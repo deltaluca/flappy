@@ -1,13 +1,22 @@
 package;
 
-#if flash
-	import flash.net.XMLSocket;
-#elseif cpp
-	import cpp.net.Socket;
-#end
+import Socket;
 
 class Main {
+	static var sock = new Socket();
 	static function main() {
+		sock.connect("localhost",4569, function() {
+			sock.receive(function (dat) {
+				trace(dat);
+				sock.send("Hello there!");
+				sock.receive(function (dat) {
+					trace(dat);
+				});
+			});
+		});
+	}
+/*
+	static function mains() {
 	#if flash
 		var sock = new XMLSocket();
 		sock.addEventListener(flash.events.Event.CONNECT, function(ev) {
@@ -36,9 +45,11 @@ class Main {
 		var sock = new Socket();
 		sock.connect(new cpp.net.Host("localhost"),4569);
 
-		trace(sock.read());
+	//	trace(sock.read());
+		trace(sock.input.readUntil(0));
 		sock.write("hello there!");
-		trace(sock.read());
+		trace(sock.input.readUntil(0));
+	//	trace(sock.read());
 	#end
-	}
+	}*/
 }
