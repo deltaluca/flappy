@@ -14,23 +14,23 @@ class Main extends flash.display.Sprite {
 		#end
 	}
 
-	var sock:AsyncSocket;
+	var sock:Socket;
 	function new() {
 		super();
 
-		sock = new AsyncSocket();
-
-		sock.connect("localhost",4569, function() {
-			trace("sending message");
-			sock.send("Hello there!");
-		});
-
+		sock = new Socket();
 		sock.onReceive = function(dat:Dynamic) {
 			trace("received message="+dat);
 		}
-
 		sock.onClose = function() {
 			trace("socket connection closed");
 		}
+	
+		sock.connect("localhost",4569, function() {
+			trace("connected");
+
+			trace("sending message");
+			sock.send("Hello there!");
+		});
 	}
 }
