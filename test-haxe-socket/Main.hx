@@ -3,17 +3,24 @@ package;
 import Socket;
 
 class Main {
-	static var sock = new Socket();
+	static var sock = new AsyncSocket();
 	static function main() {
 		sock.connect("localhost",4569, function() {
-			sock.receive(function (dat) {
-				trace(dat);
-				sock.send("Hello there!");
-				sock.receive(function (dat) {
-					trace(dat);
-				});
-			});
+			sock.send("Hello there!");
 		});
+
+		sock.onReceive = function(dat:Dynamic) {
+			trace(dat);
+		}
+
+		#if cpp
+			var exit = false;
+			sock.onClose = function() {
+				exit = true;
+			}
+
+			while(!exit) {}
+		#end
 	}
 /*
 	static function mains() {
