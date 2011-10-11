@@ -44,15 +44,17 @@ class AsyncSocket {
 			#elseif cpp
 				cpp.vm.Thread.create(function () {
 					while(true) {
-						var res = Sock.select([sock],[sock],[sock],null);
+						var res = Sock.select([sock],[],[],null);
 						if(res.read.length>0) {
+							trace(res.read);
+							var raw:String = null;
 							try {
-								var raw = sock.input.readUntil(0);
-								onData({data:raw});
+								raw = sock.input.readUntil(0);
 							}catch(e:Dynamic) {
 								//socket closed
 								break;
 							}
+							onData({data:raw});
 						}
 					}
 					if(onClose!=null) onClose();
