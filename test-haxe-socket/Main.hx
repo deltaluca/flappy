@@ -26,7 +26,7 @@ class Main extends flash.display.Sprite {
 			trace("socket connection closed");
 		}
 	
-		sock.connect("localhost",4569, function() {
+		sock.connect("localhost",4571, function() {
 			trace("connected");
 
 			trace("sending message");

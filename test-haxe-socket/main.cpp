@@ -29,6 +29,12 @@ int main(int argc, char *argv[])
      sockfd = socket(AF_INET, SOCK_STREAM, 0);
      if (sockfd < 0) 
         error("ERROR opening socket");
+
+	int val[] = {1};
+	n = setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,val,sizeof(int));
+	printf("%d\n",n);
+	perror(0);
+
      bzero((char *) &serv_addr, sizeof(serv_addr));
      portno = atoi(argv[1]);
      serv_addr.sin_family = AF_INET;
@@ -62,7 +68,10 @@ int main(int argc, char *argv[])
      n = write(newsockfd,"y18:I got your message\0",23);
      if (n < 0) error("ERROR writing to socket");
 
-     close(newsockfd);
-     close(sockfd);
+	shutdown(newsockfd, SHUT_RDWR);
+	shutdown(sockfd, SHUT_RDWR);
+
+     printf("%d\n",close(newsockfd));
+     printf("%d\n",close(sockfd));
      return 0; 
 }
