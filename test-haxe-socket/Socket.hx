@@ -75,6 +75,7 @@ class Socket {
 			sock.send(ser);
 		#elseif cpp
 			sock.write(ser);
+			sock.output.writeByte(0);
 		#end
 	}
 

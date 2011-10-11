@@ -11,6 +11,7 @@ listen = do
   socket <- listenOn (PortNumber 4571)
   (handle, hostName, portNumber) <- accept socket
   hSetBuffering handle NoBuffering
+  hSetBinaryMode handle True
 
   hPutMessage handle "y15:hi from server!"
   string <- hGetMessage handle
