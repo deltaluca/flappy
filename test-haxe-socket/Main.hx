@@ -31,6 +31,8 @@ class Main extends flash.display.Sprite {
 
 			trace("sending message");
 			sock.send("Hello there!");
+			sock.send(0);
+			sock.send(12674);
 		});
 	}
 }
