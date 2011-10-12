@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+<project>
+	<app title="Flappy" main="Main" package="" version="1.0.0" company="IC"></app>
+	<window width="1152" height="956" fps="60" orientation="landscape" resizable="false" hardware="false" borderless="true"></window>
+	<set name="BUILD_DIR" value="/vol/bitbucket/ld509/cpp"></set>
+	<classpath name="."></classpath>
+	<haxelib name="nme"></haxelib>
+	<ndll name="std"></ndll>
+	<ndll name="nme" haxelib="nme"></ndll>
+
+	<assets path="Assets" rename="assets" include="*"></assets>
+</project>
+
+-->
+
+
+<?xml version="1.0" encoding="utf-8"?>
+
+<project>
+
+
+
+  <app title="Displaying A Bitmap" main="Main" package="" version="1.0.0" company="NME" />
+
+  
+
+  <set name="fullscreen" if="target_webos" />
+
+  <set name="fullscreen" if="target_ios" />
+
+  <set name="fullscreen" if="target_android" />
+
+  
+
+  <window width="640" height="480" fps="30" orientation="portrait" resizable="true" />
+
+  <window width="0" height="0" if="fullscreen" />
+
+ 
+
+	<set name="BUILD_DIR" value="/vol/bitbucket/ld509/cpp"></set>
+
+  <classpath name="." />
+
+
+
+  <haxelib name="nme" />
+
+
+
+  <assets path="Assets" rename="assets" include="*" />
+
+
+
+  <ndll name="std" />
+
+
+  <ndll name="nme" haxelib="nme" />
+
+
+
+
+
+
+</project>
