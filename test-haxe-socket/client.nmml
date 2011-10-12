@@ -1,66 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-<project>
-	<app title="Flappy" main="Main" package="" version="1.0.0" company="IC"></app>
-	<window width="1152" height="956" fps="60" orientation="landscape" resizable="false" hardware="false" borderless="true"></window>
-	<set name="BUILD_DIR" value="/vol/bitbucket/ld509/cpp"></set>
-	<classpath name="."></classpath>
-	<haxelib name="nme"></haxelib>
-	<ndll name="std"></ndll>
-	<ndll name="nme" haxelib="nme"></ndll>
-
-	<assets path="Assets" rename="assets" include="*"></assets>
-</project>
-
--->
-
-
-<?xml version="1.0" encoding="utf-8"?>
 
 <project>
-
-
-
-  <app title="Displaying A Bitmap" main="Main" package="" version="1.0.0" company="NME" />
-
+	<app title="Flaplomacy" main="Main" package="flappy" version="1.0.0" company="Flappy IC"/>
   
+	<set name="fullscreen" if="target_webos"/>
+	<set name="fullscreen" if="target_ios"/>
+	<set name="fullscreen" if="target_android"/>
 
-  <set name="fullscreen" if="target_webos" />
+	<window width="1152" height="965" fps="60" orientation="landscape" resizable="true"/>
+	<window width="0" height="0" if="fullscreen"/>
 
-  <set name="fullscreen" if="target_ios" />
+	<set name="BUILD_DIR" value="/vol/bitbucket/ld509/cpp" if="uni"/>
+	<set name="BUILD_DIR" value="Export" unless="uni"/>
 
-  <set name="fullscreen" if="target_android" />
+	<set name="SWF_VERSION" value="11"/>
 
-  
+	<classpath name="."/>
+	<haxelib name="nme"/>
 
-  <window width="640" height="480" fps="30" orientation="portrait" resizable="true" />
+	<assets path="Assets" include="*"/>
 
-  <window width="0" height="0" if="fullscreen" />
-
- 
-
-	<set name="BUILD_DIR" value="/vol/bitbucket/ld509/cpp"></set>
-
-  <classpath name="." />
-
-
-
-  <haxelib name="nme" />
-
-
-
-  <assets path="Assets" rename="assets" include="*" />
-
-
-
-  <ndll name="std" />
-
-
-  <ndll name="nme" haxelib="nme" />
-
-
-
-
-
-
+	<ndll name="std"/>
+	<ndll name="regexp"/>
+	<ndll name="zlib"/>
+	<ndll name="nme" haxelib="nme"/>
 </project>

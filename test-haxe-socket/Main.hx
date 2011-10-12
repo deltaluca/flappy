@@ -2,28 +2,29 @@ package;
 
 import Socket;
 
-#if flash
-@:bitmap("map_c.gif") class Map extends flash.display.BitmapData {}
-#elseif cpp
-import nme.Assets;
-#end
+import nme.display.Sprite;
+import nme.Lib;
+import nme.display.Bitmap;
+import nme.display.BitmapData;
+import nme.events.Event;
 
-class Main extends flash.display.Sprite {
+import nme.Assets;
+class Main extends Sprite {
 	public static function main() {
-		flash.Lib.current.addChild(new Main());
+		Lib.current.addChild(new Main());
+	}
+	function new() {
+		super();
+		addEventListener(Event.ADDED_TO_STAGE, init);
 	}
 
 	var sock:Socket;
-	function new() {
-		super();
-		addEventListener(flash.events.Event.ADDED_TO_STAGE, init);
-	}
 	function init(_) {
-		#if flash
-		addChild(new flash.display.Bitmap(new Map(800,600)));
-		#elseif cpp
-		addChild(new flash.display.Bitmap(Assets.getBitmapData("assets/map_c.gif")));
-		#end
+		removeEventListener(Event.ADDED_TO_STAGE, init);
+
+		var bit:BitmapData;
+		addChild(new Bitmap(bit = Assets.getBitmapData("Assets/map_c.jpg")));
+		trace([bit.width,bit.height,bit.getPixel(120,125)]);
 
 		sock = new Socket();
 		sock.onReceive = function(dat:Dynamic) {

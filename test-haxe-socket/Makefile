@@ -7,18 +7,28 @@ client: client.hs
 	ghc --make -o client client.hs
 
 haxe-client-uni:
-	haxe -cp . -main Main -swf test.swf -swf-version 11 -swf-header 1152:965:60:ffffff
-	haxe -cp . -main Main -cpp /vol/bitbucket/ld509/cpp/flappy/test-haxe-socket -D HXCPP_M64 -D HXFCGI -lib nme --remap flash:nme
-	cp /vol/bitbucket/ld509/cpp/flappy/test-haxe-socket/Main Main
+	haxelib run nme update client.nmml linux -64 -Duni
+	haxelib run nme build client.nmml linux -64 -Duni
 
-	g++-4.6.1 main.cpp -o main 
+	haxelib run nme update client.nmml flash -Duni
+	haxelib run nme build client.nmml flash -Duni
 
 haxe-client:
-	haxe -cp . -main Main -swf test.swf -swf-version 11 -swf-header 400:300:60:ffffff
-	haxe -cp . -main Main -cpp cpp -D HXCPP_M64 -D HXFCGI -lib nme --remap flash:nme
-	cp cpp/Main Main
+	haxelib run nme update client.nmml linux -64
+	haxelib run nme build client.nmml linux -64
 
-	g++ main.cpp -o main 
+	haxelib run nme update client.nmml flash
+	haxelib run nme build client.nmml flash
+
+haxe-run-flash:
+	haxelib run nme run client.nmml flash
+haxe-run-flash-uni:
+	haxelib run nme run client.nmml flash -Duni
+
+haxe-run-cpp:
+	haxelib run nme run client.nmml linux -64
+haxe-run-cpp-uni:
+	haxelib run nme run client.nmml linux -64 -Duni
 
 server: server.hs
 	ghc --make -o server server.hs
