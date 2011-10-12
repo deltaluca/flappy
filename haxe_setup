@@ -1,0 +1,113 @@
+#!/bin/bash
+
+INSTDIR=$HOME/.haxenekoflash
+rm -rf $INSTDIR
+
+mkdir $INSTDIR
+cd $INSTDIR
+
+# download necessary files.
+# -----------------------
+
+# not the most recent version, a bug introduced in r4014 unexpected has issues with part of nme
+# this is last version (unless it's been fixed yet, but let's be safe).
+wget http://haxe.cmt.tc/linux64/haxe_r4013.tar.gz
+
+# still need to download the normal haxe versino to get access to 'haxelib' for nme/hxcpp
+# even if we then checkout most recent svn!
+wget http://haxe.org/file/haxe-2.08-linux.tar.gz
+
+# we don't actually use neko, but it's required for parts of nme. like nme build tool.
+wget http://nekovm.org/_media/neko-1.8.2-linux.tar.gz
+
+# aaaand flash players!
+wget http://fpdownload.macromedia.com/pub/flashplayer/updaters/11/flashplayer_11_sa.i386.tar.gz
+wget http://fpdownload.macromedia.com/pub/flashplayer/updaters/11/flashplayer_11_sa_debug.i386.tar.gz
+
+# extract
+# -----------------------
+
+tar xf haxe-2.08-linux.tar.gz
+tar xf haxe_r4013.tar.gz
+tar xf neko-1.8.2-linux.tar.gz
+tar xf flashplayer_11_sa.i386.tar.gz
+tar xf flashplayer_11_sa_debug.i386.tar.gz
+
+# delete
+# ------------------------
+
+rm flashplayer_11_sa_debug.i386.tar.gz
+rm flashplayer_11_sa.i386.tar.gz
+rm haxe-2.08-linux.tar.gz
+rm haxe_r4013.tar.gz
+rm neko-1.8.2-linux.tar.gz
+
+# rename flash players, no-one likes long names
+# -------------------------------------------
+
+mv flashplayer fp
+mv flashplayerdebugger debugfp
+
+# similarly for my own sake
+# -------------------------
+
+mv haxe-2.08-linux haxe
+mv neko-1.8.2-linux neko
+
+# replace haxe with nightly
+# ------------------------
+
+rm haxe/haxe
+rm -rf haxe/std
+
+mv bin/haxe haxe/haxe
+mv bin/std haxe/std
+rm -rf bin
+
+# add env-vars to .bashrc
+# -----------------------
+
+BASHRC=$HOME/.bashrc
+
+cd $HOME
+
+echo "" >> $BASHRC
+echo "# hello Mr luca" >> $BASHRC
+echo "export HAXE_LIBRARY_PATH=$INSTDIR/haxe/std:." >> $BASHRC
+echo "export HAXE_HOME=$INSTDIR/haxe/" >> $BASHRC
+echo "export HXCPP_COMPILE_THREADS=2" >> $BASHRC
+export HAXE_LIBRARY_PATH=$INSTDIR/haxe/std:.
+export HAXE_HOME=$INSTDIR/haxe/
+export HXCPP_COMPILE_THREADS=2
+
+echo "export NEKOPATH=$INSTDIR/neko" >> $BASHRC
+export NEKOPATH=$INSTDIR/neko
+
+echo 'PATH=$PATH:'"$INSTDIR/:$INSTDIR/haxe:$INSTDIR/neko" >> $BASHRC
+echo 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:'"$INSTDIR/neko" >> $BASHRC
+PATH=$PATH:$INSTDIR/:$INSTDIR/haxe:$INSTDIR/neko
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/neko
+
+# set up hx-cpp and nme
+# ---------------------
+
+$INSTDIR/haxe/haxelib setup $INSTDIR/haxelib
+$INSTDIR/haxe/haxelib install hxcpp
+$INSTDIR/haxe/haxelib install nme
+
+# get svn versions
+# ----------------
+
+cd $INSTDIR
+svn checkout http://hxcpp.googlecode.com/svn/trunk/ hxcpp-svn
+svn checkout http://nekonme.googlecode.com/svn/trunk/ nme-svn
+cd $HOME
+
+$INSTDIR/haxe/haxelib dev hxcpp $INSTDIR/hxcpp-svn/
+$INSTDIR/haxe/haxelib dev nme $INSTDIR/nme-svn/
+
+# aaaaand add LD_LIBRARY_PATH for hxcpp + nme
+# -------------------------------------------
+
+echo 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:'"$INSTDIR/nme-svn/ndll/Linux64/" >> $BASHRC
+echo 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:'"$INSTDIR/hxcpp-svn/bin/Linux64/" >> $BASHRC
