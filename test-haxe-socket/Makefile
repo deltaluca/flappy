@@ -21,9 +21,12 @@ haxe-client:
 	haxelib run nme build client.nmml flash
 
 haxe-run-flash:
-	haxelib run nme run client.nmml flash
+#	haxelib run nme run client.nmml flash
+	fp Export/flash/bin/MyApplication.swf 
+
 haxe-run-flash-uni:
-	haxelib run nme run client.nmml flash -Duni
+#	haxelib run nme run client.nmml flash -Duni
+	fp /vol/bitbucket/ld509/cpp/Export/flash/bin/MyApplication.swf
 
 haxe-run-cpp:
 	haxelib run nme run client.nmml linux -64

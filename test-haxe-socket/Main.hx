@@ -4,6 +4,8 @@ import Socket;
 
 import nme.display.Sprite;
 import nme.Lib;
+import nme.display.StageAlign;
+import nme.display.StageScaleMode;
 import nme.display.Bitmap;
 import nme.display.BitmapData;
 import nme.events.Event;
@@ -18,13 +20,44 @@ class Main extends Sprite {
 		addEventListener(Event.ADDED_TO_STAGE, init);
 	}
 
+	var bit:Bitmap;
+	var stage_ratio:Float;
+	function resize(_) {
+		var a1 = stage.stageHeight*stage_ratio*stage.stageHeight;
+		var a2 = stage.stageWidth*stage.stageWidth/stage_ratio;
+
+		var w:Float, h:Float;
+		if(a1<a2) {
+			w = stage.stageHeight*stage_ratio;
+			h = stage.stageHeight;
+		}else {
+			w = stage.stageWidth;
+			h = stage.stageWidth/stage_ratio;
+		}
+
+		bit.width = w;
+		bit.height = h;
+		bit.x = (stage.stageWidth - bit.width)/2;
+		bit.y = (stage.stageHeight - bit.height)/2;
+	}
+
 	var sock:Socket;
 	function init(_) {
+		stage.align = StageAlign.TOP_LEFT;
+		stage.scaleMode = StageScaleMode.NO_SCALE;
+
 		removeEventListener(Event.ADDED_TO_STAGE, init);
 
-		var bit:BitmapData;
-		addChild(new Bitmap(bit = Assets.getBitmapData("Assets/map_c.jpg")));
-		trace([bit.width,bit.height,bit.getPixel(120,125)]);
+		bit = new Bitmap(Assets.getBitmapData("Assets/map_c.jpg"));
+		addChild(bit);
+		stage_ratio = bit.width/bit.height;
+
+		//-----------------------------
+
+		stage.addEventListener(Event.RESIZE, resize);
+		resize(null);
+
+		//-----------------------------
 
 		sock = new Socket();
 		sock.onReceive = function(dat:Dynamic) {
