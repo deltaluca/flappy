@@ -99,10 +99,21 @@ export HXCPP_COMPILE_THREADS=2
 echo "export NEKOPATH=$INSTDIR/neko" >> $BASHRC
 export NEKOPATH=$INSTDIR/neko
 
-echo 'PATH=$PATH:'"$INSTDIR/:$INSTDIR/haxe:$INSTDIR/neko" >> $BASHRC
-echo 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:'"$INSTDIR/neko:$INSTDIR" >> $BASHRC
-PATH=$PATH:$INSTDIR/:$INSTDIR/haxe:$INSTDIR/neko
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/neko:$INSTDIR
+if [ -z "$PATH" ]; then
+   echo "export PATH=$INSTDIR/:$INSTDIR/haxe:$INSTDIR/neko" >> $BASHRC
+   export PATH=$INSTDIR/:$INSTDIR/haxe:$INSTDIR/neko
+else
+   echo 'PATH=$PATH:'"$INSTDIR/:$INSTDIR/haxe:$INSTDIR/neko" >> $BASHRC
+   PATH=$PATH:$INSTDIR/:$INSTDIR/haxe:$INSTDIR/neko
+fi
+
+if [ -z "$LD_LIBRARY_PATH" ]; then
+   echo "export LD_LIBRARY_PATH=$INSTDIR/neko:$INSTDIR" >> $BASHRC
+   export LD_LIBRARY_PATH=$INSTDIR/neko:$INSTDIR
+else
+   echo 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:'"$INSTDIR/neko:$INSTDIR" >> $BASHRC
+   LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/neko:$INSTDIR
+fi
 
 # set up hx-cpp and nme
 # ---------------------
