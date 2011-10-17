@@ -48,7 +48,7 @@ class Main extends Sprite {
 
 		removeEventListener(Event.ADDED_TO_STAGE, init);
 
-		bit = new Bitmap(Assets.getBitmapData("Assets/map_c.jpg"));
+		bit = new Bitmap(Assets.getBitmapData("Assets/map_c.png"));
 		addChild(bit);
 		stage_ratio = bit.width/bit.height;
 
