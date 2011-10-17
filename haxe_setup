@@ -83,7 +83,10 @@ rm -rf bin
 # add env-vars to .bashrc
 # -----------------------
 
-BASHRC=$HOME/.bashrc
+BASHRC=$HOME/.haxenv
+rm -f $BASHRC
+echo "#!/bin/bash" > $BASHRC
+chmod +x $BASHRC
 
 cd $HOME
 
