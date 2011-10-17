@@ -30,6 +30,10 @@ class Socket {
 				if(onClose!=null) onClose();
 			});
 
+			sock.addEventListener(flash.events.IOErrorEvent.IO_ERROR, function(ev) {
+				trace("IO_ERROR: "+ev.text);
+			});
+
 			sock.connect(ip,port);
 		#elseif cpp
 			sock.connect(new cpp.net.Host(ip), port);

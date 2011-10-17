@@ -10,7 +10,49 @@ import nme.display.Bitmap;
 import nme.display.BitmapData;
 import nme.events.Event;
 
+import nme.text.TextField;
+import nme.text.TextFormat;
+import nme.text.TextFieldType;
+
 import nme.Assets;
+class Gui extends Sprite {
+	var map:Bitmap;
+	var terminal:TextField;
+
+	public function new() {
+		super();
+		addEventListener(Event.ADDED_TO_STAGE, init);
+	}
+	function init(_) {
+		removeEventListener(Event.ADDED_TO_STAGE, init);
+
+		map = new Bitmap(Assets.getBitmapData("Assets/map_c.png"));
+		addChild(map);
+
+		terminal = new TextField();
+		terminal.background = true;
+		terminal.backgroundColor = 0xdedede;
+		terminal.selectable = true;
+		terminal.type = TextFieldType.INPUT;
+		terminal.height = 20;
+		addChild(terminal);
+
+		var format = new TextFormat();
+		format.size = 16;
+		terminal.defaultTextFormat = format;
+
+		stage.addEventListener(Event.RESIZE, resize);
+		resize(null);
+	}
+
+	function resize(_) {
+		map.x = (stage.stageWidth - map.width)/2;
+		
+		terminal.width = stage.stageWidth;
+		terminal.y = stage.stageHeight - terminal.height;
+	}
+}
+
 class Main extends Sprite {
 	public static function main() {
 		Lib.current.addChild(new Main());
@@ -20,42 +62,17 @@ class Main extends Sprite {
 		addEventListener(Event.ADDED_TO_STAGE, init);
 	}
 
-	var bit:Bitmap;
-	var stage_ratio:Float;
-	function resize(_) {
-		var a1 = stage.stageHeight*stage_ratio*stage.stageHeight;
-		var a2 = stage.stageWidth*stage.stageWidth/stage_ratio;
-
-		var w:Float, h:Float;
-		if(a1<a2) {
-			w = stage.stageHeight*stage_ratio;
-			h = stage.stageHeight;
-		}else {
-			w = stage.stageWidth;
-			h = stage.stageWidth/stage_ratio;
-		}
-
-		bit.width = w;
-		bit.height = h;
-		bit.x = (stage.stageWidth - bit.width)/2;
-		bit.y = (stage.stageHeight - bit.height)/2;
-	}
-
+	var gui:Gui;
 	var sock:Socket;
+
 	function init(_) {
 		stage.align = StageAlign.TOP_LEFT;
 		stage.scaleMode = StageScaleMode.NO_SCALE;
 
 		removeEventListener(Event.ADDED_TO_STAGE, init);
 
-		bit = new Bitmap(Assets.getBitmapData("Assets/map_c.png"));
-		addChild(bit);
-		stage_ratio = bit.width/bit.height;
-
-		//-----------------------------
-
-		stage.addEventListener(Event.RESIZE, resize);
-		resize(null);
+		gui = new Gui();
+		addChild(gui);
 
 		//-----------------------------
 
