@@ -10,9 +10,15 @@ Extensible maps:
     ~ a graph of visitable nodes, each node representing a location (sea/coast/land).
     ~ an association of nodes to supply depots or standard location.
     ~ an association of nodes to players starting areas.
+
+    ~ considerations: Spain in standard map has two locations on one territory which represent different nodes in the graph, although they are considered a single territory which effect the movement of fleets.
+
     [GUI]
     ~ an image representing the map.
     ~ a set of co-ordinates corresponding to the position of a node on the image.
+
+    ~ also perhaps require more information to display fleets/armies in different positions on a territory
+    ~ for convoy, perhaps require more information regarding path through the seas to display a nice representation of the convoy actions, if we ever do anything animated also etc.
     
   - Graph will require different arcs - some for Fleets, some for Armies, some for Convoy.
   - This will be used to decide if a given move is valid.
