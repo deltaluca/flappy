@@ -1,0 +1,56 @@
+#---------------------------------------------------------#
+# Rough specification for the first iteration of project  #
+#---------------------------------------------------------#
+
+Initial creation: Luke, 18/10/2011
+
+Extensible maps:
+  - Will require
+    [Representation]
+    ~ a graph of visitable nodes, each node representing a location (sea/coast/land).
+    ~ an association of nodes to supply depots or standard location.
+    ~ an association of nodes to players starting areas.
+    [GUI]
+    ~ an image representing the map.
+    ~ a set of co-ordinates corresponding to the position of a node on the image.
+    
+  - Graph will require different arcs - some for Fleets, some for Armies, some for Convoy.
+  - This will be used to decide if a given move is valid.
+
+Server:
+  - Will require
+    ~ Method for allowing players to connect (whether AI or human).
+    ~ Method for dealing with disconnections (saving their game state, allocating new thread on rejoin, default moves whilst absent?)
+    ~ Method for notifying players of changing game stages (start, negotiation, move submission, resolution).
+    ~ Method for allowing players to communicate with each other (privately, or as a group).
+      # Server does not need to understand the language of negotiation (as defined in Daide).
+      # All the server needs to do is relay the message.
+    ~ Method for allowing players to submit their moves (with possible added functionality for checking if a move is valid).
+      # This will need to be in a game-defined language.
+      # Using the language specified by Daide would allow us to 'plugin' their own AIs.
+      # Method for parsing this 'move submission' language will be required.
+    ~ Method for resolving moves. This includes
+      # Moving units location on map (standard move, convoy orders).
+      # Resolving disruptions of a move/convoy action.
+      # Resolving attack moves and defend moves (and support moves).
+      # Notifying a player of the need to retreat/withdraw if they're displaced from a location.
+      # Default moves for when move is invalid/not received.
+      # Dealing with specific/rare cases.
+    ~ Updating and redistributing the current game state.
+
+GUI:
+  - Will require
+    ~ Method for representing map and units on the map in a clear and understandable fashion.
+    ~ Method for submitting orders (CLI -> GUI + CLI -> GUI?).
+    ~ Method for allowing players to view a send messages to other players (via the server).
+
+------------------------------------
+Assuming that we can get all of these up and running (with some simplifications to move submission/negotation/map representation),
+we should have a working 'game', with which we can play (as humans) or 'plugin' an external AI from Daide. Thinking will need to 
+be alloted to how the individual parts communicate (sockets? some protocol?) and how the external AI talk with the server.
+
+Once this is done, we can split the group if necessary, one to focus on improving the general game platform, and another to focus
+on building the AI to play (and hopefully beat) the other players!
+
+**** Remember that the ultimate goal of this project is to create an AI that negotiates in a game of deplomacy. All of this extra stuff
+just makes it look a lot more impressive and fleshes out the project.****

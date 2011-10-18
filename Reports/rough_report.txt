@@ -1,0 +1,38 @@
+Key requirements:
+  AI is capable of playing an entire game of Deplomacy from start to finish
+  AI is capable of negotiating with other players in the specified negotiation language
+  Software is capable of handling and organising a game of Deplomacy involving multiple players/AIs
+
+Extensions:
+  AI is capable of beating other less complicated AI (eg. ones that do not negotiate, with simple negotiation tactics etc.)
+  Software is extendable to allow other AIs to play (eg. Daide)
+  Software is runnable on multiple platforms
+  AI is able to negotiate in a meaningful way, based on previous gameplay
+
+Choice of Development Method:
+  [ Which method will we use? ]
+  [ Code testing - in Haskell? Unit tests? ]
+  Version control is handled by Git, using GitHub as a repository. 
+  Needed technology -
+    {Server} Haskell : Concurrent programming, Network programming, Message exchange/group chat
+    {GUI} Haxe : GUI creation, cross-platform availability
+    {AI} Haskell/Prolog/Some other form of decision making tech for AI
+
+  [ Project Management ] -
+    Progress : After the initial server and game creation is finished, progress on the AI can be made.
+               After the initial iteration, progress should be fairly obvious as the AI will perform better against other opponents,
+               and be capable of performing more advanced tactics.
+               Additionally, the game creation progress will be evident as the GUI becomes more user-friendly/usable, and more features are
+               added to make gameplay simpler. (eg. from CLI -> GUI/CLI -> GUI -> GUI with prettier graphics).
+    [ Roles and responsibilities ] 
+    [ Meeting and scheduling arrangements ]
+
+Draft Schedule (starting week of 17/10/2011):
+  1 - 2 : Write basic game, CLI interfaces, capable of importing external AI.
+    Requirments - 
+  2 - 3 : ?
+  4 - 5 : ?
+  5 - 6 : ?
+
+Plan of First Iteration:
+  
