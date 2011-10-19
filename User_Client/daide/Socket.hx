@@ -9,6 +9,7 @@ class Socket {
 	var sock:Sock;
 	public function new() {
 		sock = new Sock();
+		connected = false;
 	}
 
 	public var logger:String->Void;
@@ -16,7 +17,23 @@ class Socket {
 		if(logger!=null) logger(msg);
 	}
 
+	public var connected:Bool;
+	public var reader:cpp.vm.Thread;
+
+	public function disconnect() {
+		if(!connected) throw "derp";
+	
+		//send FM
+		write_message({type:3,data:null});
+		sock.shutdown(true,true);
+		sock.close();
+	
+		connected = false;
+	}
+
 	public function connect(ip:String, port:Int) {
+		if(connected) throw "herpaderp";
+
 		try {
 			log("Connecting on "+ip+":"+port);
 			sock.connect(new cpp.net.Host(ip), port);
@@ -25,15 +42,17 @@ class Socket {
 			throw "connection failure";
 		}
 
+		connected = true;
+
 		sock.output.bigEndian = true;
 		sock.input.bigEndian = true;
 
 		//send IM message
 		log("Sending IM message");
-		var im = new BytesOutput();
+		var im = new BytesOutput(); im.bigEndian = true;
 		im.writeUInt16(1);
 		im.writeUInt16(0xDA10);
-		write_message({type:0,length:4,data:im.getBytes()});
+		write_message({type:0,data:im.getBytes()});
 		
 		//wait for RM message
 		log("Waiting for RM message");
@@ -44,10 +63,17 @@ class Socket {
 			return;
 		}
 
-		cpp.vm.Thread.create(function () {
+		reader = cpp.vm.Thread.create(function () {
 			while(true) {
 				//wait for message
-				var msg = read_message();
+				var msg:Message;
+				try {
+					msg = read_message();
+				}catch(e:Dynamic) {
+					//socket closed
+					return;
+				}
+
 				switch(msg.type) {
 				case 0:
 					//IM sent by server
@@ -93,9 +119,9 @@ class Socket {
 	}
 
 	function error_message(code:Int) {
-		var buf = new BytesOutput();
+		var buf = new BytesOutput(); buf.bigEndian = true;
 		buf.writeUInt16(code);
-		return {type:4,length:2,data:buf.getBytes()};
+		return {type:4,data:buf.getBytes()};
 	}
 
 	function write_message(msg:Message) {
@@ -103,10 +129,13 @@ class Socket {
 
 		out.writeByte(msg.type);
 		out.writeByte(0); //pad
-		out.writeUInt16(msg.data.length);
-		out.write(msg.data);
+		if(msg.data!=null) {
+			out.writeUInt16(msg.data.length);
+			out.write(msg.data);
+		}else
+			out.writeUInt16(0);
 
-		log("write_message :: "+msg.type+"x"+msg.data.length);
+		log("write_message :: "+msg.type+"x"+(msg.data==null?0:msg.data.length));
 	}
 
 	function read_message() : Message {
@@ -115,12 +144,12 @@ class Socket {
 		var type:Int = inp.readByte();
 		inp.readByte(); //pad
 		var length = inp.readUInt16();
-		var data = inp.read(length);
+		var data = if(length==0) null else inp.read(length);
 
 		log("read_message :: "+type+"x"+length);
 
-		return { type:type, length: length, data: data };
+		return { type:type, data: data };
 	}
 }
 
-typedef Message = { type:Int, length:Int, data:Bytes };
+typedef Message = { type:Int, data:Bytes };
