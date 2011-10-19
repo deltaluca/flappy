@@ -106,6 +106,7 @@ class Terminal extends Sprite {
 		{name:"exit", help:"exit flaplomacy"},
 		{name:"disconnect",help:"disconnect from server"},
 		{name:"connect",help:"connect hostname:port - connect to server"},
+		{name:"sys",help:"execute system command :)"},
 		{name:"help",help:"list available commands"}
 	];
 
@@ -147,6 +148,12 @@ class Terminal extends Sprite {
 						}
 					}
 				}
+			case "sys":
+				var scmd = cmdargs[1];
+				cmdargs.shift(); cmdargs.shift();
+				cmdargs.push(">"); cmdargs.push(".out");
+				cpp.Sys.command(scmd,cmdargs);
+				log(cpp.io.File.getContent(".out"));
 			default:
 				log("Error! unknown command");
 				log("use help to list available commands");
