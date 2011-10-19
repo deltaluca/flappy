@@ -6,27 +6,37 @@ import haxe.io.Bytes;
 
 typedef Sock = cpp.net.Socket;
 class Socket {
-	public static var CONNECTION_FAILURE = 0;
-
 	var sock:Sock;
 	public function new() {
 		sock = new Sock();
 	}
 
-	public function connect(ip:String, port:Int, cont:Void->Void) {
+	public var logger:String->Void;
+	inline function log(msg:String) {
+		if(logger!=null) logger(msg);
+	}
+
+	public function connect(ip:String, port:Int) {
 		try {
+			log("Connecting on "+ip+":"+port);
 			sock.connect(new cpp.net.Host(ip), port);
 		}catch(e:Dynamic) {
-			throw CONNECTION_FAILURE;
+			log("Failed to connect");
+			throw "connection failure";
 		}
 
+		sock.output.bigEndian = true;
+		sock.input.bigEndian = true;
+
 		//send IM message
+		log("Sending IM message");
 		var im = new BytesOutput();
 		im.writeUInt16(1);
 		im.writeUInt16(0xDA10);
 		write_message({type:0,length:4,data:im.getBytes()});
 		
 		//wait for RM message
+		log("Waiting for RM message");
 		var rm = read_message();
 		if(rm.type!=1) {
 			//first message not RM
@@ -80,8 +90,6 @@ class Socket {
 			sock.shutdown(true,true);
 			sock.close();
 		});
-
-		cont();
 	}
 
 	function error_message(code:Int) {
@@ -97,20 +105,22 @@ class Socket {
 		out.writeByte(0); //pad
 		out.writeUInt16(msg.data.length);
 		out.write(msg.data);
+
+		log("write_message :: "+msg.type+"x"+msg.data.length);
 	}
 
 	function read_message() : Message {
 		var inp = sock.input;
 
-		var type = inp.readByte();
+		var type:Int = inp.readByte();
 		inp.readByte(); //pad
 		var length = inp.readUInt16();
 		var data = inp.read(length);
 
-		return { type: type, length: length, data: data };
+		log("read_message :: "+type+"x"+length);
+
+		return { type:type, length: length, data: data };
 	}
 }
 
-typedef Byte = Int;
-typedef Short = Int;
-typedef Message = { type:Byte, length:Short, data:Bytes };
+typedef Message = { type:Int, length:Int, data:Bytes };

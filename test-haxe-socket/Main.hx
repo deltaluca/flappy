@@ -39,6 +39,7 @@ class Gui extends Sprite {
 
 		var format = new TextFormat();
 		format.size = 16;
+		format.font = "Courier New";
 		terminal.defaultTextFormat = format;
 
 		stage.addEventListener(Event.RESIZE, resize);
