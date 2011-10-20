@@ -23,38 +23,17 @@ main = do
   noticeM "Main" $ "Starting server with map file \"" ++
     mapFile opts ++ "\" on port " ++ show (serverPort opts)
   gameMap <- parseMap (mapFile opts)
-  withSocketsDo . listenForClients . serverPort $ opts
+  withSocketsDo . listenForClients $ serverPort opts
 
-
-listenForClients port =  do
-  socket <- listenOn (PortNumber . fromIntegral $ serverPort opts)
+listenForClients :: Int -> IO ()
+listenForClients port = do
+  socket <- listenOn (PortNumber . fromIntegral $ port)
   forever $ do
     (handle, hostName, clientPort) <- accept socket
     noticeM "Main" $ "Client " ++ hostName ++
       ":" ++ show clientPort ++ " connecting..."
     hSetBuffering handle NoBuffering
-    forkIO $ handleClient (Client handle)
-  
-
-
-handleClient :: DiplomacyMap -> Handle -> IO ()
-handleClient map handle = do
-  initialMessage <- timeout _INITIAL_TIMEOUT (L.hGetContents handle)
-  maybe
-    (tellError handle TimerPopped)
-    (handleInitialMessage handle)
-    initialMessage
-
-handleInitialMessage :: Handle -> L.ByteString -> IO ()
-handleInitialMessage handle message =
-  E.catch (do
-              initialMessage <- return . daideDeserialise $ message
-              case initialMessage of
-                IM _ -> tell handle RM
-                _ -> tellError handle UnknownMessage
-          ) (\e -> case e of
-                WrongMagicNumber _ -> tellError handle WrongMagic)
-    
+    forkIO $ runDaide handleClient (Client handle) 
 
 -- map
 data DiplomacyMap = Map
