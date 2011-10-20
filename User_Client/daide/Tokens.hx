@@ -1,6 +1,24 @@
 package daide;
 
+import haxe.io.Bytes;
+import haxe.io.BytesInput;
+import haxe.io.BytesOutput;
+
 class TokenUtil {
+	public static function serialise(tokens:Array<Token>):Bytes {
+		var out = new BytesOutput();
+		out.bigEndian = true;
+		for(t in tokens) out.writeUInt16(encode(t));
+		return out.getBytes();
+	}
+	public static function deserialise(tokens:Bytes):Array<Token> {
+		var inp = new BytesInput(tokens);
+		inp.bigEndian = true;
+		var ret = [];
+		for(i in (tokens.length>>>1)) ret.push(decode(inp.readUInt16()));
+		return ret;
+	}
+
 	public static function decode(token:Int):Token {
 		var cat = token>>8;
 		var kind = (token&0xff);
