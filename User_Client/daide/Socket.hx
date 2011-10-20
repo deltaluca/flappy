@@ -4,6 +4,8 @@ import haxe.io.BytesOutput;
 import haxe.io.BytesInput;
 import haxe.io.Bytes;
 
+import daide.Tokens;
+
 typedef Sock = cpp.net.Socket;
 class Socket {
 	var sock:Sock;
