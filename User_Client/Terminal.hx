@@ -9,6 +9,9 @@ import nme.Assets;
 import nme.events.KeyboardEvent;
 
 import daide.Socket;
+import daide.Lexer;
+import daide.Language;
+import daide.Tokens;
 
 using StringTools;
 
@@ -104,7 +107,8 @@ class Terminal extends Sprite {
 		{name:"disconnect",help:"disconnect from server"},
 		{name:"connect",help:"connect hostname:port - connect to server"},
 		{name:"sys",help:"execute system command :)"},
-		{name:"help",help:"list available commands"}
+		{name:"help",help:"list available commands"},
+		{name:"daide",help:"submit daide message"}
 	];
 
 	public var histcnt:Int;
@@ -116,6 +120,15 @@ class Terminal extends Sprite {
 		log("cmd >> "+arg);
 		var cmdargs = arg.split(" ");
 		switch(cmdargs[0]) {
+			case "daide":
+				if(!sock.connected) {
+					log("Error! no connection exists!");
+				}else {
+					cmdargs.shift();
+					var tokens = Lexer.lex(cmdargs.join(" "));
+					log(Std.string(tokens));
+					sock.write_message(sock.daide_message(tokens));
+				}
 			case "help":
 				for(c in commands)
 					log("  "+c.name+" :: "+c.help);	

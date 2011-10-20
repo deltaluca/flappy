@@ -6,6 +6,7 @@ import haxe.io.Bytes;
 
 import daide.Tokens;
 import daide.Language;
+import daide.Lexer;
 
 typedef Sock = cpp.net.Socket;
 class Socket {
@@ -127,13 +128,17 @@ class Socket {
 		});
 	}
 
-	function error_message(code:Int) {
+	public function error_message(code:Int) {
 		var buf = new BytesOutput(); buf.bigEndian = true;
 		buf.writeUInt16(code);
 		return {type:4,data:buf.getBytes()};
 	}
 
-	function write_message(msg:ProtoMessage) {
+	public function daide_message(tokens:Array<Token>) {
+		return {type:2,data:TokenUtils.serialise(tokens)};
+	}
+
+	public function write_message(msg:ProtoMessage) {
 		var out = sock.output;
 
 		out.writeByte(msg.type);
@@ -147,7 +152,7 @@ class Socket {
 		log("write_message :: "+msg.type+"x"+(msg.data==null?0:msg.data.length));
 	}
 
-	function read_message() : ProtoMessage {
+	public function read_message() : ProtoMessage {
 		var inp = sock.input;
 
 		var type:Int = inp.readByte();

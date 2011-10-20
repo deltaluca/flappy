@@ -4,7 +4,7 @@ import daide.Tokens;
 using Tokens.TokenUtils;
 
 class MessageUtils {
-	public function inflate(msg:Array<Token>,?ind=0): {outind:Int, msg:Message} {
+	static public function inflate(msg:Array<Token>,?ind=0): {outind:Int, msg:Message} {
 		if(msg.length==0) throw "Error: Empty message";
 		
 		function accept(tok:Token) {
@@ -77,7 +77,7 @@ class MessageUtils {
 		return {outind:ind, msg:ret};
 	}
 
-	public function flatten(msg:Message):Array<Token> {
+	static public function flatten(msg:Message):Array<Token> {
 		return switch(msg) {
 		case mObserver(obs):
 			switch(obs) {
