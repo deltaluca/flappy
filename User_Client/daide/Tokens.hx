@@ -60,14 +60,14 @@ class TokenUtil {
 					prVersus,prWhat,prWhy,prDo,prOwes,prTellMe,prWRT
 				][kind]);
 			case 0x4b: tText(String.fromCharCode(kind));
-			case 0x50: tProvince(proInlandNonSC   (kind));
-			case 0x51: tProvince(proInlandSC      (kind));
-			case 0x52: tProvince(proSeaNonSC      (kind));
-			case 0x53: tProvince(proSeaSC         (kind));
-			case 0x54: tProvince(proCoastalNonSC  (kind));
-			case 0x55: tProvince(proCoastalSC     (kind));
-			case 0x56: tProvince(proBiCoastalNonSC(kind));
-			case 0x57: tProvince(proBiCoastalSC   (kind));
+			case 0x50: tProvince(proInland   (kind,false));
+			case 0x51: tProvince(proInland   (kind,true));
+			case 0x52: tProvince(proSea      (kind,false));
+			case 0x53: tProvince(proSea      (kind,true));
+			case 0x54: tProvince(proCoastal  (kind,false));
+			case 0x55: tProvince(proCoastal  (kind,true));
+			case 0x56: tProvince(proBiCoastal(kind,false));
+			case 0x57: tProvince(proBiCoastal(kind,true));
 			default:
 				if(cat<=0x3f) tInteger(token);
 		}
@@ -243,14 +243,10 @@ class TokenUtil {
 				0x4B | str.charCodeAt(0);	
 			case tProvince(prov):
 				switch(prov) {
-					case proInlandNonSC	  (val): 0x5000|val;
-					case proInlandSC  	  (val): 0x5100|val;
-					case proSeaNonSC	  (val): 0x5200|val;
-					case proSeaSC		  (val): 0x5300|val;
-					case proCoastalNonSC  (val): 0x5400|val;
-					case proCoastalSC	  (val): 0x5500|val;
-					case proBiCoastalNonSC(val): 0x5600|val;
-					case proBiCoastalSC   (val): 0x5700|val;
+					case proInland	  (val,sc): 0x5000|val|(sc ? 0x100 : 0);
+					case proSea	  (val,sc): 0x5200|val|(sc ? 0x100 : 0);
+					case proCoastal   (val,sc): 0x5400|val|(sc ? 0x100 : 0);
+					case proBiCoastal (val,sc): 0x5600|val|(sc ? 0x100 : 0);
 				}	
 		}
 	}
@@ -439,13 +435,9 @@ enum Press {
 }
 
 enum Province {
-	proInlandNonSC    (val:Int);
-	proInlandSC       (val:Int);
-	proSeaNonSC       (val:Int);
-	proSeaSC          (val:Int);
-	proCoastalNonSC   (val:Int);
-	proCoastalSC      (val:Int);
-	proBiCoastalNonSC (val:Int);
-	proBiCoastalSC    (val:Int);
+	proInland    (val:Int,supply:Bool);
+	proSea       (val:Int,supply:Bool);
+	proCoastal   (val:Int,supply:Bool);
+	proBiCoastal (val:Int,supply:Bool);
 }
 
