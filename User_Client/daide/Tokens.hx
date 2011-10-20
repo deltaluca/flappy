@@ -4,7 +4,7 @@ import haxe.io.Bytes;
 import haxe.io.BytesInput;
 import haxe.io.BytesOutput;
 
-class TokenUtil {
+class TokenUtils {
 	public static function serialise(tokens:Array<Token>):Bytes {
 		var out = new BytesOutput();
 		out.bigEndian = true;
@@ -15,7 +15,13 @@ class TokenUtil {
 		var inp = new BytesInput(tokens);
 		inp.bigEndian = true;
 		var ret = [];
-		for(i in (tokens.length>>>1)) ret.push(decode(inp.readUInt16()));
+		for(i in 0...(tokens.length>>>1)) ret.push(decode(inp.readUInt16()));
+		return ret;
+	}
+
+	public static function fromString(string:String):Array<Token> {
+		var ret = [];
+		for(c in 0...string.length) ret.push(tText(string.charAt(c)));
 		return ret;
 	}
 
@@ -87,7 +93,12 @@ class TokenUtil {
 			case 0x56: tProvince(proBiCoastal(kind,false));
 			case 0x57: tProvince(proBiCoastal(kind,true));
 			default:
-				if(cat<=0x3f) tInteger(token);
+				if(cat<=0x3f) {
+					var val = token;
+					//sign extend
+					if((val&0x2000)!=0) val |= 0xc000;
+					tInteger(val);
+				}
 		}
 	}
 

@@ -5,6 +5,7 @@ import haxe.io.BytesInput;
 import haxe.io.Bytes;
 
 import daide.Tokens;
+import daide.Language;
 
 typedef Sock = cpp.net.Socket;
 class Socket {
@@ -73,7 +74,7 @@ class Socket {
 		reader = cpp.vm.Thread.create(function () {
 			while(true) {
 				//wait for message
-				var msg:Message;
+				var msg:ProtoMessage;
 				try {
 					msg = read_message();
 				}catch(e:Dynamic) {
@@ -132,7 +133,7 @@ class Socket {
 		return {type:4,data:buf.getBytes()};
 	}
 
-	function write_message(msg:Message) {
+	function write_message(msg:ProtoMessage) {
 		var out = sock.output;
 
 		out.writeByte(msg.type);
@@ -146,7 +147,7 @@ class Socket {
 		log("write_message :: "+msg.type+"x"+(msg.data==null?0:msg.data.length));
 	}
 
-	function read_message() : Message {
+	function read_message() : ProtoMessage {
 		var inp = sock.input;
 
 		var type:Int = inp.readByte();
@@ -160,4 +161,4 @@ class Socket {
 	}
 }
 
-typedef Message = { type:Int, data:Bytes };
+typedef ProtoMessage = { type:Int, data:Bytes };
