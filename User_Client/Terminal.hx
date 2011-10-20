@@ -18,16 +18,19 @@ class Terminal extends Sprite {
 
 	var logcnt:Int;
 	var logsize:Int;
+	public function crop() {
+		while(logcnt>=logsize) {
+			logger.text = logger.text.substr(logger.text.indexOf("\n")+1);
+			logcnt--;
+		}
+	}
 	public function log(x:Dynamic) {
 		var split = Std.string(x).split("\n");
 		if(split.length>1) {
 			for(s in split) log(s);
 			return;
 		}
-		while(logcnt>=logsize) {
-			logger.text = logger.text.substr(logger.text.indexOf("\n")+1);
-			logcnt--;
-		}
+		crop();
 		logcnt++;
 		logger.text = logger.text+Std.string(x)+"\n";
 	}
@@ -89,7 +92,8 @@ class Terminal extends Sprite {
 		logger.height = height-inp.height;
 		inp.y = logger.height;
 
-		logsize = Std.int(logger.height/10);
+		logsize = Std.int(logger.height/10.02);
+		logcnt--; crop(); logcnt++;
 	}
 
 	var sock:Socket;

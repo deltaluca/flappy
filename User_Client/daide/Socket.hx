@@ -62,6 +62,11 @@ class Socket {
 			write_message(error_message(rm.type==2 ? 0x0A : 0x0B));
 			return;
 		}
+		if(rm.data.length!=0) {
+			log("Error: RM additional tokens not handled yet!!");
+			disconnect();
+			return;
+		}
 
 		reader = cpp.vm.Thread.create(function () {
 			while(true) {
@@ -85,6 +90,7 @@ class Socket {
 					break;
 				case 2:
 					//DM
+					
 				case 3:
 					//FM
 					break;
