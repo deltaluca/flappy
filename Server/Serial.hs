@@ -13,27 +13,12 @@ import Control.Monad
 import Data.Binary
 import Data.Typeable
 import Data.ByteString.Lazy as L
+import DaideError
 
 data DaideMessage = IM {version :: Word16}
                    | RM
                    | EM DaideError
                    deriving (Show)
-                     
-data DaideError = TimerPopped
-                | NoIM
-                | WrongEndian
-                | WrongMagic
-                | VersionIncompatibility
-                | ManyIMs
-                | IMFromServer
-                | UnknownMessage
-                | MessageTooShort
-                | DMBeforeRM
-                | RMNotFirstFromServer
-                | ManyRMs
-                | RMFromClient
-                | InvalidTokenInDM
-                deriving (Show)
 
 data DaideParseException = UnknownMessageType Word8
                     | WrongMagicNumber Word16

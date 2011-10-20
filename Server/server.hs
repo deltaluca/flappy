@@ -13,38 +13,37 @@ import Network
 import Maybe
 import System.Console.CmdArgs
 import System.Log.Logger
-import Serial
 import Data.ByteString.Lazy as L
-import System.Timeout
 import Data.Maybe
+import DaideClient
 
 main = do
   updateGlobalLogger "Main" (setLevel DEBUG)
   opts <- getCmdlineOpts
-  noticeM "Main" $ "Starting server with map file \"" ++ mapFile opts ++ "\" on port " ++ show (serverPort opts)
-  map <- parseMap (mapFile opts)
-  withSocketsDo $ do
-    socket <- listenOn (PortNumber . fromIntegral $ serverPort opts)
-    forever $ do
-      (handle, hostName, clientPort) <- accept socket
-      noticeM "Main" $ "Client " ++ hostName
-        ++ ":" ++ show clientPort ++ " connecting..."
-      hSetBuffering handle NoBuffering
-      forkIO $ handleClient map handle
+  noticeM "Main" $ "Starting server with map file \"" ++
+    mapFile opts ++ "\" on port " ++ show (serverPort opts)
+  gameMap <- parseMap (mapFile opts)
+  withSocketsDo . listenForClients . serverPort $ opts
+
+
+listenForClients port =  do
+  socket <- listenOn (PortNumber . fromIntegral $ serverPort opts)
+  forever $ do
+    (handle, hostName, clientPort) <- accept socket
+    noticeM "Main" $ "Client " ++ hostName ++
+      ":" ++ show clientPort ++ " connecting..."
+    hSetBuffering handle NoBuffering
+    forkIO $ handleClient (Client handle)
   
 
-_INITIAL_TIMEOUT = 30000000
 
 handleClient :: DiplomacyMap -> Handle -> IO ()
 handleClient map handle = do
   initialMessage <- timeout _INITIAL_TIMEOUT (L.hGetContents handle)
   maybe
     (tellError handle TimerPopped)
-    (handleInitialMessage handle) 
+    (handleInitialMessage handle)
     initialMessage
-
-tell handle = L.hPut handle . daideSerialise
-tellError handle = tell handle . EM
 
 handleInitialMessage :: Handle -> L.ByteString -> IO ()
 handleInitialMessage handle message =
