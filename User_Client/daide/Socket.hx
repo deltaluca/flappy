@@ -115,12 +115,6 @@ class Socket {
 					break;
 				case 4:
 					//EM
-					if(wait_rm) {
-						log("RM was not first message from server");
-						write_message(error_message(msg.type==2?0x0A:0x0B));
-						break;					
-					}
-				
 					log("EM received from server");
 					var data = new BytesInput(msg.data);
 					data.bigEndian = true;
