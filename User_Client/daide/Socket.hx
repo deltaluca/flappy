@@ -123,6 +123,7 @@ class Socket {
 				
 					log("EM received from server");
 					var data = new BytesInput(msg.data);
+					data.bigEndian = true;
 					switch(data.readUInt16()) {
 					case 0x01: log(" @ IM timer popped");
 					case 0x02: log(" @ IM was not first message");
