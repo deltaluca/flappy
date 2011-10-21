@@ -162,8 +162,6 @@ class Terminal extends Sprite {
 					try {
 						HLexLog.logger = log;
 						var tokens = HLex.lexify(cmdargs.join(" "));
-						//test syntax locally.
-						var message = MessageUtils.inflate(tokens);
 						sock.write_message(sock.daide_message(tokens));
 					}catch(e:Dynamic) {
 						log(e);
