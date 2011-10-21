@@ -6,7 +6,6 @@ import haxe.io.Bytes;
 
 import daide.Tokens;
 import daide.Language;
-import daide.Lexer;
 
 typedef Sock = cpp.net.Socket;
 class Socket {
