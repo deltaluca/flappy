@@ -5,7 +5,7 @@ using Tokens.TokenUtils;
 
 class MessageUtils {
 	static public function inflate(msg:Array<Token>,?ind=0): {outind:Int, msg:Message} {
-		if(msg.length==0) throw "Error: Empty message";
+		if(ind >= msg.length) return {outind:ind,msg:null};
 		
 		function accept(tok:Token) {
 			if(Type.enumEq(tok,msg[ind])) {
@@ -20,18 +20,22 @@ class MessageUtils {
 				ind++;
 				return true;
 			}
-			throw "Error: Unexpected token";
+			throw "Error: Unexpected token, expected "+Std.string(tok)+" found "+Std.string(msg[ind])+" instead";
 			return false;
 		}
 
 		function getString() {
+			if(ind>=msg.length)
+				throw "Error: Expected string, found null instead";
 			var ret = "";
-			while(true) {
+			while(ind<msg.length) {
 				switch(msg[ind]) {
 					case tText(char):
 						ret += char;
 						ind++;
 					default:
+						if(ret=="")
+							throw "Error: Expected string, found "+Std.string(msg[ind])+" instead";
 						break;
 				}
 			}
@@ -39,13 +43,16 @@ class MessageUtils {
 		}
 
 		function getInt() {
+			if(ind>=msg.length) 
+				throw "Error: Expected integer, found null instead";
+
 			var cur = msg[ind];
 			switch(cur) {
 				case tInteger(val):
 					ind++;
 					return val;
 				default:
-					throw "Error: Expected integer";
+					throw "Error: Expected integer, found "+Std.string(cur)+" instead";
 					return -1;
 			}
 		}
@@ -70,10 +77,29 @@ class MessageUtils {
 			var passcode = getInt();
 			expect(tRightParen);
 			ret = mObserver(obsIAm(power,passcode));
+		}else if(accept(tCommand(coAccept))) {
+			if(accept(tLeftParen)) {
+				var mid = inflate(msg,ind);
+				if(mid.msg==null) throw "Error: Expected Daide message in YES ( .. )";
+				ind = mid.outind;
+				expect(tRightParen);
+				ret = mObserver(obsAccept(mid.msg));
+			}else
+				ret = mObserver(obsAccept(null));
+		}else if(accept(tCommand(coReject))) {
+			if(accept(tLeftParen)) {
+				var mid = inflate(msg,ind);
+				if(mid.msg==null) throw "Error: Expected Daide message in REJ ( .. )";
+				ind = mid.outind;
+				expect(tRightParen);
+				ret = mObserver(obsReject(mid.msg));
+			}else
+				ret = mObserver(obsReject(null));
 		}
 
+
 		if(ret==null)
-			throw "fuck";
+			throw "Unrecognised token stream :: "+msg.slice(ind).join(" ");
 		return {outind:ind, msg:ret};
 	}
 

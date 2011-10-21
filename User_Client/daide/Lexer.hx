@@ -69,7 +69,7 @@ class Lexer {
 						case "YES": tCommand(coAccept);
 
 						default:
-							throw "fuck @ "+val;
+							throw "Error: unknown acroynm "+val;
 							null;
 					});
 			};

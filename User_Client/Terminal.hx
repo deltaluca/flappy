@@ -125,9 +125,15 @@ class Terminal extends Sprite {
 					log("Error! no connection exists!");
 				}else {
 					cmdargs.shift();
-					var tokens = Lexer.lex(cmdargs.join(" "));
-					log(Std.string(tokens));
-					sock.write_message(sock.daide_message(tokens));
+					try {
+						var tokens = Lexer.lex(cmdargs.join(" "));
+						log(Std.string(tokens));
+						//test syntax locally.
+						var message = MessageUtils.inflate(tokens);
+						sock.write_message(sock.daide_message(tokens));
+					}catch(e:Dynamic) {
+						log(e);
+					}
 				}
 			case "help":
 				for(c in commands)
