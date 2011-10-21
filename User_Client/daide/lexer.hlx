@@ -109,7 +109,7 @@ attr(string) := %{ tText(%.substr(1,%.length-2)); %}
  0 : TME := ~/TME/~ attr(TME) := %{ tCommand(coTimeToDeadline); %}
  0 : YES := ~/YES/~ attr(YES) := %{ tCommand(coAccept); %}
  0 : ADM := ~/ADM/~ attr(ADM) := %{ tCommand(coAdmin); %}
-
+/*
  0 : AOA := ~/AOA/~ attr(AOA) := %{ tParameter(paAnyOrder); %}
  0 : BTL := ~/BTL/~ attr(BTL) := %{ tParameter(paBuildTimeLimit); %}
  0 : ERR := ~/ERR/~ attr(ERR) := %{ tParameter(paLocationError); %}
@@ -127,5 +127,17 @@ attr(string) := %{ tText(%.substr(1,%.length-2)); %}
  0 : ALY := ~/ALY/~ attr(ALY) := %{ tPress(prAlly); %}
  0 : AND := ~/AND/~ attr(AND) := %{ tPress(prAND); %}
  0 : BWX := ~/BWX/~ attr(BWX) := %{ tPress(prNoneOfYourBusiness); %} 
-
+ 0 : DMZ := ~/DMZ/~ attr(DMZ) := %{ tPress(prDemiliterisedZone); %}
+ 0 : ELS := ~/ELS/~ attr(ELS) := %{ tPress(prELSE); %}
+ 0 : EXP := ~/EXP/~ attr(EXP) := %{ tPress(prExplain); %}
+ 0 : FWD := ~/FWD/~ attr(FWD) := %{ tPress(prRequestForward); %}
+ 0 : FCT := ~/FCT/~ attr(FCT) := %{ tPress(prFact); %}
+ 0 : FOR := ~/FOR/~ attr(FOR) := %{ tPress(prForTurn); %}
+ 0 : HOW := ~/HOW/~ attr(HOW) := %{ tPress(prHowToAttack); %}
+ 0 : IDK := ~/IDK/~ attr(IDK) := %{ tPress(prIDontKnow); %}
+ 0 : IFF := ~/IFF/~ attr(IFF) := %{ tPress(prIF); %}
+ 0 : INS := ~/INS/~ attr(INS) := %{ tPress(prInsist); %}
+ 0 : IOU := ~/IOU/~ attr(IOU) := %{ tPress(prIOU); %}
+ 0 : OCC := ~/OCC/~ attr(OCC) := %{ tPress(prOccupy); %}
+*/
 attr(error_tok) := %{ HLexLog.log("Error: Unknown char sequence '"+%+"'"); null; %}

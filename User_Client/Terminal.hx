@@ -109,19 +109,25 @@ class Terminal extends Sprite {
 		{name:"sys",help:"execute system command :)"},
 		{name:"help",help:"list available commands"},
 		{name:"daide",help:"submit daide message"},
-		{name:"test",help:"test daide message"}
-	#if cpp	,{name:"run",help:"run file - run file consisting of terminal commands"} #end
+		{name:"test",help:"test daide message"},
+	#if cpp	{name:"run",help:"run file - run file consisting of terminal commands"}, #end
+		{name:"send_im",help:"send im message to server"}
 	];
 
 	public var histcnt:Int;
 	public var history:Array<String>;
 
 	public function cmd(arg:String) {
+		if(arg.length==0) return;
+
 		history.push(arg);
 		histcnt = 0;
 		log("cmd >> "+arg);
 		var cmdargs = arg.split(" ");
 		switch(cmdargs[0]) {
+			case "send_im":
+				if(!sock.connected) log("Error! no connected exists!");
+				else sock.send_im();
 	#if cpp
 			case "run":
 				if(cmdargs.length!=2) {

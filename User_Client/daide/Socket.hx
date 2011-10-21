@@ -36,6 +36,15 @@ class Socket {
 		connected = false;
 	}
 
+	public function send_im() {
+		//send IM message
+		log("Sending IM message");
+		var im = new BytesOutput(); im.bigEndian = true;
+		im.writeUInt16(1);
+		im.writeUInt16(0xDA10);
+		write_message({type:0,data:im.getBytes()});
+	}
+
 	public function connect(ip:String, port:Int) {
 		if(connected) throw "herpaderp";
 
@@ -51,14 +60,7 @@ class Socket {
 
 		sock.output.bigEndian = true;
 		sock.input.bigEndian = true;
-
-		//send IM message
-/*		log("Sending IM message");
-		var im = new BytesOutput(); im.bigEndian = true;
-		im.writeUInt16(1);
-		im.writeUInt16(0xDA10);
-		write_message({type:0,data:im.getBytes()});*/
-		
+	
 		//wait for RM message
 		var wait_rm = true;
 
