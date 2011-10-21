@@ -78,7 +78,7 @@ class Socket {
 				switch(msg.type) {
 				case 0:
 					//IM sent by server
-					if(!wait_rm) {
+					if(wait_rm) {
 						log("RM was not first message from server");
 						write_message(error_message(msg.type==2?0x0A:0x0B));
 						break;
@@ -96,13 +96,13 @@ class Socket {
 					}
 				case 2:
 					//DM
-					if(!wait_rm) {
+					if(wait_rm) {
 						log("RM was not first message from server");
 						write_message(error_message(msg.type==2?0x0A:0x0B));
 					}
 				case 3:
 					//FM
-					if(!wait_rm) {
+					if(wait_rm) {
 						log("RM was not first message from server");
 						write_message(error_message(msg.type==2?0x0A:0x0B));
 						break;
@@ -111,7 +111,7 @@ class Socket {
 					break;
 				case 4:
 					//EM
-					if(!wait_rm) {
+					if(wait_rm) {
 						log("RM was not first message from server");
 						write_message(error_message(msg.type==2?0x0A:0x0B));
 						break;					
