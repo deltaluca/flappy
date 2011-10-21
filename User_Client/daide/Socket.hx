@@ -144,6 +144,7 @@ class Socket {
 			log("Connection closed");
 			sock.shutdown(true,true);
 			sock.close();
+			connected = false;
 		});
 	}
 
