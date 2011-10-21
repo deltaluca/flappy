@@ -133,7 +133,12 @@ class Terminal extends Sprite {
 				if(cmdargs.length!=2) {
 					log("run file");
 				}else {
-					var conts = cpp.io.File.getContent(cmdargs[1]);
+					var conts = "";
+					try {
+						conts = cpp.io.File.getContent(cmdargs[1]);
+					}catch(e:Dynamic) {
+						log(e);
+					}
 					for(cc in conts.split("\n")) cmd(cc);
 				}
 	#end
