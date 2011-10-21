@@ -283,7 +283,7 @@ class TokenUtils {
 				}];
 			case tText(str):
 				var ret = [];
-				for(i in 0...str.length) ret.push(0x4B | str.charCodeAt(i));
+				for(i in 0...str.length) ret.push(0x4B00 | str.charCodeAt(i));
 				ret;
 			case tProvince(prov):
 				[switch(prov) {
