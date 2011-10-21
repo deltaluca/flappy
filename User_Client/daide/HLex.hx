@@ -821,11 +821,11 @@ return ({ HLexLog.log("Error: Unknown char sequence '"+ hxl_match +"'"); null; }
             case 132:
 				return ({ tText( hxl_match .substr(1, hxl_match .length-2)); });
             case 133:
-				return ({ tLeftParen; });
+				return ({ tLeftParen;  });
             case 134:
 				return ({ tRightParen; });
             case 135:
-				return ({ tUnitType(utArmy); });
+				return ({ tUnitType(utArmy);  });
             case 136:
 				return ({ tUnitType(utFleet); });
             case 137:
