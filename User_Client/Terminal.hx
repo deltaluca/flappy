@@ -126,7 +126,7 @@ class Terminal extends Sprite {
 		var cmdargs = arg.split(" ");
 		switch(cmdargs[0]) {
 			case "send_im":
-				if(!sock.connected) log("Error! no connected exists!");
+				if(!sock.connected) log("Error! no connection exists!");
 				else sock.send_im();
 	#if cpp
 			case "run":

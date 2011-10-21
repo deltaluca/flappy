@@ -87,8 +87,10 @@ class Socket {
 					write_message(error_message(0x07));	
 					break;
 				case 1:
-					if(wait_rm) wait_rm = false;
-					else {
+					if(wait_rm) {
+						log("RM received from server");
+						wait_rm = false;
+					} else {
 						//RM sent more than once
 						log("RM sent more than once by server??");
 						write_message(error_message(0x0C));
@@ -100,6 +102,8 @@ class Socket {
 						log("RM was not first message from server");
 						write_message(error_message(msg.type==2?0x0A:0x0B));
 					}
+					log("DM received from server");
+					log("not gunna bother parsing it yet");
 				case 3:
 					//FM
 					if(wait_rm) {
