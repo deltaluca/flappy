@@ -9,7 +9,7 @@ import nme.Assets;
 import nme.events.KeyboardEvent;
 
 import daide.Socket;
-import daide.Lexer;
+import daide.HLex;
 import daide.Language;
 import daide.Tokens;
 
@@ -108,7 +108,9 @@ class Terminal extends Sprite {
 		{name:"connect",help:"connect hostname:port - connect to server"},
 		{name:"sys",help:"execute system command :)"},
 		{name:"help",help:"list available commands"},
-		{name:"daide",help:"submit daide message"}
+		{name:"daide",help:"submit daide message"},
+		{name:"test",help:"test daide message"}
+	#if cpp	,{name:"run",help:"run file - run file consisting of terminal commands"} #end
 	];
 
 	public var histcnt:Int;
@@ -120,21 +122,42 @@ class Terminal extends Sprite {
 		log("cmd >> "+arg);
 		var cmdargs = arg.split(" ");
 		switch(cmdargs[0]) {
+	#if cpp
+			case "run":
+				if(cmdargs.length!=2) {
+					log("run file");
+				}else {
+					var conts = cpp.io.File.getContent(cmdargs[1]);
+					for(cc in conts.split("\n")) cmd(cc);
+				}
+	#end
+			case "test":
+				cmdargs.shift();
+				try {
+					HLexLog.logger = log;
+					var tokens = HLex.lexify(cmdargs.join(" "));
+					log(Std.string(tokens));
+					//test syntax locally
+					var message = MessageUtils.inflate(tokens);
+					log(Std.string(message));
+				}catch(e:Dynamic) {
+					log(e);
+				}
 			case "daide":
 				if(!sock.connected) {
 					log("Error! no connection exists!");
 				}else {
 					cmdargs.shift();
 					try {
-						var tokens = Lexer.lex(cmdargs.join(" "));
-						log(Std.string(tokens));
+						HLexLog.logger = log;
+						var tokens = HLex.lexify(cmdargs.join(" "));
 						//test syntax locally.
 						var message = MessageUtils.inflate(tokens);
 						sock.write_message(sock.daide_message(tokens));
 					}catch(e:Dynamic) {
 						log(e);
 					}
-				}
+				}			
 			case "help":
 				for(c in commands)
 					log("  "+c.name+" :: "+c.help);	

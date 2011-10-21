@@ -31,6 +31,7 @@ class Socket {
 		write_message({type:3,data:null});
 		sock.shutdown(true,true);
 		sock.close();
+		sock = new Sock();
 	
 		connected = false;
 	}
@@ -52,25 +53,14 @@ class Socket {
 		sock.input.bigEndian = true;
 
 		//send IM message
-		log("Sending IM message");
+/*		log("Sending IM message");
 		var im = new BytesOutput(); im.bigEndian = true;
 		im.writeUInt16(1);
 		im.writeUInt16(0xDA10);
-		write_message({type:0,data:im.getBytes()});
+		write_message({type:0,data:im.getBytes()});*/
 		
 		//wait for RM message
-		log("Waiting for RM message");
-		var rm = read_message();
-		if(rm.type!=1) {
-			//first message not RM
-			write_message(error_message(rm.type==2 ? 0x0A : 0x0B));
-			return;
-		}
-		if(rm.data!=null) {
-			log("Error: RM additional tokens not handled yet!!");
-			disconnect();
-			return;
-		}
+		var wait_rm = true;
 
 		reader = cpp.vm.Thread.create(function () {
 			while(true) {
@@ -86,20 +76,24 @@ class Socket {
 				switch(msg.type) {
 				case 0:
 					//IM sent by server
+					if(!wait_rm) write_message(error_message(msg.type==2?0x0A:0x0B));
 					write_message(error_message(0x07));	
 					break;
 				case 1:
 					//RM sent more than once
+					if(wait_rm) { wait_rm = false; break; }
 					write_message(error_message(0x0C));
 					break;
 				case 2:
 					//DM
-					
+					if(!wait_rm) write_message(error_message(msg.type==2?0x0A:0x0B));
 				case 3:
 					//FM
+					if(!wait_rm) write_message(error_message(msg.type==2?0x0A:0x0B));
 					break;
 				case 4:
 					//EM
+					if(!wait_rm) write_message(error_message(msg.type==2?0x0A:0x0B));
 					var data = new BytesInput(msg.data);
 					switch(data.readUInt16()) {
 					case 0x01: //IM timer popped

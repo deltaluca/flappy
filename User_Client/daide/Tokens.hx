@@ -8,14 +8,28 @@ class TokenUtils {
 	public static function serialise(tokens:Array<Token>):Bytes {
 		var out = new BytesOutput();
 		out.bigEndian = true;
-		for(t in tokens) out.writeUInt16(encode(t));
+		for(t in tokens) {
+			for(i in encode(t)) out.writeUInt16(i);
+		}
 		return out.getBytes();
 	}
 	public static function deserialise(tokens:Bytes):Array<Token> {
 		var inp = new BytesInput(tokens);
 		inp.bigEndian = true;
 		var ret = [];
-		for(i in 0...(tokens.length>>>1)) ret.push(decode(inp.readUInt16()));
+		var pre = null;
+		for(i in 0...(tokens.length>>>1)) {
+			var cur = decode(inp.readUInt16());
+			if(pre!=null) {
+				switch(pre) { case tText(x): 
+				switch(cur) { case tText(y):
+					ret.pop();
+					ret.push(pre = tText(x+y));
+					continue;
+				default: } default: }
+			}
+			ret.push(pre = cur);
+		}
 		return ret;
 	}
 
@@ -96,26 +110,26 @@ class TokenUtils {
 				if(cat<=0x3f) {
 					var val = token;
 					//sign extend
-					if((val&0x2000)!=0) val |= 0xc000;
+					if((val&0x2000)!=0) val |= 0xffffc000;
 					tInteger(val);
 				}
 		}
 	}
 
-	public static function encode(token:Token):Int {
+	public static function encode(token:Token):Array<Int> {
 		return switch(token) {
 			case tInteger(val):
 				if(val<-8192 || val>8191) throw "Error: Integer OUB";
-				val&0x3FFF;
-			case tLeftParen:  0x4000;
-			case tRightParen: 0x4001;
+				[val&0x3FFF];
+			case tLeftParen:  [0x4000];
+			case tRightParen: [0x4001];
 			case tPower(power):
 				if(power<0 || power>0xff) throw "Error: Power OUB";
-				0x4100 | power;
+				[0x4100 | power];
 			case tUnitType(unit):
-				0x4200 | switch(unit) { case utArmy: 0x00; default: 0x01; };
+				[0x4200 | switch(unit) { case utArmy: 0x00; default: 0x01; }];
 			case tOrder(order):
-				0x4300 | switch(order) {
+				[0x4300 | switch(order) {
 					case oMoveByConvoy: 0x20;
 					case oConvoy:		0x21;
 					case oHold:			0x22;
@@ -127,9 +141,9 @@ class TokenUtils {
 					case oBuild:		0x80;
 					case oRemove:		0x81;
 					case oWaive:		0x82;
-				};
+				}];
 			case tOrderNote(note):
-				0x4400 | switch(note) {
+				[0x4400 | switch(note) {
 					case onOkay:				0x00;
 					case onBPR:					0x01;
 					case onNoCoastSpecified:	0x02;
@@ -150,9 +164,9 @@ class TokenUtils {
 					case onNotValidRetreat:		0x11;
 					case onNotYourUnit:			0x12;
 					case onNotYourSupply:		0x13;
-				};
+				}];
 			case tResult(result):
-				0x4500 | switch(result) {
+				[0x4500 | switch(result) {
 					case rSuccess:			0x00;
 					case rMoveBounced:		0x01;
 					case rSupportCut:		0x02;
@@ -160,9 +174,9 @@ class TokenUtils {
 					case rFLD:				0x04;
 					case rNoSuchOrder:		0x05;
 					case rDislodged:		0x06;
-				};
+				}];
 			case tCoast(coast):
-				0x4600 | switch(coast) {
+				[0x4600 | switch(coast) {
 					case cNorth:		0x00;
 					case cNorthEast:	0x02;
 					case cEast:			0x04;
@@ -171,17 +185,17 @@ class TokenUtils {
 					case cSouthWest:	0x0a;
 					case cWest:			0x0c;
 					case cNorthWest:	0x0e; 
-				};
+				}];
 			case tPhase(phase):
-				0x4700 | switch(phase) {
+				[0x4700 | switch(phase) {
 					case pSpring:	0x00;
 					case pSummer:	0x01;
 					case pFall:		0x02;
 					case pAutumn:	0x03;
 					case pWinter:	0x04;
-				};
+				}];
 			case tCommand(cmd):
-				0x4800 | switch(cmd) {
+				[0x4800 | switch(cmd) {
 					case coPowerInCivilDisorder:	0x00;
 					case coDraw:					0x01;
 					case coMessageFrom:				0x02;
@@ -212,9 +226,9 @@ class TokenUtils {
 					case coTimeToDeadline:			0x1b;
 					case coAccept:					0x1c;
 					case coAdmin:					0x1d;
-				};
+				}];
 			case tParameter(par):
-				0x4900 | switch(par) {
+				[0x4900 | switch(par) {
 					case paAnyOrder:			0x00;
 					case paBuildTimeLimit:		0x01;
 					case paLocationError:		0x02;
@@ -228,9 +242,9 @@ class TokenUtils {
 					case paRetreatTimeLimit:	0x0a;
 					case paUnowned:				0x0b;
 					case paDeadlineDisconnect:	0x0d;
-				};
+				}];
 			case tPress(press):
-				0x4a00 | switch(press) {
+				[0x4a00 | switch(press) {
 					case prAlly:				0x00;
 					case prAND:					0x01;
 					case prNoneOfYourBusiness:	0x02;
@@ -266,17 +280,18 @@ class TokenUtils {
 					case prOwes:				0x20;
 					case prTellMe:				0x21;
 					case prWRT:					0x22;
-				};
+				}];
 			case tText(str):
-				if(str.length!=1) throw "Error: tText should be 1 char";
-				0x4B | str.charCodeAt(0);	
+				var ret = [];
+				for(i in 0...str.length) ret.push(0x4B | str.charCodeAt(i));
+				ret;
 			case tProvince(prov):
-				switch(prov) {
+				[switch(prov) {
 					case proInland	  (val,sc): 0x5000|val|(sc ? 0x100 : 0);
 					case proSea	  (val,sc): 0x5200|val|(sc ? 0x100 : 0);
 					case proCoastal   (val,sc): 0x5400|val|(sc ? 0x100 : 0);
 					case proBiCoastal (val,sc): 0x5600|val|(sc ? 0x100 : 0);
-				}	
+				}];
 		}
 	}
 }

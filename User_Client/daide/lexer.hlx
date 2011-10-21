@@ -1,0 +1,131 @@
+//ignore whitespace
+NULL 0 : ws := ~/[\n\r \t]/~
+
+%{
+	import daide.Tokens;
+	class HLexLog {
+		public static var logger:String->Void = null;
+		public static function log(x:String) {
+			logger(x);
+		}
+	}
+%}
+
+-1 : integer := ~/([0-9]+)|(0x[0-9a-fA-F]+)/~
+attr(integer) := %{ tInteger(Std.parseInt(%)); %}
+
+-1 : string := ~/("([^\\"\r\n]|\\.)*")|('([^\\'\r\n]|\\.)*')/~
+attr(string) := %{ tText(%.substr(1,%.length-2)); %}
+
+ 0 : lparen := ~/\(/~ attr(lparen) := %{ tLeftParen; %}
+ 0 : rparen := ~/\)/~ attr(rparen) := %{ tRightParen; %}
+
+ 0 : AMY := ~/AMY/~ attr(AMY) := %{ tUnitType(utArmy); %} 
+ 0 : FLT := ~/FLT/~ attr(FLT) := %{ tUnitType(utFleet); %} 
+
+ 0 : CTO := ~/CTO/~ attr(CTO) := %{ tOrder(oMoveByConvoy); %}
+ 0 : CVY := ~/CVY/~ attr(CVY) := %{ tOrder(oConvoy); %}
+ 0 : HLD := ~/HLD/~ attr(HLD) := %{ tOrder(oHold); %}
+ 0 : MTO := ~/MTO/~ attr(MTO) := %{ tOrder(oMove); %}
+ 0 : SUP := ~/SUP/~ attr(SUP) := %{ tOrder(oSupport); %}
+ 0 : VIA := ~/VIA/~ attr(VIA) := %{ tOrder(oVia); %}
+ 0 : DSB := ~/DSB/~ attr(DSB) := %{ tOrder(oDisband); %}
+ 0 : RTO := ~/RTO/~ attr(RTO) := %{ tOrder(oRetreat); %}
+ 0 : BLD := ~/BLD/~ attr(BLD) := %{ tOrder(oBuild); %}
+ 0 : REM := ~/REM/~ attr(REM) := %{ tOrder(oRemove); %}
+ 0 : WVE := ~/WVE/~ attr(WVE) := %{ tOrder(oWaive); %}
+
+ 0 : MBV := ~/MBV/~ attr(MBV) := %{ tOrderNote(onOkay); %}
+ 0 : BPR := ~/BPR/~ attr(BPR) := %{ tOrderNote(onBPR); %}
+ 0 : CST := ~/CST/~ attr(CST) := %{ tOrderNote(onNoCoastSpecified); %}
+ 0 : ESC := ~/ESC/~ attr(ESC) := %{ tOrderNote(onNotEmptySupply); %}
+ 0 : FAR := ~/FAR/~ attr(FAR) := %{ tOrderNote(onNotAdjacent); %}
+ 0 : HSC := ~/HSC/~ attr(HSC) := %{ tOrderNote(onNotHomeSupply); %}
+ 0 : NAS := ~/NAS/~ attr(NAS) := %{ tOrderNote(onNotAtSea); %}
+ 0 : NMB := ~/NMB/~ attr(NMB) := %{ tOrderNote(onNoMoreBuilds); %}
+ 0 : NMR := ~/NMR/~ attr(NMR) := %{ tOrderNote(onNoMoreRemovals); %}
+ 0 : NRN := ~/NRN/~ attr(NRN) := %{ tOrderNote(onNoRetreatNeeded); %}
+ 0 : NRS := ~/NRS/~ attr(NRS) := %{ tOrderNote(onNotRightSeason); %}
+ 0 : NSA := ~/NSA/~ attr(NSA) := %{ tOrderNote(onNoSuchArmy); %}
+ 0 : NSC := ~/NSC/~ attr(NSC) := %{ tOrderNote(onNotSupply); %}
+ 0 : NSF := ~/NSF/~ attr(NSF) := %{ tOrderNote(onNoSuchFleet); %}
+ 0 : NSP := ~/NSP/~ attr(NSP) := %{ tOrderNote(onNoSuchProvince); %}
+ 0 : NST := ~/NST/~ attr(NST) := %{ tOrderNote(onNST); %}
+ 0 : NSU := ~/NSU/~ attr(NSU) := %{ tOrderNote(onNoSuchUnit); %}
+ 0 : NVR := ~/NVR/~ attr(NVR) := %{ tOrderNote(onNotValidRetreat); %}
+ 0 : NYU := ~/NYU/~ attr(NYU) := %{ tOrderNote(onNotYourUnit); %}
+ 0 : YSC := ~/YSC/~ attr(YSC) := %{ tOrderNote(onNotYourSupply); %}
+
+ 0 : SUC := ~/SUC/~ attr(SUC) := %{ tResult(rSuccess); %}
+ 0 : BNC := ~/BNC/~ attr(BNC) := %{ tResult(rMoveBounced); %}
+ 0 : CUT := ~/CUT/~ attr(CUT) := %{ tResult(rSupportCut); %}
+ 0 : DSR := ~/DSR/~ attr(DSR) := %{ tResult(rConvoyDisrupted); %}
+ 0 : FLD := ~/FLD/~ attr(FLD) := %{ tResult(rFLD); %}
+ 0 : NSO := ~/NSO/~ attr(NSO) := %{ tResult(rNoSuchOrder); %}
+ 0 : RET := ~/RET/~ attr(RET) := %{ tResult(rDislodged); %}
+
+ 0 : NCS := ~/NCS/~ attr(NCS) := %{ tCoast(cNorth); %}
+ 0 : NEC := ~/NEC/~ attr(NEC) := %{ tCoast(cNorthEast); %}
+ 0 : ECS := ~/ECS/~ attr(ECS) := %{ tCoast(cEast); %}
+ 0 : SEC := ~/SEC/~ attr(SEC) := %{ tCoast(cSouthEast); %}
+ 0 : SCS := ~/SCS/~ attr(SCS) := %{ tCoast(cSouth); %}
+ 0 : SWC := ~/SWC/~ attr(SWC) := %{ tCoast(cSouthWest); %}
+ 0 : WCS := ~/WCS/~ attr(WCS) := %{ tCoast(cWest); %}
+ 0 : NWC := ~/NWC/~ attr(NWC) := %{ tCoast(cNorthWest); %}
+
+ 0 : SPR := ~/SPR/~ attr(SPR) := %{ tPhase(pSpring); %}
+ 0 : SUM := ~/SUM/~ attr(SUM) := %{ tPhase(pSummer); %}
+ 0 : FAL := ~/FAL/~ attr(FAL) := %{ tPhase(pFall); %}
+ 0 : AUT := ~/AUT/~ attr(AUT) := %{ tPhase(pAutumn); %}
+ 0 : WIN := ~/WIN/~ attr(WIN) := %{ tPhase(pWinter); %} 
+
+ 0 : CCD := ~/CCD/~ attr(CCD) := %{ tCommand(coPowerInCivilDisorder); %}
+ 0 : DRW := ~/DRW/~ attr(DRW) := %{ tCommand(coDraw); %}
+ 0 : FRM := ~/FRM/~ attr(FRM) := %{ tCommand(coMessageFrom); %}
+ 0 : GOF := ~/GOF/~ attr(GOF) := %{ tCommand(coGoFlag); %}
+ 0 : HLO := ~/HLO/~ attr(HLO) := %{ tCommand(coHello); %}
+ 0 : HST := ~/HST/~ attr(HST) := %{ tCommand(coHistory); %}
+ 0 : HUH := ~/HUH/~ attr(HUH) := %{ tCommand(coHuh); %}
+ 0 : IAM := ~/IAM/~ attr(IAM) := %{ tCommand(coIAm); %}
+ 0 : LOD := ~/LOD/~ attr(LOD) := %{ tCommand(coLoadGame); %}
+ 0 : MAP := ~/MAP/~ attr(MAP) := %{ tCommand(coMap); %}
+ 0 : MDF := ~/MDF/~ attr(MDF) := %{ tCommand(coMapDefinition); %}
+ 0 : MIS := ~/MIS/~ attr(MIS) := %{ tCommand(coMissingOrders); %}
+ 0 : NME := ~/NME/~ attr(NME) := %{ tCommand(coName); %}
+ 0 : NOT := ~/NOT/~ attr(NOT) := %{ tCommand(coNOT); %}
+ 0 : NOW := ~/NOW/~ attr(NOW) := %{ tCommand(coCurrentPosition); %}
+ 0 : OBS := ~/OBS/~ attr(OBS) := %{ tCommand(coObserver); %}
+ 0 : OFF := ~/OFF/~ attr(OFF) := %{ tCommand(coTurnOff); %}
+ 0 : ORD := ~/ORD/~ attr(ORD) := %{ tCommand(coOrderResult); %}
+ 0 : OUT := ~/OUT/~ attr(OUT) := %{ tCommand(coPowerEliminated); %}
+ 0 : PRN := ~/PRN/~ attr(PRN) := %{ tCommand(coParenthesisError); %}
+ 0 : REJ := ~/REJ/~ attr(REJ) := %{ tCommand(coReject); %}
+ 0 : SCO := ~/SCO/~ attr(SCO) := %{ tCommand(coSupplyOwnership); %}
+ 0 : SLO := ~/SLO/~ attr(SLO) := %{ tCommand(coSolo); %}
+ 0 : SND := ~/SND/~ attr(SND) := %{ tCommand(coSendMessage); %}
+ 0 : SUB := ~/SUB/~ attr(SUB) := %{ tCommand(coSubmitOrder); %}
+ 0 : SVE := ~/SVE/~ attr(SVE) := %{ tCommand(coSaveGame); %}
+ 0 : THX := ~/THX/~ attr(THX) := %{ tCommand(coThink); %}
+ 0 : TME := ~/TME/~ attr(TME) := %{ tCommand(coTimeToDeadline); %}
+ 0 : YES := ~/YES/~ attr(YES) := %{ tCommand(coAccept); %}
+ 0 : ADM := ~/ADM/~ attr(ADM) := %{ tCommand(coAdmin); %}
+
+ 0 : AOA := ~/AOA/~ attr(AOA) := %{ tParameter(paAnyOrder); %}
+ 0 : BTL := ~/BTL/~ attr(BTL) := %{ tParameter(paBuildTimeLimit); %}
+ 0 : ERR := ~/ERR/~ attr(ERR) := %{ tParameter(paLocationError); %}
+ 0 : LVL := ~/LVL/~ attr(LVL) := %{ tParameter(paLevel); %}
+ 0 : MRT := ~/MRT/~ attr(MRT) := %{ tParameter(paMustRetreat); %}
+ 0 : MTL := ~/MTL/~ attr(MTL) := %{ tParameter(paMoveTimeLimit); %}
+ 0 : NPB := ~/NPB/~ attr(NPB) := %{ tParameter(paNoPressDuringBuild); %}
+ 0 : NPR := ~/NPR/~ attr(NPR) := %{ tParameter(paNoPressDuringRetreat); %}
+ 0 : PDA := ~/PDA/~ attr(PDA) := %{ tParameter(paPartialDrawsAllowed); %}
+ 0 : PTL := ~/PTL/~ attr(PTL) := %{ tParameter(paPressTimeLimit); %}
+ 0 : RTL := ~/RTL/~ attr(RTL) := %{ tParameter(paRetreatTimeLimit); %}
+ 0 : UNO := ~/UNO/~ attr(UNO) := %{ tParameter(paUnowned); %}
+ 0 : DSD := ~/DSD/~ attr(DSD) := %{ tParameter(paDeadlineDisconnect); %}
+
+ 0 : ALY := ~/ALY/~ attr(ALY) := %{ tPress(prAlly); %}
+ 0 : AND := ~/AND/~ attr(AND) := %{ tPress(prAND); %}
+ 0 : BWX := ~/BWX/~ attr(BWX) := %{ tPress(prNoneOfYourBusiness); %} 
+
+attr(error_tok) := %{ HLexLog.log("Error: Unknown char sequence '"+%+"'"); null; %}
