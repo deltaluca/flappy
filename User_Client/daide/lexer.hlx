@@ -1,5 +1,5 @@
 //ignore whitespace
-NULL 0 : ws := ~/[\n\r \t]/~
+NULL -1 : ws := ~/[\n\r \t]/~
 
 %{
 	import daide.Tokens;
@@ -8,14 +8,45 @@ NULL 0 : ws := ~/[\n\r \t]/~
 		public static function log(x:String) {
 			logger(x);
 		}
+
+		public static function province(x:String) {
+			var xs = ((~/[\n\r \t]+/).replace(x," ")).split(" ");
+			var val = Std.parseInt(xs[1]);
+			if(xs.length==2) return { val:val, sc:false };
+			else             return { val:val, sc:xs[2]=="true" };
+		}
 	}
 %}
 
--1 : ~/([0-9]+)|(0x[0-9a-fA-F]+)/~ := %{ tInteger(Std.parseInt(%)); %}
--1 : ~/("([^\\"\r\n]|\\.)*")|('([^\\'\r\n]|\\.)*')/~ := %{ tText(%.substr(1,%.length-2)); %}
+~/([0-9]+)|(0x[0-9a-fA-F]+)/~ := %{ tInteger(Std.parseInt(%)); %}
+~/("([^\\"\r\n]|\\.)*")|('([^\\'\r\n]|\\.)*')/~ := %{ tText(%.substr(1,%.length-2)); %}
 
 ~/\(/~ := %{ tLeftParen;  %}
 ~/\)/~ := %{ tRightParen; %}
+
+// power INTEGER
+~/power[\n\r \t]+(([0-9]+)|(0x[0-9a-fA-F]+))/~ := %{
+	var xs = ((~/[\n\r \t]+/).replace(%," ")).split(" ");
+	tPower(Std.parseInt(xs[1]));
+%}
+
+// type INTEGER [true|false]
+~/inland[\n\r \t]+(([0-9]+)|(0x[0-9a-fA-F]+))([\n\r \t]+((true)|(false)))?/~ := %{
+	var pro = HLexLog.province(%);
+	tProvince(proInland(pro.val,pro.sc));
+%}
+~/sea[\n\r \t]+(([0-9]+)|(0x[0-9a-fA-F]+))([\n\r \t]+((true)|(false)))?/~ := %{
+	var pro = HLexLog.province(%);
+	tProvince(proSea(pro.val,pro.sc));
+%}
+~/coastal[\n\r \t]+(([0-9]+)|(0x[0-9a-fA-F]+))([\n\r \t]+((true)|(false)))?/~ := %{
+	var pro = HLexLog.province(%);
+	tProvince(proCoastal(pro.val,pro.sc));
+%}
+~/bicoastal[\n\r \t]+(([0-9]+)|(0x[0-9a-fA-F]+))([\n\r \t]+((true)|(false)))?/~ := %{
+	var pro = HLexLog.province(%);
+	tProvince(proBiCoastal(pro.val,pro.sc));
+%}
 
 ~/AMY/~ := %{ tUnitType(utArmy);  %} 
 ~/FLT/~ := %{ tUnitType(utFleet); %} 
