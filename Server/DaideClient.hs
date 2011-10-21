@@ -10,6 +10,7 @@ import DaideMessage
 
 import System.IO
 import System.Timeout
+import System.Log.Logger
 import Data.ByteString.Lazy as L
 import Data.Maybe
 import Data.Binary
@@ -28,7 +29,11 @@ data DaideClientInfo = Client {clientHandle :: Handle}
 runDaide = runReaderT
 
 deserialise :: L.ByteString -> DaideClient DaideMessage
-deserialise byteString = liftIO $ E.catch (E.evaluate $ decode byteString) throwError
+deserialise byteString = do
+  ret <- liftIO . try . return . decode $ byteString
+  case ret of
+    Left e -> throwError (e :: DaideError)
+    Right message -> return message
 
 serialise :: MonadReader DaideClientInfo m => DaideMessage -> m L.ByteString
 serialise message = return (encode message)
@@ -58,7 +63,9 @@ handleClient = do
   r <- runErrorT handleClient'
   case r of
     Right _ -> return ()
-    Left error -> tellClient (EM error)
+    Left error -> do
+      liftIO . errorM "handleClient" $ "An error occured: " ++ (show error)
+      tellClient (EM error)
 
 _INITIAL_TIMEOUT = 30000000
 
@@ -70,3 +77,6 @@ handleClient' = do
     IM version -> return ()
     _ -> throwError IMNotFirst
   tellClient RM
+  forever $ do
+    message <- askClient
+    liftIO . noticeM "handleClient" $ "Received a message: " ++ (show message)

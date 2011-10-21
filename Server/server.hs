@@ -15,6 +15,7 @@ import System.Console.CmdArgs
 import System.Log.Logger
 import Data.ByteString.Lazy as L
 import Data.Maybe
+
 import DaideClient
 
 main = do
