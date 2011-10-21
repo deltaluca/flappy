@@ -726,9 +726,7 @@ while(pos<input.length) {
 	var trans = transitions[state];
 	var char = input.charCodeAt(pos);
 
-/*	state = if(char>=trans.length) trans[trans.length-1];
-	else trans[char];*/
-	state = 1;
+	state = -1;
 	if(trans!=null){
 		for(range in trans) {
 			if(char>=range[0] && char<=range[1]) {
