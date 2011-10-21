@@ -30,6 +30,7 @@ data DipToken = DipInt Int
               | DipPress Press
               | Character Char
               | DipProv Prov
+              deriving (Show, Eq)
 
 instance Binary DipToken where
   put (DipInt int) = do
@@ -41,7 +42,9 @@ instance Binary DipToken where
 
 
 data Power = Power Int
+              deriving (Show, Eq)
 data UnitType = Army | Fleet
+              deriving (Show, Eq)
 data Order = CTO
            | CVY
            | HLD
@@ -53,6 +56,7 @@ data Order = CTO
            | BLD
            | REM
            | WVE
+              deriving (Show, Eq)
 
 data OrderNote = MBV
                | BPR
@@ -74,6 +78,7 @@ data OrderNote = MBV
                | NVR
                | NYU
                | YSC
+              deriving (Show, Eq)
 
 data Result = SUC
             | BNC
@@ -82,14 +87,17 @@ data Result = SUC
             | FLD
             | NSO
             | RET
+              deriving (Show, Eq)
 
 data Coast = Coast Int
+              deriving (Show, Eq)
 
 data Phase = SPR
            | SUM
            | FAL
            | AUT
            | WIN
+              deriving (Show, Eq)
 
 data Command = CCD
              | DRW
@@ -121,6 +129,7 @@ data Command = CCD
              | TME
              | YES
              | ADM
+              deriving (Show, Eq)
 
 data Param = AOA
            | BTL
@@ -135,6 +144,7 @@ data Param = AOA
            | RTL
            | UNO
            | DSD
+              deriving (Show, Eq)
 
 data Press = ALY
            | AND
@@ -171,11 +181,14 @@ data Press = ALY
            | XOY
            | YDO
            | WRT
-             
+              deriving (Show, Eq)             
+
+
 data Prov = Inland Int
           | Sea Int
           | Coastal Int
           | BiCoastal Int
+              deriving (Show, Eq)
 
 prov :: Int -> Prov
 prov = undefined

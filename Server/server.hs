@@ -19,7 +19,7 @@ import Data.Maybe
 import DaideClient
 
 main = do
-  updateGlobalLogger "Main" (setLevel DEBUG)
+  updateGlobalLogger "Main" (setLevel NOTICE)
   opts <- getCmdlineOpts
   noticeM "Main" $ "Starting server with map file \"" ++
     mapFile opts ++ "\" on port " ++ show (serverPort opts)

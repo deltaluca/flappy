@@ -15,6 +15,7 @@ data DaideMessage = IM {version :: Int}
                   | FM
                   | DM DiplomacyMessage
                   | EM DaideError
+                  | Tokens [DipToken]
                   deriving (Show)
 
 
@@ -57,8 +58,7 @@ daideMessage 1 size = return RM
 daideMessage 2 size = do
   when (size < 2) (E.throw MsgTooShort)
   tokens <- replicateM (fromIntegral size `div` 2) (get :: Get DipToken)
-  E.throw UnknownMsg
-  return . DM . parseDipMessage $ tokens
+  return (Tokens tokens) -- DM . parseDipMessage $ tokens
 daideMessage 3 size = return FM
 daideMessage 4 size = do
   when (size < 2) (E.throw MsgTooShort)

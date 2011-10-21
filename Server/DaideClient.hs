@@ -12,6 +12,7 @@ import System.IO
 import System.Timeout
 import System.Log.Logger
 import Data.ByteString.Lazy as L
+import Data.ByteString as S
 import Data.Maybe
 import Data.Binary
 import Control.Monad.Error
@@ -30,9 +31,10 @@ runDaide = runReaderT
 
 deserialise :: L.ByteString -> DaideClient DaideMessage
 deserialise byteString = do
-  ret <- liftIO . try . return . decode $ byteString
+  msg <- return $ decode byteString
+  ret <- liftIO . try . evaluate $ msg
   case ret of
-    Left e -> throwError (e :: DaideError)
+    Left e -> throwError e
     Right message -> return message
 
 serialise :: MonadReader DaideClientInfo m => DaideMessage -> m L.ByteString
@@ -53,10 +55,11 @@ askClient = do
 askClientTimed :: Int -> DaideClient DaideMessage
 askClientTimed timedelta = do
   handle <- asks clientHandle
-  byteStringMaybe <- liftIO . timeout timedelta . L.hGetContents $ handle
+  byteString <- liftIO $ L.hGetContents handle
+  byteStringMaybe <- liftIO . timeout timedelta . evaluate $ byteString 
   case byteStringMaybe of
     Nothing -> throwError TimerPopped
-    Just byteString -> deserialise byteString
+    Just byteStr -> deserialise byteString
 
 handleClient :: DaideComm ()
 handleClient = do
@@ -79,4 +82,4 @@ handleClient' = do
   tellClient RM
   forever $ do
     message <- askClient
-    liftIO . noticeM "handleClient" $ "Received a message: " ++ (show message)
+    liftIO . print $ "Message recieved: " ++ (show message)
