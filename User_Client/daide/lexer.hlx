@@ -109,7 +109,7 @@ attr(string) := %{ tText(%.substr(1,%.length-2)); %}
  0 : TME := ~/TME/~ attr(TME) := %{ tCommand(coTimeToDeadline); %}
  0 : YES := ~/YES/~ attr(YES) := %{ tCommand(coAccept); %}
  0 : ADM := ~/ADM/~ attr(ADM) := %{ tCommand(coAdmin); %}
-/*
+
  0 : AOA := ~/AOA/~ attr(AOA) := %{ tParameter(paAnyOrder); %}
  0 : BTL := ~/BTL/~ attr(BTL) := %{ tParameter(paBuildTimeLimit); %}
  0 : ERR := ~/ERR/~ attr(ERR) := %{ tParameter(paLocationError); %}
@@ -139,5 +139,25 @@ attr(string) := %{ tText(%.substr(1,%.length-2)); %}
  0 : INS := ~/INS/~ attr(INS) := %{ tPress(prInsist); %}
  0 : IOU := ~/IOU/~ attr(IOU) := %{ tPress(prIOU); %}
  0 : OCC := ~/OCC/~ attr(OCC) := %{ tPress(prOccupy); %}
-*/
+ 0 : ORR := ~/ORR/~ attr(ORR) := %{ tPress(prOR); %}
+ 0 : PCE := ~/PCE/~ attr(PCE) := %{ tPress(prPeace); %}
+ 0 : POB := ~/POB/~ attr(POB) := %{ tPress(prPosition); %}
+ 0 : PPT := ~/PPT/~ attr(PPT) := %{ tPress(prPPT); %}
+ 0 : PRP := ~/PRP/~ attr(PRP) := %{ tPress(prPropose); %}
+ 0 : QRY := ~/QRY/~ attr(QRY) := %{ tPress(prQuery); %}
+ 0 : SCD := ~/SCD/~ attr(SCD) := %{ tPress(prSupplyDistro); %}
+ 0 : SRY := ~/SRY/~ attr(SRY) := %{ tPress(prSorry); %}
+ 0 : SUG := ~/SUG/~ attr(SUG) := %{ tPress(prSuggest); %}
+ 0 : THK := ~/THK/~ attr(THK) := %{ tPress(prThink); %}
+ 0 : THN := ~/THN/~ attr(THN) := %{ tPress(prThen); %}
+ 0 : TRY := ~/TRY/~ attr(TRY) := %{ tPress(prTry); %}
+ 0 : UOM := ~/UOM/~ attr(UOM) := %{ tPress(prUOM); %}
+ 0 : VSS := ~/VSS/~ attr(VSS) := %{ tPress(prVersus); %}
+ 0 : WHT := ~/WHT/~ attr(WHT) := %{ tPress(prWhat); %}
+ 0 : WHY := ~/WHY/~ attr(WHY) := %{ tPress(prWhy); %}
+ 0 : XDO := ~/XDO/~ attr(XDO) := %{ tPress(prDo); %}
+ 0 : XOY := ~/XOY/~ attr(XOY) := %{ tPress(prOwes); %}
+ 0 : YDO := ~/YDO/~ attr(YDO) := %{ tPress(prTellMe); %}
+ 0 : WRT := ~/WRT/~ attr(WRT) := %{ tPress(prWRT); %}
+
 attr(error_tok) := %{ HLexLog.log("Error: Unknown char sequence '"+%+"'"); null; %}

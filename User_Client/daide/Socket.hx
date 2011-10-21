@@ -78,40 +78,62 @@ class Socket {
 				switch(msg.type) {
 				case 0:
 					//IM sent by server
-					if(!wait_rm) write_message(error_message(msg.type==2?0x0A:0x0B));
+					if(!wait_rm) {
+						log("RM was not first message from server");
+						write_message(error_message(msg.type==2?0x0A:0x0B));
+						break;
+					}
+					log("IM sent by server??");
 					write_message(error_message(0x07));	
 					break;
 				case 1:
-					//RM sent more than once
-					if(wait_rm) { wait_rm = false; break; }
-					write_message(error_message(0x0C));
-					break;
+					if(wait_rm) wait_rm = false;
+					else {
+						//RM sent more than once
+						log("RM sent more than once by server??");
+						write_message(error_message(0x0C));
+						break;
+					}
 				case 2:
 					//DM
-					if(!wait_rm) write_message(error_message(msg.type==2?0x0A:0x0B));
+					if(!wait_rm) {
+						log("RM was not first message from server");
+						write_message(error_message(msg.type==2?0x0A:0x0B));
+					}
 				case 3:
 					//FM
-					if(!wait_rm) write_message(error_message(msg.type==2?0x0A:0x0B));
+					if(!wait_rm) {
+						log("RM was not first message from server");
+						write_message(error_message(msg.type==2?0x0A:0x0B));
+						break;
+					}
+					log("FM received from server");
 					break;
 				case 4:
 					//EM
-					if(!wait_rm) write_message(error_message(msg.type==2?0x0A:0x0B));
+					if(!wait_rm) {
+						log("RM was not first message from server");
+						write_message(error_message(msg.type==2?0x0A:0x0B));
+						break;					
+					}
+				
+					log("EM received from server");
 					var data = new BytesInput(msg.data);
 					switch(data.readUInt16()) {
-					case 0x01: //IM timer popped
-					case 0x02: //IM was not first message
-					case 0x03: //IM indicated the wrong endian
-					case 0x04: //IM had incorrect magic number
-					case 0x05: //Version incompatability
-					case 0x06: //More than 1 IM sent
-					case 0x07: //IM sent by server
-					case 0x08: //Unknown message received
-					case 0x09: //Message shorter than expected
-					case 0x0A: //DM sent before RM
-					case 0x0B: //RM was not first message from server
-					case 0x0C: //More than 1 RM sent
-					case 0x0D: //RM sent by client
-					case 0x0E: //Invalid token in DM
+					case 0x01: log(" @ IM timer popped");
+					case 0x02: log(" @ IM was not first message");
+					case 0x03: log(" @ IM indicated the wrong endian");
+					case 0x04: log(" @ IM had incorrect magic number");
+					case 0x05: log(" @ Version incompatability");
+					case 0x06: log(" @ More than 1 IM sent");
+					case 0x07: log(" @ IM sent by server");
+					case 0x08: log(" @ Unknown message received");
+					case 0x09: log(" @ Message shorter than expected");
+					case 0x0A: log(" @ DM sent before RM");
+					case 0x0B: log(" @ RM was not first message from server");
+					case 0x0C: log(" @ More than 1 RM sent");
+					case 0x0D: log(" @ RM sent by client");
+					case 0x0E: log(" @ Invalid token in DM");
 					default:
 					}
 					break;
@@ -119,6 +141,7 @@ class Socket {
 				}
 			}
 
+			log("Connection closed");
 			sock.shutdown(true,true);
 			sock.close();
 		});
