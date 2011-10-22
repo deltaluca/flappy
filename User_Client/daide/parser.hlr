@@ -33,6 +33,18 @@ class TU {
 	static public function power(t:Token) {
 		return switch(t) { case tPower(x): x; default: -1; };
 	}
+	static public function province(t:Token) {
+		return switch(t) { case tProvince(x): x; default: null; };
+	}
+	static public function coast(t:Token) {
+		return switch(t) { case tCoast(x): x; default: null; };
+	}
+	static public function unitType(t:Token) {
+		return switch(t) { case tUnitType(x): x; default: null; };
+	}
+	static public function phase(t:Token) {
+		return switch(t) { case tPhase(x): x; default: null; };
+	}
 
 	//need a mapping [0,#tokens) in order tokens are declared
 	//this is complicated due to the nesting of Token declarations
@@ -70,49 +82,30 @@ class TU {
 ;
 
 %client_server_message
-// level OBS
-	: NME BRA TEXT KET BRA TEXT KET %{ mObs(obsName(TU.text(%2),TU.text(%5))); %}
-	| OBS %{ mObs(obsObserver); %}
-	| IAM BRA POWER KET BRA INTEGER KET %{ mObs(obsIAm(TU.power(%2),TU.integer(%5))); %}
-	| MAP %{ mObs(obsMap_0); %}
-	| MDF %{ mObs(obsMapDefinition_0); %}
-	| YES BRA acknowedgable_command KET %{ mObs(obsAccept(%2)); %}
-	| REJ BRA acknowedgable_command KET %{ mObs(obsReject(%2)); %}
-	| NOW %{ mObs(obsCurrentPosition_0); %}
-	| SCO %{ mObs(obsSupplyOwnership_0); %}
-	| HST BRA turn KET %{ mObs(obsHistory(%2)); %}
-	| TME BRA INTEGER KET %{ mObs(obsTimeToDeadline(TU.integer(%2))); %}
-	| TME %{ mObs(obsTimeToDeadline_0); %}
-	| ADM BRA TEXT KET BRA TEXT KET %{ mObs(obsAdmin(TU.text(%2),TU.text(%5))); %}
-//	| PRN...
-//	| HUH...
-// level 0
-	| HLO %{ mLvl0(lvl0Hello_0); %}
-	| SUB order_list %{ mLvl0(lvl0Submit(null,%1)); %}
-	| SUB BRA turn KET order_list %{ mLvl0(lvl0Submit(%2,%4)); %}
-	| NOT BRA negatable_command KET %{ mLvl0(lvl0Not(%2)); %}
-	| MIS %{ mLvl0(lvl0MissingOrders_0); %}
-	| GOF %{ mLvl0(lvl0GoFlag_0); %}
-	| ORD %{ mLvl0(lvl0OrderResult_0); %}
-	| DRW %{ mLvl0(lvl0Draw_0); %}
-// level 10
-	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mLvl10(lvl10Draw(%3)); %}
-//	| send_message %{ %0; %}
+	: NME BRA TEXT KET BRA TEXT KET %{ mName(TU.text(%2),TU.text(%5)); %}
+	| OBS %{ mObserver; %}
+	| IAM BRA POWER KET BRA INTEGER KET %{ mIAm(TU.power(%2),TU.integer(%5)); %}
+	| MAP %{ mMap(null); %}
+//	| MDF %{ mMapDefinition(nulls); %}
+	| YES BRA acknowledgable_command KET %{ mAccept(%2); %}
+	| REJ BRA acknowledgable_command KEY %{ mReject(%2); %}
+//	| NOW %{ mCurrentLocation(nulls); %}
+//	| SCO %{ mSupplyOwnership(nulls); %}
+	| HST BRA turn KET %{ mHistory(%2); %}
+	| TME BRA INTEGER KET %{ mTimeToDeadline(TU.integer(%2)); %}
+	| TME %{ mTimeToDeadline(null); %}
+	| ADM BRA TEXT KET BRA TEXT KET %{ mAdmin(TU.text(%2),TU.text(%5)); %}
+//	| PRN ...?
+//	| HUH ...?
+	| HLO %{ mHello; %}
+	| SUB order_list %{ mSubmit(null,%1); %}
+	| SUB BRA turn KET order_list %{ mSubmit(%2,%4); %}
+//	| NOT BRA negatable_command KET %{ ... %}		
 ;
 
 %acknowedgable_command
-	: MAP BRA TEXT KET %{ mObs(obsMap(TU.text(%2))); %}
-	| SVE BRA TEXT KET %{ mObs(obsSaveGame(TU.text(%2))); %}
-;
-
-%negatable_command
-	: GOF %{ mObs(obsGoFlag_0); %}
-	| DRW %{ mObs(obsDraw_0); %}
-	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mObs(obsDraw(%3)); %}
-	| TME %{ mObs(obsTimeToDeadline_0); %}
-	| TME BRA INTEGER KET %{ mObs(obsTimeToDeadline(TU.integer(%2))); %}
-	| SUB %{ mObs(obsSubmit_0); %}
-	| SUB BRA order KET %{ mObs(obsSubmit(%2)); %}
+	: MAP BRA TEXT KET %{ mMap(TU.text(%2)); %}
+	| SVE BRA TEXT KET %{ mSaveGame(TU.text(%2)); %}
 ;
 
 %turn
@@ -120,11 +113,22 @@ class TU {
 ;
 
 %phase
-	: SPR %{ %0; %} 
-	| SUM %{ %0; %} 
-	| FAL %{ %0; %} 
-	| AUT %{ %0; %} 
-	| WIN %{ %0; %} 
+	: SPR %{ TU.phase(%0); %} 
+	| SUM %{ TU.phase(%0); %} 
+	| FAL %{ TU.phase(%0); %} 
+	| AUT %{ TU.phase(%0); %} 
+	| WIN %{ TU.phase(%0); %} 
+;
+
+%coast
+	: NCS %{ TU.coast(%0); %} 
+	| NEC %{ TU.coast(%0); %} 
+	| ECS %{ TU.coast(%0); %} 
+	| SEC %{ TU.coast(%0); %} 
+	| SCS %{ TU.coast(%0); %} 
+	| SWC %{ TU.coast(%0); %} 
+	| WCS %{ TU.coast(%0); %} 
+	| NWC %{ TU.coast(%0); %} 
 ;
 
 %power_list
@@ -133,10 +137,24 @@ class TU {
 ;
 
 %order
-	: BRA unit_with_location KET HLD %{ roHold(%1); %}
-	| BRA unit_with_location KET DSB %{ roDisband(%1); %}
-	| BRA unit_with_location KET BLD %{ roBuild(%1); %}
-	| BRA unit_with_location KET REM %{ roRemove(%1); %}
+	: BRA unit_with_location KET HLD %{ moHold(%1); %}
+	| BRA unit_with_location KET DSB %{ moDisband(%1); %}
+	| BRA unit_with_location KET BLD %{ moBuild(%1); %}
+	| BRA unit_with_location KET REM %{ moRemove(%1); %}
+	| BRA unit_with_location KET RTO location %{ moRetreat(%1,%4); %}
+	| BRA unit_with_location KET MTO location %{ moMove(%1,%4); %}
+	| BRA unit_with_location KET SUP BRA unit_with_location KET %{
+		moSupport(%1,%5,null);
+	%}
+	| BRA unit_with_location KET SUP BRA unit_with_location KET MTO PROVINCE %{
+		moSupport(%1,%5,TU.province(%8));
+	%}
+	| BRA unit_with_location KET CVY BRA unit_with_location KET CTO PROVINCE %{
+		moConvoy(%1,%5,TU.province(%8));
+	%}
+	| BRA unit_with_location KET CTO PROVINCE VIA BRA province_list KET %{
+		moMoveByConvoy(%1,TU.province(%4),%7);
+	%}
 ;
 
 %order_list
@@ -145,34 +163,24 @@ class TU {
 ;
 
 %unit_with_location
-	: POWER unit_type PROVINCE %{ { power : TU.power(%0), type : %1, location : { province : %2, coast : null } }; %}
-	| POWER unit_type BRA province_and_coast KET %{ { power : TU.power(%0), type : %1, location : %3 }; %}
+	: POWER unit_type location %{ { power : TU.power(%0), type : %1, location : %2 }; %}
+;
+
+%location
+	: PROVINCE %{ { province : TU.province(%0), coast : null }; %}
+	| BRA province_and_coast KET %{ %1; %}
 ;
 
 %province_and_coast
-	: PROVINCE COAST %{ { province : %0, coast : %1 }; %}
+	: PROVINCE coast %{ { province : TU.province(%0), coast : %1 }; %}
+;
+
+%province_list
+	: PROVINCE %{ [TU.province(%0)]; %}
+	| province_list PROVINCE %{ %0.push(TU.province(%1)); %0; %}
 ;
 
 %unit_type
-	: AMY %{ %0; %}
-	| FLT %{ %0; %}
+	: AMY %{ TU.unitType(%0); %}
+	| FLT %{ TU.unitType(%0); %}
 ;
-
-%variant
-	: BRA variant_option KET %{ [%1]; %}
-	| variant BRA variant_option KET %{ %0.push(%2); %0; %}
-;
-
-%variant_option
-	: LVL INTEGER %{ { par : %0, val : TU.integer(%1) }; %}
-	| MTL INTEGER %{ { par : %0, val : TU.integer(%1) }; %}
-	| RTL INTEGER %{ { par : %0, val : TU.integer(%1) }; %}
-	| BTL INTEGER %{ { par : %0, val : TU.integer(%1) }; %}
-	| AOA         %{ { par : %0, val : null           }; %}
-	| DSD         %{ { par : %0, val : null           }; %}
-	| PDA         %{ { par : %0, val : null           }; %}
-	| PTL INTEGER %{ { par : %0, val : TU.integer(%1) }; %}
-	| NPR         %{ { par : %0, val : null           }; %}
-	| NPB         %{ { par : %0, val : null           }; %}
-;
-
