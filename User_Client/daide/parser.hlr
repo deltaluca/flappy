@@ -128,27 +128,53 @@ class TU {
 %entry message
 
 %message
-	: observer_message %{ mObserver(%0); %}
+	: client_server_message %{ %0; %}
 ;
 
-%observer_message
-	: NME BRA TEXT KET BRA TEXT KET %{ obsName(TU.text(%2),TU.text(%5)); %}
-	| OBS %{ obsObserver; %}
-	| IAM BRA POWER KET BRA INTEGER KET %{ obsIAm(TU.power(%2),TU.integer(%5)); %}
-	| MAP %{ obsMap(null); %}
-	| MAP BRA TEXT KET %{ obsMap(TU.text(%2)); %}
-	| YES %{ obsAccept(null); %}
-	| YES BRA message KET %{ obsAccept(%2); %}
-	| REJ %{ obsReject(null); %}
-	| REJ BRA message KET %{ obsReject(%2); %}
-	| HST BRA turn KET %{ obsHistory(%2); %}
-	| TME %{ obsTimeToDeadline(null); %}
-	| TME BRA INTEGER KET %{ obsTimeToDeadline(TU.integer(%2)); %}
-	| ADM BRA TEXT KET BRA TEXT KET %{ obsAdmin(TU.text(%2),TU.text(%5)); %}
-	| HLO %{ obsHello(null,null,null); %}
-	| HLO BRA POWER KET BRA INTEGER KET BRA variant KET %{
-		obsHello(TU.power(%2),TU.integer(%5),%8);
-	%}
+%client_server_message
+// level OBS
+	: NME BRA TEXT KET BRA TEXT KET %{ mObs(obsName(TU.text(%2),TU.text(%5))); %}
+	| OBS %{ mObs(obsObserver); %}
+	| IAM BRA POWER KET BRA INTEGER KET %{ mObs(obsIAm(TU.power(%2),TU.integer(%5))); %}
+	| MAP %{ mObs(obsMap_0); %}
+	| MDF %{ mObs(obsMapDefinition_0); %}
+	| YES BRA acknowedgable_command KET %{ mObs(obsAccept(%2)); %}
+	| REJ BRA acknowedgable_command KET %{ mObs(obsReject(%2)); %}
+	| NOW %{ mObs(obsCurrentPosition_0); %}
+	| SCO %{ mObs(obsSupplyOwnership_0); %}
+	| HST BRA turn KET %{ mObs(obsHistory(%2)); %}
+	| TME BRA INTEGER KET %{ mObs(obsTimeToDeadline(TU.integer(%2))); %}
+	| TME %{ mObs(obsTimeToDeadline_0); %}
+	| ADM BRA TEXT KET BRA TEXT KET %{ mObs(obsAdmin(TU.text(%2),TU.text(%5))); %}
+//	| PRN...
+//	| HUH...
+// level 0
+	| HLO %{ mLvl0(lvl0Hello_0); %}
+	| SUB order_list %{ mLvl0(lvl0Submit(null,%1)); %}
+	| SUB BRA turn KET order_list %{ mLvl0(lvl0Submit(%2,%4)); %}
+	| NOT BRA negatable_command KET %{ mLvl0(lvl0Not(%2)); %}
+	| MIS %{ mLvl0(lvl0MissingOrders_0); %}
+	| GOF %{ mLvl0(lvl0GoFlag_0); %}
+	| ORD %{ mLvl0(lvl0OrderResult_0); %}
+	| DRW %{ mLvl0(lvl0Draw_0); %}
+// level 10
+	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mLvl10(lvl10Draw(%3)); %}
+//	| send_message %{ %0; %}
+;
+
+%acknowedgable_command
+	: MAP BRA TEXT KET %{ mObs(obsMap(TU.text(%2))); %}
+	| SVE BRA TEXT KET %{ mObs(obsSaveGame(TU.text(%2))); %}
+;
+
+%negatable_command
+	: GOF %{ mObs(obsGoFlag_0); %}
+	| DRW %{ mObs(obsDraw_0); %}
+	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mObs(obsDraw(%3)); %}
+	| TME %{ mObs(obsTimeToDeadline_0); %}
+	| TME BRA INTEGER KET %{ mObs(obsTimeToDeadline(TU.integer(%2))); %}
+	| SUB %{ mObs(obsSubmit_0); %}
+	| SUB BRA order KET %{ mObs(obsSubmit(%2)); %}
 ;
 
 %turn
@@ -161,6 +187,37 @@ class TU {
 	| FAL %{ %0; %} 
 	| AUT %{ %0; %} 
 	| WIN %{ %0; %} 
+;
+
+%power_list
+	: POWER %{ [TU.power(%0)]; %}
+	| power_list POWER %{ %0.push(TU.power(%1)); %0; %}
+;
+
+%order
+	: BRA unit_with_location KET HLD %{ roHold(%1); %}
+	| BRA unit_with_location KET DSB %{ roDisband(%1); %}
+	| BRA unit_with_location KET BLD %{ roBuild(%1); %}
+	| BRA unit_with_location KET REM %{ roRemove(%1); %}
+;
+
+%order_list
+	: BRA order KET %{ [%1]; %}
+	| order_list BRA order KET %{ %0.push(%2); %0; %}
+;
+
+%unit_with_location
+	: POWER unit_type PROVINCE %{ { power : TU.power(%0), type : %1, location : { province : %2, coast : null } }; %}
+	| POWER unit_type BRA province_and_coast KET %{ { power : TU.power(%0), type : %1, location : %3 }; %}
+;
+
+%province_and_coast
+	: PROVINCE COAST %{ { province : %0, coast : %1 }; %}
+;
+
+%unit_type
+	: AMY %{ %0; %}
+	| FLT %{ %0; %}
 ;
 
 %variant
@@ -180,3 +237,4 @@ class TU {
 	| NPR         %{ { par : %0, val : null           }; %}
 	| NPB         %{ { par : %0, val : null           }; %}
 ;
+

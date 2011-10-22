@@ -164,27 +164,63 @@ class MessageUtils {
 }
 */
 
-enum ObserverMessage {
+enum ObsMessage {
 	obsName(name:String,version:String);
 	obsObserver;
 	obsIAm(power:Int,passcode:Int);
+	obsMap_0;
 	obsMap(name:String);
+	obsMapDefinition_0;
 	//obsMapDefinition(...);
 	obsAccept(msg:Message);
 	obsReject(msg:Message);
 	//obsNow(...);
 	//obsSCO??(...);
 	obsHistory(turn:Turn);
-	obsTimeToDeadline(time:Null<Int>);
+	obsTimeToDeadline_0;
+	obsTimeToDeadline(time:Int);
 	obsAdmin(name:String,msg:String);
 	//obsPRN??(...);
 	//obsHUH??(...);
-	obsHello(power:Int,num:Int,v:Variant);
+	obsSaveGame(name:String);
+	obsGoFlag_0;
+	obsDraw_0;
+	obsDraw(powers:Array<Int>);
+	obsCurrentPosition_0;
+	obsSupplyOwnership_0;
+	obsSubmit_0;
+	obsSubmit(x:RealOrder);
+}
+
+enum RealOrder {
+	roHold(uloc:UnitWithLoc);
+	roDisband(uloc:UnitWithLoc);
+	roBuild(uloc:UnitWithLoc);
+	roRemove(uloc:UnitWithLoc);
+}
+
+enum Lvl0Message {
+	lvl0Hello_0;
+	lvl0Hello(power:Int,num:Int,v:Variant);
+	lvl0MissingOrders_0;
+	lvl0GoFlag_0;
+	lvl0OrderResult_0;
+	lvl0Draw_0;
+	lvl0Not(msg:Message);
+	lvl0Submit(turn:Turn,orders:Array<RealOrder>);
+}
+
+enum Lvl10Message {
+	lvl10Draw(powers:Array<Int>);
 }
 
 typedef Turn = { phase : Phase, turn : Int };
 typedef Variant = Array<{ par : Parameter, val : Null<Int> }>;
+typedef Location = { province : Province, coast : Coast };
+typedef UnitWithLoc = { power : Int, type : UnitType, location : Location };
 
 enum Message {
-	mObserver(msg:ObserverMessage);
+	mObs(msg:ObsMessage);
+	mLvl0(msg:Lvl0Message);
+	mLvl10(msg:Lvl10Message);
 }
