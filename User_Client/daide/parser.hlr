@@ -20,6 +20,7 @@
 
 import daide.Tokens;
 import daide.Language;
+import Type;
 
 class TU {
 
@@ -33,93 +34,30 @@ class TU {
 		return switch(t) { case tPower(x): x; default: -1; };
 	}
 
-	//need a one-one mapping in order tokens are declared
-	//to each possible token.
-
+	//need a mapping [0,#tokens) in order tokens are declared
 	//this is complicated due to the nesting of Token declarations
-	//but these should be computed at compile time by haxe
+	//otherwise could have simply used Type.enumIndex(t)
+	static var offsets:Array<Int> = null;
 	static public function index(t:Token) {
-		return switch(t) {
-			case tInteger(_): 0;
-			case tLeftParen:  1;
-			case tRightParen: 2;
-			case tPower(_):   3;
-			case tUnitType(x):
-				4 + Type.enumIndex(x);
-			case tOrder(x):
-				4 + Type.getEnumConstructs(UnitType).length
-				  + Type.enumIndex(x);
-			case tOrderNote(x):
-				4 + Type.getEnumConstructs(UnitType).length
-				  + Type.getEnumConstructs(Order).length
-				  + Type.enumIndex(x);
-			case tResult(x):
-				4 + Type.getEnumConstructs(UnitType).length
-				  + Type.getEnumConstructs(Order).length
-				  + Type.getEnumConstructs(OrderNote).length
-				  + Type.enumIndex(x);
-			case tCoast(x):
-				4 + Type.getEnumConstructs(UnitType).length
-				  + Type.getEnumConstructs(Order).length
-				  + Type.getEnumConstructs(OrderNote).length
-				  + Type.getEnumConstructs(Result).length
-				  + Type.enumIndex(x);
-			case tPhase(x):
-				4 + Type.getEnumConstructs(UnitType).length
-				  + Type.getEnumConstructs(Order).length
-				  + Type.getEnumConstructs(OrderNote).length
-				  + Type.getEnumConstructs(Result).length
-				  + Type.getEnumConstructs(Coast).length
-				  + Type.enumIndex(x);
-			case tCommand(x):
-				4 + Type.getEnumConstructs(UnitType).length
-				  + Type.getEnumConstructs(Order).length
-				  + Type.getEnumConstructs(OrderNote).length
-				  + Type.getEnumConstructs(Result).length
-				  + Type.getEnumConstructs(Coast).length
-				  + Type.getEnumConstructs(Phase).length
-				  + Type.enumIndex(x);
-			case tParameter(x):
-				4 + Type.getEnumConstructs(UnitType).length
-				  + Type.getEnumConstructs(Order).length
-				  + Type.getEnumConstructs(OrderNote).length
-				  + Type.getEnumConstructs(Result).length
-				  + Type.getEnumConstructs(Coast).length
-				  + Type.getEnumConstructs(Phase).length
-				  + Type.getEnumConstructs(Command).length
-				  + Type.enumIndex(x);
-			case tPress(x):
-				4 + Type.getEnumConstructs(UnitType).length
-				  + Type.getEnumConstructs(Order).length
-				  + Type.getEnumConstructs(OrderNote).length
-				  + Type.getEnumConstructs(Result).length
-				  + Type.getEnumConstructs(Coast).length
-				  + Type.getEnumConstructs(Phase).length
-				  + Type.getEnumConstructs(Command).length
-				  + Type.getEnumConstructs(Parameter).length
-				  + Type.enumIndex(x);
-			case tText(_):
-				4 + Type.getEnumConstructs(UnitType).length
-				  + Type.getEnumConstructs(Order).length
-				  + Type.getEnumConstructs(OrderNote).length
-				  + Type.getEnumConstructs(Result).length
-				  + Type.getEnumConstructs(Coast).length
-				  + Type.getEnumConstructs(Phase).length
-				  + Type.getEnumConstructs(Command).length
-				  + Type.getEnumConstructs(Parameter).length
-				  + Type.getEnumConstructs(Press).length;
-			case tProvince(_):
-				4 + Type.getEnumConstructs(UnitType).length
-				  + Type.getEnumConstructs(Order).length
-				  + Type.getEnumConstructs(OrderNote).length
-				  + Type.getEnumConstructs(Result).length
-				  + Type.getEnumConstructs(Phase).length
-				  + Type.getEnumConstructs(Command).length
-				  + Type.getEnumConstructs(Parameter).length
-				  + Type.getEnumConstructs(Coast).length
-				  + Type.getEnumConstructs(Press).length
-				  + 1;
+		if(offsets==null) {
+			offsets = [0,1,2,3,4];
+			offsets.push(offsets[offsets.length-1] + Type.getEnumConstructs(UnitType).length);
+			offsets.push(offsets[offsets.length-1] + Type.getEnumConstructs(Order).length);
+			offsets.push(offsets[offsets.length-1] + Type.getEnumConstructs(OrderNote).length);
+			offsets.push(offsets[offsets.length-1] + Type.getEnumConstructs(Result).length);
+			offsets.push(offsets[offsets.length-1] + Type.getEnumConstructs(Coast).length);
+			offsets.push(offsets[offsets.length-1] + Type.getEnumConstructs(Phase).length);
+			offsets.push(offsets[offsets.length-1] + Type.getEnumConstructs(Command).length);
+			offsets.push(offsets[offsets.length-1] + Type.getEnumConstructs(Parameter).length);
+			offsets.push(offsets[offsets.length-1] + Type.getEnumConstructs(Press).length);
+			offsets.push(offsets[offsets.length-1] + 1);
 		}
+
+		var off = offsets[Type.enumIndex(t)];
+		var pars = Type.enumParameters(t);
+		var ind = if(pars.length==0) 0 else Type.enumIndex(pars[0]);
+		if(ind==-1) ind = 0;
+		return off + ind;
 	}
 }
  

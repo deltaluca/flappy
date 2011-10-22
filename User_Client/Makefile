@@ -5,7 +5,7 @@ all:
 lexer : daide/lexer.hlx
 	hlex daide/lexer.hlx -haxe-gen daide/HLex.hx -package daide
 parser : daide/parser.hlr
-	hllr daide/parser.hlr daide/HLlr.hx -haxe-gen -token Token -ast Message -index TU.index -package daide
+	hllr daide/parser.hlr daide/HLlr.hx -haxe-gen -token Token -ast Message -index TU.index -package daide -lalr1
 
 run:
 	haxelib run nme run client.nmml linux -64
