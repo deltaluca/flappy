@@ -17,220 +17,226 @@ package daide;
 	}
 
 class HLex {
-		static inline var entry_state:Int = 127;
+		static inline var entry_state:Int = 131;
 
 	static var transitions:Array<Array<Array<Int>>> = null;
 	public static function init() {
 		if(transitions!=null) return;
 		transitions = [];
 var cur = [];
-cur.push([84,84,352]);
+cur.push([84,84,354]);
+transitions.push(cur);
+var cur = [];
+cur.push([79,79,353]);
+transitions.push(cur);
+var cur = [];
+cur.push([89,89,352]);
 transitions.push(cur);
 var cur = [];
 cur.push([79,79,351]);
 transitions.push(cur);
 var cur = [];
+cur.push([84,84,349]);
 cur.push([89,89,350]);
 transitions.push(cur);
 var cur = [];
-cur.push([79,79,349]);
+cur.push([83,83,348]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,347]);
-cur.push([89,89,348]);
+cur.push([77,77,347]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,346]);
+cur.push([89,89,346]);
 transitions.push(cur);
 var cur = [];
-cur.push([77,77,345]);
-transitions.push(cur);
-var cur = [];
-cur.push([89,89,344]);
+cur.push([89,89,342]);
 transitions.push(cur);
 var cur = [];
 cur.push([89,89,340]);
 transitions.push(cur);
 var cur = [];
-cur.push([89,89,338]);
+cur.push([84,84,338]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,336]);
+cur.push([66,66,337]);
 transitions.push(cur);
 var cur = [];
-cur.push([66,66,335]);
+cur.push([69,69,336]);
 transitions.push(cur);
 var cur = [];
-cur.push([69,69,334]);
+cur.push([67,67,334]);
 transitions.push(cur);
 var cur = [];
-cur.push([67,67,332]);
+cur.push([85,85,333]);
 transitions.push(cur);
 var cur = [];
-cur.push([85,85,331]);
+cur.push([83,83,332]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,330]);
+cur.push([70,70,331]);
 transitions.push(cur);
 var cur = [];
-cur.push([70,70,329]);
+cur.push([75,75,330]);
 transitions.push(cur);
 var cur = [];
-cur.push([75,75,328]);
+cur.push([87,87,329]);
 transitions.push(cur);
 var cur = [];
-cur.push([87,87,327]);
+cur.push([82,82,328]);
 transitions.push(cur);
 var cur = [];
-cur.push([82,82,326]);
+cur.push([84,84,327]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,325]);
+cur.push([68,68,326]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,324]);
+cur.push([80,80,325]);
 transitions.push(cur);
 var cur = [];
-cur.push([80,80,323]);
+cur.push([83,83,324]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,322]);
+cur.push([90,90,323]);
 transitions.push(cur);
 var cur = [];
-cur.push([90,90,321]);
+cur.push([88,88,322]);
 transitions.push(cur);
 var cur = [];
-cur.push([88,88,320]);
+cur.push([68,68,321]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,319]);
+cur.push([89,89,320]);
 transitions.push(cur);
 var cur = [];
-cur.push([89,89,318]);
+cur.push([79,79,318]);
 transitions.push(cur);
 var cur = [];
-cur.push([79,79,316]);
+cur.push([76,76,316]);
 transitions.push(cur);
 var cur = [];
-cur.push([76,76,314]);
+cur.push([65,65,315]);
 transitions.push(cur);
 var cur = [];
-cur.push([65,65,313]);
+cur.push([66,66,313]);
+cur.push([82,82,314]);
 transitions.push(cur);
 var cur = [];
-cur.push([66,66,311]);
-cur.push([82,82,312]);
+cur.push([84,84,311]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,309]);
+cur.push([76,76,310]);
+transitions.push(cur);
+var cur = [];
+cur.push([82,82,309]);
 transitions.push(cur);
 var cur = [];
 cur.push([76,76,308]);
 transitions.push(cur);
 var cur = [];
-cur.push([82,82,307]);
+cur.push([65,65,307]);
 transitions.push(cur);
 var cur = [];
-cur.push([76,76,306]);
+cur.push([77,77,306]);
 transitions.push(cur);
 var cur = [];
-cur.push([65,65,305]);
+cur.push([83,83,305]);
 transitions.push(cur);
 var cur = [];
-cur.push([77,77,304]);
+cur.push([69,69,304]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,303]);
+cur.push([75,75,344]);
+cur.push([78,78,345]);
+cur.push([88,88,303]);
 transitions.push(cur);
 var cur = [];
 cur.push([69,69,302]);
 transitions.push(cur);
 var cur = [];
-cur.push([75,75,342]);
-cur.push([78,78,343]);
-cur.push([88,88,301]);
+cur.push([68,68,300]);
 transitions.push(cur);
 var cur = [];
-cur.push([69,69,300]);
+cur.push([79,79,299]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,298]);
+cur.push([78,78,296]);
+cur.push([80,80,339]);
 transitions.push(cur);
 var cur = [];
-cur.push([79,79,297]);
+cur.push([84,84,295]);
 transitions.push(cur);
 var cur = [];
-cur.push([78,78,294]);
-cur.push([80,80,337]);
+cur.push([68,68,294]);
+cur.push([82,82,335]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,293]);
+cur.push([70,70,293]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,292]);
-cur.push([82,82,333]);
+cur.push([83,83,292]);
 transitions.push(cur);
 var cur = [];
-cur.push([70,70,291]);
+cur.push([84,84,290]);
+cur.push([87,87,291]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,290]);
+cur.push([83,83,288]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,288]);
-cur.push([87,87,289]);
+cur.push([70,70,287]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,286]);
+cur.push([80,80,286]);
 transitions.push(cur);
 var cur = [];
-cur.push([70,70,285]);
+cur.push([68,68,285]);
 transitions.push(cur);
 var cur = [];
-cur.push([80,80,284]);
+cur.push([77,77,284]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,283]);
+cur.push([72,72,283]);
 transitions.push(cur);
 var cur = [];
-cur.push([77,77,282]);
+cur.push([70,70,280]);
 transitions.push(cur);
 var cur = [];
-cur.push([72,72,281]);
+cur.push([77,77,279]);
 transitions.push(cur);
 var cur = [];
-cur.push([70,70,278]);
+cur.push([87,87,278]);
 transitions.push(cur);
 var cur = [];
-cur.push([77,77,277]);
+cur.push([68,68,277]);
 transitions.push(cur);
 var cur = [];
-cur.push([87,87,276]);
+cur.push([78,78,276]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,275]);
+cur.push([84,84,275]);
 transitions.push(cur);
 var cur = [];
-cur.push([78,78,274]);
+cur.push([82,82,272]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,273]);
+cur.push([67,67,271]);
 transitions.push(cur);
 var cur = [];
-cur.push([82,82,270]);
+cur.push([83,83,270]);
 transitions.push(cur);
 var cur = [];
 cur.push([67,67,269]);
 transitions.push(cur);
 var cur = [];
+cur.push([68,68,341]);
+cur.push([79,79,298]);
 cur.push([83,83,268]);
 transitions.push(cur);
 var cur = [];
 cur.push([67,67,267]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,339]);
-cur.push([79,79,296]);
 cur.push([83,83,266]);
 transitions.push(cur);
 var cur = [];
@@ -240,314 +246,334 @@ var cur = [];
 cur.push([83,83,264]);
 transitions.push(cur);
 var cur = [];
-cur.push([67,67,263]);
+cur.push([84,84,259]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,262]);
-transitions.push(cur);
-var cur = [];
-cur.push([84,84,257]);
+cur.push([67,67,258]);
 transitions.push(cur);
 var cur = [];
 cur.push([67,67,256]);
 transitions.push(cur);
 var cur = [];
-cur.push([67,67,254]);
+cur.push([85,85,255]);
 transitions.push(cur);
 var cur = [];
+cur.push([82,82,254]);
+transitions.push(cur);
+var cur = [];
+cur.push([65,65,248]);
+cur.push([67,67,249]);
+cur.push([70,70,250]);
+cur.push([79,79,262]);
+cur.push([80,80,251]);
+cur.push([84,84,252]);
 cur.push([85,85,253]);
 transitions.push(cur);
 var cur = [];
-cur.push([82,82,252]);
+cur.push([78,78,246]);
+cur.push([83,83,247]);
 transitions.push(cur);
 var cur = [];
-cur.push([65,65,246]);
-cur.push([67,67,247]);
-cur.push([70,70,248]);
-cur.push([79,79,260]);
-cur.push([80,80,249]);
-cur.push([84,84,250]);
-cur.push([85,85,251]);
+cur.push([66,66,244]);
+cur.push([69,69,289]);
+cur.push([82,82,245]);
 transitions.push(cur);
 var cur = [];
-cur.push([78,78,244]);
-cur.push([83,83,245]);
+cur.push([83,83,243]);
 transitions.push(cur);
 var cur = [];
-cur.push([66,66,242]);
-cur.push([69,69,287]);
-cur.push([82,82,243]);
+cur.push([67,67,242]);
+cur.push([84,84,282]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,241]);
+cur.push([76,76,274]);
+cur.push([82,82,241]);
 transitions.push(cur);
 var cur = [];
 cur.push([67,67,240]);
-cur.push([84,84,280]);
 transitions.push(cur);
 var cur = [];
-cur.push([76,76,272]);
-cur.push([82,82,239]);
+cur.push([84,84,239]);
 transitions.push(cur);
 var cur = [];
-cur.push([67,67,238]);
+cur.push([82,82,238]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,237]);
+cur.push([86,86,237]);
 transitions.push(cur);
 var cur = [];
-cur.push([82,82,236]);
+cur.push([69,69,236]);
 transitions.push(cur);
 var cur = [];
-cur.push([86,86,235]);
+cur.push([74,74,297]);
+cur.push([77,77,235]);
+cur.push([84,84,263]);
 transitions.push(cur);
 var cur = [];
-cur.push([69,69,234]);
+cur.push([68,68,234]);
 transitions.push(cur);
 var cur = [];
-cur.push([74,74,295]);
-cur.push([77,77,233]);
-cur.push([84,84,261]);
+cur.push([76,76,317]);
+cur.push([79,79,233]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,232]);
+cur.push([66,66,232]);
+cur.push([68,68,319]);
+cur.push([82,82,260]);
 transitions.push(cur);
 var cur = [];
-cur.push([76,76,315]);
-cur.push([79,79,231]);
+cur.push([65,65,231]);
 transitions.push(cur);
 var cur = [];
-cur.push([66,66,230]);
-cur.push([68,68,317]);
-cur.push([82,82,258]);
+cur.push([66,66,301]);
+cur.push([67,67,257]);
+cur.push([71,71,343]);
+cur.push([77,77,273]);
+cur.push([80,80,230]);
 transitions.push(cur);
 var cur = [];
-cur.push([65,65,229]);
+cur.push([76,76,312]);
+cur.push([79,79,229]);
 transitions.push(cur);
 var cur = [];
-cur.push([66,66,299]);
-cur.push([67,67,255]);
-cur.push([71,71,341]);
-cur.push([77,77,271]);
-cur.push([80,80,228]);
+cur.push([68,68,228]);
+cur.push([79,79,281]);
 transitions.push(cur);
 var cur = [];
-cur.push([76,76,310]);
-cur.push([79,79,227]);
+cur.push([89,89,227]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,226]);
-cur.push([79,79,279]);
+cur.push([79,79,226]);
 transitions.push(cur);
 var cur = [];
-cur.push([89,89,225]);
+cur.push([68,68,261]);
+cur.push([84,84,225]);
 transitions.push(cur);
 var cur = [];
-cur.push([79,79,224]);
+cur.push([89,89,224]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,259]);
-cur.push([84,84,223]);
+cur.push([49,57,221]);
+cur.push([48,48,223]);
 transitions.push(cur);
 var cur = [];
-cur.push([89,89,222]);
+cur.push([48,57,222]);
+cur.push([65,70,222]);
+cur.push([97,102,222]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,220]);
-cur.push([65,70,220]);
-cur.push([97,102,220]);
+cur.push([101,101,220]);
 transitions.push(cur);
 var cur = [];
-cur.push([101,101,218]);
+cur.push([49,57,217]);
+cur.push([48,48,219]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,216]);
-cur.push([65,70,216]);
-cur.push([97,102,216]);
+cur.push([48,57,218]);
+cur.push([65,70,218]);
+cur.push([97,102,218]);
 transitions.push(cur);
 var cur = [];
-cur.push([101,101,214]);
+cur.push([101,101,216]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,212]);
-cur.push([65,70,212]);
-cur.push([97,102,212]);
+cur.push([49,57,213]);
+cur.push([48,48,215]);
 transitions.push(cur);
 var cur = [];
-cur.push([101,101,210]);
+cur.push([48,57,214]);
+cur.push([65,70,214]);
+cur.push([97,102,214]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,208]);
-cur.push([65,70,208]);
-cur.push([97,102,208]);
+cur.push([101,101,212]);
 transitions.push(cur);
 var cur = [];
-cur.push([101,101,206]);
+cur.push([49,57,209]);
+cur.push([48,48,211]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,204]);
-cur.push([65,70,204]);
-cur.push([97,102,204]);
+cur.push([48,57,210]);
+cur.push([65,70,210]);
+cur.push([97,102,210]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,198]);
-cur.push([65,70,198]);
-cur.push([97,102,198]);
+cur.push([101,101,208]);
 transitions.push(cur);
 var cur = [];
-cur.push([1,9,112]);
-cur.push([11,12,112]);
-cur.push([14,128,112]);
+cur.push([49,57,201]);
+cur.push([48,48,203]);
 transitions.push(cur);
 var cur = [];
-cur.push([1,9,111]);
-cur.push([11,12,111]);
-cur.push([14,128,111]);
+cur.push([48,57,202]);
+cur.push([65,70,202]);
+cur.push([97,102,202]);
 transitions.push(cur);
 var cur = [];
-cur.push([1,9,111]);
-cur.push([11,12,111]);
-cur.push([14,38,111]);
-cur.push([40,91,111]);
-cur.push([93,128,111]);
-cur.push([39,39,200]);
-cur.push([92,92,110]);
+cur.push([1,9,116]);
+cur.push([11,12,116]);
+cur.push([14,128,116]);
 transitions.push(cur);
 var cur = [];
-cur.push([1,9,112]);
-cur.push([11,12,112]);
-cur.push([14,33,112]);
-cur.push([35,91,112]);
-cur.push([93,128,112]);
-cur.push([34,34,200]);
-cur.push([92,92,109]);
+cur.push([1,9,115]);
+cur.push([11,12,115]);
+cur.push([14,128,115]);
 transitions.push(cur);
 var cur = [];
-cur.push([9,10,122]);
-cur.push([13,13,122]);
-cur.push([32,32,122]);
+cur.push([1,9,115]);
+cur.push([11,12,115]);
+cur.push([14,38,115]);
+cur.push([40,91,115]);
+cur.push([93,128,115]);
+cur.push([39,39,204]);
+cur.push([92,92,114]);
 transitions.push(cur);
 var cur = [];
-cur.push([9,10,121]);
-cur.push([13,13,121]);
-cur.push([32,32,121]);
-transitions.push(cur);
-var cur = [];
-cur.push([9,10,120]);
-cur.push([13,13,120]);
-cur.push([32,32,120]);
-transitions.push(cur);
-var cur = [];
-cur.push([9,10,119]);
-cur.push([13,13,119]);
-cur.push([32,32,119]);
-transitions.push(cur);
-var cur = [];
-cur.push([9,10,118]);
-cur.push([13,13,118]);
-cur.push([32,32,118]);
-transitions.push(cur);
-var cur = [];
-cur.push([9,10,118]);
-cur.push([13,13,118]);
-cur.push([32,32,118]);
-cur.push([49,57,219]);
-cur.push([48,48,221]);
-transitions.push(cur);
-var cur = [];
-cur.push([9,10,119]);
-cur.push([13,13,119]);
-cur.push([32,32,119]);
-cur.push([49,57,215]);
-cur.push([48,48,217]);
-transitions.push(cur);
-var cur = [];
-cur.push([9,10,120]);
-cur.push([13,13,120]);
-cur.push([32,32,120]);
-cur.push([49,57,211]);
-cur.push([48,48,213]);
-transitions.push(cur);
-var cur = [];
-cur.push([9,10,121]);
-cur.push([13,13,121]);
-cur.push([32,32,121]);
-cur.push([49,57,207]);
-cur.push([48,48,209]);
-transitions.push(cur);
-var cur = [];
-cur.push([9,10,122]);
-cur.push([13,13,122]);
-cur.push([32,32,122]);
-cur.push([49,57,203]);
-cur.push([48,48,205]);
-transitions.push(cur);
-var cur = [];
-cur.push([9,10,123]);
-cur.push([13,13,123]);
-cur.push([32,32,123]);
-cur.push([102,102,156]);
-cur.push([116,116,181]);
-transitions.push(cur);
-var cur = [];
-cur.push([9,10,124]);
-cur.push([13,13,124]);
-cur.push([32,32,124]);
-cur.push([102,102,157]);
-cur.push([116,116,180]);
-transitions.push(cur);
-var cur = [];
-cur.push([9,10,125]);
-cur.push([13,13,125]);
-cur.push([32,32,125]);
-cur.push([102,102,158]);
-cur.push([116,116,179]);
+cur.push([1,9,116]);
+cur.push([11,12,116]);
+cur.push([14,33,116]);
+cur.push([35,91,116]);
+cur.push([93,128,116]);
+cur.push([34,34,204]);
+cur.push([92,92,113]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,126]);
 cur.push([13,13,126]);
 cur.push([32,32,126]);
-cur.push([102,102,159]);
-cur.push([116,116,178]);
 transitions.push(cur);
 var cur = [];
-cur.push([9,10,196]);
-cur.push([13,13,196]);
-cur.push([32,32,196]);
-cur.push([34,34,112]);
-cur.push([39,39,111]);
-cur.push([40,40,201]);
-cur.push([41,41,202]);
-cur.push([48,48,199]);
-cur.push([49,57,197]);
-cur.push([65,65,139]);
-cur.push([66,66,144]);
-cur.push([67,67,137]);
-cur.push([68,68,146]);
-cur.push([69,69,136]);
-cur.push([70,70,130]);
-cur.push([71,71,148]);
-cur.push([72,72,145]);
-cur.push([73,73,131]);
-cur.push([76,76,149]);
-cur.push([77,77,128]);
-cur.push([78,78,129]);
-cur.push([79,79,132]);
-cur.push([80,80,133]);
-cur.push([81,81,150]);
-cur.push([82,82,141]);
-cur.push([83,83,134]);
-cur.push([84,84,142]);
-cur.push([85,85,147]);
-cur.push([86,86,143]);
-cur.push([87,87,135]);
-cur.push([88,88,140]);
-cur.push([89,89,138]);
-cur.push([98,98,165]);
-cur.push([99,99,176]);
-cur.push([105,105,173]);
-cur.push([112,112,175]);
-cur.push([115,115,164]);
+cur.push([9,10,125]);
+cur.push([13,13,125]);
+cur.push([32,32,125]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,124]);
+cur.push([13,13,124]);
+cur.push([32,32,124]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,123]);
+cur.push([13,13,123]);
+cur.push([32,32,123]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,122]);
+cur.push([13,13,122]);
+cur.push([32,32,122]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,122]);
+cur.push([13,13,122]);
+cur.push([32,32,122]);
+cur.push([40,40,207]);
+cur.push([43,43,207]);
+cur.push([47,93,207]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,123]);
+cur.push([13,13,123]);
+cur.push([32,32,123]);
+cur.push([43,43,99]);
+cur.push([45,45,99]);
+cur.push([49,57,221]);
+cur.push([48,48,223]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,124]);
+cur.push([13,13,124]);
+cur.push([32,32,124]);
+cur.push([43,43,102]);
+cur.push([45,45,102]);
+cur.push([49,57,217]);
+cur.push([48,48,219]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,125]);
+cur.push([13,13,125]);
+cur.push([32,32,125]);
+cur.push([43,43,105]);
+cur.push([45,45,105]);
+cur.push([49,57,213]);
+cur.push([48,48,215]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,126]);
+cur.push([13,13,126]);
+cur.push([32,32,126]);
+cur.push([43,43,108]);
+cur.push([45,45,108]);
+cur.push([49,57,209]);
+cur.push([48,48,211]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,127]);
+cur.push([13,13,127]);
+cur.push([32,32,127]);
+cur.push([102,102,160]);
+cur.push([116,116,185]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,128]);
+cur.push([13,13,128]);
+cur.push([32,32,128]);
+cur.push([102,102,161]);
+cur.push([116,116,184]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,129]);
+cur.push([13,13,129]);
+cur.push([32,32,129]);
+cur.push([102,102,162]);
+cur.push([116,116,183]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,130]);
+cur.push([13,13,130]);
+cur.push([32,32,130]);
+cur.push([102,102,163]);
+cur.push([116,116,182]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,200]);
+cur.push([13,13,200]);
+cur.push([32,32,200]);
+cur.push([34,34,116]);
+cur.push([39,39,115]);
+cur.push([40,40,205]);
+cur.push([41,41,206]);
+cur.push([43,43,111]);
+cur.push([45,45,111]);
+cur.push([48,48,203]);
+cur.push([49,57,201]);
+cur.push([65,65,143]);
+cur.push([66,66,148]);
+cur.push([67,67,141]);
+cur.push([68,68,150]);
+cur.push([69,69,140]);
+cur.push([70,70,134]);
+cur.push([71,71,152]);
+cur.push([72,72,149]);
+cur.push([73,73,135]);
+cur.push([76,76,153]);
+cur.push([77,77,132]);
+cur.push([78,78,133]);
+cur.push([79,79,136]);
+cur.push([80,80,137]);
+cur.push([81,81,154]);
+cur.push([82,82,145]);
+cur.push([83,83,138]);
+cur.push([84,84,146]);
+cur.push([85,85,151]);
+cur.push([86,86,147]);
+cur.push([87,87,139]);
+cur.push([88,88,144]);
+cur.push([89,89,142]);
+cur.push([98,98,169]);
+cur.push([99,99,180]);
+cur.push([105,105,177]);
+cur.push([112,112,179]);
+cur.push([115,115,168]);
 transitions.push(cur);
 var cur = [];
 cur.push([65,65,52]);
@@ -695,13 +721,22 @@ var cur = [];
 cur.push([82,82,9]);
 transitions.push(cur);
 var cur = [];
-cur.push([97,97,184]);
+cur.push([97,97,188]);
 transitions.push(cur);
 var cur = [];
-cur.push([97,97,183]);
+cur.push([97,97,187]);
 transitions.push(cur);
 var cur = [];
-cur.push([97,97,174]);
+cur.push([97,97,178]);
+transitions.push(cur);
+var cur = [];
+cur.push([97,97,176]);
+transitions.push(cur);
+var cur = [];
+cur.push([97,97,175]);
+transitions.push(cur);
+var cur = [];
+cur.push([97,97,173]);
 transitions.push(cur);
 var cur = [];
 cur.push([97,97,172]);
@@ -710,240 +745,224 @@ var cur = [];
 cur.push([97,97,171]);
 transitions.push(cur);
 var cur = [];
-cur.push([97,97,169]);
+cur.push([97,97,170]);
 transitions.push(cur);
 var cur = [];
-cur.push([97,97,168]);
+cur.push([97,97,118]);
 transitions.push(cur);
 var cur = [];
-cur.push([97,97,167]);
+cur.push([99,99,181]);
 transitions.push(cur);
 var cur = [];
-cur.push([97,97,166]);
+cur.push([100,100,117]);
 transitions.push(cur);
 var cur = [];
-cur.push([97,97,115]);
+cur.push([101,101,186]);
 transitions.push(cur);
 var cur = [];
-cur.push([99,99,177]);
+cur.push([101,101,164]);
 transitions.push(cur);
 var cur = [];
-cur.push([100,100,114]);
+cur.push([105,105,165]);
 transitions.push(cur);
 var cur = [];
-cur.push([101,101,182]);
+cur.push([108,108,192]);
 transitions.push(cur);
 var cur = [];
-cur.push([101,101,160]);
+cur.push([108,108,191]);
 transitions.push(cur);
 var cur = [];
-cur.push([105,105,161]);
+cur.push([108,108,190]);
 transitions.push(cur);
 var cur = [];
-cur.push([108,108,188]);
+cur.push([108,108,189]);
 transitions.push(cur);
 var cur = [];
-cur.push([108,108,187]);
+cur.push([108,108,157]);
 transitions.push(cur);
 var cur = [];
-cur.push([108,108,186]);
+cur.push([108,108,120]);
 transitions.push(cur);
 var cur = [];
-cur.push([108,108,185]);
+cur.push([108,108,119]);
 transitions.push(cur);
 var cur = [];
-cur.push([108,108,153]);
+cur.push([110,110,174]);
 transitions.push(cur);
 var cur = [];
-cur.push([108,108,117]);
+cur.push([110,110,166]);
 transitions.push(cur);
 var cur = [];
-cur.push([108,108,116]);
+cur.push([111,111,199]);
 transitions.push(cur);
 var cur = [];
-cur.push([110,110,170]);
+cur.push([111,111,156]);
 transitions.push(cur);
 var cur = [];
-cur.push([110,110,162]);
+cur.push([111,111,155]);
 transitions.push(cur);
 var cur = [];
-cur.push([111,111,195]);
+cur.push([114,114,198]);
 transitions.push(cur);
 var cur = [];
-cur.push([111,111,152]);
+cur.push([114,114,197]);
 transitions.push(cur);
 var cur = [];
-cur.push([111,111,151]);
+cur.push([114,114,196]);
 transitions.push(cur);
 var cur = [];
-cur.push([114,114,194]);
+cur.push([114,114,195]);
 transitions.push(cur);
 var cur = [];
-cur.push([114,114,193]);
+cur.push([114,114,121]);
 transitions.push(cur);
 var cur = [];
-cur.push([114,114,192]);
+cur.push([115,115,194]);
 transitions.push(cur);
 var cur = [];
-cur.push([114,114,191]);
+cur.push([115,115,193]);
 transitions.push(cur);
 var cur = [];
-cur.push([114,114,113]);
+cur.push([115,115,110]);
 transitions.push(cur);
 var cur = [];
-cur.push([115,115,190]);
-transitions.push(cur);
-var cur = [];
-cur.push([115,115,189]);
-transitions.push(cur);
-var cur = [];
-cur.push([115,115,106]);
+cur.push([115,115,107]);
 transitions.push(cur);
 var cur = [];
 cur.push([115,115,104]);
 transitions.push(cur);
 var cur = [];
-cur.push([115,115,102]);
+cur.push([115,115,101]);
 transitions.push(cur);
 var cur = [];
-cur.push([115,115,100]);
+cur.push([116,116,159]);
 transitions.push(cur);
 var cur = [];
-cur.push([116,116,155]);
+cur.push([116,116,158]);
 transitions.push(cur);
 var cur = [];
-cur.push([116,116,154]);
+cur.push([117,117,110]);
 transitions.push(cur);
 var cur = [];
-cur.push([117,117,106]);
+cur.push([117,117,107]);
 transitions.push(cur);
 var cur = [];
 cur.push([117,117,104]);
 transitions.push(cur);
 var cur = [];
-cur.push([117,117,102]);
+cur.push([117,117,101]);
 transitions.push(cur);
 var cur = [];
-cur.push([117,117,100]);
-transitions.push(cur);
-var cur = [];
-cur.push([119,119,163]);
+cur.push([119,119,167]);
 transitions.push(cur);
 transitions.push(null);
 var cur = [];
-cur.push([48,57,197]);
+cur.push([48,57,201]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,198]);
-cur.push([65,70,198]);
-cur.push([97,102,198]);
+cur.push([48,57,202]);
+cur.push([65,70,202]);
+cur.push([97,102,202]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,197]);
-cur.push([120,120,108]);
+cur.push([48,57,201]);
+cur.push([120,120,112]);
 transitions.push(cur);
 transitions.push(null);
 transitions.push(null);
 transitions.push(null);
 var cur = [];
-cur.push([48,57,203]);
-transitions.push(cur);
-var cur = [];
-cur.push([48,57,204]);
-cur.push([65,70,204]);
-cur.push([97,102,204]);
-transitions.push(cur);
-var cur = [];
-cur.push([48,57,203]);
-cur.push([120,120,107]);
+cur.push([40,40,207]);
+cur.push([43,43,207]);
+cur.push([47,93,207]);
 transitions.push(cur);
 transitions.push(null);
 var cur = [];
-cur.push([9,10,123]);
-cur.push([13,13,123]);
-cur.push([32,32,123]);
-cur.push([48,57,207]);
+cur.push([9,10,127]);
+cur.push([13,13,127]);
+cur.push([32,32,127]);
+cur.push([48,57,209]);
 transitions.push(cur);
 var cur = [];
-cur.push([9,10,123]);
-cur.push([13,13,123]);
-cur.push([32,32,123]);
-cur.push([48,57,208]);
-cur.push([65,70,208]);
-cur.push([97,102,208]);
+cur.push([9,10,127]);
+cur.push([13,13,127]);
+cur.push([32,32,127]);
+cur.push([48,57,210]);
+cur.push([65,70,210]);
+cur.push([97,102,210]);
 transitions.push(cur);
 var cur = [];
-cur.push([9,10,123]);
-cur.push([13,13,123]);
-cur.push([32,32,123]);
-cur.push([48,57,207]);
-cur.push([120,120,105]);
+cur.push([9,10,127]);
+cur.push([13,13,127]);
+cur.push([32,32,127]);
+cur.push([48,57,209]);
+cur.push([120,120,109]);
 transitions.push(cur);
 transitions.push(null);
 var cur = [];
-cur.push([9,10,124]);
-cur.push([13,13,124]);
-cur.push([32,32,124]);
-cur.push([48,57,211]);
+cur.push([9,10,128]);
+cur.push([13,13,128]);
+cur.push([32,32,128]);
+cur.push([48,57,213]);
 transitions.push(cur);
 var cur = [];
-cur.push([9,10,124]);
-cur.push([13,13,124]);
-cur.push([32,32,124]);
-cur.push([48,57,212]);
-cur.push([65,70,212]);
-cur.push([97,102,212]);
+cur.push([9,10,128]);
+cur.push([13,13,128]);
+cur.push([32,32,128]);
+cur.push([48,57,214]);
+cur.push([65,70,214]);
+cur.push([97,102,214]);
 transitions.push(cur);
 var cur = [];
-cur.push([9,10,124]);
-cur.push([13,13,124]);
-cur.push([32,32,124]);
-cur.push([48,57,211]);
+cur.push([9,10,128]);
+cur.push([13,13,128]);
+cur.push([32,32,128]);
+cur.push([48,57,213]);
+cur.push([120,120,106]);
+transitions.push(cur);
+transitions.push(null);
+var cur = [];
+cur.push([9,10,129]);
+cur.push([13,13,129]);
+cur.push([32,32,129]);
+cur.push([48,57,217]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,129]);
+cur.push([13,13,129]);
+cur.push([32,32,129]);
+cur.push([48,57,218]);
+cur.push([65,70,218]);
+cur.push([97,102,218]);
+transitions.push(cur);
+var cur = [];
+cur.push([9,10,129]);
+cur.push([13,13,129]);
+cur.push([32,32,129]);
+cur.push([48,57,217]);
 cur.push([120,120,103]);
 transitions.push(cur);
 transitions.push(null);
 var cur = [];
-cur.push([9,10,125]);
-cur.push([13,13,125]);
-cur.push([32,32,125]);
-cur.push([48,57,215]);
+cur.push([9,10,130]);
+cur.push([13,13,130]);
+cur.push([32,32,130]);
+cur.push([48,57,221]);
 transitions.push(cur);
 var cur = [];
-cur.push([9,10,125]);
-cur.push([13,13,125]);
-cur.push([32,32,125]);
-cur.push([48,57,216]);
-cur.push([65,70,216]);
-cur.push([97,102,216]);
+cur.push([9,10,130]);
+cur.push([13,13,130]);
+cur.push([32,32,130]);
+cur.push([48,57,222]);
+cur.push([65,70,222]);
+cur.push([97,102,222]);
 transitions.push(cur);
 var cur = [];
-cur.push([9,10,125]);
-cur.push([13,13,125]);
-cur.push([32,32,125]);
-cur.push([48,57,215]);
-cur.push([120,120,101]);
-transitions.push(cur);
-transitions.push(null);
-var cur = [];
-cur.push([9,10,126]);
-cur.push([13,13,126]);
-cur.push([32,32,126]);
-cur.push([48,57,219]);
-transitions.push(cur);
-var cur = [];
-cur.push([9,10,126]);
-cur.push([13,13,126]);
-cur.push([32,32,126]);
-cur.push([48,57,220]);
-cur.push([65,70,220]);
-cur.push([97,102,220]);
-transitions.push(cur);
-var cur = [];
-cur.push([9,10,126]);
-cur.push([13,13,126]);
-cur.push([32,32,126]);
-cur.push([48,57,219]);
-cur.push([120,120,99]);
+cur.push([9,10,130]);
+cur.push([13,13,130]);
+cur.push([32,32,130]);
+cur.push([48,57,221]);
+cur.push([120,120,100]);
 transitions.push(cur);
 transitions.push(null);
 transitions.push(null);
@@ -1078,7 +1097,7 @@ transitions.push(null);
 transitions.push(null);
 }
 
-        static var accepting = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false].concat([false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]).concat([false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]).concat([false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true]).concat([true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true]).concat([true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true]);
+        static var accepting = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false].concat([false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]).concat([false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]).concat([false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true]).concat([true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true]).concat([true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true]);
 
 	public static function lexify(input:String):Array<Token> {
 		init();
@@ -1184,42 +1203,22 @@ return ({ HLexLog.log("Error: Unknown char sequence '"+ hxl_match +"'"); null; }
 	static function tokenof(id:Int, hxl_match:String) {
 		switch(id) {
 			default: return null;
-            case 197:
-				return ({ tInteger(Std.parseInt( hxl_match )); });
-            case 198:
-				return ({ tInteger(Std.parseInt( hxl_match )); });
-            case 199:
-				return ({ tInteger(Std.parseInt( hxl_match )); });
-            case 200:
-				return ({ tText( hxl_match .substr(1, hxl_match .length-2)); });
             case 201:
-				return ({ tLeftParen;  });
+				return ({ tInteger(Std.parseInt( hxl_match )); });
             case 202:
-				return ({ tRightParen; });
+				return ({ tInteger(Std.parseInt( hxl_match )); });
             case 203:
-				return ({
-	var xs = ((~/[\n\r \t]+/).replace( hxl_match ," ")).split(" ");
-	tPower(Std.parseInt(xs[1]));
-});
+				return ({ tInteger(Std.parseInt( hxl_match )); });
             case 204:
-				return ({
-	var xs = ((~/[\n\r \t]+/).replace( hxl_match ," ")).split(" ");
-	tPower(Std.parseInt(xs[1]));
-});
+				return ({ tText( hxl_match .substr(1, hxl_match .length-2)); });
             case 205:
-				return ({
-	var xs = ((~/[\n\r \t]+/).replace( hxl_match ," ")).split(" ");
-	tPower(Std.parseInt(xs[1]));
-});
+				return ({ tLeftParen;  });
             case 206:
-				return ({
-	var pro = HLexLog.province( hxl_match );
-	tProvince(proInland(pro.val,pro.sc));
-});
+				return ({ tRightParen; });
             case 207:
 				return ({
-	var pro = HLexLog.province( hxl_match );
-	tProvince(proInland(pro.val,pro.sc));
+	var xs = ((~/[\n\r \t]+/).replace( hxl_match ," ")).split(" ");
+	tPower(Std.parseInt(xs[1]));
 });
             case 208:
 				return ({
@@ -1234,12 +1233,12 @@ return ({ HLexLog.log("Error: Unknown char sequence '"+ hxl_match +"'"); null; }
             case 210:
 				return ({
 	var pro = HLexLog.province( hxl_match );
-	tProvince(proSea(pro.val,pro.sc));
+	tProvince(proInland(pro.val,pro.sc));
 });
             case 211:
 				return ({
 	var pro = HLexLog.province( hxl_match );
-	tProvince(proSea(pro.val,pro.sc));
+	tProvince(proInland(pro.val,pro.sc));
 });
             case 212:
 				return ({
@@ -1254,12 +1253,12 @@ return ({ HLexLog.log("Error: Unknown char sequence '"+ hxl_match +"'"); null; }
             case 214:
 				return ({
 	var pro = HLexLog.province( hxl_match );
-	tProvince(proCoastal(pro.val,pro.sc));
+	tProvince(proSea(pro.val,pro.sc));
 });
             case 215:
 				return ({
 	var pro = HLexLog.province( hxl_match );
-	tProvince(proCoastal(pro.val,pro.sc));
+	tProvince(proSea(pro.val,pro.sc));
 });
             case 216:
 				return ({
@@ -1274,12 +1273,12 @@ return ({ HLexLog.log("Error: Unknown char sequence '"+ hxl_match +"'"); null; }
             case 218:
 				return ({
 	var pro = HLexLog.province( hxl_match );
-	tProvince(proBiCoastal(pro.val,pro.sc));
+	tProvince(proCoastal(pro.val,pro.sc));
 });
             case 219:
 				return ({
 	var pro = HLexLog.province( hxl_match );
-	tProvince(proBiCoastal(pro.val,pro.sc));
+	tProvince(proCoastal(pro.val,pro.sc));
 });
             case 220:
 				return ({
@@ -1292,266 +1291,276 @@ return ({ HLexLog.log("Error: Unknown char sequence '"+ hxl_match +"'"); null; }
 	tProvince(proBiCoastal(pro.val,pro.sc));
 });
             case 222:
-				return ({ tUnitType(utArmy);  });
+				return ({
+	var pro = HLexLog.province( hxl_match );
+	tProvince(proBiCoastal(pro.val,pro.sc));
+});
             case 223:
-				return ({ tUnitType(utFleet); });
+				return ({
+	var pro = HLexLog.province( hxl_match );
+	tProvince(proBiCoastal(pro.val,pro.sc));
+});
             case 224:
-				return ({ tOrder(oMoveByConvoy); });
+				return ({ tUnitType(utArmy);  });
             case 225:
-				return ({ tOrder(oConvoy); });
+				return ({ tUnitType(utFleet); });
             case 226:
-				return ({ tOrder(oHold); });
+				return ({ tOrder(oMoveByConvoy); });
             case 227:
-				return ({ tOrder(oMove); });
+				return ({ tOrder(oConvoy); });
             case 228:
-				return ({ tOrder(oSupport); });
+				return ({ tOrder(oHold); });
             case 229:
-				return ({ tOrder(oVia); });
+				return ({ tOrder(oMove); });
             case 230:
-				return ({ tOrder(oDisband); });
+				return ({ tOrder(oSupport); });
             case 231:
-				return ({ tOrder(oRetreat); });
+				return ({ tOrder(oVia); });
             case 232:
-				return ({ tOrder(oBuild); });
+				return ({ tOrder(oDisband); });
             case 233:
-				return ({ tOrder(oRemove); });
+				return ({ tOrder(oRetreat); });
             case 234:
-				return ({ tOrder(oWaive); });
+				return ({ tOrder(oBuild); });
             case 235:
-				return ({ tOrderNote(onOkay); });
+				return ({ tOrder(oRemove); });
             case 236:
-				return ({ tOrderNote(onBPR); });
+				return ({ tOrder(oWaive); });
             case 237:
-				return ({ tOrderNote(onNoCoastSpecified); });
+				return ({ tOrderNote(onOkay); });
             case 238:
-				return ({ tOrderNote(onNotEmptySupply); });
+				return ({ tOrderNote(onBPR); });
             case 239:
-				return ({ tOrderNote(onNotAdjacent); });
+				return ({ tOrderNote(onNoCoastSpecified); });
             case 240:
-				return ({ tOrderNote(onNotHomeSupply); });
+				return ({ tOrderNote(onNotEmptySupply); });
             case 241:
-				return ({ tOrderNote(onNotAtSea); });
+				return ({ tOrderNote(onNotAdjacent); });
             case 242:
-				return ({ tOrderNote(onNoMoreBuilds); });
+				return ({ tOrderNote(onNotHomeSupply); });
             case 243:
-				return ({ tOrderNote(onNoMoreRemovals); });
+				return ({ tOrderNote(onNotAtSea); });
             case 244:
-				return ({ tOrderNote(onNoRetreatNeeded); });
+				return ({ tOrderNote(onNoMoreBuilds); });
             case 245:
-				return ({ tOrderNote(onNotRightSeason); });
+				return ({ tOrderNote(onNoMoreRemovals); });
             case 246:
-				return ({ tOrderNote(onNoSuchArmy); });
+				return ({ tOrderNote(onNoRetreatNeeded); });
             case 247:
-				return ({ tOrderNote(onNotSupply); });
+				return ({ tOrderNote(onNotRightSeason); });
             case 248:
-				return ({ tOrderNote(onNoSuchFleet); });
+				return ({ tOrderNote(onNoSuchArmy); });
             case 249:
-				return ({ tOrderNote(onNoSuchProvince); });
+				return ({ tOrderNote(onNotSupply); });
             case 250:
-				return ({ tOrderNote(onNST); });
+				return ({ tOrderNote(onNoSuchFleet); });
             case 251:
-				return ({ tOrderNote(onNoSuchUnit); });
+				return ({ tOrderNote(onNoSuchProvince); });
             case 252:
-				return ({ tOrderNote(onNotValidRetreat); });
+				return ({ tOrderNote(onNST); });
             case 253:
-				return ({ tOrderNote(onNotYourUnit); });
+				return ({ tOrderNote(onNoSuchUnit); });
             case 254:
-				return ({ tOrderNote(onNotYourSupply); });
+				return ({ tOrderNote(onNotValidRetreat); });
             case 255:
-				return ({ tResult(rSuccess); });
+				return ({ tOrderNote(onNotYourUnit); });
             case 256:
-				return ({ tResult(rMoveBounced); });
+				return ({ tOrderNote(onNotYourSupply); });
             case 257:
-				return ({ tResult(rSupportCut); });
+				return ({ tResult(rSuccess); });
             case 258:
-				return ({ tResult(rConvoyDisrupted); });
+				return ({ tResult(rMoveBounced); });
             case 259:
-				return ({ tResult(rFLD); });
+				return ({ tResult(rSupportCut); });
             case 260:
-				return ({ tResult(rNoSuchOrder); });
+				return ({ tResult(rConvoyDisrupted); });
             case 261:
-				return ({ tResult(rDislodged); });
+				return ({ tResult(rFLD); });
             case 262:
-				return ({ tCoast(cNorth); });
+				return ({ tResult(rNoSuchOrder); });
             case 263:
-				return ({ tCoast(cNorthEast); });
+				return ({ tResult(rDislodged); });
             case 264:
-				return ({ tCoast(cEast); });
+				return ({ tCoast(cNorth); });
             case 265:
-				return ({ tCoast(cSouthEast); });
+				return ({ tCoast(cNorthEast); });
             case 266:
-				return ({ tCoast(cSouth); });
+				return ({ tCoast(cEast); });
             case 267:
-				return ({ tCoast(cSouthWest); });
+				return ({ tCoast(cSouthEast); });
             case 268:
-				return ({ tCoast(cWest); });
+				return ({ tCoast(cSouth); });
             case 269:
-				return ({ tCoast(cNorthWest); });
+				return ({ tCoast(cSouthWest); });
             case 270:
-				return ({ tPhase(pSpring); });
+				return ({ tCoast(cWest); });
             case 271:
-				return ({ tPhase(pSummer); });
+				return ({ tCoast(cNorthWest); });
             case 272:
-				return ({ tPhase(pFall); });
+				return ({ tPhase(pSpring); });
             case 273:
-				return ({ tPhase(pAutumn); });
+				return ({ tPhase(pSummer); });
             case 274:
-				return ({ tPhase(pWinter); });
+				return ({ tPhase(pFall); });
             case 275:
-				return ({ tCommand(coPowerInCivilDisorder); });
+				return ({ tPhase(pAutumn); });
             case 276:
-				return ({ tCommand(coDraw); });
+				return ({ tPhase(pWinter); });
             case 277:
-				return ({ tCommand(coMessageFrom); });
+				return ({ tCommand(coPowerInCivilDisorder); });
             case 278:
-				return ({ tCommand(coGoFlag); });
+				return ({ tCommand(coDraw); });
             case 279:
-				return ({ tCommand(coHello); });
+				return ({ tCommand(coMessageFrom); });
             case 280:
-				return ({ tCommand(coHistory); });
+				return ({ tCommand(coGoFlag); });
             case 281:
-				return ({ tCommand(coHuh); });
+				return ({ tCommand(coHello); });
             case 282:
-				return ({ tCommand(coIAm); });
+				return ({ tCommand(coHistory); });
             case 283:
-				return ({ tCommand(coLoadGame); });
+				return ({ tCommand(coHuh); });
             case 284:
-				return ({ tCommand(coMap); });
+				return ({ tCommand(coIAm); });
             case 285:
-				return ({ tCommand(coMapDefinition); });
+				return ({ tCommand(coLoadGame); });
             case 286:
-				return ({ tCommand(coMissingOrders); });
+				return ({ tCommand(coMap); });
             case 287:
-				return ({ tCommand(coName); });
+				return ({ tCommand(coMapDefinition); });
             case 288:
-				return ({ tCommand(coNOT); });
+				return ({ tCommand(coMissingOrders); });
             case 289:
-				return ({ tCommand(coCurrentPosition); });
+				return ({ tCommand(coName); });
             case 290:
-				return ({ tCommand(coObserver); });
+				return ({ tCommand(coNOT); });
             case 291:
-				return ({ tCommand(coTurnOff); });
+				return ({ tCommand(coCurrentPosition); });
             case 292:
-				return ({ tCommand(coOrderResult); });
+				return ({ tCommand(coObserver); });
             case 293:
-				return ({ tCommand(coPowerEliminated); });
+				return ({ tCommand(coTurnOff); });
             case 294:
-				return ({ tCommand(coParenthesisError); });
+				return ({ tCommand(coOrderResult); });
             case 295:
-				return ({ tCommand(coReject); });
+				return ({ tCommand(coPowerEliminated); });
             case 296:
-				return ({ tCommand(coSupplyOwnership); });
+				return ({ tCommand(coParenthesisError); });
             case 297:
-				return ({ tCommand(coSolo); });
+				return ({ tCommand(coReject); });
             case 298:
-				return ({ tCommand(coSendMessage); });
+				return ({ tCommand(coSupplyOwnership); });
             case 299:
-				return ({ tCommand(coSubmitOrder); });
+				return ({ tCommand(coSolo); });
             case 300:
-				return ({ tCommand(coSaveGame); });
+				return ({ tCommand(coSendMessage); });
             case 301:
-				return ({ tCommand(coThink); });
+				return ({ tCommand(coSubmitOrder); });
             case 302:
-				return ({ tCommand(coTimeToDeadline); });
+				return ({ tCommand(coSaveGame); });
             case 303:
-				return ({ tCommand(coAccept); });
+				return ({ tCommand(coThink); });
             case 304:
-				return ({ tCommand(coAdmin); });
+				return ({ tCommand(coTimeToDeadline); });
             case 305:
-				return ({ tParameter(paAnyOrder); });
+				return ({ tCommand(coAccept); });
             case 306:
-				return ({ tParameter(paBuildTimeLimit); });
+				return ({ tCommand(coAdmin); });
             case 307:
-				return ({ tParameter(paLocationError); });
+				return ({ tParameter(paAnyOrder); });
             case 308:
-				return ({ tParameter(paLevel); });
+				return ({ tParameter(paBuildTimeLimit); });
             case 309:
-				return ({ tParameter(paMustRetreat); });
+				return ({ tParameter(paLocationError); });
             case 310:
-				return ({ tParameter(paMoveTimeLimit); });
+				return ({ tParameter(paLevel); });
             case 311:
-				return ({ tParameter(paNoPressDuringBuild); });
+				return ({ tParameter(paMustRetreat); });
             case 312:
-				return ({ tParameter(paNoPressDuringRetreat); });
+				return ({ tParameter(paMoveTimeLimit); });
             case 313:
-				return ({ tParameter(paPartialDrawsAllowed); });
+				return ({ tParameter(paNoPressDuringBuild); });
             case 314:
-				return ({ tParameter(paPressTimeLimit); });
+				return ({ tParameter(paNoPressDuringRetreat); });
             case 315:
-				return ({ tParameter(paRetreatTimeLimit); });
+				return ({ tParameter(paPartialDrawsAllowed); });
             case 316:
-				return ({ tParameter(paUnowned); });
+				return ({ tParameter(paPressTimeLimit); });
             case 317:
-				return ({ tParameter(paDeadlineDisconnect); });
+				return ({ tParameter(paRetreatTimeLimit); });
             case 318:
-				return ({ tPress(prAlly); });
+				return ({ tParameter(paUnowned); });
             case 319:
-				return ({ tPress(prAND); });
+				return ({ tParameter(paDeadlineDisconnect); });
             case 320:
-				return ({ tPress(prNoneOfYourBusiness); });
+				return ({ tPress(prAlly); });
             case 321:
-				return ({ tPress(prDemiliterisedZone); });
+				return ({ tPress(prAND); });
             case 322:
-				return ({ tPress(prELSE); });
+				return ({ tPress(prNoneOfYourBusiness); });
             case 323:
-				return ({ tPress(prExplain); });
+				return ({ tPress(prDemiliterisedZone); });
             case 324:
-				return ({ tPress(prRequestForward); });
+				return ({ tPress(prELSE); });
             case 325:
-				return ({ tPress(prFact); });
+				return ({ tPress(prExplain); });
             case 326:
-				return ({ tPress(prForTurn); });
+				return ({ tPress(prRequestForward); });
             case 327:
-				return ({ tPress(prHowToAttack); });
+				return ({ tPress(prFact); });
             case 328:
-				return ({ tPress(prIDontKnow); });
+				return ({ tPress(prForTurn); });
             case 329:
-				return ({ tPress(prIF); });
+				return ({ tPress(prHowToAttack); });
             case 330:
-				return ({ tPress(prInsist); });
+				return ({ tPress(prIDontKnow); });
             case 331:
-				return ({ tPress(prIOU); });
+				return ({ tPress(prIF); });
             case 332:
-				return ({ tPress(prOccupy); });
+				return ({ tPress(prInsist); });
             case 333:
-				return ({ tPress(prOR); });
+				return ({ tPress(prIOU); });
             case 334:
-				return ({ tPress(prPeace); });
+				return ({ tPress(prOccupy); });
             case 335:
-				return ({ tPress(prPosition); });
+				return ({ tPress(prOR); });
             case 336:
-				return ({ tPress(prPPT); });
+				return ({ tPress(prPeace); });
             case 337:
-				return ({ tPress(prPropose); });
+				return ({ tPress(prPosition); });
             case 338:
-				return ({ tPress(prQuery); });
+				return ({ tPress(prPPT); });
             case 339:
-				return ({ tPress(prSupplyDistro); });
+				return ({ tPress(prPropose); });
             case 340:
-				return ({ tPress(prSorry); });
+				return ({ tPress(prQuery); });
             case 341:
-				return ({ tPress(prSuggest); });
+				return ({ tPress(prSupplyDistro); });
             case 342:
-				return ({ tPress(prThink); });
+				return ({ tPress(prSorry); });
             case 343:
-				return ({ tPress(prThen); });
+				return ({ tPress(prSuggest); });
             case 344:
-				return ({ tPress(prTry); });
+				return ({ tPress(prThink); });
             case 345:
-				return ({ tPress(prUOM); });
+				return ({ tPress(prThen); });
             case 346:
-				return ({ tPress(prVersus); });
+				return ({ tPress(prTry); });
             case 347:
-				return ({ tPress(prWhat); });
+				return ({ tPress(prUOM); });
             case 348:
-				return ({ tPress(prWhy); });
+				return ({ tPress(prVersus); });
             case 349:
-				return ({ tPress(prDo); });
+				return ({ tPress(prWhat); });
             case 350:
-				return ({ tPress(prOwes); });
+				return ({ tPress(prWhy); });
             case 351:
-				return ({ tPress(prTellMe); });
+				return ({ tPress(prDo); });
             case 352:
+				return ({ tPress(prOwes); });
+            case 353:
+				return ({ tPress(prTellMe); });
+            case 354:
 				return ({ tPress(prWRT); });
         }
 	}

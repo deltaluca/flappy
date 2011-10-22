@@ -18,32 +18,32 @@ NULL -1 : ws := ~/[\n\r \t]/~
 	}
 %}
 
-~/([0-9]+)|(0x[0-9a-fA-F]+)/~ := %{ tInteger(Std.parseInt(%)); %}
+~/[+\-]?(([0-9]+)|(0x[0-9a-fA-F]+))/~ := %{ tInteger(Std.parseInt(%)); %}
 ~/("([^\\"\r\n]|\\.)*")|('([^\\'\r\n]|\\.)*')/~ := %{ tText(%.substr(1,%.length-2)); %}
 
 ~/\(/~ := %{ tLeftParen;  %}
 ~/\)/~ := %{ tRightParen; %}
 
 // power INTEGER
-~/power[\n\r \t]+(([0-9]+)|(0x[0-9a-fA-F]+))/~ := %{
+~/power[\n\r \t]+[+/-]?(([0-9]+)|(0x[0-9a-fA-F]+))/~ := %{
 	var xs = ((~/[\n\r \t]+/).replace(%," ")).split(" ");
 	tPower(Std.parseInt(xs[1]));
 %}
 
 // type INTEGER [true|false]
-~/inland[\n\r \t]+(([0-9]+)|(0x[0-9a-fA-F]+))([\n\r \t]+((true)|(false)))?/~ := %{
+~/inland[\n\r \t]+[+\-]?(([0-9]+)|(0x[0-9a-fA-F]+))([\n\r \t]+((true)|(false)))?/~ := %{
 	var pro = HLexLog.province(%);
 	tProvince(proInland(pro.val,pro.sc));
 %}
-~/sea[\n\r \t]+(([0-9]+)|(0x[0-9a-fA-F]+))([\n\r \t]+((true)|(false)))?/~ := %{
+~/sea[\n\r \t]+[+\-]?(([0-9]+)|(0x[0-9a-fA-F]+))([\n\r \t]+((true)|(false)))?/~ := %{
 	var pro = HLexLog.province(%);
 	tProvince(proSea(pro.val,pro.sc));
 %}
-~/coastal[\n\r \t]+(([0-9]+)|(0x[0-9a-fA-F]+))([\n\r \t]+((true)|(false)))?/~ := %{
+~/coastal[\n\r \t]+[+\-]?(([0-9]+)|(0x[0-9a-fA-F]+))([\n\r \t]+((true)|(false)))?/~ := %{
 	var pro = HLexLog.province(%);
 	tProvince(proCoastal(pro.val,pro.sc));
 %}
-~/bicoastal[\n\r \t]+(([0-9]+)|(0x[0-9a-fA-F]+))([\n\r \t]+((true)|(false)))?/~ := %{
+~/bicoastal[\n\r \t]+[+\-]?(([0-9]+)|(0x[0-9a-fA-F]+))([\n\r \t]+((true)|(false)))?/~ := %{
 	var pro = HLexLog.province(%);
 	tProvince(proBiCoastal(pro.val,pro.sc));
 %}
