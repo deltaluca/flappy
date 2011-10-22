@@ -10,6 +10,7 @@ import nme.events.KeyboardEvent;
 
 import daide.Socket;
 import daide.HLex;
+import daide.HLlr;
 import daide.Language;
 import daide.Tokens;
 
@@ -149,7 +150,7 @@ class Terminal extends Sprite {
 					var tokens = HLex.lexify(cmdargs.join(" "));
 					log(Std.string(tokens));
 					//test syntax locally
-					var message = MessageUtils.inflate(tokens);
+					var message = HLlr.parse(tokens);
 					log(Std.string(message));
 				}catch(e:Dynamic) {
 					log(e);

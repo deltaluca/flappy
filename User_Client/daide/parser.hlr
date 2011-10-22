@@ -1,0 +1,139 @@
+//all tokens, must match the nested ordering of
+//tokens in daide.Tokens
+%token INTEGER
+%token BRA
+%token KET
+%token POWER
+%token AMY FLT
+%token CTO CVY HLD MTO SUP VIA DSB RTO BLD REM WVE
+%token MBV BPR CST ESC FAR HSC NAS NMB NMR NRN NRS NSA NSC NSF NSP NST NSU NVR NYU YSC 
+%token SUC BNC CUT DSR FLD NSO RET
+%token NCS NEC ECS SEC SCS SWC WCS NWC
+%token SPR SUM FAL AUT WIN
+%token CCD DRW FRM GOF HLO HST HUH IAM LOD MAP MDF MIS NME NOT NOW OBS OFF ORD OUT PRN REJ SCO SLO SND SUB SVE THX TME YES ADM
+%token AOA BTL ERR LVL MRT MTL NPB NPR PDA PTL RTL UNO DSD
+%token ALY AND BWD DMZ ELS EXP FWD FCT FOR HOUW IDK IFF INS IOU OCC ORR PCE POB PPT PRP QRY SCD SRY SUG THK THN TRY UOM VSS WHT WHY XDO XOY YDO WRT
+%token TEXT
+%token PROVINCE
+
+%{
+
+import daide.Tokens;
+import daide.Language;
+
+class TU {
+
+	static public function text(t:Token) {
+		return switch(t) { case tText(x): x; default: null; };
+	}
+	static public function integer(t:Token) {
+		return switch(t) { case tInteger(x): x; default: -1; };
+	}
+
+	//need a one-one mapping in order tokens are declared
+	//to each possible token.
+
+	//this is complicated due to the nesting of Token declarations
+	//but these should be computed at compile time by haxe
+	static public function index(t:Token) {
+		return switch(t) {
+			case tInteger(_): 0;
+			case tLeftParen:  1;
+			case tRightParen: 2;
+			case tPower(_):   3;
+			case tUnitType(x):
+				4 + Type.enumIndex(x);
+			case tOrder(x):
+				4 + Type.getEnumConstructs(UnitType).length
+				  + Type.enumIndex(x);
+			case tOrderNote(x):
+				4 + Type.getEnumConstructs(UnitType).length
+				  + Type.getEnumConstructs(Order).length
+				  + Type.enumIndex(x);
+			case tResult(x):
+				4 + Type.getEnumConstructs(UnitType).length
+				  + Type.getEnumConstructs(Order).length
+				  + Type.getEnumConstructs(OrderNote).length
+				  + Type.enumIndex(x);
+			case tCoast(x):
+				4 + Type.getEnumConstructs(UnitType).length
+				  + Type.getEnumConstructs(Order).length
+				  + Type.getEnumConstructs(OrderNote).length
+				  + Type.getEnumConstructs(Result).length
+				  + Type.enumIndex(x);
+			case tPhase(x):
+				4 + Type.getEnumConstructs(UnitType).length
+				  + Type.getEnumConstructs(Order).length
+				  + Type.getEnumConstructs(OrderNote).length
+				  + Type.getEnumConstructs(Result).length
+				  + Type.getEnumConstructs(Coast).length
+				  + Type.enumIndex(x);
+			case tCommand(x):
+				4 + Type.getEnumConstructs(UnitType).length
+				  + Type.getEnumConstructs(Order).length
+				  + Type.getEnumConstructs(OrderNote).length
+				  + Type.getEnumConstructs(Result).length
+				  + Type.getEnumConstructs(Coast).length
+				  + Type.getEnumConstructs(Phase).length
+				  + Type.enumIndex(x);
+			case tParameter(x):
+				4 + Type.getEnumConstructs(UnitType).length
+				  + Type.getEnumConstructs(Order).length
+				  + Type.getEnumConstructs(OrderNote).length
+				  + Type.getEnumConstructs(Result).length
+				  + Type.getEnumConstructs(Coast).length
+				  + Type.getEnumConstructs(Phase).length
+				  + Type.getEnumConstructs(Command).length
+				  + Type.enumIndex(x);
+			case tPress(x):
+				4 + Type.getEnumConstructs(UnitType).length
+				  + Type.getEnumConstructs(Order).length
+				  + Type.getEnumConstructs(OrderNote).length
+				  + Type.getEnumConstructs(Result).length
+				  + Type.getEnumConstructs(Coast).length
+				  + Type.getEnumConstructs(Phase).length
+				  + Type.getEnumConstructs(Command).length
+				  + Type.getEnumConstructs(Parameter).length
+				  + Type.enumIndex(x);
+			case tText(_):
+				4 + Type.getEnumConstructs(UnitType).length
+				  + Type.getEnumConstructs(Order).length
+				  + Type.getEnumConstructs(OrderNote).length
+				  + Type.getEnumConstructs(Result).length
+				  + Type.getEnumConstructs(Coast).length
+				  + Type.getEnumConstructs(Phase).length
+				  + Type.getEnumConstructs(Command).length
+				  + Type.getEnumConstructs(Parameter).length
+				  + Type.getEnumConstructs(Press).length;
+			case tProvince(_):
+				4 + Type.getEnumConstructs(UnitType).length
+				  + Type.getEnumConstructs(Order).length
+				  + Type.getEnumConstructs(OrderNote).length
+				  + Type.getEnumConstructs(Result).length
+				  + Type.getEnumConstructs(Phase).length
+				  + Type.getEnumConstructs(Command).length
+				  + Type.getEnumConstructs(Parameter).length
+				  + Type.getEnumConstructs(Coast).length
+				  + Type.getEnumConstructs(Press).length
+				  + 1;
+		}
+	}
+}
+ 
+%}
+
+%entry message
+
+%message
+	: observer_message %{ mObserver(%0); %}
+;
+
+%observer_message
+	: NME BRA TEXT KET BRA TEXT KET %{ obsName(TU.text(%2),TU.text(%5)); %}
+	| OBS %{ obsObserver; %}
+	| IAM BRA INTEGER KET BRA INTEGER KET %{ obsIAm(TU.integer(%2),TU.integer(%5)); %}
+	| YES %{ obsAccept(null); %}
+	| YES BRA message KET %{ obsAccept(%2); %}
+	| REJ %{ obsReject(null); %}
+	| REJ BRA message KET %{ obsReject(%2); %}
+;
