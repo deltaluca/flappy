@@ -174,12 +174,16 @@ enum ObserverMessage {
 	obsReject(msg:Message);
 	//obsNow(...);
 	//obsSCO??(...);
-	//obsHST??(...);
+	obsHistory(turn:Turn);
 	obsTimeToDeadline(time:Null<Int>);
 	obsAdmin(name:String,msg:String);
 	//obsPRN??(...);
 	//obsHUH??(...);
+	obsHello(power:Int,num:Int,v:Variant);
 }
+
+typedef Turn = { phase : Phase, turn : Int };
+typedef Variant = Array<{ par : Parameter, val : Null<Int> }>;
 
 enum Message {
 	mObserver(msg:ObserverMessage);

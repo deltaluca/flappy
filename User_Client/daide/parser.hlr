@@ -29,6 +29,9 @@ class TU {
 	static public function integer(t:Token) {
 		return switch(t) { case tInteger(x): x; default: -1; };
 	}
+	static public function power(t:Token) {
+		return switch(t) { case tPower(x): x; default: -1; };
+	}
 
 	//need a one-one mapping in order tokens are declared
 	//to each possible token.
@@ -131,9 +134,49 @@ class TU {
 %observer_message
 	: NME BRA TEXT KET BRA TEXT KET %{ obsName(TU.text(%2),TU.text(%5)); %}
 	| OBS %{ obsObserver; %}
-	| IAM BRA INTEGER KET BRA INTEGER KET %{ obsIAm(TU.integer(%2),TU.integer(%5)); %}
+	| IAM BRA POWER KET BRA INTEGER KET %{ obsIAm(TU.power(%2),TU.integer(%5)); %}
+	| MAP %{ obsMap(null); %}
+	| MAP BRA TEXT KET %{ obsMap(TU.text(%2)); %}
 	| YES %{ obsAccept(null); %}
 	| YES BRA message KET %{ obsAccept(%2); %}
 	| REJ %{ obsReject(null); %}
 	| REJ BRA message KET %{ obsReject(%2); %}
+	| HST BRA turn KET %{ obsHistory(%2); %}
+	| TME %{ obsTimeToDeadline(null); %}
+	| TME BRA INTEGER KET %{ obsTimeToDeadline(TU.integer(%2)); %}
+	| ADM BRA TEXT KET BRA TEXT KET %{ obsAdmin(TU.text(%2),TU.text(%5)); %}
+	| HLO %{ obsHello(null,null,null); %}
+	| HLO BRA POWER KET BRA INTEGER KET BRA variant KET %{
+		obsHello(TU.power(%2),TU.integer(%5),%8);
+	%}
+;
+
+%turn
+	: phase INTEGER %{ { phase : %0, turn : TU.integer(%1) }; %} 
+;
+
+%phase
+	: SPR %{ %0; %} 
+	| SUM %{ %0; %} 
+	| FAL %{ %0; %} 
+	| AUT %{ %0; %} 
+	| WIN %{ %0; %} 
+;
+
+%variant
+	: BRA variant_option KET %{ [%1]; %}
+	| variant BRA variant_option KET %{ %0.push(%2); %0; %}
+;
+
+%variant_option
+	: LVL INTEGER %{ { par : %0, val : TU.integer(%1) }; %}
+	| MTL INTEGER %{ { par : %0, val : TU.integer(%1) }; %}
+	| RTL INTEGER %{ { par : %0, val : TU.integer(%1) }; %}
+	| BTL INTEGER %{ { par : %0, val : TU.integer(%1) }; %}
+	| AOA         %{ { par : %0, val : null           }; %}
+	| DSD         %{ { par : %0, val : null           }; %}
+	| PDA         %{ { par : %0, val : null           }; %}
+	| PTL INTEGER %{ { par : %0, val : TU.integer(%1) }; %}
+	| NPR         %{ { par : %0, val : null           }; %}
+	| NPB         %{ { par : %0, val : null           }; %}
 ;
