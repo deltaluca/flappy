@@ -9,10 +9,11 @@ enum Message {
 	mIAm(power:Int,passcode:Int);
 	mMap(name:String);
 	mSaveGame(name:String);
+	mLoadGame(name:String);
 //	mMapDefinition(...);
 	mAccept(m:Message);
 	mReject(m:Message);
-//	mCurrentLocation(...);
+	mCurrentLocation(turn:Turn,unitlocs:Array<UnitWithLocAndMRT>);
 //	mSupplyOwnership(...);
 	mHistory(turn:Turn);
 	mTimeToDeadline(time:Null<Int>);
@@ -38,6 +39,10 @@ enum MsgOrder {
 typedef Turn = { phase : Phase, turn : Int };
 typedef Location = { province : Province, coast : Coast };
 typedef UnitWithLoc = { power : Int, type : UnitType, location : Location };
+typedef VariantOption = { par : Parameter, val : Null<Int> };
+typedef Variant = Array<VariantOption>;
+typedef UnitWithLocAndMRT = { unitloc : UnitWithLoc, locs : Array<Location> };
+typedef MdfCentreList = { powers : Array<Int>, locs : Array<Location> }; 
 /*
 enum ObsMessage {
 	obsName(name:String,version:String);

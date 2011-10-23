@@ -45,6 +45,9 @@ class TU {
 	static public function phase(t:Token) {
 		return switch(t) { case tPhase(x): x; default: null; };
 	}
+	static public function parameter(t:Token) {
+		return switch(t) { case tParameter(x): x; default: null; };
+	}
 
 	//need a mapping [0,#tokens) in order tokens are declared
 	//this is complicated due to the nesting of Token declarations
@@ -77,10 +80,13 @@ class TU {
 
 %entry message
 
+// Message
 %message
 	: client_server_message %{ %0; %}
+	| server_client_message %{ %0; %}
 ;
 
+// Message
 %client_server_message
 	: NME BRA TEXT KET BRA TEXT KET %{ mName(TU.text(%2),TU.text(%5)); %}
 	| OBS %{ mObserver; %}
@@ -89,7 +95,7 @@ class TU {
 //	| MDF %{ mMapDefinition(nulls); %}
 	| YES BRA acknowledgable_command KET %{ mAccept(%2); %}
 	| REJ BRA acknowledgable_command KEY %{ mReject(%2); %}
-//	| NOW %{ mCurrentLocation(nulls); %}
+	| NOW %{ mCurrentLocation(null,null); %}
 //	| SCO %{ mSupplyOwnership(nulls); %}
 	| HST BRA turn KET %{ mHistory(%2); %}
 	| TME BRA INTEGER KET %{ mTimeToDeadline(TU.integer(%2)); %}
@@ -103,15 +109,28 @@ class TU {
 //	| NOT BRA negatable_command KET %{ ... %}		
 ;
 
+// Message
+%server_client_message
+	: MAP BRA TEXT KET %{ mMap(TU.text(%2)); %}
+	| SVE BRA TEXT KET %{ mSaveGame(TU.text(%2)); %}
+	| LOD BRA TEXT KET %{ mLoadGame(TU.text(%2)); %}
+	| TME BRA INTEGER KET %{ mTimeToDeadline(TU.integer(%2)); %}
+	| ADM BRA TEXT KET BRA TEXT KET %{ mAdmin(TU.text(%2),TU.text(%5)); %}
+	| NOW BRA turn KET unit_with_location_and_mrt_list %{ mCurrentLocation(%2,%4); %}
+;
+
+// Message
 %acknowedgable_command
 	: MAP BRA TEXT KET %{ mMap(TU.text(%2)); %}
 	| SVE BRA TEXT KET %{ mSaveGame(TU.text(%2)); %}
 ;
 
+// Turn
 %turn
 	: phase INTEGER %{ { phase : %0, turn : TU.integer(%1) }; %} 
 ;
 
+// Phase
 %phase
 	: SPR %{ TU.phase(%0); %} 
 	| SUM %{ TU.phase(%0); %} 
@@ -120,6 +139,7 @@ class TU {
 	| WIN %{ TU.phase(%0); %} 
 ;
 
+// Coast
 %coast
 	: NCS %{ TU.coast(%0); %} 
 	| NEC %{ TU.coast(%0); %} 
@@ -131,18 +151,20 @@ class TU {
 	| NWC %{ TU.coast(%0); %} 
 ;
 
+// Array<Int>
 %power_list
 	: POWER %{ [TU.power(%0)]; %}
 	| power_list POWER %{ %0.push(TU.power(%1)); %0; %}
 ;
 
+// MsgOrder
 %order
 	: BRA unit_with_location KET HLD %{ moHold(%1); %}
 	| BRA unit_with_location KET DSB %{ moDisband(%1); %}
 	| BRA unit_with_location KET BLD %{ moBuild(%1); %}
 	| BRA unit_with_location KET REM %{ moRemove(%1); %}
-	| BRA unit_with_location KET RTO location %{ moRetreat(%1,%4); %}
-	| BRA unit_with_location KET MTO location %{ moMove(%1,%4); %}
+	| BRA unit_with_location KET RTO mdf_province %{ moRetreat(%1,%4); %}
+	| BRA unit_with_location KET MTO mdf_province %{ moMove(%1,%4); %}
 	| BRA unit_with_location KET SUP BRA unit_with_location KET %{
 		moSupport(%1,%5,null);
 	%}
@@ -157,30 +179,81 @@ class TU {
 	%}
 ;
 
+// Array<MsgOrder>
 %order_list
 	: BRA order KET %{ [%1]; %}
 	| order_list BRA order KET %{ %0.push(%2); %0; %}
 ;
 
+// UnitWithLoc
 %unit_with_location
-	: POWER unit_type location %{ { power : TU.power(%0), type : %1, location : %2 }; %}
+	: POWER unit_type mdf_province %{ { power : TU.power(%0), type : %1, location : %2 }; %}
 ;
 
-%location
+// MdfCentreList
+%mdf_centre_list
+	: POWER province_list %{ { powers: [TU.power(%0)], locs : %1 }; %}
+	| UNO province_list   %{ { powers: [], locs : %1 }; %}
+	| BRA power_list KET province_list %{ { powers: %1, locs : %3 }; %}
+;
+
+// Location
+%mdf_province
 	: PROVINCE %{ { province : TU.province(%0), coast : null }; %}
 	| BRA province_and_coast KET %{ %1; %}
 ;
 
+// Array<Location>
+%mdf_province_list
+	: mdf_province %{ [%0]; %}
+	| mdf_province_list mdf_province %{ %0.push(%1); %0; %}
+;
+
+// Location
 %province_and_coast
 	: PROVINCE coast %{ { province : TU.province(%0), coast : %1 }; %}
 ;
 
+// Array<Location>
 %province_list
 	: PROVINCE %{ [TU.province(%0)]; %}
 	| province_list PROVINCE %{ %0.push(TU.province(%1)); %0; %}
 ;
 
+// UnitType
 %unit_type
 	: AMY %{ TU.unitType(%0); %}
 	| FLT %{ TU.unitType(%0); %}
+;
+
+// UnitWithLocAndMRT
+%unit_with_location_and_mrt
+	: unit_with_location %{ { unitloc : %0, locs : null }; %}
+	| unit_with_location MRT BRA mdf_province_list KET %{ { unitloc : %0, locs : %3 }; %}
+;
+
+// Array<UnitWithLocAndMRT>
+%unit_with_location_and_mrt_list
+	: BRA unit_with_location_and_mrt KET %{ [%1]; %}
+	| unit_with_location_and_mrt_list BRA unit_with_location_and_mrt KET %{ %0.push(%2); %0; %}
+;
+
+// Variant
+%variant
+	: BRA variant_option KET %{ [%1]; %}
+	| variant BRA variant_option KET %{ %0.push(%2); %0; %}
+;
+
+// VariantOption
+%variant_option
+	: LVL INTEGER %{ { par : TU.parameter(%0), val : TU.integer(%1) }; %}
+	| MTL INTEGER %{ { par : TU.parameter(%0), val : TU.integer(%1) }; %}
+	| RTL INTEGER %{ { par : TU.parameter(%0), val : TU.integer(%1) }; %}
+	| BTL INTEGER %{ { par : TU.parameter(%0), val : TU.integer(%1) }; %}
+	| AOA         %{ { par : TU.parameter(%0), val : null           }; %}
+	| DSD         %{ { par : TU.parameter(%0), val : null           }; %}
+	| PDA         %{ { par : TU.parameter(%0), val : null           }; %}
+	| PTL INTEGER %{ { par : TU.parameter(%0), val : TU.integer(%1) }; %}
+	| NPR         %{ { par : TU.parameter(%0), val : null           }; %}
+	| NPB         %{ { par : TU.parameter(%0), val : null           }; %}
 ;
