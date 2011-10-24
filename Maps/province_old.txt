@@ -1,0 +1,77 @@
+--Land--
+DEN,Denmark;Sweden,Kiel;Skagerrak,Baltic Sea,Helgoland Bight,North Sea
+BOH,Bohemia;Vienna,Galicia,Tyrolia,Munich,Silesia;
+BUD,Budapest;Galicia,Vienna,Trieste,Serbia,Rumania;
+GAL,Galicia;Warsaw,Ukraine,Bohemia,Vienna,Budapest,Rumania;
+TRI,Trieste;Tyrolia,Vienna,Budapest,Serbia,Albania,Venezia;Adriatic Sea
+TYR,Tyrolia;Munich,Bohemia,Vienna,Trieste,Venezia,Piemonte;
+VIE,Vienna;Bohemia,Galicia,Budapest,Trieste,Tyrolia;
+CLY,Clyde;Edinburgh,Liverpool;North Atlantic Ocean,Norwegian Sea
+EDI,Edinburgh;Yorkshire,Clyde,Liverpool;Norwegian Sea,North Sea
+LVP,Liverpool;Yorkshire,Wales,Clyde,Edinburgh;North Atlantic Ocean,Irish Sea
+LON,London;Wales,Yorkshire;North Sea,English Channel
+WAL,Wales;Liverpool,London,Yorkshire;Irish Sea,English Channel
+YOR,Yorkshire;London,Wales,Liverpool,Edinburgh;North Sea
+BRE,Brest;Picardy,Paris,Gascony;English Channel,Mid-Atlantic Ocean
+BUR,Burgundy;Paris,Picardy,Belgium,Ruhr,Munich,Marseilles,Gascony;
+GAS,Gascony;Brest,Paris,Burgundy,Marseilles,Spain;Mid-Atlantic Ocean
+MAR,Marseilles;Gascony,Burgundy,Piemonte,Spain;Gulf of Lyon
+PAR,Paris;Brest,Picardy,Burgundy,Gascony;
+PIC,Picardy;Belgium,Burgundy,Paris,Brest;English Channel
+BER,Berlin;Prussia,Silesia,Munich,Kiel;Baltic Sea
+KIE,Kiel;Denmark,Berlin,Munich,Ruhr,Holland;Helgoland Bight,Baltic Sea
+MUN,Munich;Ruhr,Kiel,Berlin,Silesia,Bohemia,Tyrolia,Burgundy;
+PRU,Prussia;Livonia,Warsaw,Silesia,Berlin;Baltic Sea
+RUH,Ruhr;Belgium,Holland,Kiel,Munich,Burgundy;
+SIL,Silesia;Prussia,Warsaw,Galicia,Bohemia,Munich,Berlin;
+APU,Apulia;Venezia,Roma,Napoli;Adriatic Sea,Ionian Sea
+NAP,Napoli;Apulia,Roma;Tyrhennian Sea,Ionian Sea
+PIE,Piemonte;Venezia,Tuscany,Marseilles,Tyrolia;Gulf of Lyon
+ROM,Roma;Tuscany,Venezia,Apulia,Napoli;Tyrhennian Sea
+TUS,Tuscany;Roma,Venezia,Piemonte;Gulf of Lyon,Tyrhennian Sea
+VEN,Venezia;Piemonte,Tuscany,Roma,Tyrolia,Trieste;Adriatic Sea
+LVN,Livonia;Warsaw,Moscow,St. Petersburg;Baltic Sea,Gulf of Bothnia
+MOS,Moscow;St. Petersburg,Livonia,Warsaw,Ukraine,Stevastopol;
+SEV,Stevastopol;Ukraine,Moscow,Armenia;Black Sea
+STP,St. Petersburg;Finland,Moscow,Livonia;Barents Sea,Gulf of Bothnia
+UKR,Ukraine;Warsaw,Moscow,Stevastopol,Galicia,Rumania;
+WAR,Warsaw;Prussia,Silesia,Galicia,Ukraine,Moscow,Livonia;
+ANK,Ankara;Constantinople,Smyrna,Syria,Armenia;Black Sea
+ARM,Armenia;Stevastopol,Ankara,Smyrna,Syria;Black Sea
+CON,Constantinople;Ankara,Smyrna,Bulgaria;Aegean Sea,Black Sea
+SMY,Smyrna;Constantinople,Ankara,Armenia,Syria;Aegean Sea,Eastern Mediterranean
+SYR,Syria;Smyrna,Armenia;Eastern Mediterranean
+ALB,Albania;Trieste,Serbia,Greece;Adriatic Sea,Ionian Sea
+BEL,Belgium;Holland,Ruhr,Burgundy,Picardy;English Channel,North Sea
+BUL,Bulgaria;Rumania,Serbia,Greece,Constantinople;Black Sea,Aegean Sea
+FIN,Finland;St. Petersburg,Sweden,Norway;Gulf of Bothnia
+GRE,Greece;Albania,Serbia,Bulgaria;Aegean Sea,Ionian Sea
+HOL,Holland;Belgium,Ruhr,Kiel;North Sea,Helgoland Bight
+NWY,Norway;Sweden,Finland;Skagerrak,North Sea,Norwegian Sea,Barents Sea
+NAF,North Africa;Tunisia;Western Mediterranean,Mid-Atlantic Ocean
+POR,Portugal;Spain;Mid-Atlantic Ocean
+RUM,Rumania;Budapest,Galicia,Ukraine,Stevastopol,Bulgaria,Serbia;Black Sea
+SER,Serbia;Trieste,Budapest,Rumania,Bulgaria,Greece,Albania;
+SPA,Spain;Portugal,Gascony,Marseilles;Gulf of Lyon,Western Mediterranean,Mid-Atlantic Ocean
+SWE,Sweden;Norway,Finland,Denmark;Gulf of Bothnia,Baltic Sea,Skagerrak
+TUN,Tunisia;North Africa;Western Mediterranean,Tyrhennian Sea,Ionian Sea
+--Water--
+ADR,Adriatic Sea;Apulia,Venezia,Trieste,Albania;Ionian Sea
+AEG,Aegean Sea;Greece,Bulgaria,Constantinople,Smyrna;Eastern Mediterranean,Ionian Sea
+BAL,Baltic Sea;Sweden,Livonia,Prussia,Berlin,Kiel,Denmark;Gulf of Bothnia
+BAR,Barents Sea;St. Petersburg,Norway;Norwegian Sea
+BLA,Black Sea;Stevastopol,Armenia,Ankara,Constantinople,Bulgaria,Rumania;
+EAS,Eastern Mediterranean;Smyrna,Syria;Aegean Sea,Ionian Sea
+ENG,English Channel;Wales,London,Belgium,Picardy,Brest;Irish Sea,North Sea,Mid-Atlantic Ocean
+BOT,Gulf of Bothnia;Sweden,Finland,St. Petersburg,Livonia;Baltic Sea
+GOL,Gulf of Lyon;Spain,Marseilles,Piemonte,Tuscany;Western Mediterranean,Tyrhennian Sea
+HEI,Helgoland Bight;Holland,Kiel,Denmark;North Sea
+ION,Ionian Sea;Tunisia,Napoli,Apulia,Albania,Greece;Tyrhennian Sea,Adriatic Sea,Aegean Sea,Eastern Mediterranean
+IRI,Irish Sea;Liverpool,Wales;English Channel,North Atlantic Ocean,Mid-Atlantic Ocean
+MID,Mid-Atlantic Ocean;Portugal,Spain,Gascony,Brest,North Africa;North Atlantic Ocean,Irish Sea,English Channel,Western Mediterranean
+NAT,North Atlantic Ocean;Clyde;Norwegian Sea,Irish Sea,Mid-Atlantic Ocean
+NTH,North Sea;Edinburgh,Yorkshire,London,Belgium,Holland,Denmark,Norway;Skagerrak,Helgoland Bight,Norwegian Sea,English Channel
+NRG,Norwegian Sea;Norway,Clyde;North Sea,North Atlantic Ocean
+SKA,Skagerrak;Norway,Sweden,Denmark;North Sea
+TYN,Tyrhennian Sea;Tunisia,Roma,Napoli,Tuscany;Gulf of Lyon,Western Mediterranean,Ionian Sea
+WES,Western Mediterranean;North Africa,Spain,Tunisia;Gulf of Lyon,Tyrhennian Sea,Mid-Atlantic Ocean

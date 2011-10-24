@@ -1,0 +1,75 @@
+DEN,Denmark
+BOH,Bohemia
+BUD,Budapest
+GAL,Galicia
+TRI,Trieste
+TYR,Tyrolia
+VIE,Vienna
+CLY,Clyde
+EDI,Edinburgh
+LVP,Liverpool
+LON,London
+WAL,Wales
+YOR,Yorkshire
+BRE,Brest
+BUR,Burgundy
+GAS,Gascony
+MAR,Marseilles
+PAR,Paris
+PIC,Picardy
+BER,Berlin
+KIE,Kiel
+MUN,Munich
+PRU,Prussia
+RUH,Ruhr
+SIL,Silesia
+APU,Apulia
+NAP,Napoli
+PIE,Piemonte
+ROM,Roma
+TUS,Tuscany
+VEN,Venezia
+LVN,Livonia
+MOS,Moscow
+SEV,Stevastopol
+STP,St. Petersburg
+UKR,Ukraine
+WAR,Warsaw
+ANK,Ankara
+ARM,Armenia
+CON,Constantinople
+SMY,Smyrna
+SYR,Syria
+ALB,Albania
+BEL,Belgium
+BUL,Bulgaria
+FIN,Finland
+GRE,Greece
+HOL,Holland
+NWY,Norway
+NAF,North Africa
+POR,Portugal
+RUM,Rumania
+SER,Serbia
+SPA,Spain
+SWE,Sweden
+TUN,Tunisia
+ADR,Adriatic Sea
+AEG,Aegean Sea
+BAL,Baltic Sea
+BAR,Barents Sea
+BLA,Black Sea
+EAS,Eastern Mediterranean
+ENG,English Channel
+BOT,Gulf of Bothnia
+GOL,Gulf of Lyon
+HEI,Helgoland Bight
+ION,Ionian Sea
+IRI,Irish Sea
+MID,Mid-Atlantic Ocean
+NAT,North Atlantic Ocean
+NTH,North Sea
+NRG,Norwegian Sea
+SKA,Skagerrak
+TYN,Tyrhennian Sea
+WES,Western Mediterranean
