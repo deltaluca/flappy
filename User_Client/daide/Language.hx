@@ -10,7 +10,7 @@ enum Message {
 	mMap(name:String);
 	mSaveGame(name:String);
 	mLoadGame(name:String);
-//	mMapDefinition(...);
+	mMapDefinition(powers:Array<Int>,provinces:MdfProvinces,adj:Array<MdfProAdjacencies>);
 	mAccept(m:Message);
 	mReject(m:Message);
 	mCurrentLocation(turn:Turn,unitlocs:Array<UnitWithLocAndMRT>);
@@ -45,3 +45,6 @@ typedef VariantOption = { par : Parameter, val : Null<Int> };
 typedef Variant = Array<VariantOption>;
 typedef UnitWithLocAndMRT = { unitloc : UnitWithLoc, locs : Array<Location> };
 typedef MdfCentreList = { powers : Array<Int>, locs : Array<Location> }; 
+typedef MdfProvinces = { slocs : Array<MdfCentreList>, locs : Array<Location> };
+typedef MdfCoastAdjacencies = { unit : UnitType, locs : Array<Location> };
+typedef MdfProAdjacencies = { pro : Province, coasts : Array<MdfCoastAdjacencies> }; 

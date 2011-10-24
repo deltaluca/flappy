@@ -92,7 +92,7 @@ class TU {
 	| OBS %{ mObserver; %}
 	| IAM BRA POWER KET BRA INTEGER KET %{ mIAm(TU.power(%2),TU.integer(%5)); %}
 	| MAP %{ mMap(null); %}
-//	| MDF %{ mMapDefinition(nulls); %}
+	| MDF %{ mMapDefinition(null,null,null); %}
 	| YES BRA acknowledgable_command KET %{ mAccept(%2); %}
 	| REJ BRA acknowledgable_command KEY %{ mReject(%2); %}
 	| NOW %{ mCurrentLocation(null,null); %}
@@ -115,6 +115,7 @@ class TU {
 // Message
 %server_client_message
 	: MAP BRA TEXT KET %{ mMap(TU.text(%2)); %}
+	| MDF BRA power_list KET BRA mdf_provinces KET BRA mdf_adjacencies KET %{ mMapDefinition(%2,%5,%8); %}
 	| HLO BRA POWER KET BRA INTEGER KET BRA variant KET %{ mHello(TU.power(%2),TU.integer(%5),%8); %}
 	| NOW BRA turn KET unit_with_location_and_mrt_list %{ mCurrentLocation(%2,%4); %}
 	| SCO sco_entry_list %{ mSupplyOwnership(%1); %}
@@ -207,11 +208,49 @@ class TU {
 	: POWER unit_type mdf_province %{ { power : TU.power(%0), type : %1, location : %2 }; %}
 ;
 
+// Array<MdfProAdjacencies>
+%mdf_adjacencies
+	: BRA mdf_province_adjacencies KET %{ [%1]; %}
+	| mdf_provinces BRA mdf_province_adjacencies KET %{ %0.push(%2); %0; %}
+;
+
+// MdfProAdjacencies
+%mdf_province_adjacencies
+	: PROVINCE mdf_coast_adjacencies_list %{ { pro : TU.province(%0), coasts : %1 }; %}
+;
+
+// Coast
+%mdf_coast
+	: FLT coast %{ %1; %}
+;
+
+// MdfCoastAdjacencies
+%mdf_coast_adjacencies
+	: unit_type mdf_province_list %{ { unit : %0, locs : %1 }; %}
+;
+
+// Array<MdfCoastAdjacencies>
+%mdf_coast_adjacencies_list
+	: BRA mdf_coast_adjacencies KET %{ [%1]; %}
+	| mdf_coast_adjacencies_list BRA mdf_coast_adjacencies KET %{ %0.push(%2); %0; %}
+;
+
 // MdfCentreList
 %mdf_centre_list
 	: POWER province_list %{ { powers: [TU.power(%0)], locs : %1 }; %}
 	| UNO province_list   %{ { powers: [], locs : %1 }; %}
 	| BRA power_list KET province_list %{ { powers: %1, locs : %3 }; %}
+;
+
+// Array<MdfCentreList>
+%mdf_supply_centres
+	: BRA mdf_centre_list KET %{ [%1]; %}
+	| mdf_centre_list_list BRA mdf_centre_list KET %{ %0.push(%2); %0; %}
+;
+
+// MdfProvinces
+%mdf_provinces
+	: BRA mdf_supply_centres KET BRA province_list KET %{ {slocs: %2, locs : %4 }; %}
 ;
 
 // Location
