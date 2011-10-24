@@ -96,33 +96,50 @@ class TU {
 	| YES BRA acknowledgable_command KET %{ mAccept(%2); %}
 	| REJ BRA acknowledgable_command KEY %{ mReject(%2); %}
 	| NOW %{ mCurrentLocation(null,null); %}
-//	| SCO %{ mSupplyOwnership(nulls); %}
+	| SCO %{ mSupplyOwnership(null); %}
 	| HST BRA turn KET %{ mHistory(%2); %}
 	| TME BRA INTEGER KET %{ mTimeToDeadline(TU.integer(%2)); %}
 	| TME %{ mTimeToDeadline(null); %}
 	| ADM BRA TEXT KET BRA TEXT KET %{ mAdmin(TU.text(%2),TU.text(%5)); %}
 //	| PRN ...?
 //	| HUH ...?
-	| HLO %{ mHello; %}
+	| HLO %{ mHello(null,null,null); %}
 	| SUB order_list %{ mSubmit(null,%1); %}
 	| SUB BRA turn KET order_list %{ mSubmit(%2,%4); %}
 //	| NOT BRA negatable_command KET %{ ... %}		
+	| DRW %{ mDraw(null); %}
+	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mDraw(%3); %}
+// more
 ;
 
 // Message
 %server_client_message
 	: MAP BRA TEXT KET %{ mMap(TU.text(%2)); %}
+	| HLO BRA POWER KET BRA INTEGER KET BRA variant KET %{ mHello(TU.power(%2),TU.integer(%5),%8); %}
+	| NOW BRA turn KET unit_with_location_and_mrt_list %{ mCurrentLocation(%2,%4); %}
+	| SCO sco_entry_list %{ mSupplyOwnership(%1); %}
 	| SVE BRA TEXT KET %{ mSaveGame(TU.text(%2)); %}
 	| LOD BRA TEXT KET %{ mLoadGame(TU.text(%2)); %}
 	| TME BRA INTEGER KET %{ mTimeToDeadline(TU.integer(%2)); %}
 	| ADM BRA TEXT KET BRA TEXT KET %{ mAdmin(TU.text(%2),TU.text(%5)); %}
-	| NOW BRA turn KET unit_with_location_and_mrt_list %{ mCurrentLocation(%2,%4); %}
+	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mDraw(%3); %}
 ;
 
 // Message
 %acknowedgable_command
 	: MAP BRA TEXT KET %{ mMap(TU.text(%2)); %}
 	| SVE BRA TEXT KET %{ mSaveGame(TU.text(%2)); %}
+;
+
+// ScoEntry
+%sco_entry
+	: POWER province_list %{ { power : TU.power(%0), locs : %1 }; %}
+;
+
+// Array<ScoEntry>
+%sco_entry_list
+	: BRA sco_entry KET %{ [%1]; %}
+	| sco_entry_list BRA sco_entry KET %{ %0.push(%2); %0; %}
 ;
 
 // Turn
