@@ -23,6 +23,10 @@ enum Message {
 	mHello(power:Null<Int>,x:Int,v:Variant);
 	mSubmit(turn:Turn,orders:Array<MsgOrder>);
 	mDraw(powers:Array<Int>);
+	mMissingOrders(x:Null<Int>,units:Array<UnitWithLocAndMRT>);
+	mThink(order:MsgOrder, note:OrderNote);
+	mOrderResult(turn:Turn, order:MsgOrder, result:CompOrderResult);
+	mSolo(power:Int);
 }
 
 enum MsgOrder {
@@ -48,3 +52,4 @@ typedef MdfCentreList = { powers : Array<Int>, locs : Array<Location> };
 typedef MdfProvinces = { slocs : Array<MdfCentreList>, locs : Array<Location> };
 typedef MdfCoastAdjacencies = { unit : UnitType, locs : Array<Location> };
 typedef MdfProAdjacencies = { pro : Province, coasts : Array<MdfCoastAdjacencies> }; 
+typedef CompOrderResult = { note : OrderNote, result:Result, ret:Bool };

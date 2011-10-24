@@ -107,12 +107,12 @@ class TU {
 	| SUB order_list %{ mSubmit(null,%1); %}
 	| SUB BRA turn KET order_list %{ mSubmit(%2,%4); %}
 //	| NOT BRA negatable_command KET %{ ... %}		
-//	| MIS
+	| MIS %{ mMissingOrders(null,null); %}
 //	| GOF
 //	| ORD
 	| DRW %{ mDraw(null); %}
 	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mDraw(%3); %}
-//	| send_message %{ %0; %}
+//	| send_message
 ;
 
 // Message
@@ -126,10 +126,10 @@ class TU {
 	| HLO BRA POWER KET BRA INTEGER KET BRA variant KET %{ mHello(TU.power(%2),TU.integer(%5),%8); %}
 	| NOW BRA turn KET unit_with_location_and_mrt_list %{ mCurrentLocation(%2,%4); %}
 	| SCO sco_entry_list %{ mSupplyOwnership(%1); %}
-//	| THX
-//	| MIS
-//	| MIS
-//	| ORD
+	| THX BRA order KET BRA order_note KET %{ mThink(%2,%5); %}
+	| MIS unit_with_location_and_mrt_list %{ mMissingOrders(null,%1); %}
+	| MIS BRA INTEGER KET %{ mMissingOrders(TU.integer(%2),null); %}
+	| ORD BRA turn KET BRA order KET BRA compound_order_result KET %{ mOrderResult(%2,%5,%8); %}
 	| SVE BRA TEXT KET %{ mSaveGame(TU.text(%2)); %}
 	| LOD BRA TEXT KET %{ mLoadGame(TU.text(%2)); %}
 //	| OFF
@@ -139,7 +139,7 @@ class TU {
 //	| CCD
 //	| NOT
 	| ADM BRA TEXT KET BRA TEXT KET %{ mAdmin(TU.text(%2),TU.text(%5)); %}
-//	| SLO
+	| SLO BRA INTEGER KET %{ mSolo(TU.integer(%2)); %}
 	| DRW %{ mDraw(null); %}
 //	| OUT
 	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mDraw(%3); %}
@@ -181,6 +181,14 @@ class TU {
 	| SWC %{ TU.coast(%0); %} 
 	| WCS %{ TU.coast(%0); %} 
 	| NWC %{ TU.coast(%0); %} 
+;
+
+// CompOrderResult
+%compound_order_result
+	: order_note %{ { note:%0, result:null, ret:false }; %}
+	| order_result %{ { note:null, result:%0, ret:false }; %}
+	| order_note RET %{ { note:%0, result:null, ret:true }; %}
+	| order_result RET %{ { note:null, result:%0, ret:true }; %}
 ;
 
 // ScoEntry
@@ -249,6 +257,14 @@ class TU {
 	: BRA order KET %{ [%1]; %}
 	| order_list BRA order KET %{ %0.push(%2); %0; %}
 ;
+
+// OrderNote
+%order_note : sub_order_note %{ switch(cast(%0,Token)) { case tOrderNote(x): x; default : null; } %} ;
+%sub_order_note : MBV | FAR | NSP | NSU | NAS | NSF | NSA | NYU | NRN | NVR | YSC | ESC | HSC | NSC | CST | NMB | NMR | NRS ;
+
+// Result
+%order_result : sub_order_result %{ switch(cast(%0,Token)) { case tResult(x): x; default : null; } %} ;
+%sub_order_result : SUC | BNC | CUT | DSR | NSO ;
 
 // UnitWithLoc
 %unit_with_location
