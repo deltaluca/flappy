@@ -12,9 +12,9 @@
 %token SPR SUM FAL AUT WIN
 %token CCD DRW FRM GOF HLO HST HUH IAM LOD MAP MDF MIS NME NOT NOW OBS OFF ORD OUT PRN REJ SCO SLO SND SUB SVE THX TME YES ADM
 %token AOA BTL ERR LVL MRT MTL NPB NPR PDA PTL RTL UNO DSD
-%token ALY AND BWD DMZ ELS EXP FWD FCT FOR HOUW IDK IFF INS IOU OCC ORR PCE POB PPT PRP QRY SCD SRY SUG THK THN TRY UOM VSS WHT WHY XDO XOY YDO WRT
+%token ALY AND BWD DMZ ELS EXP FWD FCT FOR HOW IDK IFF INS IOU OCC ORR PCE POB PPT PRP QRY SCD SRY SUG THK THN TRY UOM VSS WHT WHY XDO XOY YDO WRT
 %token TEXT
-%token PROVINCE
+%token INLAND SEA COASTAL BICOASTAL
 
 %{
 
@@ -82,8 +82,8 @@ class TU {
 
 // Message
 %message
-	: client_server_message %{ %0; %}
-	| server_client_message %{ %0; %}
+	: client_server_message
+	| server_client_message
 ;
 
 // Message
@@ -101,35 +101,86 @@ class TU {
 	| TME BRA INTEGER KET %{ mTimeToDeadline(TU.integer(%2)); %}
 	| TME %{ mTimeToDeadline(null); %}
 	| ADM BRA TEXT KET BRA TEXT KET %{ mAdmin(TU.text(%2),TU.text(%5)); %}
-//	| PRN ...?
-//	| HUH ...?
+	| PRN BRA bad_bracketed_sequence KET %{ mBadBrackets(%2); %}
+	| HUH BRA any_token_sequence KET %{ mHuh(%2); %}
 	| HLO %{ mHello(null,null,null); %}
 	| SUB order_list %{ mSubmit(null,%1); %}
 	| SUB BRA turn KET order_list %{ mSubmit(%2,%4); %}
 //	| NOT BRA negatable_command KET %{ ... %}		
+//	| MIS
+//	| GOF
+//	| ORD
 	| DRW %{ mDraw(null); %}
 	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mDraw(%3); %}
-// more
+//	| send_message %{ %0; %}
 ;
 
 // Message
 %server_client_message
+//	: YES 
+//	| YES
+//	| REJ
+//	| REJ
 	: MAP BRA TEXT KET %{ mMap(TU.text(%2)); %}
 	| MDF BRA power_list KET BRA mdf_provinces KET BRA mdf_adjacencies KET %{ mMapDefinition(%2,%5,%8); %}
 	| HLO BRA POWER KET BRA INTEGER KET BRA variant KET %{ mHello(TU.power(%2),TU.integer(%5),%8); %}
 	| NOW BRA turn KET unit_with_location_and_mrt_list %{ mCurrentLocation(%2,%4); %}
 	| SCO sco_entry_list %{ mSupplyOwnership(%1); %}
+//	| THX
+//	| MIS
+//	| MIS
+//	| ORD
 	| SVE BRA TEXT KET %{ mSaveGame(TU.text(%2)); %}
 	| LOD BRA TEXT KET %{ mLoadGame(TU.text(%2)); %}
+//	| OFF
 	| TME BRA INTEGER KET %{ mTimeToDeadline(TU.integer(%2)); %}
+	| PRN BRA bad_bracketed_sequence KET %{ mBadBrackets(%2); %}
+	| HUH BRA any_token_sequence KET %{ mHuh(%2); %}
+//	| CCD
+//	| NOT
 	| ADM BRA TEXT KET BRA TEXT KET %{ mAdmin(TU.text(%2),TU.text(%5)); %}
+//	| SLO
+	| DRW %{ mDraw(null); %}
+//	| OUT
 	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mDraw(%3); %}
+//	| FRM
+//	| FRM
 ;
 
 // Message
 %acknowedgable_command
 	: MAP BRA TEXT KET %{ mMap(TU.text(%2)); %}
 	| SVE BRA TEXT KET %{ mSaveGame(TU.text(%2)); %}
+;
+
+// Array<Token>
+%any_token_sequence
+	: any_no_braket %{ [%0]; %}
+	| BRA any_token_sequence KET %{ %1.unshift(%0); %1.push(%2); %1; %}
+	| any_token_sequence any_no_bracket %{ %0.push(%1); %0; %}
+	| any_token_sequence BRA any_token_sequence KET %{ %0.push(%1); %0 = %0.concat(%2); %0.push(%3); %0; %}
+;
+
+%any_no_bracket : INTEGER | POWER | AMY | FLT | CTO | CVY | HLD | MTO | SUP | VIA | DSB | RTO | BLD | REM | WVE | MBV | BPR | CST | ESC | FAR | HSC | NAS | NMB | NMR | NRN | NRS | NSA | NSC | NSF | NSP | NST | NSU | NVR | NYU | YSC | SUC | BNC | CUT | DSR | FLD | NSO | RET | NCS | NEC | ECS | SEC | SCS | SWC | WCS | NWC | SPR | SUM | FAL | AUT | WIN | CCD | DRW | FRM | GOF | HLO | HST | HUH | IAM | LOD | MAP | MDF | MIS | NME | NOT | NOW | OBS | OFF | ORD | OUT | PRN | REJ | SCO | SLO | SND | SUB | SVE | THX | TME | YES | ADM | AOA | BTL | ERR | LVL | MRT | MTL | NPB | NPR | PDA | PTL | RTL | UNO | DSD | ALY | AND | BWD | DMZ | ELS | EXP | FWD | FCT | FOR | HOW | IDK | IFF | INS | IOU | OCC | ORR | PCE | POB | PPT | PRP | QRY | SCD | SRY | SUG | THK | THN | TRY | UOM | VSS | WHT | WHY | XDO | XOY | YDO | WRT | TEXT | INLAND | SEA | COASTAL | BICOASTAL ;
+
+%any : any_no_bracket | BRA | KET ;
+
+// Array<Token>
+%bad_bracketed_sequence
+	: any %{ [%0]; %}
+	| bad_bracketed_sequence any %{ %0.push(%1); %0; %}
+;
+
+// Coast
+%coast
+	: NCS %{ TU.coast(%0); %} 
+	| NEC %{ TU.coast(%0); %} 
+	| ECS %{ TU.coast(%0); %} 
+	| SEC %{ TU.coast(%0); %} 
+	| SCS %{ TU.coast(%0); %} 
+	| SWC %{ TU.coast(%0); %} 
+	| WCS %{ TU.coast(%0); %} 
+	| NWC %{ TU.coast(%0); %} 
 ;
 
 // ScoEntry
@@ -157,16 +208,12 @@ class TU {
 	| WIN %{ TU.phase(%0); %} 
 ;
 
-// Coast
-%coast
-	: NCS %{ TU.coast(%0); %} 
-	| NEC %{ TU.coast(%0); %} 
-	| ECS %{ TU.coast(%0); %} 
-	| SEC %{ TU.coast(%0); %} 
-	| SCS %{ TU.coast(%0); %} 
-	| SWC %{ TU.coast(%0); %} 
-	| WCS %{ TU.coast(%0); %} 
-	| NWC %{ TU.coast(%0); %} 
+// Province
+%province
+	: INLAND %{ TU.province(%0); %}
+	| SEA %{ TU.province(%0); %}
+	| COASTAL %{ TU.province(%0); %}
+	| BICOASTAL %{ TU.province(%0); %}
 ;
 
 // Array<Int>
@@ -186,14 +233,14 @@ class TU {
 	| BRA unit_with_location KET SUP BRA unit_with_location KET %{
 		moSupport(%1,%5,null);
 	%}
-	| BRA unit_with_location KET SUP BRA unit_with_location KET MTO PROVINCE %{
-		moSupport(%1,%5,TU.province(%8));
+	| BRA unit_with_location KET SUP BRA unit_with_location KET MTO province %{
+		moSupport(%1,%5,%8);
 	%}
-	| BRA unit_with_location KET CVY BRA unit_with_location KET CTO PROVINCE %{
-		moConvoy(%1,%5,TU.province(%8));
+	| BRA unit_with_location KET CVY BRA unit_with_location KET CTO province %{
+		moConvoy(%1,%5,%8);
 	%}
-	| BRA unit_with_location KET CTO PROVINCE VIA BRA province_list KET %{
-		moMoveByConvoy(%1,TU.province(%4),%7);
+	| BRA unit_with_location KET CTO province VIA BRA province_list KET %{
+		moMoveByConvoy(%1,%4,%7);
 	%}
 ;
 
@@ -216,7 +263,7 @@ class TU {
 
 // MdfProAdjacencies
 %mdf_province_adjacencies
-	: PROVINCE mdf_coast_adjacencies_list %{ { pro : TU.province(%0), coasts : %1 }; %}
+	: province mdf_coast_adjacencies_list %{ { pro : %0, coasts : %1 }; %}
 ;
 
 // Coast
@@ -255,7 +302,7 @@ class TU {
 
 // Location
 %mdf_province
-	: PROVINCE %{ { province : TU.province(%0), coast : null }; %}
+	: province %{ { province : %0, coast : null }; %}
 	| BRA province_and_coast KET %{ %1; %}
 ;
 
@@ -267,13 +314,13 @@ class TU {
 
 // Location
 %province_and_coast
-	: PROVINCE coast %{ { province : TU.province(%0), coast : %1 }; %}
+	: province coast %{ { province : %0, coast : %1 }; %}
 ;
 
 // Array<Location>
 %province_list
-	: PROVINCE %{ [TU.province(%0)]; %}
-	| province_list PROVINCE %{ %0.push(TU.province(%1)); %0; %}
+	: province %{ [%0]; %}
+	| province_list province %{ %0.push(%1); %0; %}
 ;
 
 // UnitType

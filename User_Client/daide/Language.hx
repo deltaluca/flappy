@@ -18,8 +18,8 @@ enum Message {
 	mHistory(turn:Turn);
 	mTimeToDeadline(time:Null<Int>);
 	mAdmin(a:String,b:String);
-//	mBadBracketedSequence(...);
-//	mHuh(...);
+	mBadBrackets(seq:Array<Token>);
+	mHuh(seq:Array<Token>);
 	mHello(power:Null<Int>,x:Int,v:Variant);
 	mSubmit(turn:Turn,orders:Array<MsgOrder>);
 	mDraw(powers:Array<Int>);
