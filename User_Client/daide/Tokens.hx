@@ -63,7 +63,7 @@ class TokenUtils {
 					onOkay,onBPR,onNoCoastSpecified,onNotEmptySupply,onNotAdjacent,
 					onNotHomeSupply,onNotAtSea,onNoMoreBuilds,onNoMoreRemovals,
 					onNoRetreatNeeded,onNotRightSeason,onNoSuchArmy,onNotSupply,
-					onNoSuchFleet,onNoSuchProvince,onNST,onNoSuchUnit,onNotValidRetreat,
+					onNoSuchFleet,onNoSuchProvince,null,onNoSuchUnit,onNotValidRetreat,
 					onNotYourUnit,onNotYourSupply
 				][kind]);
 			case 0x45: tResult([
@@ -93,9 +93,9 @@ class TokenUtils {
 			case 0x4a: tPress([
 					prAlly,prAND,prNoneOfYourBusiness,prDemiliterisedZone,prELSE,prExplain,
 					prRequestForward,prFact,prForTurn,prHowToAttack,prIDontKnow,prIF,
-					prInsist,prIOU,prOccupy,prOR,prPeace,prPosition,prPPT,prPropose,
-					prQuery,prSupplyDistro,prSorry,prSuggest,prThink,prThen,prTry,prUOM,
-					prVersus,prWhat,prWhy,prDo,prOwes,prTellMe,prWRT
+					prInsist,null,prOccupy,prOR,prPeace,prPosition,null,prPropose,
+					prQuery,prSupplyDistro,prSorry,prSuggest,prThink,prThen,prTry,null,
+					prVersus,prWhat,prWhy,prDo,prOwes,prTellMe,prChoose,prBCC,prUNT
 				][kind]);
 			case 0x4b: tText(String.fromCharCode(kind));
 			case 0x50: tProvince(proInland   (kind,false));
@@ -159,7 +159,6 @@ class TokenUtils {
 					case onNotSupply:			0x0c;
 					case onNoSuchFleet:			0x0d;
 					case onNoSuchProvince:		0x0e;
-					case onNST:					0x0f;
 					case onNoSuchUnit:			0x10;
 					case onNotValidRetreat:		0x11;
 					case onNotYourUnit:			0x12;
@@ -258,12 +257,10 @@ class TokenUtils {
 					case prIDontKnow:			0x0a;
 					case prIF:					0x0b;
 					case prInsist:				0x0c;
-					case prIOU:					0x0d;
 					case prOccupy:				0x0e;
 					case prOR:					0x0f;
 					case prPeace:				0x10;
 					case prPosition:			0x11;
-					case prPPT:					0x12;
 					case prPropose:				0x13;
 					case prQuery:				0x14;
 					case prSupplyDistro:		0x15;
@@ -272,14 +269,15 @@ class TokenUtils {
 					case prThink:				0x18;
 					case prThen:				0x19;
 					case prTry:					0x1a;
-					case prUOM:					0x1b;
 					case prVersus:				0x1c;
 					case prWhat:				0x1d;
 					case prWhy:					0x1e;
 					case prDo:					0x1f;
 					case prOwes:				0x20;
 					case prTellMe:				0x21;
-					case prWRT:					0x22;
+					case prChoose:				0x22;
+					case prBCC:					0x23;
+					case prUNT:					0x24;
 				}];
 			case tText(str):
 				var ret = [];
@@ -341,7 +339,7 @@ enum Order {
 
 enum OrderNote {
 	/* MBV */ onOkay;
-	/* BPR */ onBPR; //no longer used in Daide
+	/* BPR */ onBPR; 
 	/* CST */ onNoCoastSpecified;
 	/* ESC */ onNotEmptySupply;
 	/* FAR */ onNotAdjacent;
@@ -355,7 +353,6 @@ enum OrderNote {
 	/* NSC */ onNotSupply;
 	/* NSF */ onNoSuchFleet;
 	/* NSP */ onNoSuchProvince;
-	/* NST */ onNST; //doesn't seem to exist according to Daide Syntax?
 	/* NSU */ onNoSuchUnit;
 	/* NVR */ onNotValidRetreat;
 	/* NYU */ onNotYourUnit;
@@ -367,7 +364,7 @@ enum Result {
 	/* BNC */ rMoveBounced;
 	/* CUT */ rSupportCut;
 	/* DSR */ rConvoyDisrupted;
-	/* FLD */ rFLD; //no longer used in Daide
+	/* FLD */ rFLD;
 	/* NSO */ rNoSuchOrder;
 	/* RET */ rDislodged;
 }
@@ -454,12 +451,10 @@ enum Press {
 	/* IDK */ prIDontKnow;
 	/* IFF */ prIF;
 	/* INS */ prInsist;
-	/* IOU */ prIOU; //doesn't exists in daide syntax?
 	/* OCC */ prOccupy;
 	/* ORR */ prOR;
 	/* PCE */ prPeace;
 	/* POB */ prPosition;
-	/* PPT */ prPPT; //doesn't exists in daide syntax?
 	/* PRP */ prPropose;
 	/* QRY */ prQuery;
 	/* SCD */ prSupplyDistro;
@@ -468,14 +463,15 @@ enum Press {
 	/* THK */ prThink;
 	/* THN */ prThen;
 	/* TRY */ prTry;
-	/* UOM */ prUOM; //doesn't exist in daide syntax?
 	/* VSS */ prVersus;
 	/* WHT */ prWhat;
 	/* WHY */ prWhy;
 	/* XDO */ prDo;
 	/* XOY */ prOwes;
 	/* YDO */ prTellMe;
-	/* WRT */ prWRT; //doesn't exist in daide syntax?
+	/* CHO */ prChoose;
+	/* BCC */ prBCC;
+	/* UNT */ prUNT;
 }
 
 enum Province {
