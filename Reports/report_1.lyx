@@ -1,0 +1,504 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+% Initial report, skeleton
+
+
+\usepackage{mathptmx}
+\end_preamble
+\use_default_options false
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman times
+\font_sans default
+\font_typewriter mathptmx
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 3cm
+\rightmargin 3cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Automated negotiation in the game of deplomacy
+\end_layout
+
+\begin_layout Title
+Report 1 : Inception
+\end_layout
+
+\begin_layout Author
+Luca Deltodesco, Matthias Hueser, 
+\begin_inset Newline newline
+\end_inset
+
+Andras Slemmer, Cliff Sun, Luke Tomlin
+\end_layout
+
+\begin_layout Date
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+today
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Key Requirements
+\end_layout
+
+\begin_layout Enumerate
+AI is capable of playing an entire game of Deplomacy from start to finish.
+\end_layout
+
+\begin_layout Enumerate
+AI is capable of negotiating with other players in the specified negotiation
+ language.
+\end_layout
+
+\begin_layout Enumerate
+Software is capable of handling and organising a game of Deplomacy involving
+ multiple players/AIs.
+\end_layout
+
+\begin_layout Section
+Extensions
+\end_layout
+
+\begin_layout Enumerate
+AI is capable of beating other less complicated AI (eg.
+ ones that do not negotiate, with simple negotiation tactics etc.).
+\end_layout
+
+\begin_layout Enumerate
+Software is extendable to allow other AIs to play (eg.
+ Daide).
+\end_layout
+
+\begin_layout Enumerate
+Software is runnable on multiple platforms.
+\end_layout
+
+\begin_layout Enumerate
+AI is able to negotiate in a meaningful way, based on previous gameplay
+ within a game (Machine learning?).
+\end_layout
+
+\begin_layout Section
+Choice of Development Method
+\end_layout
+
+\begin_layout Paragraph*
+Methodology
+\end_layout
+
+\begin_layout Standard
+Agile development, regular group meetings and weekly re-adjustments of targets.
+ Individual targets and group targets set regularly.
+\end_layout
+
+\begin_layout Paragraph*
+Code testing
+\end_layout
+
+\begin_layout Standard
+Unit testing and other code testing using QuickCheck.
+\end_layout
+
+\begin_layout Paragraph*
+Version control
+\end_layout
+
+\begin_layout Standard
+Handled by Git, using GitHub as a central repository.
+\end_layout
+
+\begin_layout Subsubsection*
+Required technology
+\end_layout
+
+\begin_layout Description
+Server Haskell : Concurrent programming, Network Programming
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Socket programming (for GUI/Server communications)
+\end_layout
+
+\end_deeper
+\begin_layout Description
+GUI Haxe : GUI creation, cross-platform availability
+\end_layout
+
+\begin_layout Description
+AI Haskell
+\end_layout
+
+\begin_layout Subsubsection*
+Project Management
+\end_layout
+
+\begin_layout Paragraph*
+Progress
+\end_layout
+
+\begin_layout Standard
+After the initial server and game creation is completed, progress on the
+ AI can be made.
+ 
+\begin_inset Newline newline
+\end_inset
+
+AI progress should be fairly simple to gauge, as it gains negotiation functions
+ and performs better against other opponents (human/AI).
+ 
+\begin_inset Newline newline
+\end_inset
+
+Additionally, the visuals and interactivity of the game itself will become
+ more advanced and user-friendly as the GUI improves.
+ (eg.
+ from just a simple CLI -> GUI/CLI -> GUI -> GUI with prettier graphics...)
+\end_layout
+
+\begin_layout Paragraph*
+Roles and responsibilities
+\end_layout
+
+\begin_layout Standard
+Roles are quite flexible as there are many ways to organise group members
+ within the project, and there are many different jobs that require doing.
+ 
+\end_layout
+
+\begin_layout Paragraph*
+Meeting and scheduling arrangements
+\end_layout
+
+\begin_layout Standard
+Weekly or more frequent brief meetings to discuss progress.
+ Online forums for other discussions on work and to suggest reading materials.
+ 
+\end_layout
+
+\begin_layout Section
+Draft Schedule
+\end_layout
+
+\begin_layout Paragraph*
+Weeks 1 - 2
+\end_layout
+
+\begin_layout Standard
+Write the basic game foundation, CLI interfaces, functions to make it play
+ nicely with external AI (eg.
+ from Daide).
+ Learn how to use the various technologies required.
+\end_layout
+
+\begin_layout Paragraph*
+Weeks 3 - 4
+\end_layout
+
+\begin_layout Standard
+Start initial work on the AI.
+ Continue to improve and develop game foundation (work will need to be split
+ between team members here).
+ AI should be able to play a 'holding' game and fulfill all requirements
+ to play with other AIs.
+ Begin research into tactics and how we will develop the AI.
+\end_layout
+
+\begin_layout Paragraph*
+Weeks 5-6
+\end_layout
+
+\begin_layout Standard
+Further improvements on the AI, implementing extensions and investigating
+ cross-platform availability.
+ Frequent tests against other AIs, test implementations of different AI
+ techniques (neural networks etc.)
+\end_layout
+
+\begin_layout Paragraph*
+Weeks 7+
+\end_layout
+
+\begin_layout Standard
+Finishing touches to game and platforms.
+ Focused work on AI improvement/features.
+\end_layout
+
+\begin_layout Section
+Detailed Plan for First Iteration
+\end_layout
+
+\begin_layout Subsubsection*
+Extensible maps
+\end_layout
+
+\begin_layout Standard
+Will require 
+\end_layout
+
+\begin_layout Paragraph*
+Representation
+\end_layout
+
+\begin_layout Itemize
+A graph of visitable nodes, each node representing a location (sea/coastal/bicoa
+stal/inland).
+\end_layout
+
+\begin_layout Itemize
+An association of nodes to supply depots or standard location.
+\end_layout
+
+\begin_layout Itemize
+An association of nodes to players starting areas.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Considerations: 
+\series default
+Spain in standard map has two locations on one territory which represent
+ different nodes in the graph, although they are considered a single territory
+ which effect the movement of fleets.
+\end_layout
+
+\begin_layout Paragraph*
+GUI
+\end_layout
+
+\begin_layout Itemize
+An image representing the map.
+\end_layout
+
+\begin_layout Itemize
+A set of coordinates corresponding to the position of a node on the image.
+\end_layout
+
+\begin_layout Itemize
+Also perhaps require more information to display fleets/armies in different
+ positions on a territory.
+\end_layout
+
+\begin_layout Itemize
+For convoy, perhaps require more information regarding path through the
+ seas to display a nice representation of the convoy actions, if we ever
+ do anything animated also etc.
+\end_layout
+
+\begin_layout Itemize
+Graph will require different arcs - some for Fleets, some for Armies, some
+ for Convoy.
+\end_layout
+
+\begin_layout Itemize
+This will be used to decide if a given move is valid.
+\end_layout
+
+\begin_layout Subsubsection*
+Server
+\end_layout
+
+\begin_layout Standard
+Will require
+\end_layout
+
+\begin_layout Itemize
+Method for allowing players to connect (whether AI or human).
+\end_layout
+
+\begin_layout Itemize
+Method for dealing with disconnections (saving their game state, allocating
+ new thread on rejoin, default moves whilst absent?)
+\end_layout
+
+\begin_layout Itemize
+Method for notifying players of changing game stages (start, negotiation,
+ move submission, resolution).
+\end_layout
+
+\begin_layout Itemize
+Method for allowing players to communicate with each other (privately, or
+ as a group).
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Server does not need to understand the language of negotiation (as defined
+ in Daide).
+\end_layout
+
+\begin_layout Itemize
+All the server needs to do is relay the message.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Method for allowing players to submit their moves (with possible added functiona
+lity for checking if a move is valid).
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+This will need to be in a game-defined language.
+\end_layout
+
+\begin_layout Itemize
+Using the language specified by Daide would allow us to 'plugin' their own
+ AIs.
+\end_layout
+
+\begin_layout Itemize
+Method for parsing this 'move submission' language will be required.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Method for resolving moves.
+ This includes
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Moving units location on map (standard move, convoy orders).
+\end_layout
+
+\begin_layout Itemize
+Resolving disruptions of a move/convoy action.
+\end_layout
+
+\begin_layout Itemize
+Resolving attack moves and defend moves (and support moves).
+\end_layout
+
+\begin_layout Itemize
+Notifying a player of the need to retreat/withdraw if they're displaced
+ from a location.
+\end_layout
+
+\begin_layout Itemize
+Default moves for when move is invalid/not received.
+\end_layout
+
+\begin_layout Itemize
+Dealing with specific/rare cases.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Updating and redistributing the current game state.
+\end_layout
+
+\begin_layout Subsubsection*
+GUI
+\end_layout
+
+\begin_layout Standard
+Will require
+\end_layout
+
+\begin_layout Itemize
+Method for representing map and units on the map in a clear and understandable
+ fashion.
+\end_layout
+
+\begin_layout Itemize
+Method for submitting orders (CLI -> GUI + CLI -> GUI?).
+\end_layout
+
+\begin_layout Itemize
+Method for allowing players to view a send messages to other players (via
+ the server).
+\end_layout
+
+\begin_layout Subsection*
+Other notes
+\end_layout
+
+\begin_layout Standard
+Assuming that we can get all of these up and running (with some simplifications
+ to move submission/negotation/map representation), we should have a working
+ 'game', with which we can play (as humans) or 'plugin' an external AI from
+ Daide.
+ Thinking will need to be alloted to how the individual parts communicate
+ (sockets? some protocol?) and how the external AI talk with the server.
+\end_layout
+
+\begin_layout Standard
+Once this is done, we can split the group if necessary, one to focus on
+ improving the general game platform, and another to focus on building the
+ AI to play (and hopefully beat) the other players!
+\end_layout
+
+\begin_layout Standard
+**** Remember that the ultimate goal of this project is to create an AI
+ that negotiates in a game of deplomacy.
+ All of this extra stuff just makes it look a lot more impressive and fleshes
+ out the project.****
+\end_layout
+
+\end_body
+\end_document

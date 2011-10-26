@@ -4,6 +4,8 @@
 \usepackage{mathptmx}
 \renewcommand{\ttdefault}{mathptmx}
 \usepackage[latin9]{inputenc}
+\usepackage{geometry}
+\geometry{verbose,lmargin=3cm,rmargin=3cm}
 
 \makeatletter
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
@@ -12,12 +14,13 @@
 
 \usepackage{mathptmx}
 
-
-
 \makeatother
 
 \usepackage{babel}
 \begin{document}
+
+\title{Automated negotiation in the game of deplomacy}
+
 
 \title{Report 1 : Inception}
 
@@ -47,13 +50,16 @@ do not negotiate, with simple negotiation tactics etc.).
 \item Software is extendable to allow other AIs to play (eg. Daide).
 \item Software is runnable on multiple platforms.
 \item AI is able to negotiate in a meaningful way, based on previous gameplay
-within a game.
+within a game (Machine learning?).
 \end{enumerate}
 
 \section{Choice of Development Method}
 
 
 \paragraph*{Methodology}
+
+Agile development, regular group meetings and weekly re-adjustments
+of targets. Individual targets and group targets set regularly.
 
 
 \paragraph*{Code testing}
@@ -69,6 +75,10 @@ Handled by Git, using GitHub as a central repository.
 \subsubsection*{Required technology}
 \begin{description}
 \item [{Server}] Haskell : Concurrent programming, Network Programming
+
+
+Socket programming (for GUI/Server communications)
+
 \item [{GUI}] Haxe : GUI creation, cross-platform availability
 \item [{AI}] Haskell
 \end{description}
@@ -79,9 +89,10 @@ Handled by Git, using GitHub as a central repository.
 \paragraph*{Progress}
 
 After the initial server and game creation is completed, progress
-on the AI can be made. AI progress should be fairly simple to gauge,
-as it gains negotiation functions and performs better against other
-opponents (human/AI). \\
+on the AI can be made. \\
+AI progress should be fairly simple to gauge, as it gains negotiation
+functions and performs better against other opponents (human/AI).
+\\
 Additionally, the visuals and interactivity of the game itself will
 become more advanced and user-friendly as the GUI improves. (eg. from
 just a simple CLI -\textgreater{} GUI/CLI -\textgreater{} GUI -\textgreater{}
@@ -90,29 +101,150 @@ GUI with prettier graphics...)
 
 \paragraph*{Roles and responsibilities}
 
+Roles are quite flexible as there are many ways to organise group
+members within the project, and there are many different jobs that
+require doing. 
+
 
 \paragraph*{Meeting and scheduling arrangements}
+
+Weekly or more frequent brief meetings to discuss progress. Online
+forums for other discussions on work and to suggest reading materials. 
 
 
 \section{Draft Schedule}
 
-\textit{\char`\"{}A well-considered but non-binding estimate of how
-the project should progress:}\\
-\textit{ Outline of anticipated number of time-boxed iterations you
-will use}\\
-\textit{ Tentative list of features or milestones that each iteration
-should deliver in executable software}\\
-\textit{ For each feature, an analysis of the technical components
-necessary for their realization.}\\
-\textit{ Identify which components are supposed to work for each iteration.\char`\"{}}
+
+\paragraph*{Weeks 1 - 2}
+
+Write the basic game foundation, CLI interfaces, functions to make
+it play nicely with external AI (eg. from Daide). Learn how to use
+the various technologies required.
+
+
+\paragraph*{Weeks 3 - 4}
+
+Start initial work on the AI. Continue to improve and develop game
+foundation (work will need to be split between team members here).
+AI should be able to play a 'holding' game and fulfill all requirements
+to play with other AIs. Begin research into tactics and how we will
+develop the AI.
+
+
+\paragraph*{Weeks 5-6}
+
+Further improvements on the AI, implementing extensions and investigating
+cross-platform availability. Frequent tests against other AIs, test
+implementations of different AI techniques (neural networks etc.)
+
+
+\paragraph*{Weeks 7+}
+
+Finishing touches to game and platforms. Focused work on AI improvement/features.
 
 
 \section{Detailed Plan for First Iteration}
 
-\textit{\char`\"{}Specification of length of, and dates for, your
-first time-boxed iteration of software development.}\\
-\textit{ Detailed mapping of tasks for the iteration, wg with a Sprint
-backlog.}\\
-\textit{ Identification of potential risks during first iteration.}\\
-\textit{ Planned progress measure for first iteration. \char`\"{}}
+
+\subsubsection*{Extensible maps}
+
+Will require 
+
+
+\paragraph*{Representation}
+\begin{itemize}
+\item A graph of visitable nodes, each node representing a location (sea/coastal/bicoastal/inland).
+\item An association of nodes to supply depots or standard location.
+\item An association of nodes to players starting areas.
+\end{itemize}
+\textbf{Considerations: }Spain in standard map has two locations on
+one territory which represent different nodes in the graph, although
+they are considered a single territory which effect the movement of
+fleets.
+
+
+\paragraph*{GUI}
+\begin{itemize}
+\item An image representing the map.
+\item A set of coordinates corresponding to the position of a node on the
+image.
+\item Also perhaps require more information to display fleets/armies in
+different positions on a territory.
+\item For convoy, perhaps require more information regarding path through
+the seas to display a nice representation of the convoy actions, if
+we ever do anything animated also etc.
+\item Graph will require different arcs - some for Fleets, some for Armies,
+some for Convoy.
+\item This will be used to decide if a given move is valid.
+\end{itemize}
+
+\subsubsection*{Server}
+
+Will require
+\begin{itemize}
+\item Method for allowing players to connect (whether AI or human).
+\item Method for dealing with disconnections (saving their game state, allocating
+new thread on rejoin, default moves whilst absent?)
+\item Method for notifying players of changing game stages (start, negotiation,
+move submission, resolution).
+\item Method for allowing players to communicate with each other (privately,
+or as a group).
+
+\begin{itemize}
+\item Server does not need to understand the language of negotiation (as
+defined in Daide).
+\item All the server needs to do is relay the message.
+\end{itemize}
+\item Method for allowing players to submit their moves (with possible added
+functionality for checking if a move is valid).
+
+\begin{itemize}
+\item This will need to be in a game-defined language.
+\item Using the language specified by Daide would allow us to 'plugin' their
+own AIs.
+\item Method for parsing this 'move submission' language will be required.
+\end{itemize}
+\item Method for resolving moves. This includes
+
+\begin{itemize}
+\item Moving units location on map (standard move, convoy orders).
+\item Resolving disruptions of a move/convoy action.
+\item Resolving attack moves and defend moves (and support moves).
+\item Notifying a player of the need to retreat/withdraw if they're displaced
+from a location.
+\item Default moves for when move is invalid/not received.
+\item Dealing with specific/rare cases.
+\end{itemize}
+\item Updating and redistributing the current game state.
+\end{itemize}
+
+\subsubsection*{GUI}
+
+Will require
+\begin{itemize}
+\item Method for representing map and units on the map in a clear and understandable
+fashion.
+\item Method for submitting orders (CLI -\textgreater{} GUI + CLI -\textgreater{}
+GUI?).
+\item Method for allowing players to view a send messages to other players
+(via the server).
+\end{itemize}
+
+\subsection*{Other notes}
+
+Assuming that we can get all of these up and running (with some simplifications
+to move submission/negotation/map representation), we should have
+a working 'game', with which we can play (as humans) or 'plugin' an
+external AI from Daide. Thinking will need to be alloted to how the
+individual parts communicate (sockets? some protocol?) and how the
+external AI talk with the server.
+
+Once this is done, we can split the group if necessary, one to focus
+on improving the general game platform, and another to focus on building
+the AI to play (and hopefully beat) the other players!
+
+{*}{*}{*}{*} Remember that the ultimate goal of this project is to
+create an AI that negotiates in a game of deplomacy. All of this extra
+stuff just makes it look a lot more impressive and fleshes out the
+project.{*}{*}{*}{*}
 \end{document}
