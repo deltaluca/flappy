@@ -1,98 +1,89 @@
-import Data.String.Utils
-import Data.Graph
-import System.IO
-import Maybe
+import Text.ParserCombinators.Parsec
 
-names = "province_names.txt"
-links = "province_links.txt"
-test_links = "t_links.txt"
-
-data Province = 
-    Inland  ProvinceName [LandBorder] [WaterBorder]
-  | Coastal ProvinceName [LandBorder] [WaterBorder]
-  | Water   ProvinceName [LandBorder] [WaterBorder]
+data DMap = MDF [Power] ([Supply],NSupply) [ProvinceAdj]
   deriving (Show)
 
-type MapLinks = ([Province],[Province],[Province])
-type WaterBorder = Border
-type LandBorder  = Border
-type Border = String
-type ProvinceName = String
+-- add coastal?
+data ProvinceAdj = PAdj Province [UnitAdj]
+  deriving (Show)
+data UnitAdj = UAdj UType [AdjProv]
+  deriving (Show)
+data AdjProv = AProv Province | ACst Province Coast
+  deriving (Show)
+data Supply  = Supp Power [Province]
+  deriving (Show)
 
-getPName :: Province -> ProvinceName
-getPName (Inland  n _ _) = n
-getPName (Coastal n _ _) = n
-getPName (Water   n _ _) = n
+type Power = String
+type NSupply = [Province]
+type Province = String
+type Coast = String
+type UType = String
 
-getPLands :: Province -> [LandBorder]
-getPLands (Inland  _ l _) = l
-getPLands (Coastal _ l _) = l
-getPLands (Water   _ l _) = l
+mapFile =
+  do  result <- line
+      eof
+      return result
 
-getPWaters :: Province -> [WaterBorder]
-getPWaters (Inland  _ _ w) = w
-getPWaters (Coastal _ _ w) = w
-getPWaters (Water   _ _ w) = w
+-- Need to make it more flexible, ie. accepts extra spaces and stuff
+line = 
+  do  mdf_start <- many (noneOf "(")
+      powers <- getPowers
+      supply <- getSupplyProvs
+      adjacency <- getAdjacencies
+      eol
+      return (MDF powers supply adjacency)
 
-isCoastal (Coastal _ _ _) = True
-isCoastal p = False
+getAdjacencies =
+  do  char '('
+      contents <- many getProvAdjacency
+      char ')'
+      return contents
 
-createArmyGraph (coast,inland,sea) = do
-  let ids = assignID (coast,inland,sea)
-  let armyMap = makeArmyMap (coast,inland,sea)
-  let just_armyNodes = map (\(x,y) -> ((flip lookup) ids x,(flip lookup) ids y)) armyMap
-  let armyNodes = map (\(x,y) -> (fromJust x,fromJust y)) just_armyNodes
-  return $ buildG (1,length ids) armyNodes
+getProvAdjacency =
+  do  char '('
+      pname <- many (noneOf "(")
+      units <- many getUnits
+      char ')'
+      return (PAdj pname units)
 
-makeArmyMap (coast,inland,_) =
-  concat [[(name,l) | l <- lands] | (name,lands) <- provlinks]
-  where
-    provlinks = zip (map getPName (coast ++ inland)) (map getPLands (coast ++ inland))
+getUnits =
+  do  char '('
+      unit <- many (noneOf " ")
+      char ' '
+      links <- sepBy (many (noneOf " )")) (char ' ')
+      char ')'
+      return (UAdj unit (map AProv links))
 
--- Needs work to discriminate against non-coastal links
-makeFleetMap (coast,_,sea) =
-  concat [[(name,l) | l <- lands] | (name,lands) <- provlinks]
-  where
-    provlinks = zip (map getPName (coast ++ sea)) ((map getPLands (coast ++ sea)) ++ (map getPWaters (coast ++ sea)))
+getPowers =
+  do  char '('  
+      contents <- sepBy (many (noneOf ") ")) (char ' ')
+      char ')'
+      return contents
 
-assignID :: MapLinks -> [(ProvinceName,Int)]
-assignID (coast,inland,sea) =
- zip (map getPName (coast ++ inland ++ sea)) [1..]
+getSupplyProvs :: GenParser Char st ([Supply],NSupply)
+getSupplyProvs = 
+  do  char '('
+      -- Get supplies
+      char '('
+      supplies <- many getSupply
+      char ')'
+      -- Get non-supplies
+      char '('
+      nsupplies <- sepBy (many (noneOf ") ")) (char ' ')
+      char ')'
+      char ')'
+      return (supplies,nsupplies)
 
--- Functions for conerting list-structure of provinces into a slightly
--- more readable custom data type form.
+getSupply =
+  do  char '('
+      powname <- many (noneOf " ")
+      provinces <- sepBy (many (noneOf ") ")) (char ' ')
+      char ')'
+      return (Supp powname provinces)
 
-listToProvince ptype [[name],landborders,seaborders] =
-  ptype name landborders seaborders
+eol :: GenParser Char st Char
+eol = char '\n'
 
-convertToProvince (coast,inland,sea) =
-  (map (listToProvince Coastal) coast,
-   map (listToProvince Inland)  inland,
-   map (listToProvince Water)   sea)
-
--- Sorting out and parsing the provinces from a file
-
--- Splits a list of land provinces into those which are coastal, and those
--- which aren't.
-
-inferCoastal lands = 
-  ((filter ((/=0) . length . last)) lands,(filter ((==0) . length . last)) lands)
-
-getLinks filename = do
-  handle <- openFile filename ReadMode
-  contents <- hGetContents handle
-  let ret =  map (map (split ",")) $ map (split ";") $ lines contents
-  return (tail (takeWhile (/=[["--Water--"]]) ret), tail (dropWhile (/=[["--Water--"]]) ret))
-
-getNames filename = do
-  handle <- openFile filename ReadMode
-  contents <- hGetContents handle
+parseMap input = parse mapFile "(unknown)" input
   
-  return $ map (\[x,y] -> (x,y)) $ map (split ",") $ lines contents
 
-main = do
-  provs <- getLinks test_links
-  let (coast,inland) = inferCoastal $ fst provs
-  let sea = snd provs
-  return $ convertToProvince (coast,inland,sea)
-  --putStrLn $ show $ convertToProvince (coast,inland,sea)
