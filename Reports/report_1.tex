@@ -1,38 +1,118 @@
+%% LyX 2.0.0 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english]{article}
+\usepackage{mathptmx}
+\renewcommand{\ttdefault}{mathptmx}
+\usepackage[latin9]{inputenc}
+
+\makeatletter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
 % Initial report, skeleton
 
-\documentclass[]{article}
+
 \usepackage{mathptmx}
 
+
+
+\makeatother
+
+\usepackage{babel}
 \begin{document}
+
 \title{Report 1 : Inception}
-\author{Luca Deltodesco, Matthias Hueser, \\Andras Slemmer, Cliff Sun, Luke Tomlin}
+
+
+\author{Luca Deltodesco, Matthias Hueser, \\
+Andras Slemmer, Cliff Sun, Luke Tomlin}
+
+
 \date{\today}
+
 \maketitle
 
 \section{Key Requirements}
-\textit{"Up to 10 most critical or high-risk, but definitely essential, requirements that your completed system will meet; their realisation should secure at least grade B. "}
+\begin{enumerate}
+\item AI is capable of playing an entire game of Deplomacy from start to
+finish.
+\item AI is capable of negotiating with other players in the specified negotiation
+language.
+\item Software is capable of handling and organising a game of Deplomacy
+involving multiple players/AIs.
+\end{enumerate}
 
 \section{Extensions}
-\textit{"Additional features or requirements that, if implemented satisfactorily, could contribute to the group getting an A (provided the group scores well on all other criteria). "}
+\begin{enumerate}
+\item AI is capable of beating other less complicated AI (eg. ones that
+do not negotiate, with simple negotiation tactics etc.).
+\item Software is extendable to allow other AIs to play (eg. Daide).
+\item Software is runnable on multiple platforms.
+\item AI is able to negotiate in a meaningful way, based on previous gameplay
+within a game.
+\end{enumerate}
 
 \section{Choice of Development Method}
-\textit{"Suggested (blend of) agile software development method you intend to use.
-A description of the anticipated methods and practices for code testing and version control.
-Identification of needed information technology.\\
-Your project management: how you measure project progress or velocity, what roles and responsibilities team members have throughout project, how often and in what form (e.g. Scrum meeting) will you meet, etc. "}
+
+
+\paragraph*{Methodology}
+
+
+\paragraph*{Code testing}
+
+Unit testing and other code testing using QuickCheck.
+
+
+\paragraph*{Version control}
+
+Handled by Git, using GitHub as a central repository.
+
+
+\subsubsection*{Required technology}
+\begin{description}
+\item [{Server}] Haskell : Concurrent programming, Network Programming
+\item [{GUI}] Haxe : GUI creation, cross-platform availability
+\item [{AI}] Haskell
+\end{description}
+
+\subsubsection*{Project Management}
+
+
+\paragraph*{Progress}
+
+After the initial server and game creation is completed, progress
+on the AI can be made. AI progress should be fairly simple to gauge,
+as it gains negotiation functions and performs better against other
+opponents (human/AI). \\
+Additionally, the visuals and interactivity of the game itself will
+become more advanced and user-friendly as the GUI improves. (eg. from
+just a simple CLI -\textgreater{} GUI/CLI -\textgreater{} GUI -\textgreater{}
+GUI with prettier graphics...)
+
+
+\paragraph*{Roles and responsibilities}
+
+
+\paragraph*{Meeting and scheduling arrangements}
+
 
 \section{Draft Schedule}
-\textit{"A well-considered but non-binding estimate of how the project should progress:\\
-    Outline of anticipated number of time-boxed iterations you will use\\
-    Tentative list of features or milestones that each iteration should deliver in executable software\\
-    For each feature, an analysis of the technical components necessary for their realization.\\
-    Identify which components are supposed to work for each iteration."}
+
+\textit{\char`\"{}A well-considered but non-binding estimate of how
+the project should progress:}\\
+\textit{ Outline of anticipated number of time-boxed iterations you
+will use}\\
+\textit{ Tentative list of features or milestones that each iteration
+should deliver in executable software}\\
+\textit{ For each feature, an analysis of the technical components
+necessary for their realization.}\\
+\textit{ Identify which components are supposed to work for each iteration.\char`\"{}}
+
 
 \section{Detailed Plan for First Iteration}
-\textit{"Specification of length of, and dates for, your first time-boxed iteration of software development.\\
-Detailed mapping of tasks for the iteration, wg with a Sprint backlog.\\
-Identification of potential risks during first iteration.\\
-Planned progress measure for first iteration. "}
 
-
+\textit{\char`\"{}Specification of length of, and dates for, your
+first time-boxed iteration of software development.}\\
+\textit{ Detailed mapping of tasks for the iteration, wg with a Sprint
+backlog.}\\
+\textit{ Identification of potential risks during first iteration.}\\
+\textit{ Planned progress measure for first iteration. \char`\"{}}
 \end{document}
