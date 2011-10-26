@@ -88,69 +88,113 @@ class TU {
 
 // Message
 %client_server_message
-	: NME BRA TEXT KET BRA TEXT KET %{ mName(TU.text(%2),TU.text(%5)); %}
-	| OBS %{ mObserver; %}
-	| IAM BRA POWER KET BRA INTEGER KET %{ mIAm(TU.power(%2),TU.integer(%5)); %}
-	| MAP %{ mMap(null); %}
-	| MDF %{ mMapDefinition(null,null,null); %}
-	| YES BRA acknowledgable_command KET %{ mAccept(%2); %}
-	| REJ BRA acknowledgable_command KEY %{ mReject(%2); %}
-	| NOW %{ mCurrentLocation(null,null); %}
-	| SCO %{ mSupplyOwnership(null); %}
-	| HST BRA turn KET %{ mHistory(%2); %}
-	| TME BRA INTEGER KET %{ mTimeToDeadline(TU.integer(%2)); %}
-	| TME %{ mTimeToDeadline(null); %}
-	| ADM BRA TEXT KET BRA TEXT KET %{ mAdmin(TU.text(%2),TU.text(%5)); %}
-	| PRN BRA bad_bracketed_sequence KET %{ mBadBrackets(%2); %}
-	| HUH BRA any_token_sequence KET %{ mHuh(%2); %}
-	| HLO %{ mHello(null,null,null); %}
-	| SUB order_list %{ mSubmit(null,%1); %}
-	| SUB BRA turn KET order_list %{ mSubmit(%2,%4); %}
-//	| NOT BRA negatable_command KET %{ ... %}		
-	| MIS %{ mMissingOrders(null,null); %}
-//	| GOF
-//	| ORD
-	| DRW %{ mDraw(null); %}
-	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mDraw(%3); %}
+	: NME BRA TEXT KET BRA TEXT KET 			%{ mName(TU.text(%2),TU.text(%5)); %}
+	| OBS 										%{ mObserver; %}
+	| IAM BRA POWER KET BRA INTEGER KET			%{ mIAm(TU.power(%2),TU.integer(%5)); %}
+	| MAP 										%{ mMap(null); %}
+	| MDF 										%{ mMapDefinition(null,null,null); %}
+	| YES BRA acknowledgable_command KET 		%{ mAccept(%2); %}
+	| REJ BRA acknowledgable_command KEY 		%{ mReject(%2); %}
+	| NOW 										%{ mCurrentLocation(null,null); %}
+	| SCO 										%{ mSupplyOwnership(null); %}
+	| HST BRA turn KET 							%{ mHistory(%2); %}
+	| TME BRA INTEGER KET 						%{ mTimeToDeadline(TU.integer(%2)); %}
+	| TME 										%{ mTimeToDeadline(null); %}
+	| ADM BRA TEXT KET BRA TEXT KET 			%{ mAdmin(TU.text(%2),TU.text(%5)); %}
+	| PRN BRA bad_bracketed_sequence KET 		%{ mBadBrackets(%2); %}
+	| HUH BRA any_token_sequence KET 			%{ mHuh(%2); %}
+	| HLO 										%{ mHello(null,null,null); %}
+	| SUB order_list 							%{ mSubmit(null,%1); %}
+	| SUB BRA turn KET order_list 				%{ mSubmit(%2,%4); %}
+	| NOT BRA negatable_command KET 			%{ mNOT(%2); %}		
+	| MIS 										%{ mMissingOrders(null,null); %}
+	| GOF 										%{ mGoFlag; %}
+	| ORD 										%{ mOrderResult(null,null,null); %}
+	| DRW 										%{ mDraw(null); %}
+	| DRW BRA POWER power_list KET 				%{ %3.unshift(TU.power(%2)); mDraw(%3); %}
 //	| send_message
 ;
 
 // Message
 %server_client_message
-//	: YES 
-//	| YES
-//	| REJ
-//	| REJ
-	: MAP BRA TEXT KET %{ mMap(TU.text(%2)); %}
+	: YES BRA client_command KET 				%{ mAccept(%2); %}
+	| YES BRA client_request KET 				%{ mAccept(%2); %}
+	| REJ BRA client_request KET 				%{ mReject(%2); %}
+	| REJ BRA rejectable_client_command KET 	%{ mReject(%2); %}
+	| MAP BRA TEXT KET 							%{ mMap(TU.text(%2)); %}
 	| MDF BRA power_list KET BRA mdf_provinces KET BRA mdf_adjacencies KET %{ mMapDefinition(%2,%5,%8); %}
 	| HLO BRA POWER KET BRA INTEGER KET BRA variant KET %{ mHello(TU.power(%2),TU.integer(%5),%8); %}
 	| NOW BRA turn KET unit_with_location_and_mrt_list %{ mCurrentLocation(%2,%4); %}
-	| SCO sco_entry_list %{ mSupplyOwnership(%1); %}
-	| THX BRA order KET BRA order_note KET %{ mThink(%2,%5); %}
-	| MIS unit_with_location_and_mrt_list %{ mMissingOrders(null,%1); %}
-	| MIS BRA INTEGER KET %{ mMissingOrders(TU.integer(%2),null); %}
+	| SCO sco_entry_list 						%{ mSupplyOwnership(%1); %}
+	| THX BRA order KET BRA order_note KET 		%{ mThink(%2,%5); %}
+	| MIS unit_with_location_and_mrt_list 		%{ mMissingOrders(null,%1); %}
+	| MIS BRA INTEGER KET 						%{ mMissingOrders(TU.integer(%2),null); %}
 	| ORD BRA turn KET BRA order KET BRA compound_order_result KET %{ mOrderResult(%2,%5,%8); %}
-	| SVE BRA TEXT KET %{ mSaveGame(TU.text(%2)); %}
-	| LOD BRA TEXT KET %{ mLoadGame(TU.text(%2)); %}
-//	| OFF
-	| TME BRA INTEGER KET %{ mTimeToDeadline(TU.integer(%2)); %}
-	| PRN BRA bad_bracketed_sequence KET %{ mBadBrackets(%2); %}
-	| HUH BRA any_token_sequence KET %{ mHuh(%2); %}
-//	| CCD
-//	| NOT
-	| ADM BRA TEXT KET BRA TEXT KET %{ mAdmin(TU.text(%2),TU.text(%5)); %}
-	| SLO BRA INTEGER KET %{ mSolo(TU.integer(%2)); %}
-	| DRW %{ mDraw(null); %}
-//	| OUT
-	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mDraw(%3); %}
+	| SVE BRA TEXT KET 							%{ mSaveGame(TU.text(%2)); %}
+	| LOD BRA TEXT KET 							%{ mLoadGame(TU.text(%2)); %}
+	| OFF 										%{ mTurnOff; %}
+	| TME BRA INTEGER KET 						%{ mTimeToDeadline(TU.integer(%2)); %}
+	| PRN BRA bad_bracketed_sequence KET 		%{ mBadBrackets(%2); %}
+	| HUH BRA any_token_sequence KET 			%{ mHuh(%2); %}
+	| CCD BRA POWER KET 						%{ mPowerDisorder(TU.power(%2)); %}
+	| NOT BRA negated_server_message KET 		%{ mNOT(%2); %}
+	| ADM BRA TEXT KET BRA TEXT KET 			%{ mAdmin(TU.text(%2),TU.text(%5)); %}
+	| SLO BRA INTEGER KET 						%{ mSolo(TU.integer(%2)); %}
+	| DRW 										%{ mDraw(null); %}
+	| OUT BRA POWER KET 						%{ mPowerEliminated(TU.power(%2)); %}
+	| DRW BRA POWER power_list KET 				%{ %3.unshift(TU.power(%2)); mDraw(%3); %}
 //	| FRM
 //	| FRM
 ;
 
 // Message
 %acknowedgable_command
-	: MAP BRA TEXT KET %{ mMap(TU.text(%2)); %}
-	| SVE BRA TEXT KET %{ mSaveGame(TU.text(%2)); %}
+	: MAP BRA TEXT KET 			%{ mMap(TU.text(%2)); %}
+	| SVE BRA TEXT KET 			%{ mSaveGame(TU.text(%2)); %}
+;
+
+// Message
+%client_command
+	: OBS 					%{ mObserver; %}
+	| NOT BRA TME KET 		%{ mNOT(mTimeToDeadline(null)); %}
+;
+
+// Message
+%client_request
+	: NME BRA STRING KET BRA STRING KET 	%{ mName(TU.text(%2),TU.text(%5)); %}
+	| IAM BRA POWER KET BRA INTEGER KET 	%{ mIAm(TU.power(%2),TU.integer(%5)); %}
+	| NOT BRA GOF KET 						%{ mNOT(mGoFlag); %}
+	| GOF 									%{ mGoFlag; %}
+	| TME BRA INTEGER KET 					%{ mTimeToDeadline(TU.integer(%2)); %}
+	| DRW 									%{ mDraw(null); %}
+	| NOT BRA negated_client_request KET 	%{ mNOT(%2); %}
+	| DRW BRA POWER power_list KET 			%{ %3.unshift(TU.power(%2)); mDraw(%3); %}
+//	| send_message
+;
+
+// Message
+%negated_client_request
+	: TME BRA INTEGER KET 				%{ mTimeToDeadline(TU.integer(%2)); %}
+	| DRW 								%{ mDraw(null); %}
+	| DRW BRA POWER power_list KET 		%{ %3.unshift(TU.power(%2)); mDraw(%3); %}
+;
+
+// Message
+%negated_server_message
+	: TME BRA INTEGER KET 		%{ mTimeToDeadline(TU.integer(%2)); %}
+	| CCD BRA POWER KET 		%{ mPowerDisorder(TU.power(%2)); %}
+;
+
+// Message
+%rejectable_client_command
+	: HLO 					%{ mHello(null,null,null); %}
+	| NOW 					%{ mCurrentLocation(null,null); %}
+	| SCO 					%{ mSupplyOwnership(null); %}
+	| HST BRA turn KET 		%{ mHistory(%2); %}
+	| SUB order_list 		%{ mSubmit(null,%1); %}
+	| ORD 					%{ mOrderResult(null,null,null); %}
+	| TME 					%{ mTimeToDeadline(null); %}
+	| ADM BRA TEXT KET BRA TEXT KET %{ mAdmin(TU.text(%2),TU.text(%5)); %}
 ;
 
 // Array<Token>
@@ -326,6 +370,17 @@ class TU {
 %mdf_province_list
 	: mdf_province %{ [%0]; %}
 	| mdf_province_list mdf_province %{ %0.push(%1); %0; %}
+;
+
+// Message
+%negatable_command
+	: SUB BRA order KET %{ mSubmit(null,cast [%2]); %}
+	| SUB %{ mSubmit(null,null); %}
+	| GOF %{ mGoFlag; %}
+	| DRW %{ mDraw(null); %}
+	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mDraw(%3); %}
+	| TME %{ mTimeToDeadline(null); %}
+	| TME BRA INTEGER KET %{ mTimeToDeadline(TU.integer(%2)); %}
 ;
 
 // Location
