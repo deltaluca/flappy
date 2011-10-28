@@ -455,13 +455,16 @@ class TU {
 	| try_parameters try_token %{ %0.push(%1); %0; %}
 ;
 
-// not typed yet
+// not all typed yet
 
-%explanation : EXP BRA turn KET BRA reply KET ;
+// Explanation
+%explanation : EXP BRA turn KET BRA reply KET %{ { turn : %2, reply : %5 }; %};
 
-%future_offer : PCE BRA POWER power_list KET ;
+// Array<Int=Power>
+%future_offer : PCE BRA POWER power_list KET %{ %3; %};
 
-%period : BRA turn KET BRA turn KET ;
+// Period
+%period : BRA turn KET BRA turn KET %{ { from : %1, to : %4 }; %};
 
 %sc_ownership_list
 	: POWER province_list
@@ -473,19 +476,20 @@ class TU {
 	| sc_ownership_list_list BRA sc_ownership_list KET
 ;
 
+// Arrangement
 %arrangement
-	: PCE BRA POWER power_list KET
-	| ALY BRA power_list KET VSS BRA power_list KET
-	| DRW
-	| SLO BRA POWER KET
-	| NOT BRA arrangement KET
-	| NAR BRA arrangement KET
-	| XDO BRA order KET
-	| DMZ BRA power_list KET BRA province_list KET
+	: PCE BRA POWER power_list KET						%{ %3.unshift(TU.power(%2)); arPeace(%3); %}
+	| ALY BRA power_list KET VSS BRA power_list KET		%{ arAlly(%2,%6); %}
+	| DRW												%{ arDraw; %}
+	| SLO BRA POWER KET									%{ arSolo(TU.power(%2)); %}
+	| NOT BRA arrangement KET							%{ arNOT(%2); %}
+	| NAR BRA arrangement KET							%{ arNAR(%2); %}
+	| XDO BRA order KET									%{ arXDo(%2); %}
+	| DMZ BRA power_list KET BRA province_list KET		%{ arDMZ(%2,%5); %}
 	| SCD sc_ownership_list_list
 	| OCC unit_with_location_list
-	| AND arrangement_list
-	| ORR arrangement_list
+	| AND arrangement_list								%{ arAND(%1); %}
+	| ORR arrangement_list								%{ arOR(%1); %}
 	| CHO BRA INTEGER INTEGER KET arrangement_list
 	| FOR BRA turn KET BRA future_offer KET
 	| FOR BRA period KET BRA future_offer KET
@@ -497,6 +501,7 @@ class TU {
 	| BCC BRA POWER KET BRA power_list KET BRA POWER KET
 ;
 
+// Array<Arrangement>
 %arrangement_list
 	: BRA arrangement KET %{ [%1]; %}
 	| arrangement_list BRA arrangement KET %{ %0.push(%2); %0; %}

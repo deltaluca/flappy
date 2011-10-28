@@ -2187,31 +2187,34 @@ var hllr__0 = ret.pop();
 		ret.push(({ hllr__0.push(hllr__1); hllr__0; }));
 	}
 	private static inline function R382(ret:Array<Dynamic>) {
-		//default action. (do nothing in particular)
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		// --> keep on stack <-- ret.pop();
+		//assign arguments.
+var hllr__6:Token = ret.pop();
+var hllr__5 = ret.pop();
+var hllr__4:Token = ret.pop();
+var hllr__3:Token = ret.pop();
+var hllr__2 = ret.pop();
+var hllr__1:Token = ret.pop();
+var hllr__0:Token = ret.pop();
+		ret.push(({ { turn : hllr__2, reply : hllr__5 }; }));
 	}
 	private static inline function R383(ret:Array<Dynamic>) {
-		//default action. (do nothing in particular)
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		// --> keep on stack <-- ret.pop();
+		//assign arguments.
+var hllr__4:Token = ret.pop();
+var hllr__3 = ret.pop();
+var hllr__2:Token = ret.pop();
+var hllr__1:Token = ret.pop();
+var hllr__0:Token = ret.pop();
+		ret.push(({ hllr__3; }));
 	}
 	private static inline function R384(ret:Array<Dynamic>) {
-		//default action. (do nothing in particular)
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		// --> keep on stack <-- ret.pop();
+		//assign arguments.
+var hllr__5:Token = ret.pop();
+var hllr__4 = ret.pop();
+var hllr__3:Token = ret.pop();
+var hllr__2:Token = ret.pop();
+var hllr__1 = ret.pop();
+var hllr__0:Token = ret.pop();
+		ret.push(({ { from : hllr__1, to : hllr__4 }; }));
 	}
 	private static inline function R385(ret:Array<Dynamic>) {
 		//default action. (do nothing in particular)
@@ -2237,65 +2240,73 @@ var hllr__0 = ret.pop();
 		// --> keep on stack <-- ret.pop();
 	}
 	private static inline function R389(ret:Array<Dynamic>) {
-		//default action. (do nothing in particular)
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		// --> keep on stack <-- ret.pop();
+		//assign arguments.
+var hllr__4:Token = ret.pop();
+var hllr__3 = ret.pop();
+var hllr__2:Token = ret.pop();
+var hllr__1:Token = ret.pop();
+var hllr__0:Token = ret.pop();
+		ret.push(({ hllr__3.unshift(TU.power(hllr__2)); arPeace(hllr__3); }));
 	}
 	private static inline function R390(ret:Array<Dynamic>) {
-		//default action. (do nothing in particular)
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		// --> keep on stack <-- ret.pop();
+		//assign arguments.
+var hllr__7:Token = ret.pop();
+var hllr__6 = ret.pop();
+var hllr__5:Token = ret.pop();
+var hllr__4:Token = ret.pop();
+var hllr__3:Token = ret.pop();
+var hllr__2 = ret.pop();
+var hllr__1:Token = ret.pop();
+var hllr__0:Token = ret.pop();
+		ret.push(({ arAlly(hllr__2,hllr__6); }));
 	}
 	private static inline function R391(ret:Array<Dynamic>) {
-		//default action. (do nothing in particular)
-		// --> keep on stack <-- ret.pop();
+		//assign arguments.
+var hllr__0:Token = ret.pop();
+		ret.push(({ arDraw; }));
 	}
 	private static inline function R392(ret:Array<Dynamic>) {
-		//default action. (do nothing in particular)
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		// --> keep on stack <-- ret.pop();
+		//assign arguments.
+var hllr__3:Token = ret.pop();
+var hllr__2:Token = ret.pop();
+var hllr__1:Token = ret.pop();
+var hllr__0:Token = ret.pop();
+		ret.push(({ arSolo(TU.power(hllr__2)); }));
 	}
 	private static inline function R393(ret:Array<Dynamic>) {
-		//default action. (do nothing in particular)
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		// --> keep on stack <-- ret.pop();
+		//assign arguments.
+var hllr__3:Token = ret.pop();
+var hllr__2 = ret.pop();
+var hllr__1:Token = ret.pop();
+var hllr__0:Token = ret.pop();
+		ret.push(({ arNOT(hllr__2); }));
 	}
 	private static inline function R394(ret:Array<Dynamic>) {
-		//default action. (do nothing in particular)
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		// --> keep on stack <-- ret.pop();
+		//assign arguments.
+var hllr__3:Token = ret.pop();
+var hllr__2 = ret.pop();
+var hllr__1:Token = ret.pop();
+var hllr__0 = ret.pop();
+		ret.push(({ arNAR(hllr__2); }));
 	}
 	private static inline function R395(ret:Array<Dynamic>) {
-		//default action. (do nothing in particular)
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		// --> keep on stack <-- ret.pop();
+		//assign arguments.
+var hllr__3:Token = ret.pop();
+var hllr__2 = ret.pop();
+var hllr__1:Token = ret.pop();
+var hllr__0:Token = ret.pop();
+		ret.push(({ arXDo(hllr__2); }));
 	}
 	private static inline function R396(ret:Array<Dynamic>) {
-		//default action. (do nothing in particular)
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		ret.pop();
-		// --> keep on stack <-- ret.pop();
+		//assign arguments.
+var hllr__6:Token = ret.pop();
+var hllr__5 = ret.pop();
+var hllr__4:Token = ret.pop();
+var hllr__3:Token = ret.pop();
+var hllr__2 = ret.pop();
+var hllr__1:Token = ret.pop();
+var hllr__0:Token = ret.pop();
+		ret.push(({ arDMZ(hllr__2,hllr__5); }));
 	}
 	private static inline function R397(ret:Array<Dynamic>) {
 		//default action. (do nothing in particular)
@@ -2308,14 +2319,16 @@ var hllr__0 = ret.pop();
 		// --> keep on stack <-- ret.pop();
 	}
 	private static inline function R399(ret:Array<Dynamic>) {
-		//default action. (do nothing in particular)
-		ret.pop();
-		// --> keep on stack <-- ret.pop();
+		//assign arguments.
+var hllr__1 = ret.pop();
+var hllr__0:Token = ret.pop();
+		ret.push(({ arAND(hllr__1); }));
 	}
 	private static inline function R400(ret:Array<Dynamic>) {
-		//default action. (do nothing in particular)
-		ret.pop();
-		// --> keep on stack <-- ret.pop();
+		//assign arguments.
+var hllr__1 = ret.pop();
+var hllr__0:Token = ret.pop();
+		ret.push(({ arOR(hllr__1); }));
 	}
 	private static inline function R401(ret:Array<Dynamic>) {
 		//default action. (do nothing in particular)

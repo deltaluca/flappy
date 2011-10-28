@@ -46,6 +46,19 @@ enum MsgOrder {
 	moMoveByConvoy(unit:UnitWithLoc, from:Province, via:Array<Province>); 
 }
 
+enum Arrangement {
+	arPeace(powers:Array<Int>);
+	arAlly(powers:Array<Int>, versus:Array<Int>);
+	arDraw;
+	arSolo(power:Int);
+	arNOT(arr:Arrangement);
+	arNAR(arr:Arrangement);
+	arXDo(arr:MsgOrder);
+	arDMZ(powers:Array<Int>, locs:Array<Location>);
+	arAND(list:Array<Arrangement>);
+	arOR(list:Array<Arrangement>);
+}
+
 typedef ScoEntry = { power : Int, locs : Array<Location> };
 typedef Turn = { phase : Phase, turn : Int };
 typedef Location = { province : Province, coast : Coast };
@@ -58,3 +71,5 @@ typedef MdfProvinces = { slocs : Array<MdfCentreList>, locs : Array<Location> };
 typedef MdfCoastAdjacencies = { unit : UnitType, locs : Array<Location> };
 typedef MdfProAdjacencies = { pro : Province, coasts : Array<MdfCoastAdjacencies> }; 
 typedef CompOrderResult = { note : OrderNote, result:Result, ret:Bool };
+typedef Explanation = { turn : Turn, reply : Message/*TBC: Reply*/ };
+typedef Period = { from : Turn, to : Turn };
