@@ -27,6 +27,11 @@ enum Message {
 	mThink(order:MsgOrder, note:OrderNote);
 	mOrderResult(turn:Turn, order:MsgOrder, result:CompOrderResult);
 	mSolo(power:Int);
+	mGoFlag;
+	mNOT(msg:Message);
+	mPowerDisorder(power:Int);
+	mTurnOff;
+	mPowerEliminated(power:Int);
 }
 
 enum MsgOrder {

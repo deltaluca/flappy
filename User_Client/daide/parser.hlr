@@ -6,13 +6,13 @@
 %token POWER
 %token AMY FLT
 %token CTO CVY HLD MTO SUP VIA DSB RTO BLD REM WVE
-%token MBV BPR CST ESC FAR HSC NAS NMB NMR NRN NRS NSA NSC NSF NSP NST NSU NVR NYU YSC 
+%token MBV BPR CST ESC FAR HSC NAS NMB NMR NRN NRS NSA NSC NSF NSP NSU NVR NYU YSC 
 %token SUC BNC CUT DSR FLD NSO RET
 %token NCS NEC ECS SEC SCS SWC WCS NWC
 %token SPR SUM FAL AUT WIN
 %token CCD DRW FRM GOF HLO HST HUH IAM LOD MAP MDF MIS NME NOT NOW OBS OFF ORD OUT PRN REJ SCO SLO SND SUB SVE THX TME YES ADM
 %token AOA BTL ERR LVL MRT MTL NPB NPR PDA PTL RTL UNO DSD
-%token ALY AND BWD DMZ ELS EXP FWD FCT FOR HOW IDK IFF INS IOU OCC ORR PCE POB PPT PRP QRY SCD SRY SUG THK THN TRY UOM VSS WHT WHY XDO XOY YDO WRT
+%token ALY AND BWX DMZ ELS EXP FWD FCT FOR HOW IDK IFF INS OCC ORR PCE POB PRP QRY SCD SRY SUG THK THN TRY VSS WHT WHY XDO XOY YDO CHO BCC UNT
 %token TEXT
 %token INLAND SEA COASTAL BICOASTAL
 
@@ -88,80 +88,124 @@ class TU {
 
 // Message
 %client_server_message
-	: NME BRA TEXT KET BRA TEXT KET %{ mName(TU.text(%2),TU.text(%5)); %}
-	| OBS %{ mObserver; %}
-	| IAM BRA POWER KET BRA INTEGER KET %{ mIAm(TU.power(%2),TU.integer(%5)); %}
-	| MAP %{ mMap(null); %}
-	| MDF %{ mMapDefinition(null,null,null); %}
-	| YES BRA acknowledgable_command KET %{ mAccept(%2); %}
-	| REJ BRA acknowledgable_command KEY %{ mReject(%2); %}
-	| NOW %{ mCurrentLocation(null,null); %}
-	| SCO %{ mSupplyOwnership(null); %}
-	| HST BRA turn KET %{ mHistory(%2); %}
-	| TME BRA INTEGER KET %{ mTimeToDeadline(TU.integer(%2)); %}
-	| TME %{ mTimeToDeadline(null); %}
-	| ADM BRA TEXT KET BRA TEXT KET %{ mAdmin(TU.text(%2),TU.text(%5)); %}
-	| PRN BRA bad_bracketed_sequence KET %{ mBadBrackets(%2); %}
-	| HUH BRA any_token_sequence KET %{ mHuh(%2); %}
-	| HLO %{ mHello(null,null,null); %}
-	| SUB order_list %{ mSubmit(null,%1); %}
-	| SUB BRA turn KET order_list %{ mSubmit(%2,%4); %}
-//	| NOT BRA negatable_command KET %{ ... %}		
-	| MIS %{ mMissingOrders(null,null); %}
-//	| GOF
-//	| ORD
-	| DRW %{ mDraw(null); %}
-	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mDraw(%3); %}
-//	| send_message
+	: NME BRA TEXT KET BRA TEXT KET 			%{ mName(TU.text(%2),TU.text(%5)); %}
+	| OBS 										%{ mObserver; %}
+	| IAM BRA POWER KET BRA INTEGER KET			%{ mIAm(TU.power(%2),TU.integer(%5)); %}
+	| MAP 										%{ mMap(null); %}
+	| MDF 										%{ mMapDefinition(null,null,null); %}
+	| YES BRA acknowledgable_command KET 		%{ mAccept(%2); %}
+	| REJ BRA acknowledgable_command KET 		%{ mReject(%2); %}
+	| NOW 										%{ mCurrentLocation(null,null); %}
+	| SCO 										%{ mSupplyOwnership(null); %}
+	| HST BRA turn KET 							%{ mHistory(%2); %}
+	| TME BRA INTEGER KET 						%{ mTimeToDeadline(TU.integer(%2)); %}
+	| TME 										%{ mTimeToDeadline(null); %}
+	| ADM BRA TEXT KET BRA TEXT KET 			%{ mAdmin(TU.text(%2),TU.text(%5)); %}
+	| PRN BRA bad_bracketed_sequence KET 		%{ mBadBrackets(%2); %}
+	| HUH BRA any_token_sequence KET 			%{ mHuh(%2); %}
+	| HLO 										%{ mHello(null,null,null); %}
+	| SUB order_list 							%{ mSubmit(null,%1); %}
+	| SUB BRA turn KET order_list 				%{ mSubmit(%2,%4); %}
+	| NOT BRA negatable_command KET 			%{ mNOT(%2); %}		
+	| MIS 										%{ mMissingOrders(null,null); %}
+	| GOF 										%{ mGoFlag; %}
+	| ORD 										%{ mOrderResult(null,null,null); %}
+	| DRW 										%{ mDraw(null); %}
+	| DRW BRA POWER power_list KET 				%{ %3.unshift(TU.power(%2)); mDraw(%3); %}
+	| send_message
 ;
 
 // Message
 %server_client_message
-//	: YES 
-//	| YES
-//	| REJ
-//	| REJ
-	: MAP BRA TEXT KET %{ mMap(TU.text(%2)); %}
+	: YES BRA client_command KET 				%{ mAccept(%2); %}
+	| YES BRA client_request KET 				%{ mAccept(%2); %}
+	| REJ BRA client_request KET 				%{ mReject(%2); %}
+	| REJ BRA rejectable_client_command KET 	%{ mReject(%2); %}
+	| MAP BRA TEXT KET 							%{ mMap(TU.text(%2)); %}
 	| MDF BRA power_list KET BRA mdf_provinces KET BRA mdf_adjacencies KET %{ mMapDefinition(%2,%5,%8); %}
 	| HLO BRA POWER KET BRA INTEGER KET BRA variant KET %{ mHello(TU.power(%2),TU.integer(%5),%8); %}
 	| NOW BRA turn KET unit_with_location_and_mrt_list %{ mCurrentLocation(%2,%4); %}
-	| SCO sco_entry_list %{ mSupplyOwnership(%1); %}
-	| THX BRA order KET BRA order_note KET %{ mThink(%2,%5); %}
-	| MIS unit_with_location_and_mrt_list %{ mMissingOrders(null,%1); %}
-	| MIS BRA INTEGER KET %{ mMissingOrders(TU.integer(%2),null); %}
+	| SCO sco_entry_list 						%{ mSupplyOwnership(%1); %}
+	| THX BRA order KET BRA order_note KET 		%{ mThink(%2,%5); %}
+	| MIS unit_with_location_and_mrt_list 		%{ mMissingOrders(null,%1); %}
+	| MIS BRA INTEGER KET 						%{ mMissingOrders(TU.integer(%2),null); %}
 	| ORD BRA turn KET BRA order KET BRA compound_order_result KET %{ mOrderResult(%2,%5,%8); %}
-	| SVE BRA TEXT KET %{ mSaveGame(TU.text(%2)); %}
-	| LOD BRA TEXT KET %{ mLoadGame(TU.text(%2)); %}
-//	| OFF
-	| TME BRA INTEGER KET %{ mTimeToDeadline(TU.integer(%2)); %}
-	| PRN BRA bad_bracketed_sequence KET %{ mBadBrackets(%2); %}
-	| HUH BRA any_token_sequence KET %{ mHuh(%2); %}
-//	| CCD
-//	| NOT
-	| ADM BRA TEXT KET BRA TEXT KET %{ mAdmin(TU.text(%2),TU.text(%5)); %}
-	| SLO BRA INTEGER KET %{ mSolo(TU.integer(%2)); %}
-	| DRW %{ mDraw(null); %}
-//	| OUT
-	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mDraw(%3); %}
-//	| FRM
-//	| FRM
+	| SVE BRA TEXT KET 							%{ mSaveGame(TU.text(%2)); %}
+	| LOD BRA TEXT KET 							%{ mLoadGame(TU.text(%2)); %}
+	| OFF 										%{ mTurnOff; %}
+	| TME BRA INTEGER KET 						%{ mTimeToDeadline(TU.integer(%2)); %}
+	| PRN BRA bad_bracketed_sequence KET 		%{ mBadBrackets(%2); %}
+	| HUH BRA any_token_sequence KET 			%{ mHuh(%2); %}
+	| CCD BRA POWER KET 						%{ mPowerDisorder(TU.power(%2)); %}
+	| NOT BRA negated_server_message KET 		%{ mNOT(%2); %}
+	| ADM BRA TEXT KET BRA TEXT KET 			%{ mAdmin(TU.text(%2),TU.text(%5)); %}
+	| SLO BRA INTEGER KET 						%{ mSolo(TU.integer(%2)); %}
+	| DRW 										%{ mDraw(null); %}
+	| OUT BRA POWER KET 						%{ mPowerEliminated(TU.power(%2)); %}
+	| DRW BRA POWER power_list KET 				%{ %3.unshift(TU.power(%2)); mDraw(%3); %}
+	| FRM BRA POWER INTEGER KET BRA power_list KET BRA press_message KET
+	| FRM BRA POWER INTEGER KET BRA power_list KET BRA reply KET
 ;
 
 // Message
-%acknowedgable_command
-	: MAP BRA TEXT KET %{ mMap(TU.text(%2)); %}
-	| SVE BRA TEXT KET %{ mSaveGame(TU.text(%2)); %}
+%acknowledgable_command
+	: MAP BRA TEXT KET 			%{ mMap(TU.text(%2)); %}
+	| SVE BRA TEXT KET 			%{ mSaveGame(TU.text(%2)); %}
+;
+
+// Message
+%client_command
+	: OBS 					%{ mObserver; %}
+	| NOT BRA TME KET 		%{ mNOT(mTimeToDeadline(null)); %}
+;
+
+// Message
+%client_request
+	: NME BRA TEXT KET BRA TEXT KET 	%{ mName(TU.text(%2),TU.text(%5)); %}
+	| IAM BRA POWER KET BRA INTEGER KET 	%{ mIAm(TU.power(%2),TU.integer(%5)); %}
+	| NOT BRA GOF KET 						%{ mNOT(mGoFlag); %}
+	| GOF 									%{ mGoFlag; %}
+	| TME BRA INTEGER KET 					%{ mTimeToDeadline(TU.integer(%2)); %}
+	| DRW 									%{ mDraw(null); %}
+	| NOT BRA negated_client_request KET 	%{ mNOT(%2); %}
+	| DRW BRA POWER power_list KET 			%{ %3.unshift(TU.power(%2)); mDraw(%3); %}
+	| send_message
+;
+
+// Message
+%negated_client_request
+	: TME BRA INTEGER KET 				%{ mTimeToDeadline(TU.integer(%2)); %}
+	| DRW 								%{ mDraw(null); %}
+	| DRW BRA POWER power_list KET 		%{ %3.unshift(TU.power(%2)); mDraw(%3); %}
+;
+
+// Message
+%negated_server_message
+	: TME BRA INTEGER KET 		%{ mTimeToDeadline(TU.integer(%2)); %}
+	| CCD BRA POWER KET 		%{ mPowerDisorder(TU.power(%2)); %}
+;
+
+// Message
+%rejectable_client_command
+	: HLO 					%{ mHello(null,null,null); %}
+	| NOW 					%{ mCurrentLocation(null,null); %}
+	| SCO 					%{ mSupplyOwnership(null); %}
+	| HST BRA turn KET 		%{ mHistory(%2); %}
+	| SUB order_list 		%{ mSubmit(null,%1); %}
+	| ORD 					%{ mOrderResult(null,null,null); %}
+	| TME 					%{ mTimeToDeadline(null); %}
+	| ADM BRA TEXT KET BRA TEXT KET %{ mAdmin(TU.text(%2),TU.text(%5)); %}
 ;
 
 // Array<Token>
 %any_token_sequence
-	: any_no_braket %{ [%0]; %}
+	: any_no_bracket %{ [%0]; %}
 	| BRA any_token_sequence KET %{ %1.unshift(%0); %1.push(%2); %1; %}
 	| any_token_sequence any_no_bracket %{ %0.push(%1); %0; %}
 	| any_token_sequence BRA any_token_sequence KET %{ %0.push(%1); %0 = %0.concat(%2); %0.push(%3); %0; %}
 ;
 
-%any_no_bracket : INTEGER | POWER | AMY | FLT | CTO | CVY | HLD | MTO | SUP | VIA | DSB | RTO | BLD | REM | WVE | MBV | BPR | CST | ESC | FAR | HSC | NAS | NMB | NMR | NRN | NRS | NSA | NSC | NSF | NSP | NST | NSU | NVR | NYU | YSC | SUC | BNC | CUT | DSR | FLD | NSO | RET | NCS | NEC | ECS | SEC | SCS | SWC | WCS | NWC | SPR | SUM | FAL | AUT | WIN | CCD | DRW | FRM | GOF | HLO | HST | HUH | IAM | LOD | MAP | MDF | MIS | NME | NOT | NOW | OBS | OFF | ORD | OUT | PRN | REJ | SCO | SLO | SND | SUB | SVE | THX | TME | YES | ADM | AOA | BTL | ERR | LVL | MRT | MTL | NPB | NPR | PDA | PTL | RTL | UNO | DSD | ALY | AND | BWD | DMZ | ELS | EXP | FWD | FCT | FOR | HOW | IDK | IFF | INS | IOU | OCC | ORR | PCE | POB | PPT | PRP | QRY | SCD | SRY | SUG | THK | THN | TRY | UOM | VSS | WHT | WHY | XDO | XOY | YDO | WRT | TEXT | INLAND | SEA | COASTAL | BICOASTAL ;
+%any_no_bracket : CHO | INTEGER | POWER | AMY | FLT | CTO | CVY | HLD | MTO | SUP | VIA | DSB | RTO | BLD | REM | WVE | MBV | BPR | CST | ESC | FAR | HSC | NAS | NMB | NMR | NRN | NRS | NSA | NSC | NSF | NSP | NSU | NVR | NYU | YSC | SUC | BNC | CUT | DSR | FLD | NSO | RET | NCS | NEC | ECS | SEC | SCS | SWC | WCS | NWC | SPR | SUM | FAL | AUT | WIN | CCD | DRW | FRM | GOF | HLO | HST | HUH | IAM | LOD | MAP | MDF | MIS | NME | NOT | NOW | OBS | OFF | ORD | OUT | PRN | REJ | SCO | SLO | SND | SUB | SVE | THX | TME | YES | ADM | AOA | BTL | ERR | LVL | MRT | MTL | NPB | NPR | PDA | PTL | RTL | UNO | DSD | ALY | AND | BWX | DMZ | ELS | EXP | FWD | FCT | FOR | HOW | IDK | IFF | INS | OCC | ORR | PCE | POB | PRP | QRY | SCD | SRY | SUG | THK | THN | TRY | VSS | WHT | WHY | XDO | XOY | YDO | CHO | BCC | UNT | TEXT | INLAND | SEA | COASTAL | BICOASTAL ;
 
 %any : any_no_bracket | BRA | KET ;
 
@@ -305,6 +349,12 @@ class TU {
 	| BRA power_list KET province_list %{ { powers: %1, locs : %3 }; %}
 ;
 
+// Array<MdfCentreList
+%mdf_centre_list_list
+	: BRA mdf_centre_list KET %{ [%1]; %}
+	| mdf_centre_list_list BRA mdf_centre_list KET %{ %0.push(%2); %0; %}
+;
+
 // Array<MdfCentreList>
 %mdf_supply_centres
 	: BRA mdf_centre_list KET %{ [%1]; %}
@@ -328,6 +378,17 @@ class TU {
 	| mdf_province_list mdf_province %{ %0.push(%1); %0; %}
 ;
 
+// Message
+%negatable_command
+	: SUB BRA order KET %{ mSubmit(null,cast [%2]); %}
+	| SUB %{ mSubmit(null,null); %}
+	| GOF %{ mGoFlag; %}
+	| DRW %{ mDraw(null); %}
+	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mDraw(%3); %}
+	| TME %{ mTimeToDeadline(null); %}
+	| TME BRA INTEGER KET %{ mTimeToDeadline(TU.integer(%2)); %}
+;
+
 // Location
 %province_and_coast
 	: province coast %{ { province : %0, coast : %1 }; %}
@@ -349,6 +410,12 @@ class TU {
 %unit_with_location_and_mrt
 	: unit_with_location %{ { unitloc : %0, locs : null }; %}
 	| unit_with_location MRT BRA mdf_province_list KET %{ { unitloc : %0, locs : %3 }; %}
+;
+
+// Array<UnitWithLoc>
+%unit_with_location_list
+	: BRA unit_with_location KET %{ [%1]; %}
+	| unit_with_location_list BRA unit_with_location KET %{ %0.push(%2); %0; %}
 ;
 
 // Array<UnitWithLocAndMRT>
@@ -376,3 +443,131 @@ class TU {
 	| NPR         %{ { par : TU.parameter(%0), val : null           }; %}
 	| NPB         %{ { par : TU.parameter(%0), val : null           }; %}
 ;
+
+//------------------------------------------------------------------------------
+// press shiz
+// Token
+%try_token : PRP | PCE | ALY | VSS | DRW | SLO | NOT | NAR | YES | REJ | BWX | CCL | XDO | DMZ | AND | ORR | SCD | OCC | INS | QRY | THK | FCT | IDK | SUG | WHT | HOW | EXP | SRY | FOR | IFF | THN | ELS | XOY | YDO | FRM | FWD | SND | WHY | POB;
+
+// Array<Token>
+%try_parameters
+	: %{ []; %}
+	| try_parameters try_token %{ %0.push(%1); %0; %}
+;
+
+// not typed yet
+
+%explanation : EXP BRA turn KET BRA reply KET ;
+
+%future_offer : PCE BRA POWER power_list KET ;
+
+%period : BRA turn KET BRA turn KET ;
+
+%sc_ownership_list
+	: POWER province_list
+	| UNO province_list
+;
+
+%sc_ownership_list_list
+	: BRA sc_ownership_list KET
+	| sc_ownership_list_list BRA sc_ownership_list KET
+;
+
+%arrangement
+	: PCE BRA POWER power_list KET
+	| ALY BRA power_list KET VSS BRA power_list KET
+	| DRW
+	| SLO BRA POWER KET
+	| NOT BRA arrangement KET
+	| NAR BRA arrangement KET
+	| XDO BRA order KET
+	| DMZ BRA power_list KET BRA province_list KET
+	| SCD sc_ownership_list_list
+	| OCC unit_with_location_list
+	| AND arrangement_list
+	| ORR arrangement_list
+	| CHO BRA INTEGER INTEGER KET arrangement_list
+	| FOR BRA turn KET BRA future_offer KET
+	| FOR BRA period KET BRA future_offer KET
+	| XOY BRA POWER KET BRA POWER KET
+	| YDO BRA POWER KET unit_with_location_list
+	| SND BRA POWER KET BRA power_list KET BRA press_message KET
+	| SND BRA POWER KET BRA power_list KET BRA reply KET
+	| FWD BRA power_list KET BRA POWER KET BRA POWER KET
+	| BCC BRA POWER KET BRA power_list KET BRA POWER KET
+;
+
+%arrangement_list
+	: BRA arrangement KET %{ [%1]; %}
+	| arrangement_list BRA arrangement KET %{ %0.push(%2); %0; %}
+;
+
+%press_message
+	: PRP BRA arrangement KET
+	| TRY BRA try_parameters KET
+	| CCL BRA press_message KET
+	| PRP BRA logical_operator KET
+	| INS BRA arrangement KET
+	| QRY BRA arrangement KET
+	| SUG BRA arrangement KET
+	| THK BRA arrangement KET
+	| FCT BRA arrangement KET
+	| WHT BRA unit_with_location KET
+	| HOW BRA province KET
+	| HOW BRA POWER KET
+	| EXP BRA turn KET BRA reply KET
+	| IFF BRA arrangement KET THN BRA press_message KET
+	| IFF BRA arrangement KET THN BRA press_message KET ELS BRA press_message KET
+	| FRM BRA POWER INTEGER KET BRA power_list KET BRA press_message KET
+	| FRM BRA POWER INTEGER KET BRA power_list KET BRA reply KET
+	| TEXT
+;
+
+%query : QRY BRA arrangement KET ;
+
+%negatable_query
+	: QRY BRA arrangement KET
+	| NOT BRA query KET
+;
+
+%logical_operator
+	: AND arrangement_list
+	| ORR arrangement_list
+;
+
+%reply
+	: YES BRA press_message KET
+	| REJ BRA press_message KET
+	| BWX BRA press_message KET
+	| HUH BRA any_token_sequence KET
+	| THK BRA negatable_query KET
+	| FCT BRA negatable_query KET
+	| IDK BRA query KET
+	| YES BRA explanation KET
+	| REJ BRA explanation KET
+	| IDK BRA explanation KET
+	| SRY BRA explanation KET
+	| WHY BRA think_and_fact KET
+	| POB BRA why_sequence KET
+	| WHY BRA SUG BRA arrangement KET KET
+	| WHY BRA PRP BRA arrangement KET KET
+	| WHY BRA INS BRA arrangement KET KET
+	| IDK BRA PRP BRA arrangement KET KET
+	| IDK BRA INS BRA arrangement KET KET
+	| IDK BRA SUG BRA arrangement KET KET
+	| press_message
+;
+
+%send_message
+	: SND BRA power_list KET BRA press_message KET
+	| SND BRA power_list KET BRA reply KET
+	| SND BRA turn KET BRA power_list KET BRA press_message KET
+	| SND BRA turn KET BRA power_list KET BRA reply KET
+;
+
+%think_and_fact
+	: THK BRA arrangement KET
+	| FCT BRA arrangement KET
+;
+
+%why_sequence : WHY BRA think_and_fact KET ;
