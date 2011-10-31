@@ -18,63 +18,69 @@ import Data.Binary
 import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Exception as E
+import Network
 
 -- Daide communication holding client info
-type DaideComm = ReaderT DaideClientInfo IO
+type DaideCommT = ReaderT DaideClientInfo
+
+type DaideComm = DaideCommT IO
 
 -- DaideClient is a Daide communication with error handling
-type DaideClient = ErrorT DaideError DaideComm
+type DaideClientT m = ErrorT DaideError (DaideCommT m)
 
-data DaideClientInfo = Client {clientHandle :: Handle}
+type DaideClient = DaideClientT IO
+
+data DaideClientInfo = Client { clientHandle :: Handle
+                              , clientHostName :: String
+                              , clientPort :: PortNumber
+                              }
+
+class (MonadIO m, MonadReader DaideClientInfo m) => MonadDaideComm m
+class (MonadDaideComm m, MonadError DaideError m) => MonadDaideClient m
+
+instance MonadDaideComm DaideComm
+instance MonadDaideComm DaideClient
+instance MonadDaideClient DaideClient
 
 runDaide = runReaderT
 
-deserialise :: L.ByteString -> DaideClient DaideMessage
+deserialise :: MonadDaideClient m => L.ByteString -> m DaideMessage
 deserialise byteString = do
-  msg <- return $ decode byteString
+  msg <- return (decode byteString)
   ret <- liftIO . try . evaluate $ msg
-  case ret of
-    Left e -> throwError e
-    Right message -> return message
+  either throwError return ret
 
 serialise :: MonadReader DaideClientInfo m => DaideMessage -> m L.ByteString
 serialise message = return (encode message)
 
-tellClient :: (MonadIO m, MonadReader DaideClientInfo m) => DaideMessage -> m ()
+tellClient :: MonadDaideComm m => DaideMessage -> m ()
 tellClient message = do
   handle <- asks clientHandle
-  byteString <- serialise message
-  liftIO . L.hPut handle $ byteString
+  serialise message >>= liftIO . L.hPut handle
 
-askClient :: DaideClient DaideMessage
+askClient :: MonadDaideClient m => m DaideMessage
 askClient = do
   handle <- asks clientHandle
-  byteString <- liftIO . L.hGetContents $ handle
-  deserialise byteString
+  liftIO (L.hGetContents handle) >>= deserialise
 
-askClientTimed :: Int -> DaideClient DaideMessage
+askClientTimed :: MonadDaideClient m => Int -> m DaideMessage
 askClientTimed timedelta = do
   handle <- asks clientHandle
-  byteString <- liftIO $ L.hGetContents handle
-  byteStringMaybe <- liftIO . timeout timedelta . evaluate $ byteString 
-  case byteStringMaybe of
-    Nothing -> throwError TimerPopped
-    Just byteStr -> deserialise byteString
+  byteString <- liftIO $ L.hGetContents handle >>= timeout timedelta . evaluate
+  maybe (throwError TimerPopped) deserialise byteString
 
 handleClient :: DaideComm ()
-handleClient = do
-  r <- runErrorT handleClient'
-  case r of
-    Right _ -> return ()
-    Left error -> do
-      liftIO . errorM "handleClient" $ "An error occured: " ++ (show error)
-      tellClient (EM error)
+handleClient = runErrorT handleClient' >>= handleError
+
+handleError :: MonadDaideComm m => Either DaideError a -> m ()
+handleError = flip either (const $ return ()) $ \error -> do
+  liftIO . errorM "handleClient" $ "An error occured: " ++ (show error)
+  tellClient (EM error)
 
 _INITIAL_TIMEOUT = 30000000
 
-handleClient' :: DaideClient ()
+handleClient' :: MonadDaideClient m => m ()
 handleClient' = do
-  handle <- asks clientHandle
   initialMessage <- askClientTimed _INITIAL_TIMEOUT
   case initialMessage of
     IM version -> return ()
