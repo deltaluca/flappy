@@ -8,6 +8,7 @@ import Text.Parsec
 import Data.Maybe
 import Control.Monad.Identity
 
+  -- DESC (SENDING PARTY)
 data DipMessage -- first message (CLIENT)
                = Name { startName :: String
                       , startVersion :: String }
@@ -39,6 +40,9 @@ data DipMessage -- first message (CLIENT)
                  -- reject message (SERVER, CLIENT)
                | Reject DipMessage
 
+                 -- cancel message (CLIENT)
+               | Cancel DipMessage
+
                  -- game is starting (SERVER)
                | Start { startPower :: Power
                        , startPasscode :: Int
@@ -65,12 +69,44 @@ data DipMessage -- first message (CLIENT)
 
                  -- submitting orders (CLIENT)
                | SubmitOrder (Maybe Turn) [Order]
+                 
+                 -- acknowledge order (SERVER)
+               | AckOrder Order OrderNote
+               
+                 -- missing movement orders (SERVER)
+               | MissingMovement [UnitPosition]
+                 
+                 -- missing retreat orders (SERVER)
+               | MissingRetreat [(UnitPosition, [ProvinceNode])]
+               
+                 -- missing build orders (SERVER)
+               | MissingBuild Int
                deriving (Show)
 
 data Order = OrderMovement OrderMovement
            | OrderRetreat OrderRetreat
            | OrderBuild OrderBuild
            deriving (Show)
+
+data OrderNote = MovementOK
+               | NotAdjacent
+               | NoSuchProvince
+               | NoSuchUnit
+               | NotAtSea
+               | NoSuchFleet
+               | NoSuchArmy
+               | NotYourUnit
+               | NoRetreatNeeded
+               | InvalidRetreatSpace
+               | NotYourSC
+               | NotEmptySC
+               | NotHomeSC
+               | NotASC
+               | InvalidBuildLocation
+               | NoMoreBuildAllowed
+               | NoMoreRemovalAllowed
+               | NotCurrentSeason
+               deriving (Show)
 
 data OrderMovement = Hold UnitPosition
                    | Move UnitPosition ProvinceNode
@@ -153,8 +189,9 @@ pMsg = choice [ pAccept, pReject
               , pSco, pNow, pHistoryReq
               ]
 
-pAccept = tok1 (DipCmd YES) >> paren pMsg
-pReject = tok1 (DipCmd REJ) >> paren pMsg
+pAccept = return . Accept =<< (tok1 (DipCmd YES) >> paren pMsg)
+pReject = return . Reject =<< (tok1 (DipCmd REJ) >> paren pMsg)
+pCancel = return . Cancel =<< (tok1 (DipCmd NOT) >> paren pMsg)
 
 pNme = do
   tok1 (DipCmd NME)
@@ -172,7 +209,7 @@ pIam = do
   passcode <- paren pInt
   return (Rejoin power passcode)
 
-pMapName = paren pStr >>= return . MapName
+pMapName = return . MapName =<< paren pStr
 
 pMapNameReq = return MapNameReq
 
@@ -214,7 +251,7 @@ pUnitType = tok (\t -> case t of {DipUnitType typ -> Just typ ; _ -> Nothing})
 
 pCoast = tok (\t -> case t of {DipCoast c -> Just c ; _ -> Nothing})
 
-pProvinceNode = (pProvince >>= return . ProvNode) <|>
+pProvinceNode = (return . ProvNode =<< pProvince) <|>
                 (paren $ do
                     prov <- pProvince
                     c <- pCoast
@@ -244,17 +281,17 @@ pVariant = do
     [] -> parserFail "No LVL option specified in HLO message"
     (Level lvl) : _ -> return (lvl, others)
 
-pVariantOpt = choice [ tok1 (DipParam LVL) >> pInt >>= return . Level
-                     , tok1 (DipParam MTL) >> pInt >>= return . TimeMovement
-                     , tok1 (DipParam RTL) >> pInt >>= return . TimeRetreat
-                     , tok1 (DipParam BTL) >> pInt >>= return . TimeBuild
-                     , tok1 (DipParam DSD) >> return DeadlineStop
-                     , tok1 (DipParam AOA) >> return AnyOrderAccepted
+pVariantOpt = choice [ return . Level         =<< (tok1 (DipParam LVL) >> pInt)
+                     , return . TimeMovement  =<< (tok1 (DipParam MTL) >> pInt)
+                     , return . TimeRetreat   =<< (tok1 (DipParam RTL) >> pInt)
+                     , return . TimeBuild     =<< (tok1 (DipParam BTL) >> pInt)
+                     , return DeadlineStop     << tok1 (DipParam DSD)
+                     , return AnyOrderAccepted << tok1 (DipParam AOA)
                      ]
 
 pSco = tok1 (DipCmd SCO) >> choice [pCurrentPos, pCurrentPosReq]
 
-pCurrentPos = many (paren pSupplyCentre) >>= return . CurrentPosition
+pCurrentPos = return . CurrentPosition =<< many (paren pSupplyCentre)
 pCurrentPosReq = return CurrentPositionReq
 
 pPhase = tok (\t -> case t of {DipPhase p -> Just p ; _ -> Nothing})
@@ -282,7 +319,7 @@ pUnitPosition = do
   provNode <- pProvinceNode
   return (UnitPosition pow typ provNode)
 
-pHistoryReq = tok1 (DipCmd HST) >> paren pTurn >>= return . HistoryReq
+pHistoryReq = return . HistoryReq =<< (tok1 (DipCmd HST) >> paren pTurn)
 
 splitWith b x = (filter b x, filter (not . b) x)
 
@@ -299,18 +336,16 @@ pOrderOrWaive = pOrder <|> do
 
 pOrder = do
   unit <- paren (pUnitPosition)
-  choice . map ($ unit) $ [ pHld, pMto, pSup, pCvy, pCto
-                          , pRto, pDsb
-                          , pBld, pRem]
+  choice . map ($ unit) $ [ pHld, pMto, pSup, pCvy, pCto -- move
+                          , pRto, pDsb                   -- retreat
+                          , pBld, pRem]                  -- build
 
 pHld u = do
   tok1 (DipOrder HLD)
   return . OrderMovement . Hold $ u
 
 
-pMto u = do
-  tok1 (DipOrder MTO)
-  pProvinceNode >>= return . OrderMovement . Move u
+pMto u = return . OrderMovement . Move u =<< (tok1 (DipOrder MTO) >> pProvinceNode)
 
 
 pSup u1 = do
@@ -320,7 +355,7 @@ pSup u1 = do
 
 pSupMove u1 u2 = do
   tok1 (DipOrder MTO)
-  pProvince >>= return . OrderMovement . SupportMove u1 u2
+  return . OrderMovement . SupportMove u1 u2 =<< pProvince
 
 pSupHold u1 u2 = return . OrderMovement . SupportHold u1 $ u2
 
@@ -328,10 +363,58 @@ pCvy u1 = do
   tok1 (DipOrder CVY)
   u2 <- paren pUnitPosition
   tok1 (DipOrder CTO)
-  pProvinceNode >>= return . OrderMovement . Convoy u1 u2
+  return . OrderMovement . Convoy u1 u2 =<< pProvinceNode
 
-pCto = undefined
-pRto = undefined
-pDsb = undefined
-pBld = undefined
-pRem = undefined
+pCto u = do
+  tok1 (DipOrder CTO)
+  prov <- pProvinceNode
+  tok1 (DipOrder VIA)
+  return . OrderMovement . MoveConvoy u prov =<< paren (many pProvince)
+
+pRto u = return . OrderRetreat . Retreat u =<< (tok1 (DipOrder RTO) >> pProvinceNode)
+
+pDsb u = (return . OrderRetreat . Disband) u << tok1 (DipOrder DSB)
+
+pBld u = (return . OrderBuild . Build) u << tok1 (DipOrder BLD)
+
+pRem u = (return . OrderBuild . Remove) u << tok1 (DipOrder REM)
+
+pAck = do
+  order <- paren pOrder
+  orderNote <- paren pOrderNote
+  return (AckOrder order orderNote)
+
+pOrderNote = tok (\t -> case t of {DipOrderNote tk -> return (f tk) ; _ -> Nothing})
+  where
+    f MBV = MovementOK
+    f FAR = NotAdjacent
+    f NSP = NoSuchProvince
+    f NSU = NoSuchUnit
+    f NAS = NotAtSea
+    f NSF = NoSuchFleet
+    f NSA = NoSuchArmy
+    f NYU = NotYourUnit
+    f NRN = NoRetreatNeeded
+    f NVR = InvalidRetreatSpace
+    f YSC = NotYourSC
+    f ESC = NotEmptySC
+    f HSC = NotHomeSC
+    f NSC = NotASC
+    f CST = InvalidBuildLocation
+    f NMB = NoMoreBuildAllowed
+    f NMR = NoMoreRemovalAllowed
+    f NRS = NotCurrentSeason
+
+    -- "try" used because of the freaking 2.3gajillion token lookahead
+pMis = choice [ return . MissingMovement =<< (try . many . paren) pUnitPosition
+              , return . MissingRetreat =<< (try . many . paren . pPair)
+                (pUnitPosition, tok1 (DipParam MRT) >> paren (many pProvinceNode))
+              , return . MissingBuild =<< paren pInt
+              ]
+
+pPair :: (ParsecT s u m a, ParsecT s u m b) -> ParsecT s u m (a, b)
+pPair (a, b) = do
+  aRes <- a
+  bRes <- b
+  return (a, b)
+

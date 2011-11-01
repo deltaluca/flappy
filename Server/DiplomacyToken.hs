@@ -16,7 +16,7 @@ data DipToken = DipInt Int
               | DipPow Pow
               | DipUnitType UnitType
               | DipOrder OrderTok
-              | DipOrderNote OrderNote
+              | DipOrderNote OrderNoteTok
               | DipResult Result
               | DipCoast Dat.Coast
               | DipPhase Phase
@@ -174,7 +174,7 @@ decodeToken 0x41 val = return . DipPow . Pow . fromIntegral $ val
 decodeToken 0x42 0x00 = return . DipUnitType $ Army
 decodeToken 0x42 0x01 = return . DipUnitType $ Fleet
 decodeToken 0x43 val = return . DipOrder . decodeOrderTok $ val
-decodeToken 0x44 val = return . DipOrderNote . decodeOrderNote $ val
+decodeToken 0x44 val = return . DipOrderNoteTok . decodeOrderNoteTok $ val
 decodeToken 0x45 val = return . DipResult . decodeResult $ val
 decodeToken 0x46 val = return . DipCoast . Coast . fromIntegral $ val
 decodeToken 0x47 val = return . DipPhase . decodePhase $ val
@@ -209,27 +209,27 @@ decodeOrderTok 0x81 = REM
 decodeOrderTok 0x82 = WVE
 decodeOrderTok _ = throw InvalidToken
 
-decodeOrderNote 0x00 = MBV
-decodeOrderNote 0x01 = BPR
-decodeOrderNote 0x02 = CST
-decodeOrderNote 0x03 = ESC
-decodeOrderNote 0x04 = FAR
-decodeOrderNote 0x05 = HSC
-decodeOrderNote 0x06 = NAS
-decodeOrderNote 0x07 = NMB
-decodeOrderNote 0x08 = NMR
-decodeOrderNote 0x09 = NRN
-decodeOrderNote 0x0A = NRS
-decodeOrderNote 0x0B = NSA
-decodeOrderNote 0x0C = NSC
-decodeOrderNote 0x0D = NSF
-decodeOrderNote 0x0E = NSP
-decodeOrderNote 0x0F = NST
-decodeOrderNote 0x10 = NSU
-decodeOrderNote 0x11 = NVR
-decodeOrderNote 0x12 = NYU
-decodeOrderNote 0x13 = YSC
-decodeOrderNote _ = throw InvalidToken
+decodeOrderNoteTok 0x00 = MBV
+decodeOrderNoteTok 0x01 = BPR
+decodeOrderNoteTok 0x02 = CST
+decodeOrderNoteTok 0x03 = ESC
+decodeOrderNoteTok 0x04 = FAR
+decodeOrderNoteTok 0x05 = HSC
+decodeOrderNoteTok 0x06 = NAS
+decodeOrderNoteTok 0x07 = NMB
+decodeOrderNoteTok 0x08 = NMR
+decodeOrderNoteTok 0x09 = NRN
+decodeOrderNoteTok 0x0A = NRS
+decodeOrderNoteTok 0x0B = NSA
+decodeOrderNoteTok 0x0C = NSC
+decodeOrderNoteTok 0x0D = NSF
+decodeOrderNoteTok 0x0E = NSP
+decodeOrderNoteTok 0x0F = NST
+decodeOrderNoteTok 0x10 = NSU
+decodeOrderNoteTok 0x11 = NVR
+decodeOrderNoteTok 0x12 = NYU
+decodeOrderNoteTok 0x13 = YSC
+decodeOrderNoteTok _ = throw InvalidToken
 
 
 decodeResult 0x00 = SUC
