@@ -4,6 +4,7 @@ module DaideMessage where
 
 import DaideError
 import DiplomacyMessage
+import DiplomacyToken
 
 import Data.Binary
 import Data.Typeable
@@ -13,9 +14,9 @@ import Control.Monad
 data DaideMessage = IM {version :: Int}
                   | RM
                   | FM
-                  | DM DiplomacyMessage
+                  | DM DipMessage
                   | EM DaideError
-                  | Tokens [DipToken]
+                  | Tokens [DipToken] -- for debugging
                   deriving (Show)
 
 

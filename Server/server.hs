@@ -2,6 +2,8 @@
 
 module Main where
 
+import DaideClient
+
 import Control.Monad
 import Control.Monad.Trans
 import Control.Exception as E
@@ -16,25 +18,23 @@ import System.Log.Logger
 import Data.ByteString.Lazy as L
 import Data.Maybe
 
-import DaideClient
-
 main = do
   updateGlobalLogger "Main" (setLevel NOTICE)
   opts <- getCmdlineOpts
   noticeM "Main" $ "Starting server with map file \"" ++
     mapFile opts ++ "\" on port " ++ show (serverPort opts)
   gameMap <- parseMap (mapFile opts)
-  withSocketsDo . listenForClients $ serverPort opts
+  withSocketsDo . listenForClients . PortNumber . fromIntegral $ (serverPort opts)
 
-listenForClients :: Int -> IO ()
+listenForClients :: PortID -> IO ()
 listenForClients port = do
-  socket <- listenOn (PortNumber . fromIntegral $ port)
+  socket <- listenOn port
   forever $ do
     (handle, hostName, clientPort) <- accept socket
     noticeM "Main" $ "Client " ++ hostName ++
       ":" ++ show clientPort ++ " connecting..."
     hSetBuffering handle NoBuffering
-    forkIO $ runDaide handleClient (Client handle) 
+    forkIO $ runDaide handleClient (Client handle hostName clientPort) 
 
 -- map
 data DiplomacyMap = Map

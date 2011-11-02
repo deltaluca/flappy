@@ -1,353 +1,420 @@
-{-# LANGUAGE EmptyDataDecls #-}
+{-# LANGUAGE EmptyDataDecls, FlexibleInstances, MultiParamTypeClasses #-}
 module DiplomacyMessage where
 
-import DaideError
+import DiplomacyToken as Tok
+import DiplomacyData as Dat
 
-import Data.Binary
-import Control.Exception
-import Control.Monad
-import Data.Bits
-import Data.Char
+import Text.Parsec
+import Data.Maybe
+import Control.Monad.Identity
 
-data DiplomacyMessage = Lol
-     deriving (Show)
+  -- DESC (SENDING PARTY)
+data DipMessage -- first message (CLIENT)
+               = Name { startName :: String
+                      , startVersion :: String }
 
-parseDipMessage :: [DipToken] -> DiplomacyMessage
-parseDipMessage = undefined
+                 -- client is observer (CLIENT)
+               | Observer
 
-data DipToken = DipInt Int
-              | Bra
-              | Ket
-              | DipPower Power
-              | DipUnitType UnitType
-              | DipOrder Order
-              | DipOrderNote OrderNote
-              | DipResult Result
-              | DipCoast Coast
-              | DipPhase Phase
-              | DipCommand Command
-              | DipParam Param
-              | DipPress Press
-              | Character Char
-              | DipProv Prov
-              deriving (Show, Eq)
+                 -- client wants to rejoin (CLIENT)
+               | Rejoin { rejoinPower :: Power
+                        , rejoinPasscode :: Int }
 
-instance Binary DipToken where
-  put (DipInt int) = do
-    put (int .&. 0x3F)
-  get = do
-    typ <- (get :: Get Word8)
-    val <- (get :: Get Word8)
-    decodeToken typ val
+                 -- map name (SERVER)
+               | MapName { mapName :: String }
+
+                 -- requesting map name (CLIENT)
+               | MapNameReq
+
+                 -- definition of the map (SERVER)
+               | MapDef { mapDefPowers :: [Power]
+                        , mapDefProvinces :: Provinces
+                        , mapDefAdjacencies :: [Adjacency] }
+
+                 -- requesting the definition of the map (CLIENT)
+               | MapDefReq
+
+                 -- accept message (SERVER, CLIENT)
+               | Accept DipMessage
+
+                 -- reject message (SERVER, CLIENT)
+               | Reject DipMessage
+
+                 -- cancel message (CLIENT)
+               | Cancel DipMessage
+
+                 -- game is starting (SERVER)
+               | Start { startPower :: Power
+                       , startPasscode :: Int
+                       , startLevel :: Int
+                       , startVariantOpts :: [VariantOption] }
+
+                 -- requesting whether game started (CLIENT) or replying yes (SERVER)
+               | StartPing
+
+                 -- current position (SERVER)
+               | CurrentPosition [SupplyCentre]
+
+                 -- current position request (CLIENT)
+               | CurrentPositionReq
+
+                 -- current position of units (SERVER)
+               | CurrentUnitPosition Turn [UnitPosition] (Maybe [ProvinceNode])
+
+                 -- current position of units request (CLIENT)
+               | CurrentUnitPositionReq
+
+                 -- history requested (CLIENT)
+               | HistoryReq Turn
+
+                 -- submitting orders (CLIENT)
+               | SubmitOrder (Maybe Turn) [Order]
+                 
+                 -- acknowledge order (SERVER)
+               | AckOrder Order OrderNote
+               
+                 -- missing movement orders (SERVER)
+               | MissingMovement [UnitPosition]
+                 
+                 -- missing retreat orders (SERVER)
+               | MissingRetreat [(UnitPosition, [ProvinceNode])]
+               
+                 -- missing build orders (SERVER)
+               | MissingBuild Int
+               deriving (Show)
+
+data Order = OrderMovement OrderMovement
+           | OrderRetreat OrderRetreat
+           | OrderBuild OrderBuild
+           deriving (Show)
+
+data OrderNote = MovementOK
+               | NotAdjacent
+               | NoSuchProvince
+               | NoSuchUnit
+               | NotAtSea
+               | NoSuchFleet
+               | NoSuchArmy
+               | NotYourUnit
+               | NoRetreatNeeded
+               | InvalidRetreatSpace
+               | NotYourSC
+               | NotEmptySC
+               | NotHomeSC
+               | NotASC
+               | InvalidBuildLocation
+               | NoMoreBuildAllowed
+               | NoMoreRemovalAllowed
+               | NotCurrentSeason
+               deriving (Show)
+
+data OrderMovement = Hold UnitPosition
+                   | Move UnitPosition ProvinceNode
+                   | SupportHold UnitPosition UnitPosition
+                   | SupportMove UnitPosition UnitPosition Province
+                   | Convoy UnitPosition UnitPosition ProvinceNode
+                   | MoveConvoy UnitPosition ProvinceNode [Province]
+                   deriving (Show)
+
+data OrderRetreat = Retreat UnitPosition ProvinceNode
+                  | Disband UnitPosition
+                  deriving (Show)
+
+data OrderBuild = Build UnitPosition
+                | Remove UnitPosition
+                | Waive Power
+                deriving (Show)
+
+data Provinces = Provinces [SupplyCentre] [Province]
+               deriving (Show)
+
+data Turn = Turn Phase Int
+            deriving (Show)
+
+data UnitPosition = UnitPosition Power UnitType ProvinceNode
+                  deriving (Show)
+
+data VariantOption = Level Int
+                   | TimeMovement Int
+                   | TimeRetreat Int
+                   | TimeBuild Int
+                   | DeadlineStop
+                   | AnyOrderAccepted
+                   deriving (Show)
+
+data SupplyCentre = SupplyCentre Power [Province]
+                    deriving (Show)
+
+data Adjacency = Adjacency Province [UnitToProv]
+             deriving (Show)
+
+data UnitToProv = UnitToProv UnitType [ProvinceNode]
+                | CoastalFleetToProv Coast [ProvinceNode]
+                deriving (Show)
+
+data ProvinceNode = ProvNode Province | ProvCoastNode Province Coast
+                  deriving (Show)
+
+type DipParser = Parsec [DipToken] ()
+
+parseDipMessage :: String -> [DipToken] -> Either ParseError DipMessage
+parseDipMessage = parse pMsg
+
+mayEq a b = if a == b then Just a else Nothing
+
+tok f = getPosition >>= \p -> token show (const p) f
+
+tok1 a = tok (mayEq a)
+
+paren a = do
+  tok1 Bra
+  r <- a
+  tok1 Ket
+  return r
+
+pStr :: DipParser String
+pStr = many pChr
+
+pChr :: DipParser Char
+pChr = tok (\t -> case t of {Character c -> Just c ; _ -> Nothing})
+
+pInt :: DipParser Int
+pInt = tok (\t -> case t of {DipInt i -> Just i ; _ -> Nothing})
+
+pMsg :: DipParser DipMessage
+pMsg = choice [ pAccept, pReject
+              , pNme, pObs
+              , pMap, pMdf
+              , pHlo
+              , pSco, pNow, pHistoryReq
+              ]
+
+pAccept = return . Accept =<< (tok1 (DipCmd YES) >> paren pMsg)
+pReject = return . Reject =<< (tok1 (DipCmd REJ) >> paren pMsg)
+pCancel = return . Cancel =<< (tok1 (DipCmd NOT) >> paren pMsg)
+
+pNme = do
+  tok1 (DipCmd NME)
+  startName <- paren pStr
+  startVersion <- paren pStr
+  return (Name startName startVersion)
+
+pMap = tok1 (DipCmd MAP) >> choice [pMapName, pMapNameReq]
+
+pObs = tok1 (DipCmd OBS) >> return Observer
+
+pIam = do
+  tok1 (DipCmd IAM)
+  power <- paren pPower
+  passcode <- paren pInt
+  return (Rejoin power passcode)
+
+pMapName = return . MapName =<< paren pStr
+
+pMapNameReq = return MapNameReq
+
+pMdf = tok1 (DipCmd MDF) >> choice [pMapDef, pMapDefReq]
+
+pMapDef = do
+  powers <- paren (many pPower)
+  provinces <- paren pProvinces
+  adjacencies <- paren (many (paren pAdjacency))
+  return (MapDef powers provinces adjacencies)
+
+pMapDefReq = return MapDefReq
+
+pPower = tok (\t -> case t of { DipPow (Pow p) -> Just (Power p)
+                              ; DipParam UNO -> Just Neutral
+                              ; _ -> Nothing})
+
+pProvinces = do
+  supplyCentres <- paren (many pSupplyCentre)
+  nonSupplyCentres <- paren (many pProvince)
+  return (Provinces supplyCentres nonSupplyCentres)
+
+pAdjacency = do
+  province <- pProvince
+  unitToProvs <- paren (many (paren pUnitToProv))
+  return (Adjacency province unitToProvs)
+
+pUnitToProv = do
+  unitType <- pUnitType
+  provNodes <- many pProvinceNode
+  return (UnitToProv unitType provNodes)
+
+pCoastalFleetToProv = do
+  coast <- paren (tok1 (DipUnitType Fleet) >> pCoast)
+  provNodes <- many pProvinceNode
+  return (CoastalFleetToProv coast provNodes)
+
+pUnitType = tok (\t -> case t of {DipUnitType typ -> Just typ ; _ -> Nothing})
+
+pCoast = tok (\t -> case t of {DipCoast c -> Just c ; _ -> Nothing})
+
+pProvinceNode = (return . ProvNode =<< pProvince) <|>
+                (paren $ do
+                    prov <- pProvince
+                    c <- pCoast
+                    return (ProvCoastNode prov c))
+
+pSupplyCentre = do
+  pow <- pPower
+  centres <- many pProvince
+  return (SupplyCentre pow centres)
+
+pProvince = tok (\t -> case t of {(DipProv p) -> Just p ; _ -> Nothing})
+
+pHlo = tok1 (DipCmd HLO) >> choice [pStart, pStartPing]
+
+pStart = do
+  pow <- paren pPower
+  passCode <- paren pInt
+  (level, variantOpts) <- paren pVariant
+  return (Start pow passCode level variantOpts)
+
+pStartPing = return StartPing
+
+pVariant = do
+  options <- many pVariantOpt
+  let (lvls, others) = splitWith (\v -> case v of {Level _ -> True ; _ -> False}) options
+  case lvls of
+    [] -> parserFail "No LVL option specified in HLO message"
+    (Level lvl) : _ -> return (lvl, others)
+
+pVariantOpt = choice [ return . Level         =<< (tok1 (DipParam LVL) >> pInt)
+                     , return . TimeMovement  =<< (tok1 (DipParam MTL) >> pInt)
+                     , return . TimeRetreat   =<< (tok1 (DipParam RTL) >> pInt)
+                     , return . TimeBuild     =<< (tok1 (DipParam BTL) >> pInt)
+                     , return DeadlineStop     << tok1 (DipParam DSD)
+                     , return AnyOrderAccepted << tok1 (DipParam AOA)
+                     ]
+
+pSco = tok1 (DipCmd SCO) >> choice [pCurrentPos, pCurrentPosReq]
+
+pCurrentPos = return . CurrentPosition =<< many (paren pSupplyCentre)
+pCurrentPosReq = return CurrentPositionReq
+
+pPhase = tok (\t -> case t of {DipPhase p -> Just p ; _ -> Nothing})
+
+pTurn = do
+  phase <- pPhase
+  year <- pInt
+  return (Turn phase year)
+
+pNow = tok1 (DipCmd NOW) >> choice [pCurrentUnitPos, pCurrentUnitPosReq]
+
+pCurrentUnitPos = do
+  turn <- paren pTurn
+  unitPoss <- many (paren pUnitPosition)
+  retreats <- (tok1 (DipParam MRT) >> (paren . many . paren) pProvinceNode
+               >>= return . Just)
+              <|> return Nothing
+  return (CurrentUnitPosition turn unitPoss retreats)
+
+pCurrentUnitPosReq = return CurrentUnitPositionReq
+
+pUnitPosition = do
+  pow <- pPower
+  typ <- pUnitType
+  provNode <- pProvinceNode
+  return (UnitPosition pow typ provNode)
+
+pHistoryReq = return . HistoryReq =<< (tok1 (DipCmd HST) >> paren pTurn)
+
+splitWith b x = (filter b x, filter (not . b) x)
+
+pSub = do
+  turn <- (tok1 (DipCmd SUB) >> paren pTurn >>= return . Just) <|> return Nothing
+  orders <- many (paren pOrderOrWaive)
+  return (SubmitOrder turn orders)
+
+pOrderOrWaive :: DipParser Order
+pOrderOrWaive = pOrder <|> do
+  tok1 (DipOrder WVE)
+  power <- pPower
+  return (OrderBuild (Waive power))
+
+pOrder = do
+  unit <- paren (pUnitPosition)
+  choice . map ($ unit) $ [ pHld, pMto, pSup, pCvy, pCto -- move
+                          , pRto, pDsb                   -- retreat
+                          , pBld, pRem]                  -- build
+
+pHld u = do
+  tok1 (DipOrder HLD)
+  return . OrderMovement . Hold $ u
 
 
-data Power = Power Int
-              deriving (Show, Eq)
-data UnitType = Army | Fleet
-              deriving (Show, Eq)
-data Order = CTO
-           | CVY
-           | HLD
-           | MTO
-           | SUP
-           | VIA
-           | DSB
-           | RTO
-           | BLD
-           | REM
-           | WVE
-              deriving (Show, Eq)
-
-data OrderNote = MBV
-               | BPR
-               | CST
-               | ESC
-               | FAR
-               | HSC
-               | NAS
-               | NMB
-               | NMR
-               | NRN
-               | NRS
-               | NSA
-               | NSC
-               | NSF
-               | NSP
-               | NST
-               | NSU
-               | NVR
-               | NYU
-               | YSC
-              deriving (Show, Eq)
-
-data Result = SUC
-            | BNC
-            | CUT
-            | DSR
-            | FLD
-            | NSO
-            | RET
-              deriving (Show, Eq)
-
-data Coast = Coast Int
-              deriving (Show, Eq)
-
-data Phase = SPR
-           | SUM
-           | FAL
-           | AUT
-           | WIN
-              deriving (Show, Eq)
-
-data Command = CCD
-             | DRW
-             | FRM
-             | GOF
-             | HLO
-             | HST
-             | HUH
-             | IAM
-             | LOD
-             | MAP
-             | MDF
-             | MIS
-             | NME
-             | NOT
-             | NOW
-             | OBS
-             | OFF
-             | ORD
-             | OUT
-             | PRN
-             | REJ
-             | SCO
-             | SLO
-             | SND
-             | SUB
-             | SVE
-             | THX
-             | TME
-             | YES
-             | ADM
-              deriving (Show, Eq)
-
-data Param = AOA
-           | BTL
-           | ERR
-           | LVL
-           | MRT
-           | MTL
-           | NPB
-           | NPR
-           | PDA
-           | PTL
-           | RTL
-           | UNO
-           | DSD
-              deriving (Show, Eq)
-
-data Press = ALY
-           | AND
-           | BWX
-           | DMZ
-           | ELS
-           | EXP
-           | FWD
-           | FCT
-           | FOR
-           | HOW
-           | IDK
-           | IFF
-           | INS
-           | IOU
-           | OCC
-           | ORR
-           | PCE
-           | POB
-           | PPT
-           | PRP
-           | QRY
-           | SCD
-           | SRY
-           | SUG
-           | THK
-           | THN
-           | TRY
-           | UOM
-           | VSS
-           | WHT
-           | WHY
-           | XDO
-           | XOY
-           | YDO
-           | WRT
-              deriving (Show, Eq)             
+pMto u = return . OrderMovement . Move u =<< (tok1 (DipOrder MTO) >> pProvinceNode)
 
 
-data Prov = Inland Int
-          | Sea Int
-          | Coastal Int
-          | BiCoastal Int
-              deriving (Show, Eq)
+pSup u1 = do
+  tok1 (DipOrder SUP)
+  u2 <- paren pUnitPosition
+  pSupMove u1 u2 <|> pSupHold u1 u2
 
-prov :: Int -> Prov
-prov = undefined
+pSupMove u1 u2 = do
+  tok1 (DipOrder MTO)
+  return . OrderMovement . SupportMove u1 u2 =<< pProvince
 
-decodeToken :: Word8 -> Word8 -> Get DipToken
-decodeToken 0x40 0x00 = return Bra
-decodeToken 0x40 0x01 = return Ket
-decodeToken 0x41 val = return . DipPower . Power . fromIntegral $ val
-decodeToken 0x42 0x00 = return . DipUnitType $ Army
-decodeToken 0x42 0x01 = return . DipUnitType $ Fleet
-decodeToken 0x43 val = return . DipOrder . decodeOrder $ val
-decodeToken 0x44 val = return . DipOrderNote . decodeOrderNote $ val
-decodeToken 0x45 val = return . DipResult . decodeResult $ val
-decodeToken 0x46 val = return . DipCoast . Coast . fromIntegral $ val
-decodeToken 0x47 val = return . DipPhase . decodePhase $ val
-decodeToken 0x48 val = return . DipCommand . decodeCommand $ val
-decodeToken 0x49 val = return . DipParam . decodeParam $ val
-decodeToken 0x4A val = return . DipPress . decodePress $ val
-decodeToken 0x4B val = return . Character . chr . fromIntegral $ val
-decodeToken 0x50 val = return . DipProv . Inland . fromIntegral $ val
-decodeToken 0x51 val = return . DipProv . Inland . fromIntegral $ val
-decodeToken 0x52 val = return . DipProv . Sea . fromIntegral $ val
-decodeToken 0x53 val = return . DipProv . Sea . fromIntegral $ val
-decodeToken 0x54 val = return . DipProv . Coastal . fromIntegral $ val
-decodeToken 0x55 val = return . DipProv . Coastal . fromIntegral $ val
-decodeToken 0x56 val = return . DipProv . BiCoastal . fromIntegral $ val
-decodeToken 0x57 val = return . DipProv . BiCoastal . fromIntegral $ val
-decodeToken typ val
-  | typ .&. 0xA0 == 0 = return . DipInt $ (fromIntegral typ :: Int) `shift` 8 + fromIntegral val
-  | otherwise = throw InvalidToken
+pSupHold u1 u2 = return . OrderMovement . SupportHold u1 $ u2
 
-decodeOrder 0x20 = CTO
-decodeOrder 0x21 = CVY
-decodeOrder 0x22 = HLD
-decodeOrder 0x23 = MTO
-decodeOrder 0x24 = SUP
-decodeOrder 0x25 = VIA
-decodeOrder 0x40 = DSB
-decodeOrder 0x41 = RTO
-decodeOrder 0x80 = BLD
-decodeOrder 0x81 = REM
-decodeOrder 0x82 = WVE
+pCvy u1 = do
+  tok1 (DipOrder CVY)
+  u2 <- paren pUnitPosition
+  tok1 (DipOrder CTO)
+  return . OrderMovement . Convoy u1 u2 =<< pProvinceNode
 
-decodeOrderNote 0x00 = MBV
-decodeOrderNote 0x01 = BPR
-decodeOrderNote 0x02 = CST
-decodeOrderNote 0x03 = ESC
-decodeOrderNote 0x04 = FAR
-decodeOrderNote 0x05 = HSC
-decodeOrderNote 0x06 = NAS
-decodeOrderNote 0x07 = NMB
-decodeOrderNote 0x08 = NMR
-decodeOrderNote 0x09 = NRN
-decodeOrderNote 0x0A = NRS
-decodeOrderNote 0x0B = NSA
-decodeOrderNote 0x0C = NSC
-decodeOrderNote 0x0D = NSF
-decodeOrderNote 0x0E = NSP
-decodeOrderNote 0x0F = NST
-decodeOrderNote 0x10 = NSU
-decodeOrderNote 0x11 = NVR
-decodeOrderNote 0x12 = NYU
-decodeOrderNote 0x13 = YSC
+pCto u = do
+  tok1 (DipOrder CTO)
+  prov <- pProvinceNode
+  tok1 (DipOrder VIA)
+  return . OrderMovement . MoveConvoy u prov =<< paren (many pProvince)
 
+pRto u = return . OrderRetreat . Retreat u =<< (tok1 (DipOrder RTO) >> pProvinceNode)
 
-decodeResult 0x00 = SUC
-decodeResult 0x01 = BNC
-decodeResult 0x02 = CUT
-decodeResult 0x03 = DSR
-decodeResult 0x04 = FLD
-decodeResult 0x05 = NSO
-decodeResult 0x06 = RET
+pDsb u = (return . OrderRetreat . Disband) u << tok1 (DipOrder DSB)
 
-decodePhase 0x00 = SPR
-decodePhase 0x01 = SUM
-decodePhase 0x02 = FAL
-decodePhase 0x03 = AUT
-decodePhase 0x04 = WIN
+pBld u = (return . OrderBuild . Build) u << tok1 (DipOrder BLD)
 
+pRem u = (return . OrderBuild . Remove) u << tok1 (DipOrder REM)
 
-decodeCommand 0x00 = CCD
-decodeCommand 0x01 = DRW
-decodeCommand 0x02 = FRM
-decodeCommand 0x03 = GOF
-decodeCommand 0x04 = HLO
-decodeCommand 0x05 = HST
-decodeCommand 0x06 = HUH
-decodeCommand 0x07 = IAM
-decodeCommand 0x08 = LOD
-decodeCommand 0x09 = MAP
-decodeCommand 0x0A = MDF
-decodeCommand 0x0B = MIS
-decodeCommand 0x0C = NME
-decodeCommand 0x0D = NOT
-decodeCommand 0x0E = NOW
-decodeCommand 0x0F = OBS
-decodeCommand 0x10 = OFF
-decodeCommand 0x11 = ORD
-decodeCommand 0x12 = OUT
-decodeCommand 0x13 = PRN
-decodeCommand 0x14 = REJ
-decodeCommand 0x15 = SCO
-decodeCommand 0x16 = SLO
-decodeCommand 0x17 = SND
-decodeCommand 0x18 = SUB
-decodeCommand 0x19 = SVE
-decodeCommand 0x1A = THX
-decodeCommand 0x1B = TME
-decodeCommand 0x1C = YES
-decodeCommand 0x1D = ADM
+pAck = do
+  order <- paren pOrder
+  orderNote <- paren pOrderNote
+  return (AckOrder order orderNote)
 
+pOrderNote = tok (\t -> case t of {DipOrderNote tk -> return (f tk) ; _ -> Nothing})
+  where
+    f MBV = MovementOK
+    f FAR = NotAdjacent
+    f NSP = NoSuchProvince
+    f NSU = NoSuchUnit
+    f NAS = NotAtSea
+    f NSF = NoSuchFleet
+    f NSA = NoSuchArmy
+    f NYU = NotYourUnit
+    f NRN = NoRetreatNeeded
+    f NVR = InvalidRetreatSpace
+    f YSC = NotYourSC
+    f ESC = NotEmptySC
+    f HSC = NotHomeSC
+    f NSC = NotASC
+    f CST = InvalidBuildLocation
+    f NMB = NoMoreBuildAllowed
+    f NMR = NoMoreRemovalAllowed
+    f NRS = NotCurrentSeason
 
-decodeParam 0x00 = AOA
-decodeParam 0x01 = BTL
-decodeParam 0x02 = ERR
-decodeParam 0x03 = LVL
-decodeParam 0x04 = MRT
-decodeParam 0x05 = MTL
-decodeParam 0x06 = NPB
-decodeParam 0x07 = NPR
-decodeParam 0x08 = PDA
-decodeParam 0x09 = PTL
-decodeParam 0x0A = RTL
-decodeParam 0x0B = UNO
-decodeParam 0x0D = DSD
+    -- "try" used because of the freaking 2.3gajillion token lookahead
+pMis = choice [ return . MissingMovement =<< (try . many . paren) pUnitPosition
+              , return . MissingRetreat =<< (try . many . paren . pPair)
+                (pUnitPosition, tok1 (DipParam MRT) >> paren (many pProvinceNode))
+              , return . MissingBuild =<< paren pInt
+              ]
 
+pPair :: (ParsecT s u m a, ParsecT s u m b) -> ParsecT s u m (a, b)
+pPair (a, b) = do
+  aRes <- a
+  bRes <- b
+  return (a, b)
 
-decodePress 0x00 = ALY
-decodePress 0x01 = AND
-decodePress 0x02 = BWX
-decodePress 0x03 = DMZ
-decodePress 0x04 = ELS
-decodePress 0x05 = EXP
-decodePress 0x06 = FWD
-decodePress 0x07 = FCT
-decodePress 0x08 = FOR
-decodePress 0x09 = HOW
-decodePress 0x0A = IDK
-decodePress 0x0B = IFF
-decodePress 0x0C = INS
-decodePress 0x0D = IOU
-decodePress 0x0E = OCC
-decodePress 0x0F = ORR
-decodePress 0x10 = PCE
-decodePress 0x11 = POB
-decodePress 0x12 = PPT
-decodePress 0x13 = PRP
-decodePress 0x14 = QRY
-decodePress 0x15 = SCD
-decodePress 0x16 = SRY
-decodePress 0x17 = SUG
-decodePress 0x18 = THK
-decodePress 0x19 = THN
-decodePress 0x1A = TRY
-decodePress 0x1B = UOM
-decodePress 0x1C = VSS
-decodePress 0x1D = WHT
-decodePress 0x1E = WHY
-decodePress 0x1F = XDO
-decodePress 0x20 = XOY
-decodePress 0x21 = YDO
-decodePress 0x22 = WRT
