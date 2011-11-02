@@ -3,11 +3,19 @@ module DiplomacyMessage where
 
 import DiplomacyToken as Tok
 import DiplomacyData as Dat
+import DaideError
 
 import Text.Parsec
+import Data.Either
 import Data.Maybe
 import Control.Monad.Identity
+import Control.Monad.Error
+import Control.Monad.Reader
 
+  -- Things to look out for:
+  -- ambiguity: StartPing and MissingReq
+  -- Cancel (StartProcessing) means dont process until deadline (ignore?)
+  
   -- DESC (SENDING PARTY)
 data DipMessage -- first message (CLIENT)
                = Name { startName :: String
@@ -81,12 +89,43 @@ data DipMessage -- first message (CLIENT)
                
                  -- missing build orders (SERVER)
                | MissingBuild Int
+                 
+                 -- missing request (CLIENT) or replying 'no more missing request' (SERVER)
+               | MissingReq
+                 
+                 -- start processing orders (CLIENT) (Missing... follows)
+               | StartProcessing
+               
+                 -- result of an order after turn is processed (SERVER)
+               | OrderResult Turn Order Result
+                 
+                 -- save game (SERVER)
+               | SaveGame String
+               
+                 -- load game (SERVER)
+               | LoadGame String
+               
+                 -- tell client to exit (SERVER)
+               | ExitClient
                deriving (Show)
 
 data Order = OrderMovement OrderMovement
            | OrderRetreat OrderRetreat
            | OrderBuild OrderBuild
            deriving (Show)
+
+data Result = Result (Maybe ResultNormal) (Maybe ResultRetreat)
+            deriving (Show)
+                     
+data ResultNormal = Success
+                  | MoveBounced
+                  | SupportCut
+                  | DisbandedConvoy
+                  | NoSuchOrder
+                  deriving (Show)
+                    
+data ResultRetreat = ResultRetreat
+                   deriving (Show)
 
 data OrderNote = MovementOK
                | NotAdjacent
@@ -155,14 +194,30 @@ data UnitToProv = UnitToProv UnitType [ProvinceNode]
 data ProvinceNode = ProvNode Province | ProvCoastNode Province Coast
                   deriving (Show)
 
-type DipParser = Parsec [DipToken] ()
+-- DipParser is a Reader (for the press level) wrapped in Parsec
+type DipParser = ParsecT [DipToken] () (Reader Int)
 
-parseDipMessage :: String -> [DipToken] -> Either ParseError DipMessage
-parseDipMessage = parse pMsg
+parseDipMessage :: Monad m => Int -> [DipToken] -> ErrorT DaideError m DipMessage
+parseDipMessage = parseDip pMsg
+
+parseDip :: Monad m => DipParser a -> Int -> [DipToken] -> ErrorT DaideError m a
+parseDip parsr lvl toks = 
+  liftEither . return . mapEitherLeft ParseError . runReader (runParserT parsr () "Whatevs" toks) $ lvl
+
+
+liftEither :: (Error e, Monad m) => m (Either e a) -> ErrorT e m a
+liftEither a = lift a >>= either throwError return
+
+mapEitherLeft :: (a -> b) -> (Either a c -> Either b c)
+mapEitherLeft f = either (Left . f) (Right . id)
+
+infixr 4 <<
+(<<) :: Monad m => m a -> m b -> m a
+a << b = b >>= (\_ -> a)
 
 mayEq a b = if a == b then Just a else Nothing
 
-tok f = getPosition >>= \p -> token show (const p) f
+tok f = getPosition >>= \p -> tokenPrim show (const . const . const $ p) f
 
 tok1 a = tok (mayEq a)
 
@@ -171,6 +226,15 @@ paren a = do
   r <- a
   tok1 Ket
   return r
+
+level :: Int -> DipParser a -> DipParser a
+level l p = do
+  lvl <- ask
+  if lvl < l
+    then do
+    rest <- many (tok Just)
+    parserFail $ "Level " ++ show l ++ " needed to parse " ++ show rest ++ ", I only have level " ++ show lvl
+    else p
 
 pStr :: DipParser String
 pStr = many pChr
@@ -187,6 +251,10 @@ pMsg = choice [ pAccept, pReject
               , pMap, pMdf
               , pHlo
               , pSco, pNow, pHistoryReq
+              , pSub, pMis
+              , pGof
+              , pSve, pLod
+              , pOff
               ]
 
 pAccept = return . Accept =<< (tok1 (DipCmd YES) >> paren pMsg)
@@ -323,8 +391,11 @@ pHistoryReq = return . HistoryReq =<< (tok1 (DipCmd HST) >> paren pTurn)
 
 splitWith b x = (filter b x, filter (not . b) x)
 
+pMaybe :: DipParser a -> DipParser (Maybe a)
+pMaybe a = (try a >>= return . Just) <|> return Nothing
+
 pSub = do
-  turn <- (tok1 (DipCmd SUB) >> paren pTurn >>= return . Just) <|> return Nothing
+  turn <- (tok1 (DipCmd SUB) >> pMaybe (paren pTurn))
   orders <- many (paren pOrderOrWaive)
   return (SubmitOrder turn orders)
 
@@ -380,6 +451,7 @@ pBld u = (return . OrderBuild . Build) u << tok1 (DipOrder BLD)
 pRem u = (return . OrderBuild . Remove) u << tok1 (DipOrder REM)
 
 pAck = do
+  tok1 (DipCmd THX)
   order <- paren pOrder
   orderNote <- paren pOrderNote
   return (AckOrder order orderNote)
@@ -406,15 +478,58 @@ pOrderNote = tok (\t -> case t of {DipOrderNote tk -> return (f tk) ; _ -> Nothi
     f NRS = NotCurrentSeason
 
     -- "try" used because of the freaking 2.3gajillion token lookahead
-pMis = choice [ return . MissingMovement =<< (try . many . paren) pUnitPosition
+pMis = tok1 (DipCmd MIS) >>
+       choice [ return . MissingMovement =<< (try . many . paren) pUnitPosition
               , return . MissingRetreat =<< (try . many . paren . pPair)
                 (pUnitPosition, tok1 (DipParam MRT) >> paren (many pProvinceNode))
               , return . MissingBuild =<< paren pInt
+              , return MissingReq
               ]
 
 pPair :: (ParsecT s u m a, ParsecT s u m b) -> ParsecT s u m (a, b)
 pPair (a, b) = do
   aRes <- a
   bRes <- b
-  return (a, b)
+  return (aRes, bRes)
 
+pGof = return StartProcessing << tok1 (DipCmd GOF)
+
+pOrd = do
+  tok1 (DipCmd ORD)
+  turn <- paren pTurn
+  order <- paren pOrder
+  result <- paren pResult
+  return (OrderResult turn order result)
+
+pResult = do
+  normal <- pMaybe pResultNormal
+  retreat <- pMaybe pResultRetreat
+  when (isNothing normal && isNothing retreat) (parserFail "Empty ORD result")
+  return (Result normal retreat)
+  
+
+pResultNormal :: DipParser ResultNormal
+pResultNormal = (tok1 (DipResult FLD) >> parserFail "FLD token received") <|>
+                tok (\t -> Just $ case t of 
+                        { DipResult SUC -> Success
+                        ; DipResult BNC -> MoveBounced
+                        ; DipResult CUT -> SupportCut
+                        ; DipResult DSR -> DisbandedConvoy
+                        ; DipResult NSO -> NoSuchOrder
+                        })
+
+pResultRetreat = return ResultRetreat << tok1 (DipResult RET)
+
+pSve = do
+  tok1 (DipCmd SVE)
+  gameName <- paren pStr
+  return (SaveGame gameName)
+  
+pLod = do
+  tok1 (DipCmd LOD)
+  gameName <- paren pStr
+  return (LoadGame gameName)
+
+pOff = do
+  tok1 (DipCmd OFF)
+  return (ExitClient)

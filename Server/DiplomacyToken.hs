@@ -17,7 +17,7 @@ data DipToken = DipInt Int
               | DipUnitType UnitType
               | DipOrder OrderTok
               | DipOrderNote OrderNoteTok
-              | DipResult Result
+              | DipResult ResultTok
               | DipCoast Dat.Coast
               | DipPhase Phase
               | DipCmd Cmd
@@ -51,36 +51,36 @@ data OrderTok = CTO
            | WVE
               deriving (Show, Eq)
 
-data OrderNote = MBV
-               | BPR
-               | CST
-               | ESC
-               | FAR
-               | HSC
-               | NAS
-               | NMB
-               | NMR
-               | NRN
-               | NRS
-               | NSA
-               | NSC
-               | NSF
-               | NSP
-               | NST
-               | NSU
-               | NVR
-               | NYU
-               | YSC
-              deriving (Show, Eq)
+data OrderNoteTok = MBV
+                  | BPR
+                  | CST
+                  | ESC
+                  | FAR
+                  | HSC
+                  | NAS
+                  | NMB
+                  | NMR
+                  | NRN
+                  | NRS
+                  | NSA
+                  | NSC
+                  | NSF
+                  | NSP
+                  | NST
+                  | NSU
+                  | NVR
+                  | NYU
+                  | YSC
+                  deriving (Show, Eq)
 
-data Result = SUC
-            | BNC
-            | CUT
-            | DSR
-            | FLD
-            | NSO
-            | RET
-            deriving (Show, Eq)
+data ResultTok = SUC
+               | BNC
+               | CUT
+               | DSR
+               | FLD
+               | NSO
+               | RET
+               deriving (Show, Eq)
 
 data Cmd = CCD
          | DRW
@@ -174,7 +174,7 @@ decodeToken 0x41 val = return . DipPow . Pow . fromIntegral $ val
 decodeToken 0x42 0x00 = return . DipUnitType $ Army
 decodeToken 0x42 0x01 = return . DipUnitType $ Fleet
 decodeToken 0x43 val = return . DipOrder . decodeOrderTok $ val
-decodeToken 0x44 val = return . DipOrderNoteTok . decodeOrderNoteTok $ val
+decodeToken 0x44 val = return . DipOrderNote . decodeOrderNoteTok $ val
 decodeToken 0x45 val = return . DipResult . decodeResult $ val
 decodeToken 0x46 val = return . DipCoast . Coast . fromIntegral $ val
 decodeToken 0x47 val = return . DipPhase . decodePhase $ val
