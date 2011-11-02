@@ -41,3 +41,4 @@ errorCode RMNotFirst    = 0x0B
 errorCode ManyRMs       = 0x0C
 errorCode RMFromClient  = 0x0D
 errorCode InvalidToken  = 0x0E
+errorCode (ParseError _)= 0x0E -- CHANGE THIS
