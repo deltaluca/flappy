@@ -10,6 +10,7 @@ import Data.Binary
 import Data.Typeable
 import Control.Exception as E
 import Control.Monad
+import Control.Monad.Error
 
 data DaideMessage = IM {version :: Int}
                   | RM
@@ -23,6 +24,7 @@ data DaideMessage = IM {version :: Int}
 _MAGIC_NUM    = 0xDA10 :: Word16
 _MAGIC_NUM_LE = 0x10DA :: Word16
 _VERSION = 1 :: Word16
+_PRESS_LEVEL = 0
 
 instance Binary DaideMessage where
   put (IM version) = putMessage 0 4 $ do
@@ -59,7 +61,11 @@ daideMessage 1 size = return RM
 daideMessage 2 size = do
   when (size < 2) (E.throw MsgTooShort)
   tokens <- replicateM (fromIntegral size `div` 2) (get :: Get DipToken)
-  return (Tokens tokens) -- DM . parseDipMessage $ tokens
+  eMessage <- runErrorT . parseDipMessage _PRESS_LEVEL $ tokens
+  case eMessage of
+    Left err -> throw err
+    Right msg -> return (DM msg)
+
 daideMessage 3 size = return FM
 daideMessage 4 size = do
   when (size < 2) (E.throw MsgTooShort)
