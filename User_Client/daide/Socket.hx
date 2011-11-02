@@ -150,6 +150,7 @@ class Socket {
 			log("Connection closed");
 			sock.shutdown(true,true);
 			sock.close();
+			sock = new Sock();
 			connected = false;
 		});
 	}
