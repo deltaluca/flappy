@@ -3,7 +3,7 @@ module DiplomacyMessage where
 
 import DiplomacyToken as Tok
 import DiplomacyData as Dat
-import DaideError
+import DiplomacyError
 
 import Text.Parsec
 import Data.Either
@@ -107,7 +107,30 @@ data DipMessage -- first message (CLIENT)
                
                  -- tell client to exit (SERVER)
                | ExitClient
+
+                 -- time in seconds until next deadline (SERVER)
+               | TimeUntilDeadline Int
+
+                 -- throw a Diplomacy Error
+               | DipError DipError
+
+                 -- admin message sent from client to server
+               | AdminMessage { playerName :: String
+                              , adminMessage :: String }
+
+                 -- game has ended due to a solo by specified power
+               | SoloWinGame { soloPower :: Power }
+
+                 -- command sent from client to server to indicate a draw
+               | DrawGame 
+
+         {-        -- full statistics at the end of the game
+               | EndGameStats Turn [PlayerStat] -}
+
                deriving (Show)
+
+{-data PlayerStat = PlayerStat Power String String Int (Maybe Int)
+                deriving (Show)-}
 
 data Order = OrderMovement OrderMovement
            | OrderRetreat OrderRetreat
@@ -197,12 +220,12 @@ data ProvinceNode = ProvNode Province | ProvCoastNode Province Coast
 -- DipParser is a Reader (for the press level) wrapped in Parsec
 type DipParser = ParsecT [DipToken] () (Reader Int)
 
-parseDipMessage :: Monad m => Int -> [DipToken] -> ErrorT DaideError m DipMessage
+parseDipMessage :: Monad m => Int -> [DipToken] -> ErrorT DipError m DipMessage
 parseDipMessage = parseDip pMsg
 
-parseDip :: Monad m => DipParser a -> Int -> [DipToken] -> ErrorT DaideError m a
+parseDip :: Monad m => DipParser a -> Int -> [DipToken] -> ErrorT DipError m a
 parseDip parsr lvl toks = 
-  liftEither . return . mapEitherLeft ParseError . runReader (runParserT parsr () "Whatevs" toks) $ lvl
+  liftEither . return . mapEitherLeft (SyntaxError . show) . runReader (runParserT parsr () "Whatevs" toks) $ lvl
 
 
 liftEither :: (Error e, Monad m) => m (Either e a) -> ErrorT e m a
@@ -222,10 +245,12 @@ tok f = getPosition >>= \p -> tokenPrim show (const . const . const $ p) f
 tok1 a = tok (mayEq a)
 
 paren a = do
-  tok1 Bra
+  tok1 Bra <?> "\"(\" expected"
   r <- a
-  tok1 Ket
+  tok1 Ket <?> "\")\" expected"
   return r
+
+data Something = Sg {value :: Int}
 
 level :: Int -> DipParser a -> DipParser a
 level l p = do
@@ -255,6 +280,12 @@ pMsg = choice [ pAccept, pReject
               , pGof
               , pSve, pLod
               , pOff
+              , pTme
+              , pError
+              , pAdm
+              , pSlo
+              , pDrw
+              --, pSmr
               ]
 
 pAccept = return . Accept =<< (tok1 (DipCmd YES) >> paren pMsg)
@@ -533,3 +564,61 @@ pLod = do
 pOff = do
   tok1 (DipCmd OFF)
   return (ExitClient)
+
+pTme = do
+  tok1 (DipCmd TME)
+  timeLeft <- paren pInt
+  return (TimeUntilDeadline timeLeft)
+
+pError :: DipParser DipMessage
+pError = do
+  err <- choice [ pPrn, pHuh, pCcd ]
+  return (DipError err)
+
+pPrn = do
+  tok1 (DipCmd PRN)
+  message <- paren pStr
+  return (WrongParen message)
+
+pHuh = do
+  tok1 (DipCmd HUH)
+  message <- paren pStr
+  return (SyntaxError message)
+
+pCcd = do
+  tok1 (DipCmd CCD)
+  power <- paren pPower
+  return (CivilDisorder power)
+  
+
+pAdm = do
+  tok1 (DipCmd ADM)
+  name <- paren pStr
+  message <- paren pStr
+  return (AdminMessage name message)
+
+pSlo = do
+  tok1 (DipCmd SLO)
+  power <- paren pPower
+  return (SoloWinGame power)
+
+pDrw = do
+  tok1 (DipCmd DRW)
+  return (DrawGame)
+
+{-
+pPlayerStat = do
+  power <- pPower
+  name <- paren pStr
+  message <- paren pStr
+  centres <- pInt
+  yearOfElimination <- pMaybe pInt
+  return (PlayerStat power name message centres yearOfElimination)
+
+pSmr = do
+  tok1 (DipCmd SMR)
+  turn <- paren pTurn
+  playerStats <- many (paren pPlayerStat)
+  return (EndGameStats turn playerStats)
+-}
+

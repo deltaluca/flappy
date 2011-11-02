@@ -7,6 +7,7 @@ module DaideClient where
 
 import DaideError
 import DaideMessage
+import DiplomacyMessage
 
 import System.IO
 import System.Timeout
@@ -69,6 +70,12 @@ askClientTimed timedelta = do
   byteString <- liftIO $ L.hGetContents handle >>= timeout timedelta . evaluate
   maybe (throwError TimerPopped) deserialise byteString
 
+echoClient :: MonadDaideClient m => m ()
+echoClient = do
+  handle <- asks clientHandle
+  liftIO $ L.hGetContents handle >>= L.hPut handle
+
+
 handleClient :: DaideComm ()
 handleClient = runErrorT handleClient' >>= handleError
 
@@ -88,4 +95,13 @@ handleClient' = do
   tellClient RM
   forever $ do
     message <- askClient
+    liftIO . print $ "COME ON"
     liftIO . print $ "Message recieved: " ++ (show message)
+    handleMessage message
+
+handleMessage :: MonadDaideClient m => DaideMessage -> m ()
+handleMessage m = case m of
+  IM _ -> throwError ManyIMs
+  RM -> throwError RMFromClient
+  DM dipMessage -> liftIO . print $ "Diplomacy Message: " ++ show dipMessage
+  _ -> throwError InvalidToken

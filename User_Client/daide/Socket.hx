@@ -49,6 +49,7 @@ class Socket {
 
 		try {
 			log("Connecting on "+ip+":"+port);
+			sock = new Sock();
 			sock.connect(new cpp.net.Host(ip), port);
 		}catch(e:Dynamic) {
 			log("Failed to connect");

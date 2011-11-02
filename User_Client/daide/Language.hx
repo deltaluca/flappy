@@ -32,6 +32,7 @@ enum Message {
 	mPowerDisorder(power:Int);
 	mTurnOff;
 	mPowerEliminated(power:Int);
+	mSend(t:Turn,powers:Array<Int>,press:PressMsg,reply:ReplyMsg);
 }
 
 enum MsgOrder {
@@ -57,6 +58,60 @@ enum Arrangement {
 	arDMZ(powers:Array<Int>, locs:Array<Location>);
 	arAND(list:Array<Arrangement>);
 	arOR(list:Array<Arrangement>);
+	arSCD(list:Array<ScOwnershipList>);
+	arOCC(list:Array<UnitWithLoc>);
+	arCHO(a:Int,b:Int,list:Array<Arrangement>);	
+	arFOR(t:Turn,p:Period,offer:FutureOffer);
+	arXOY(a:Int,b:Int);
+	arYDO(a:Int,units:Array<UnitWithLoc>);
+	arSND(a:Int,b:Array<Int>,press:PressMsg,reply:ReplyMsg);
+	arFWD(a:Array<Int>,b:Int,c:Int);
+	arBCC(a:Int,b:Array<Int>,c:Int);
+}
+
+enum PressMsg {
+	pmPRP(a:Arrangement,b:LogicalOp);
+	pmTRY(toks:Array<Token>);
+	pmCCL(pm:PressMsg);
+	pmINS(a:Arrangement);
+	pmQRY(a:Arrangement);
+	pmSUG(a:Arrangement);
+	pmTHK(a:Arrangement);
+	pmFCT(a:Arrangement);
+	pmWHT(unit:UnitWithLoc);
+	pmHOW(p:Province,pow:Null<Int>);
+	pmEXP(t:Turn,r:ReplyMsg);
+	pmIFF(a:Arrangement, p:PressMsg, els:PressMsg);
+	pmFRM(a:Int, b:Int, c:Array<Int>, p:PressMsg, r:ReplyMsg);
+	pmText(x:String);
+}
+
+enum ReplyMsg {
+	rmYes(p:PressMsg,e:Explanation);
+	rmRej(p:PressMsg,e:Explanation);
+	rmBWX(p:PressMsg);
+	rmHUH(x:Array<Token>);
+	rmTHK(x:NegQuery);
+	rmFCT(x:NegQuery);
+	rmSRY(e:Explanation);
+	rmPress(p:PressMsg);
+	rmPOB(x:ThinkAndFact);
+	rmWHY(x:WhyIDK);
+	rmIDK(x:WhyIDK);
+}
+
+enum WhyIDK {
+	whyQry(q:Arrangement);
+	whyExp(e:Explanation);
+	whyPRP(a:Arrangement);
+	whyINS(a:Arrangement);
+	whySug(a:Arrangement);
+	whyThinkFact(a:ThinkAndFact);
+}
+
+enum NegQuery {
+	negQRY(a:Arrangement);
+	negNOT(a:Arrangement);
 }
 
 typedef ScoEntry = { power : Int, locs : Array<Location> };
@@ -73,3 +128,7 @@ typedef MdfProAdjacencies = { pro : Province, coasts : Array<MdfCoastAdjacencies
 typedef CompOrderResult = { note : OrderNote, result:Result, ret:Bool };
 typedef Explanation = { turn : Turn, reply : Message/*TBC: Reply*/ };
 typedef Period = { from : Turn, to : Turn };
+typedef ScOwnershipList = { power : Null<Int>, locs : Array<Location> };
+typedef FutureOffer = Array<Int/*Power*/>;
+typedef LogicalOp = { and:Bool, list:Array<Arrangement>}; 
+typedef ThinkAndFact = { thk:Bool, arr:Arrangement};
