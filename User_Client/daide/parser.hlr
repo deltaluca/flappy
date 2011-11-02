@@ -455,25 +455,25 @@ class TU {
 	| try_parameters try_token %{ %0.push(%1); %0; %}
 ;
 
-// not all typed yet
-
 // Explanation
 %explanation : EXP BRA turn KET BRA reply KET %{ { turn : %2, reply : %5 }; %};
 
-// Array<Int=Power>
+// FutureOffer
 %future_offer : PCE BRA POWER power_list KET %{ %3; %};
 
 // Period
 %period : BRA turn KET BRA turn KET %{ { from : %1, to : %4 }; %};
 
+// ScOwnershipList
 %sc_ownership_list
-	: POWER province_list
-	| UNO province_list
+	: POWER province_list %{ { power : TU.power(%0), locs : %1 }; %}
+	| UNO province_list   %{ { power : null, locs : %1 }; %}
 ;
 
+// Array<ScOwnershipList>
 %sc_ownership_list_list
-	: BRA sc_ownership_list KET
-	| sc_ownership_list_list BRA sc_ownership_list KET
+	: BRA sc_ownership_list KET %{ [%1]; %}
+	| sc_ownership_list_list BRA sc_ownership_list KET %{ %0.push(%2); %0; %}
 ;
 
 // Arrangement
@@ -486,19 +486,19 @@ class TU {
 	| NAR BRA arrangement KET							%{ arNAR(%2); %}
 	| XDO BRA order KET									%{ arXDo(%2); %}
 	| DMZ BRA power_list KET BRA province_list KET		%{ arDMZ(%2,%5); %}
-	| SCD sc_ownership_list_list
-	| OCC unit_with_location_list
+	| SCD sc_ownership_list_list						%{ arSCD(%1); %} 
+	| OCC unit_with_location_list						%{ arOCC(%1); %}
 	| AND arrangement_list								%{ arAND(%1); %}
 	| ORR arrangement_list								%{ arOR(%1); %}
-	| CHO BRA INTEGER INTEGER KET arrangement_list
-	| FOR BRA turn KET BRA future_offer KET
-	| FOR BRA period KET BRA future_offer KET
-	| XOY BRA POWER KET BRA POWER KET
-	| YDO BRA POWER KET unit_with_location_list
-	| SND BRA POWER KET BRA power_list KET BRA press_message KET
-	| SND BRA POWER KET BRA power_list KET BRA reply KET
-	| FWD BRA power_list KET BRA POWER KET BRA POWER KET
-	| BCC BRA POWER KET BRA power_list KET BRA POWER KET
+	| CHO BRA INTEGER INTEGER KET arrangement_list		%{ arCHO(TU.integer(%2),TU.integer(%3),%5); %}
+	| FOR BRA turn KET BRA future_offer KET				%{ arFOR(%2,null,%5); %}
+	| FOR BRA period KET BRA future_offer KET			%{ arFOR(null,%2,%5); %}
+	| XOY BRA POWER KET BRA POWER KET					%{ arXOY(TU.power(%2),TU.power(%5)); %}
+	| YDO BRA POWER KET unit_with_location_list			%{ arYDO(TU.power(%2),%4); %}
+	| SND BRA POWER KET BRA power_list KET BRA press_message KET %{ arSND(TU.power(%2),%5,%8,null); %}
+	| SND BRA POWER KET BRA power_list KET BRA reply KET		 %{ arSND(TU.power(%2),%5,null,%8); %}
+	| FWD BRA power_list KET BRA POWER KET BRA POWER KET %{ arFWD(%2,TU.power(%5),TU.power(%8)); %}
+	| BCC BRA POWER KET BRA power_list KET BRA POWER KET %{ arBCC(TU.power(%2),%5,TU.power(%8)); %}
 ;
 
 // Array<Arrangement>
@@ -507,72 +507,79 @@ class TU {
 	| arrangement_list BRA arrangement KET %{ %0.push(%2); %0; %}
 ;
 
+// PressMsg
 %press_message
-	: PRP BRA arrangement KET
-	| TRY BRA try_parameters KET
-	| CCL BRA press_message KET
-	| PRP BRA logical_operator KET
-	| INS BRA arrangement KET
-	| QRY BRA arrangement KET
-	| SUG BRA arrangement KET
-	| THK BRA arrangement KET
-	| FCT BRA arrangement KET
-	| WHT BRA unit_with_location KET
-	| HOW BRA province KET
-	| HOW BRA POWER KET
-	| EXP BRA turn KET BRA reply KET
-	| IFF BRA arrangement KET THN BRA press_message KET
-	| IFF BRA arrangement KET THN BRA press_message KET ELS BRA press_message KET
-	| FRM BRA POWER INTEGER KET BRA power_list KET BRA press_message KET
-	| FRM BRA POWER INTEGER KET BRA power_list KET BRA reply KET
-	| TEXT
+	: PRP BRA arrangement KET     %{ pmPRP(%2,null); %}
+	| TRY BRA try_parameters KET  %{ pmTRY(%2); %}
+	| CCL BRA press_message KET   %{ pmCCL(%2); %}
+	| PRP BRA logical_operator KET %{ pmPRP(null,%2); %}
+	| INS BRA arrangement KET	%{ pmINS(%2); %}
+	| QRY BRA arrangement KET	%{ pmQRY(%2); %}
+	| SUG BRA arrangement KET	%{ pmSUG(%2); %}
+	| THK BRA arrangement KET	%{ pmTHK(%2); %}
+	| FCT BRA arrangement KET	%{ pmFCT(%2); %}
+	| WHT BRA unit_with_location KET	%{ pmWHT(%2); %}
+	| HOW BRA province KET	%{ pmHOW(%2,null); %}
+	| HOW BRA POWER KET	%{ pmHOW(null,TU.power(%2)); %}
+	| EXP BRA turn KET BRA reply KET	%{ pmEXP(%2,%5); %}
+	| IFF BRA arrangement KET THN BRA press_message KET	%{ pmIFF(%2,%6,null); %}
+	| IFF BRA arrangement KET THN BRA press_message KET ELS BRA press_message KET %{ pmIFF(%2,%6,%10); %}
+	| FRM BRA POWER INTEGER KET BRA power_list KET BRA press_message KET	%{ pmFRM(TU.power(%2),TU.integer(%3),%6,%9,null); %}
+	| FRM BRA POWER INTEGER KET BRA power_list KET BRA reply KET %{ pmFRM(TU.power(%2), TU.integer(%3), %6, null, %9); %}
+	| TEXT %{ pmText(TU.text(%0)); %}
 ;
 
-%query : QRY BRA arrangement KET ;
+// Arrangement
+%query : QRY BRA arrangement KET %{ %2; %} ;
 
+// NegQuery
 %negatable_query
-	: QRY BRA arrangement KET
-	| NOT BRA query KET
+	: QRY BRA arrangement KET %{ negQRY(%2); %}
+	| NOT BRA query KET		  %{ negNOT(%2); %}
 ;
 
+// LogicalOp
 %logical_operator
-	: AND arrangement_list
-	| ORR arrangement_list
+	: AND arrangement_list %{ { and:true, list:%1 }; %}
+	| ORR arrangement_list %{ { and:false,list:%1 }; %}
 ;
 
 %reply
-	: YES BRA press_message KET
-	| REJ BRA press_message KET
-	| BWX BRA press_message KET
-	| HUH BRA any_token_sequence KET
-	| THK BRA negatable_query KET
-	| FCT BRA negatable_query KET
-	| IDK BRA query KET
-	| YES BRA explanation KET
-	| REJ BRA explanation KET
-	| IDK BRA explanation KET
-	| SRY BRA explanation KET
-	| WHY BRA think_and_fact KET
-	| POB BRA why_sequence KET
-	| WHY BRA SUG BRA arrangement KET KET
-	| WHY BRA PRP BRA arrangement KET KET
-	| WHY BRA INS BRA arrangement KET KET
-	| IDK BRA PRP BRA arrangement KET KET
-	| IDK BRA INS BRA arrangement KET KET
-	| IDK BRA SUG BRA arrangement KET KET
-	| press_message
+	: YES BRA press_message KET %{ rmYes(%2,null); %}
+	| YES BRA explanation KET	%{ rmYes(null,%2); %}
+	| REJ BRA press_message KET	%{ rmRej(%2,null); %}
+	| REJ BRA explanation KET	%{ rmRej(null,%2); %}
+	| BWX BRA press_message KET	%{ rmBWX(%2); %}
+	| HUH BRA any_token_sequence KET	%{ rmHUH(%2); %}
+	| THK BRA negatable_query KET	%{ rmTHK(%2); %}
+	| FCT BRA negatable_query KET	%{ rmFCT(%2); %}
+	| SRY BRA explanation KET		%{ rmSRY(%2); %}
+	| POB BRA why_sequence KET	%{ rmPOB(%2); %}
+	| WHY BRA think_and_fact KET	%{ rmWHY(whyThinkFact(%2)); %}
+	| WHY BRA SUG BRA arrangement KET KET %{ rmWHY(whySug(%4)); %}
+	| WHY BRA PRP BRA arrangement KET KET %{ rmWHY(whyPRP(%4)); %}
+	| WHY BRA INS BRA arrangement KET KET %{ rmWHY(whyINS(%4)); %}
+	| IDK BRA query KET			%{ rmIDK(whyQry(%2)); %}
+	| IDK BRA explanation KET	%{ rmIDK(whyExp(%2)); %}
+	| IDK BRA PRP BRA arrangement KET KET	%{ rmIDK(whyPRP(%4)); %}
+	| IDK BRA INS BRA arrangement KET KET	%{ rmIDK(whyINS(%4)); %}
+	| IDK BRA SUG BRA arrangement KET KET	%{ rmIDK(whySug(%4)); %}
+	| press_message		%{ rmPress(%0); %}
 ;
 
+// Message
 %send_message
-	: SND BRA power_list KET BRA press_message KET
-	| SND BRA power_list KET BRA reply KET
-	| SND BRA turn KET BRA power_list KET BRA press_message KET
-	| SND BRA turn KET BRA power_list KET BRA reply KET
+	: SND BRA power_list KET BRA press_message KET %{ mSend(null,%2,%5,null); %}
+	| SND BRA power_list KET BRA reply KET		   %{ mSend(null,%2,null,%5); %}
+	| SND BRA turn KET BRA power_list KET BRA press_message KET %{ mSend(%2,%5,%8,null); %}
+	| SND BRA turn KET BRA power_list KET BRA reply KET			%{ mSend(%2,%5,null,%8); %}
 ;
 
+// ThinkAndFact
 %think_and_fact
-	: THK BRA arrangement KET
-	| FCT BRA arrangement KET
+	: THK BRA arrangement KET %{ { thk:true, arr:%2 }; %}
+	| FCT BRA arrangement KET %{ { thk:false,arr:%2 }; %}
 ;
 
-%why_sequence : WHY BRA think_and_fact KET ;
+// ThinkAndFact
+%why_sequence : WHY BRA think_and_fact KET %{ %2; %} ;
