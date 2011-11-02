@@ -102,7 +102,15 @@ class Socket {
 						write_message(error_message(msg.type==2?0x0A:0x0B));
 					}
 					log("DM received from server");
-					log("not gunna bother parsing it yet");
+					log("let's try parsing it!");
+					var tokens = TokenUtils.deserialise(msg.data);
+					try {
+						var message = HLlr.parse(tokens);
+						log(Std.string(message));
+					}catch(e:Dynamic) {
+						log("Failed to parse message D:");
+						//send a fucking error message to the bloody server
+					}
 				case 3:
 					//FM
 					if(wait_rm) {
