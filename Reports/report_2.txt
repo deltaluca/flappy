@@ -1,0 +1,36 @@
+Report Two: Progress & Revisions — due: 12.00 11th November 2011
+
+This report has four aims:
+
+
+Progress: to report on the progress of the project so far.
+
+   [ It should detail how many iterations and what requirements or features have   been completed so far. Also include what problems - technical or other - have been encountered and what measures have been taken to mitigate their effect on overall success. ]
+
+
+Revisions: to record any changes to any of the five items in Report One.
+
+     [ You are expected to include appropriate elements of Report One to highlight any changes made.
+
+        Have key requirements changed, been deleted or added? If so, has this been cleared by your project supervisor?
+        Have your infrastrucutre needs changed?
+        Do you still plan the same feature extensions?
+        Have you changed how you measure progress?
+        Are there problems that threaten completion of core functionality?
+        How many iterations do you still plan?
+        Also present a revised, less speculative schedule. ]
+
+    
+People management: to document any issues that may have emerged in the work dynamics of your group
+
+       [ How do you cope with the fact that group members have different levels or areas of skills?
+        how do you ensure that all group members contribute fairly
+        How do you resolve any problems? ]
+
+    
+Ethical and Environmental Impact:
+
+        Discuss whether your project has any potential ethical issues and explain how you intend to address such issues in your design, implementation, deployment or work practice,
+        Assess the environmental impact of your to-be-deployed system; describe ways in which this impact can be limited without compromising key requirements, or argue why the environmental impact cannot be decreased without such compromise.
+
+Evaluation Criteria for Report Two: the same as for Report One. But keep in mind that change and its management are the norm, not the exception. 
