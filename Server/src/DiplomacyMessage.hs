@@ -17,57 +17,43 @@ import Control.Monad.Reader
   -- Cancel (StartProcessing) means dont process until deadline (ignore?)
   
   -- DESC (SENDING PARTY)
-data DipMessage -- first message (CLIENT)
+data DipMessage 
                = Name { startName :: String
-                      , startVersion :: String }
-
-                 -- client is observer (CLIENT)
-               | Observer
-
-                 -- client wants to rejoin (CLIENT)
+                      , startVersion :: String } -- ^first message (CLIENT)
+               | Observer -- ^client is observer (CLIENT)
+                 
                | Rejoin { rejoinPower :: Power
-                        , rejoinPasscode :: Int }
-
-                 -- map name (SERVER)
-               | MapName { mapName :: String }
-
-                 -- requesting map name (CLIENT)
-               | MapNameReq
-
-                 -- definition of the map (SERVER)
+                        , rejoinPasscode :: Int } -- ^client wants to rejoin (CLIENT)
+                 
+               | MapName { mapName :: String } -- ^map name (SERVER)
+                 
+               | MapNameReq -- ^requesting map name (CLIENT)
+               
                | MapDef { mapDefPowers :: [Power]
                         , mapDefProvinces :: Provinces
-                        , mapDefAdjacencies :: [Adjacency] }
+                        , mapDefAdjacencies :: [Adjacency] } -- ^definition of the map (SERVER)
 
-                 -- requesting the definition of the map (CLIENT)
-               | MapDefReq
+               | MapDefReq -- ^requesting the definition of the map (CLIENT)
+                 
+               | Accept DipMessage -- ^accept message (SERVER, CLIENT)
+                 
+               | Reject DipMessage -- ^reject message (SERVER, CLIENT)
+                 
+               | Cancel DipMessage -- ^cancel message (CLIENT)
 
-                 -- accept message (SERVER, CLIENT)
-               | Accept DipMessage
-
-                 -- reject message (SERVER, CLIENT)
-               | Reject DipMessage
-
-                 -- cancel message (CLIENT)
-               | Cancel DipMessage
-
-                 -- game is starting (SERVER)
                | Start { startPower :: Power
                        , startPasscode :: Int
                        , startLevel :: Int
-                       , startVariantOpts :: [VariantOption] }
+                       , startVariantOpts :: [VariantOption] } -- ^game is starting
+                 
+               | StartPing -- ^requesting whether game started (CLIENT) or replying yes (SERVER)
 
-                 -- requesting whether game started (CLIENT) or replying yes (SERVER)
-               | StartPing
-
-                 -- current position (SERVER)
-               | CurrentPosition [SupplyCentre]
-
-                 -- current position request (CLIENT)
-               | CurrentPositionReq
-
-                 -- current position of units (SERVER)
-               | CurrentUnitPosition Turn [UnitPosition] (Maybe [ProvinceNode])
+               | CurrentPosition [SupplyCentre] -- ^current position (SERVER)
+                 
+               | CurrentPositionReq -- ^current position request (CLIENT)
+                 
+               | CurrentUnitPosition Turn [UnitPosition] (Maybe [ProvinceNode]) 
+                 -- ^current position of units (SERVER)
 
                  -- current position of units request (CLIENT)
                | CurrentUnitPositionReq
