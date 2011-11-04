@@ -131,7 +131,7 @@ class Match {
 					default: throw "lol";
 					case EConst(c):
 						switch(c) {
-							default: throw "lol";
+							default: throw "lol "+en.expr;
 							case CIdent(n): name = n;
 						}
 				}

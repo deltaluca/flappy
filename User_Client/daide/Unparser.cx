@@ -156,7 +156,7 @@ class Unparser {
 			mObserver  					= [OBS],
 			mIAm(x,y)  					= [IAM,BRA,POWER(x),KET,BRA,INTEGER(y),KET],
 			mMap(null) 					= [MAP],
-		  MapDefinition(null,null,null) = [MDF],
+		 mMapDefinition(null,null,null) = [MDF],
 			mAccept(x) 					= [YES,BRA].concat(unparse(x)).concat([KET]),
 			mReject(x) 					= [REJ,BRA].concat(unparse(x)).concat([KET]),
 			mCurrentLocation(null,null) = [NOW],
