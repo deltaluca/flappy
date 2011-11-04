@@ -4,7 +4,6 @@ module DaideError where
 import Control.Monad.Error
 import Control.Exception
 import Data.Typeable
-import Text.Parsec.Error
 
 data DaideError = TimerPopped
                 | IMNotFirst

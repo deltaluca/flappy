@@ -5,16 +5,17 @@ import Control.Monad.Error
 import Control.Exception
 import DiplomacyData
 import Data.Typeable
-import Text.Parsec.Error
+import DiplomacyToken
 
 data DipError   -- message recieved by server does not have correct parentheses
-              = WrongParen String
+              = WrongParen [DipToken]
 
                 -- message has a syntax error
-              | SyntaxError String
+              | SyntaxError [DipToken]
 
                 -- specified power has been declared to be in Civil Disorder
               | CivilDisorder { disorderPower :: Power }
+              | ParseError String
 
               deriving (Show, Typeable)
 
