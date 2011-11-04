@@ -60,7 +60,7 @@ BAL,Baltic Sea
 BAR,Barents Sea
 BLA,Black Sea
 EAS,Eastern Mediterranean
-ENG,English Channel
+ECH,English Channel
 BOT,Gulf of Bothnia
 GOL,Gulf of Lyon
 HEI,Helgoland Bight

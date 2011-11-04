@@ -1,12 +1,14 @@
 import Text.ParserCombinators.Parsec
+import System.IO
 
 data DMap = MDF [Power] ([Supply],NSupply) [ProvinceAdj]
   deriving (Show)
 
--- add coastal?
 data ProvinceAdj = PAdj Province [UnitAdj]
   deriving (Show)
 data UnitAdj = UAdj UType [AdjProv]
+  deriving (Show)
+data UType = Unit UT | CUnit UT Coast
   deriving (Show)
 data AdjProv = AProv Province | ACst Province Coast
   deriving (Show)
@@ -17,7 +19,7 @@ type Power = String
 type NSupply = [Province]
 type Province = String
 type Coast = String
-type UType = String
+type UT = String
 
 mapFile =
   do  result <- line
@@ -26,9 +28,12 @@ mapFile =
 
 -- Need to make it more flexible, ie. accepts extra spaces and stuff
 line = 
-  do  mdf_start <- many (noneOf "(")
+  do  mdf_start <- string "MDF"
+      many (oneOf " \n")
       powers <- getPowers
+      many (oneOf " \n")
       supply <- getSupplyProvs
+      many (oneOf " \n")
       adjacency <- getAdjacencies
       eol
       return (MDF powers supply adjacency)
@@ -46,14 +51,44 @@ getProvAdjacency =
       char ')'
       return (PAdj pname units)
 
+unitCoast = 
+  do  char '('
+      pname <- many (noneOf " ")
+      char ' '
+      pcoast <- many (noneOf ")")
+      char ')'
+      return (CUnit pname pcoast)
+     
+unitStd =
+  do  uname <- many (noneOf " ")
+      return (Unit uname)
+
+-- Two cases of coast to add here
 getUnits =
   do  char '('
-      unit <- many (noneOf " ")
+      unit <- ((try unitCoast) <|> unitStd)
       char ' '
-      links <- sepBy (many (noneOf " )")) (char ' ')
+      links <- many getAdj --sepBy (many (noneOf " )")) (char ' ')
       char ')'
-      return (UAdj unit (map AProv links))
+      return (UAdj unit links)
 
+getAdj = 
+  do  adjacency <- ((try adjCoast) <|> adjStd)
+      many (char ' ')
+      return adjacency
+
+adjCoast =
+  do  char '('
+      pname <- many1 (noneOf " ")
+      char ' '
+      pcoast <- many1 (noneOf ")")
+      char ')'
+      return (ACst pname pcoast)
+
+adjStd =
+  do  pname <- many1 (noneOf " )")
+      return (AProv pname) 
+  
 getPowers =
   do  char '('  
       contents <- sepBy (many (noneOf ") ")) (char ' ')
@@ -77,6 +112,7 @@ getSupplyProvs =
 getSupply =
   do  char '('
       powname <- many (noneOf " ")
+      many (char ' ')
       provinces <- sepBy (many (noneOf ") ")) (char ' ')
       char ')'
       return (Supp powname provinces)
@@ -86,4 +122,12 @@ eol = char '\n'
 
 parseMap input = parse mapFile "(unknown)" input
   
+----------------------------------------------------------
+-- Map based functions
+--
+
+main = do
+  handle <- openFile "std_map_def.txt" ReadMode
+  contents <- hGetContents handle
+  return contents
 
