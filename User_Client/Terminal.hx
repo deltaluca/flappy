@@ -13,6 +13,7 @@ import daide.HLex;
 import daide.HLlr;
 import daide.Language;
 import daide.Tokens;
+import daide.Unparser;
 
 using StringTools;
 
@@ -152,6 +153,9 @@ class Terminal extends Sprite {
 					//test syntax locally
 					var message = HLlr.parse(tokens);
 					log(Std.string(message));
+					//test unparser
+					var tokens2 = Unparser.unparse(message);
+					log(Std.string(tokens2));
 				}catch(e:Dynamic) {
 					log(e);
 				}

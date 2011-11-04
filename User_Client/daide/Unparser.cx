@@ -1,0 +1,213 @@
+package daide;
+
+import Match;
+import daide.Language;
+import daide.Tokens;
+
+$(mixin INTEGER(x) tInteger(x));
+$(mixin BRA() tLeftParen);
+$(mixin KET() tRightParen);
+$(mixin POWER(x) tPower(x));
+//...
+$(mixin AMY() tUnitType(utArmy));
+$(mixin FLT() tUnitType(utFleet));
+//...
+$(mixin CTO() tOrder(oMoveByConvoy));
+$(mixin CVY() tOrder(oConvoy));
+$(mixin HLD() tOrder(oHold));
+$(mixin MTO() tOrder(oMove));
+$(mixin SUP() tOrder(oSupport));
+$(mixin VIA() tOrder(oVia));
+$(mixin DSB() tOrder(oDisband));
+$(mixin RTO() tOrder(oRetreat));
+$(mixin BLD() tOrder(oBuild));
+$(mixin REM() tOrder(oRemove));
+$(mixin WVE() tOrder(oWaive));
+//...
+$(mixin MBV() tOrderNote(onOkay));
+$(mixin BPR() tOrderNote(onBPR));
+$(mixin CST() tOrderNote(onNoCoastSpecified));
+$(mixin ESC() tOrderNote(onNotEmptySupply));
+$(mixin FAR() tOrderNote(onNotAdjacent));
+$(mixin HSC() tOrderNote(onNotHomeSupply));
+$(mixin NAS() tOrderNote(onNotAtSea));
+$(mixin NMB() tOrderNote(onNoMoreBuilds));
+$(mixin NMR() tOrderNote(onNoMoreRemovals));
+$(mixin NRN() tOrderNote(onNoRetreatNeeded));
+$(mixin NRS() tOrderNote(onNotRightSeason));
+$(mixin NSA() tOrderNote(onNoSuchArmy));
+$(mixin NSC() tOrderNote(onNotSupply));
+$(mixin NSF() tOrderNote(onNoSuchFleet));
+$(mixin NSP() tOrderNote(onNoSuchProvince));
+$(mixin NSU() tOrderNote(onNoSuchUnit));
+$(mixin NVR() tOrderNote(onNotValidRetreat));
+$(mixin NYU() tOrderNote(onNotYourUnit));
+$(mixin YSC() tOrderNote(onNotYourSupply));
+//...
+$(mixin SUC() tResult(rSuccess));
+$(mixin BNC() tResult(rMoveBounced));
+$(mixin CUT() tResult(rSupportCut));
+$(mixin DSR() tResult(rConvoyDisrupted));
+$(mixin FLD() tResult(rFLD));
+$(mixin NSO() tResult(rNoSuchOrder));
+$(mixin RET() tResult(rDislodged));
+//...
+$(mixin NCS() tCoast(cNorth));
+$(mixin NEC() tCoast(cNorthEast));
+$(mixin ECS() tCoast(cEast));
+$(mixin SEC() tCoast(cSouthEast));
+$(mixin SCS() tCoast(cSouth));
+$(mixin SWC() tCoast(cSouthWest));
+$(mixin WCS() tCoast(cWest));
+$(mixin NWC() tCoast(cNorthWest));
+//...
+$(mixin SPR() tPhase(pSpring));
+$(mixin SUM() tPhase(pSummer));
+$(mixin FAL() tPhase(pFall));
+$(mixin AUT() tPhase(pAutumn));
+$(mixin WIN() tPhase(pWinter));
+//...
+$(mixin CCD() tCommand(coPowerInCivilDisorder));
+$(mixin DRW() tCommand(coDraw));
+$(mixin FRM() tCommand(coMessageFrom));
+$(mixin GOF() tCommand(coGoFlag));
+$(mixin HLO() tCommand(coHello));
+$(mixin HST() tCommand(coHistory));
+$(mixin HUH() tCommand(coHuh));
+$(mixin IAM() tCommand(coIAm));
+$(mixin LOD() tCommand(coLoadGame));
+$(mixin MAP() tCommand(coMap));
+$(mixin MDF() tCommand(coMapDefinition));
+$(mixin MIS() tCommand(coMissingOrders));
+$(mixin NME() tCommand(coName));
+$(mixin NOT() tCommand(coNOT));
+$(mixin NOW() tCommand(coCurrentPosition));
+$(mixin OBS() tCommand(coObserver));
+$(mixin OFF() tCommand(coTurnOff));
+$(mixin ORD() tCommand(coOrderResult));
+$(mixin OUT() tCommand(coPowerEliminated));
+$(mixin PRN() tCommand(coParenthesisError));
+$(mixin REJ() tCommand(coReject));
+$(mixin SCO() tCommand(coSupplyOwnership));
+$(mixin SLO() tCommand(coSolo));
+$(mixin SND() tCommand(coSendMessage));
+$(mixin SUB() tCommand(coSubmitOrder));
+$(mixin SVE() tCommand(coSaveGame));
+$(mixin THX() tCommand(coThink));
+$(mixin TME() tCommand(coTimeToDeadline));
+$(mixin YES() tCommand(coAccept));
+$(mixin ADM() tCommand(coAdmin));
+//...
+$(mixin AOA() tParameter(paAnyOrder));
+$(mixin BTL() tParameter(paBuildTimeLimit));
+$(mixin ERR() tParameter(paLocationError));
+$(mixin LVL() tParameter(paLevel));
+$(mixin MRT() tParameter(paMustRetreat));
+$(mixin MTL() tParameter(paMoveTimeLimit));
+$(mixin NPB() tParameter(paNoPressDuringBuild));
+$(mixin NPR() tParameter(paNoPressDuringRetreat));
+$(mixin PDA() tParameter(paPartialDrawsAllowed));
+$(mixin PTL() tParameter(paPressTimeLimit));
+$(mixin RTL() tParameter(paRetreatTimeLimit));
+$(mixin UNO() tParameter(paUnowned));
+$(mixin DSD() tParameter(paDeadlineDisconnect));
+//...
+$(mixin ALY() tPress(prAlly));
+$(mixin AND() tPress(prAND));
+$(mixin BWX() tPress(prNoneOfYourBusiness));
+$(mixin DMZ() tPress(prDemiliterisedZone));
+$(mixin ELS() tPress(prELSE));
+$(mixin EXP() tPress(prExplain));
+$(mixin FWD() tPress(prRequestForward));
+$(mixin FCT() tPress(prFact));
+$(mixin FOR() tPress(prForTurn));
+$(mixin HOW() tPress(prHowToAttack));
+$(mixin IDK() tPress(prIDontKnow));
+$(mixin IFF() tPress(prIF));
+$(mixin INS() tPress(prInsist));
+$(mixin OCC() tPress(prOccupy));
+$(mixin ORR() tPress(prOR));
+$(mixin PCE() tPress(prPeace));
+$(mixin POB() tPress(prPosition));
+$(mixin PRP() tPress(prPropose));
+$(mixin QRY() tPress(prQuery));
+$(mixin SCD() tPress(prSupplyDistro));
+$(mixin SRY() tPress(prSorry));
+$(mixin SUG() tPress(prSuggest));
+$(mixin THK() tPress(prThink));
+$(mixin THN() tPress(prThen));
+$(mixin TRY() tPress(prTry));
+$(mixin VSS() tPress(prVersus));
+$(mixin WHT() tPress(prWhat));
+$(mixin WHY() tPress(prWhy));
+$(mixin XDO() tPress(prDo));
+$(mixin XOY() tPress(prOwes));
+$(mixin YDO() tPress(prTellMe));
+$(mixin CHO() tPress(prChoose));
+$(mixin BCC() tPress(prBCC));
+$(mixin UNT() tPress(prUNT));
+//...
+$(mixin TEXT(x) tText(x));
+
+class Unparser {
+	public static function unparse(x:Message):Array<Token> {
+		return Match.match(x,
+			mName(x,y) 					= [NME,BRA,TEXT(x),KET,BRA,TEXT(y),KET],
+			mObserver  					= [OBS],
+			mIAm(x,y)  					= [IAM,BRA,POWER(x),KET,BRA,INTEGER(y),KET],
+			mMap(null) 					= [MAP],
+		 mMapDefinition(null,null,null) = [MDF],
+			mAccept(x) 					= [YES,BRA].concat(unparse(x)).concat([KET]),
+			mReject(x) 					= [REJ,BRA].concat(unparse(x)).concat([KET]),
+			mCurrentLocation(null,null) = [NOW],
+			mSupplyOwnership(null) 		= [SCO],
+			mHistory(turn) 				= [HST,BRA].concat(unturn(turn)).concat([KET]),
+			mTimeToDeadline(null) 		= [TME],
+			mTimeToDeadline(x) 			= [TME,BRA,INTEGER(x),KET],
+			mAdmin(x,y) 				= [ADM,BRA,TEXT(x),KET,BRA,TEXT(y),KET],
+			mBadBrackets(xs) 			= [PRN,BRA].concat(xs).concat([KET]),
+			mHuh(xs) 					= [HUH,BRA].concat(xs).concat([KET]),
+			mHello(null,null,null) 		= [HLO],
+			mSubmit(null,xs) 			= [SUB].concat(unorder_list(xs)),
+			mSubmit(turn,xs) 			= [SUB, BRA].concat(unturn(turn)).concat([KET]).concat(unorder_list(xs)),
+			mNOT(x) 					= [NOT,BRA].concat(unparse(x)).concat([KET]),
+			mMissingOrders(null,null)	= [MIS],
+			mGoFlag 					= [GOF],
+			mOrderResult(null,null,null)= [ORD],
+			mDraw(null) 				= [DRW],
+			mDraw(xs) 					= [DRW,BRA].concat(unpower_list(xs)).concat([KET]),
+// send_message
+			
+			mMap(x) = [MAP,BRA,TEXT(x),KET]
+//			mMapDefinition(
+		);
+		return [];
+	}
+
+	static function unturn(t:Turn):Array<Token> return [tPhase(t.phase)].concat([INTEGER(t.turn)])
+	static function unorder_list(xs:Array<MsgOrder>):Array<Token> {
+		var ret = [];
+		for(i in xs) ret = ret.concat([BRA]).concat(unorder(i)).concat([KET]);
+		return ret;
+	}
+	static function unorder(x:MsgOrder):Array<Token> {
+		return Match.match(x,
+			moHold(x) = [BRA].concat(ununit_with_location(x)).concat([KET,HLD])
+		);
+	}
+	static function ununit_with_location(x:UnitWithLoc):Array<Token> {
+		return [POWER(x.power),tUnitType(x.type)].concat(unmdf_province(x.location));
+	}
+	static function unmdf_province(x:Location):Array<Token> {
+		if(x.coast==null) return [tProvince(x.province)];
+		else return [BRA].concat(unprovince_and_coast(x)).concat([KET]);	
+	}
+	static function unprovince_and_coast(x:Location):Array<Token> {
+		return [tProvince(x.province),tCoast(x.coast)];	
+	}
+	static function unpower_list(xs:Array<Int>):Array<Token> {
+		var ret = [];
+		for(i in xs) ret.push(POWER(i));
+		return ret;
+	}
+}

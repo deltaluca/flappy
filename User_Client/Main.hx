@@ -26,8 +26,8 @@ class Main extends Sprite {
 		stage.scaleMode = StageScaleMode.NO_SCALE;
 		stage.align = StageAlign.TOP_LEFT;
 
-		var bit = new Bitmap(Assets.getBitmapData("Assets/map-std.png"));
-		addChild(bit);
+//		var bit = new Bitmap(Assets.getBitmapData("Assets/map-std.png"));
+//		addChild(bit);
 
 		var terminal = new Terminal(stage.stageWidth,stage.stageHeight);
 		addChild(terminal);
