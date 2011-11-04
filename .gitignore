@@ -2,5 +2,8 @@
 *.hi
 *.o
 *.html
+Reports/*.log
+Reports/*.dvi
+Reports/*.txt
 *.pdf
 Server/server
