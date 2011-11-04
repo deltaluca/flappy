@@ -6,9 +6,9 @@ import DiplomacyData as Dat
 
 import Data.Binary
 import Control.Exception
-import Control.Monad
 import Data.Bits
 import Data.Char
+import qualified Data.Map as Map
 
 data DipToken = DipInt Int
               | Bra
@@ -29,6 +29,7 @@ data DipToken = DipInt Int
 
 instance Binary DipToken where
   put (DipInt int) = put . (.&. 0x3FFF) $ (fromIntegral int :: Word16)
+  put _ = undefined
   get = do
     typ <- (get :: Get Word8)
     val <- (get :: Get Word8)
@@ -37,18 +38,18 @@ instance Binary DipToken where
 
 data Pow = Pow Int
               deriving (Show, Eq)
-                                              
+
 data OrderTok = CTO
-           | CVY
-           | HLD
-           | MTO
-           | SUP
-           | VIA
-           | DSB
-           | RTO
-           | BLD
-           | REM
-           | WVE
+              | CVY
+              | HLD
+              | MTO
+              | SUP
+              | VIA
+              | DSB
+              | RTO
+              | BLD
+              | REM
+              | WVE
               deriving (Show, Eq)
 
 data OrderNoteTok = MBV
@@ -164,7 +165,7 @@ data Press = ALY
            | XOY
            | YDO
            | WRT
-              deriving (Show, Eq)             
+              deriving (Show, Eq)
 
 
 decodeToken :: Word8 -> Word8 -> Get DipToken
@@ -334,3 +335,233 @@ decodePress 0x20 = XOY
 decodePress 0x21 = YDO
 decodePress 0x22 = WRT
 decodePress _ = throw InvalidToken
+
+type TokenMap = Map.Map [Char] DipToken
+
+tokenMap :: TokenMap
+tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
+                 [ ("CTO", DipOrder CTO)
+                 , ("CVY", DipOrder CVY)
+                 , ("HLD", DipOrder HLD)
+                 , ("MTO", DipOrder MTO)
+                 , ("SUP", DipOrder SUP)
+                 , ("VIA", DipOrder VIA)
+                 , ("DSB", DipOrder DSB)
+                 , ("RTO", DipOrder RTO)
+                 , ("BLD", DipOrder BLD)
+                 , ("REM", DipOrder REM)
+                 , ("WVE", DipOrder WVE)
+                                         
+                 , ("MBV", DipOrderNote MBV)
+                 , ("BPR", DipOrderNote BPR)
+                 , ("CST", DipOrderNote CST)      
+                 , ("ESC", DipOrderNote ESC)
+                 , ("FAR", DipOrderNote FAR)
+                 , ("HSC", DipOrderNote HSC)
+                 , ("NAS", DipOrderNote NAS)
+                 , ("NMB", DipOrderNote NMB)
+                 , ("NMR", DipOrderNote NMR)
+                 , ("NRN", DipOrderNote NRN)
+                 , ("NRS", DipOrderNote NRS)
+                 , ("NSA", DipOrderNote NSA)
+                 , ("NSC", DipOrderNote NSC)
+                 , ("NSF", DipOrderNote NSF)
+                 , ("NSP", DipOrderNote NSP)
+                 , ("NST", DipOrderNote NST)
+                 , ("NSU", DipOrderNote NSU)
+                 , ("NVR", DipOrderNote NVR)
+                 , ("NYU", DipOrderNote NYU)
+                 , ("YSC", DipOrderNote YSC)
+                 
+                 , ("SUC", DipResult SUC)
+                 , ("BNC", DipResult BNC)
+                 , ("CUT", DipResult CUT)
+                 , ("DSR", DipResult DSR)
+                 , ("FLD", DipResult FLD)
+                 , ("NSO", DipResult NSO)
+                 , ("RET", DipResult RET)
+                 
+                 , ("CCD", DipCmd CCD)
+                 , ("DRW", DipCmd DRW)
+                 , ("FRM", DipCmd FRM)
+                 , ("GOF", DipCmd GOF)
+                 , ("HLO", DipCmd HLO)
+                 , ("HST", DipCmd HST)
+                 , ("HUH", DipCmd HUH)
+                 , ("IAM", DipCmd IAM)
+                 , ("LOD", DipCmd LOD)
+                 , ("MAP", DipCmd MAP)
+                 , ("MDF", DipCmd MDF)
+                 , ("MIS", DipCmd MIS)
+                 , ("NME", DipCmd NME)
+                 , ("NOT", DipCmd NOT)
+                 , ("NOW", DipCmd NOW)
+                 , ("OBS", DipCmd OBS)
+                 , ("OFF", DipCmd OFF)
+                 , ("ORD", DipCmd ORD)
+                 , ("OUT", DipCmd OUT)
+                 , ("PRN", DipCmd PRN)
+                 , ("REJ", DipCmd REJ)
+                 , ("SCO", DipCmd SCO)
+                 , ("SLO", DipCmd SLO)
+                 , ("SND", DipCmd SND)
+                 , ("SUB", DipCmd SUB)
+                 , ("SVE", DipCmd SVE)
+                 , ("THX", DipCmd THX)
+                 , ("TME", DipCmd TME)
+                 , ("YES", DipCmd YES)
+                 , ("ADM", DipCmd ADM)
+                 
+                 , ("AOA", DipParam AOA)
+                 , ("BTL", DipParam BTL)
+                 , ("ERR", DipParam ERR)
+                 , ("LVL", DipParam LVL)
+                 , ("MRT", DipParam MRT)
+                 , ("MTL", DipParam MTL)
+                 , ("NPB", DipParam NPB)
+                 , ("NPR", DipParam NPR)
+                 , ("PDA", DipParam PDA)
+                 , ("PTL", DipParam PTL)
+                 , ("RTL", DipParam RTL)
+                 , ("UNO", DipParam UNO)
+                 , ("DSD", DipParam DSD)
+                   
+                 , ("ALY", DipPress ALY)
+                 , ("AND", DipPress AND)
+                 , ("BWX", DipPress BWX)
+                 , ("DMZ", DipPress DMZ)
+                 , ("ELS", DipPress ELS)
+                 , ("EXP", DipPress EXP)
+                 , ("FWD", DipPress FWD)
+                 , ("FCT", DipPress FCT)
+                 , ("FOR", DipPress FOR)
+                 , ("HOW", DipPress HOW)
+                 , ("IDK", DipPress IDK)
+                 , ("IFF", DipPress IFF)
+                 , ("INS", DipPress INS)
+                 , ("IOU", DipPress IOU)
+                 , ("OCC", DipPress OCC)
+                 , ("ORR", DipPress ORR)
+                 , ("PCE", DipPress PCE)
+                 , ("POB", DipPress POB)
+                 , ("PPT", DipPress PPT)
+                 , ("PRP", DipPress PRP)
+                 , ("QRY", DipPress QRY)
+                 , ("SCD", DipPress SCD)
+                 , ("SRY", DipPress SRY)
+                 , ("SUG", DipPress SUG)
+                 , ("THK", DipPress THK)
+                 , ("THN", DipPress THN)
+                 , ("TRY", DipPress TRY)
+                 , ("UOM", DipPress UOM)
+                 , ("VSS", DipPress VSS)
+                 , ("WHT", DipPress WHT)
+                 , ("WHY", DipPress WHY)
+                 , ("XDO", DipPress XDO)
+                 , ("XOY", DipPress XOY)
+                 , ("YDO", DipPress YDO)
+                 , ("WRT", DipPress WRT)
+                   
+                 , ("AMY", DipUnitType Army)
+                 , ("FLT", DipUnitType Fleet)
+                   
+                   -- standard map
+                   -- provinces
+                 , ("BOH", DipProv (Inland 0x00))
+                 , ("BUR", DipProv (Inland 0x01))
+                 , ("GAL", DipProv (Inland 0x02))
+                 , ("RUH", DipProv (Inland 0x03))
+                 , ("SIL", DipProv (Inland 0x04))
+                 , ("TYR", DipProv (Inland 0x05))
+                 , ("UKR", DipProv (Inland 0x06))
+                 , ("BUD", DipProv (Inland 0x07))
+                 , ("MOS", DipProv (Inland 0x08))
+                 , ("MUN", DipProv (Inland 0x09))
+                 , ("PAR", DipProv (Inland 0x0A))
+                 , ("SER", DipProv (Inland 0x0B))
+                 , ("VIE", DipProv (Inland 0x0C))
+                 , ("WAR", DipProv (Inland 0x0D))
+                 
+                 , ("ADR", DipProv (Sea 0x0E))
+                 , ("AEG", DipProv (Sea 0x0F))
+                 , ("BAL", DipProv (Sea 0x10))
+                 , ("BAR", DipProv (Sea 0x11))
+                 , ("BLA", DipProv (Sea 0x12))
+                 , ("EAS", DipProv (Sea 0x13))
+                 , ("ECH", DipProv (Sea 0x14))
+                 , ("GOB", DipProv (Sea 0x15))
+                 , ("GOL", DipProv (Sea 0x16))
+                 , ("HEL", DipProv (Sea 0x17))
+                 , ("ION", DipProv (Sea 0x18))
+                 , ("IRI", DipProv (Sea 0x19))
+                 , ("MAO", DipProv (Sea 0x1A))
+                 , ("NAO", DipProv (Sea 0x1B))
+                 , ("NTH", DipProv (Sea 0x1C))
+                 , ("NWG", DipProv (Sea 0x1D))
+                 , ("SKA", DipProv (Sea 0x1E))
+                 , ("TYS", DipProv (Sea 0x1F))
+                 , ("WES", DipProv (Sea 0x20))
+                 
+                 , ("ALB", DipProv (Coastal 0x21))
+                 , ("APU", DipProv (Coastal 0x22))
+                 , ("ARM", DipProv (Coastal 0x23))
+                 , ("CLY", DipProv (Coastal 0x24))
+                 , ("FIN", DipProv (Coastal 0x25))
+                 , ("GAS", DipProv (Coastal 0x26))
+                 , ("LVN", DipProv (Coastal 0x27))
+                 , ("NAF", DipProv (Coastal 0x28))
+                 , ("PIC", DipProv (Coastal 0x29))
+                 , ("PIE", DipProv (Coastal 0x2A))
+                 , ("PRU", DipProv (Coastal 0x2B))
+                 , ("SYR", DipProv (Coastal 0x2C))
+                 , ("TUS", DipProv (Coastal 0x2D))
+                 , ("WAL", DipProv (Coastal 0x2E))
+                 , ("YOR", DipProv (Coastal 0x2F))
+                 , ("ANK", DipProv (Coastal 0x30))
+                 , ("BEL", DipProv (Coastal 0x31))
+                 , ("BER", DipProv (Coastal 0x32))
+                 , ("BRE", DipProv (Coastal 0x33))
+                 , ("CON", DipProv (Coastal 0x34))
+                 , ("DEN", DipProv (Coastal 0x35))
+                 , ("EDI", DipProv (Coastal 0x36))
+                 , ("GRE", DipProv (Coastal 0x37))
+                 , ("HOL", DipProv (Coastal 0x38))
+                 , ("KIE", DipProv (Coastal 0x39))
+                 , ("LON", DipProv (Coastal 0x3A))
+                 , ("LVP", DipProv (Coastal 0x3B))
+                 , ("MAR", DipProv (Coastal 0x3C))
+                 , ("NAP", DipProv (Coastal 0x3D))
+                 , ("NWY", DipProv (Coastal 0x3E))
+                 , ("POR", DipProv (Coastal 0x3F))
+                 , ("ROM", DipProv (Coastal 0x40))
+                 , ("RUM", DipProv (Coastal 0x41))
+                 , ("SEV", DipProv (Coastal 0x42))
+                 , ("SMY", DipProv (Coastal 0x43))
+                 , ("SWE", DipProv (Coastal 0x44))
+                 , ("TRI", DipProv (Coastal 0x45))
+                 , ("TUN", DipProv (Coastal 0x46))
+                 , ("VEN", DipProv (Coastal 0x47))
+                 
+                 , ("BUL", DipProv (BiCoastal 0x48))
+                 , ("SPA", DipProv (BiCoastal 0x49))
+                 , ("STP", DipProv (BiCoastal 0x4A))
+                 
+                   -- coasts
+                 , ("NCS", DipCoast (Coast 0x00))
+                 , ("NEC", DipCoast (Coast 0x02))
+                 , ("ECS", DipCoast (Coast 0x04))
+                 , ("SEC", DipCoast (Coast 0x06))
+                 , ("SCS", DipCoast (Coast 0x08))
+                 , ("SWC", DipCoast (Coast 0x0A))
+                 , ("WCS", DipCoast (Coast 0x0C))
+                 , ("NWC", DipCoast (Coast 0x0E))
+                   
+                   -- powers
+                 , ("AUS", DipPow (Pow 0x00))
+                 , ("ENG", DipPow (Pow 0x01))
+                 , ("FRA", DipPow (Pow 0x02))
+                 , ("GER", DipPow (Pow 0x03))
+                 , ("ITA", DipPow (Pow 0x04))
+                 , ("RUS", DipPow (Pow 0x05))
+                 , ("TUR", DipPow (Pow 0x06))
+                 ]

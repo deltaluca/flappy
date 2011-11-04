@@ -7,12 +7,11 @@ import DiplomacyMessage
 import DiplomacyToken
 
 import Data.Binary
-import Data.Typeable
 import Control.Exception as E
 import Control.Monad
 import Control.Monad.Error
 
-data DaideMessage = IM {version :: Int}
+data DaideMessage = IM {imVersion :: Int}
                   | RM
                   | FM
                   | DM DipMessage
@@ -31,9 +30,10 @@ instance Binary DaideMessage where
     put (fromIntegral version :: Word16)
     put _MAGIC_NUM
   put RM = putMessage 1 0 $ return ()
-  put (EM error) = putMessage 4 2 $ do
-    (put :: Word16 -> Put) . fromIntegral . errorCode $ error
+  put (EM err) = putMessage 4 2 $ do
+    (put :: Word16 -> Put) . fromIntegral . errorCode $ err
   put FM = putMessage 3 0 $ return ()
+  put _ = undefined
   get = do
     typ <- get :: Get Word8
     get :: Get Word8           -- padding
@@ -41,10 +41,10 @@ instance Binary DaideMessage where
     daideMessage typ size    
 
 putMessage :: Word8 -> Word16 -> Put -> Put
-putMessage typ length dat = do
+putMessage typ lth dat = do
   put typ
   put (0 :: Word8)
-  put length
+  put lth
   dat
 
 daideMessage :: Word8 -> Word16 -> Get DaideMessage
@@ -57,7 +57,7 @@ daideMessage 0 size = do
     (do when (magic == _MAGIC_NUM_LE) (E.throw WrongMagic)
         E.throw WrongEndian)
   return . IM . fromIntegral $ version
-daideMessage 1 size = return RM
+daideMessage 1 _ = return RM
 daideMessage 2 size = do
   when (size < 2) (E.throw MsgTooShort)
   tokens <- replicateM (fromIntegral size `div` 2) (get :: Get DipToken)
@@ -66,8 +66,8 @@ daideMessage 2 size = do
     Left err -> throw err
     Right msg -> return (DM msg)
 
-daideMessage 3 size = return FM
+daideMessage 3 _ = return FM
 daideMessage 4 size = do
   when (size < 2) (E.throw MsgTooShort)
   E.throw UnknownMsg
-daideMessage unknown _ = E.throw UnknownMsg
+daideMessage _ _ = E.throw UnknownMsg
