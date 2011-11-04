@@ -6,7 +6,6 @@ import DiplomacyData as Dat
 
 import Data.Binary
 import Control.Exception
-import Control.Monad
 import Data.Bits
 import Data.Char
 
@@ -29,6 +28,7 @@ data DipToken = DipInt Int
 
 instance Binary DipToken where
   put (DipInt int) = put . (.&. 0x3FFF) $ (fromIntegral int :: Word16)
+  put _ = undefined
   get = do
     typ <- (get :: Get Word8)
     val <- (get :: Get Word8)

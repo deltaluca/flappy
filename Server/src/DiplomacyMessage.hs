@@ -6,7 +6,6 @@ import DiplomacyData as Dat
 import DiplomacyError
 
 import Text.Parsec
-import Data.Either
 import Data.Maybe
 import Control.Monad.Identity
 import Control.Monad.Error
@@ -15,44 +14,44 @@ import Control.Monad.Reader
   -- Things to look out for:
   -- ambiguity: StartPing and MissingReq
   -- Cancel (StartProcessing) means dont process until deadline (ignore?)
-  
+
   -- DESC (SENDING PARTY)
-data DipMessage 
+data DipMessage
                = Name { startName :: String
                       , startVersion :: String } -- ^first message (CLIENT)
                | Observer -- ^client is observer (CLIENT)
-                 
+
                | Rejoin { rejoinPower :: Power
                         , rejoinPasscode :: Int } -- ^client wants to rejoin (CLIENT)
-                 
+
                | MapName { mapName :: String } -- ^map name (SERVER)
-                 
+
                | MapNameReq -- ^requesting map name (CLIENT)
-               
+
                | MapDef { mapDefPowers :: [Power]
                         , mapDefProvinces :: Provinces
                         , mapDefAdjacencies :: [Adjacency] } -- ^definition of the map (SERVER)
 
                | MapDefReq -- ^requesting the definition of the map (CLIENT)
-                 
+
                | Accept DipMessage -- ^accept message (SERVER, CLIENT)
-                 
+
                | Reject DipMessage -- ^reject message (SERVER, CLIENT)
-                 
+
                | Cancel DipMessage -- ^cancel message (CLIENT)
 
                | Start { startPower :: Power
                        , startPasscode :: Int
                        , startLevel :: Int
                        , startVariantOpts :: [VariantOption] } -- ^game is starting
-                 
+
                | StartPing -- ^requesting whether game started (CLIENT) or replying yes (SERVER)
 
                | CurrentPosition [SupplyCentre] -- ^current position (SERVER)
-                 
+
                | CurrentPositionReq -- ^current position request (CLIENT)
-                 
-               | CurrentUnitPosition Turn [UnitPosition] (Maybe [ProvinceNode]) 
+
+               | CurrentUnitPosition Turn [UnitPosition] (Maybe [ProvinceNode])
                  -- ^current position of units (SERVER)
 
                  -- current position of units request (CLIENT)
@@ -63,53 +62,61 @@ data DipMessage
 
                  -- submitting orders (CLIENT)
                | SubmitOrder (Maybe Turn) [Order]
-                 
+
                  -- acknowledge order (SERVER)
                | AckOrder Order OrderNote
-               
+
                  -- missing movement orders (SERVER)
                | MissingMovement [UnitPosition]
-                 
+
                  -- missing retreat orders (SERVER)
                | MissingRetreat [(UnitPosition, [ProvinceNode])]
-               
+
                  -- missing build orders (SERVER)
                | MissingBuild Int
-                 
+
                  -- missing request (CLIENT) or replying 'no more missing request' (SERVER)
                | MissingReq
-                 
+
                  -- start processing orders (CLIENT) (Missing... follows)
                | StartProcessing
-               
+
                  -- result of an order after turn is processed (SERVER)
                | OrderResult Turn Order Result
-                 
+
                  -- save game (SERVER)
                | SaveGame String
-               
+
                  -- load game (SERVER)
                | LoadGame String
-               
+
                  -- tell client to exit (SERVER)
                | ExitClient
 
                  -- time in seconds until next deadline (SERVER)
                | TimeUntilDeadline Int
 
-                 -- throw a Diplomacy Error
+                 -- throw a Diplomacy Error (SERVER, CLIENT)
                | DipError DipError
 
-                 -- admin message sent from client to server
+                 -- admin message sent from client to server (CLIENT)
                | AdminMessage { playerName :: String
                               , adminMessage :: String }
 
-                 -- game has ended due to a solo by specified power
+                 -- game has ended due to a solo by specified power (SERVER)
                | SoloWinGame { soloPower :: Power }
 
-                 -- command sent from client to server to indicate a draw
-               | DrawGame 
+                 -- command sent from client to server to indicate a draw (SERVER, CLIENT)
+               | DrawGame (Maybe [Power])
 
+                 -- send press (CLIENT)
+               | SendPress (Maybe Turn) [Power] PressMessage
+
+                 -- receive press (SERVER)
+               | ReceivePress Power [Power] PressMessage
+
+                 -- sent if press is to be sent to an eliminated power (SERVER)
+               | PowerEliminated Power
          {-        -- full statistics at the end of the game
                | EndGameStats Turn [PlayerStat] -}
 
@@ -123,16 +130,35 @@ data Order = OrderMovement OrderMovement
            | OrderBuild OrderBuild
            deriving (Show)
 
+data PressMessage = PressProposal PressProposal
+                  | PressReply PressReply
+                  | PressInfo PressProposal
+                  | PressCapable [DipToken]
+                  deriving (Show)
+
+data PressReply = PressAccept PressMessage
+                | PressReject PressMessage
+                | PressRefuse PressMessage
+                | PressHuh PressMessage
+                deriving (Show)
+
+data PressProposal = ArrangeDraw
+                   | ArrangeSolo Power
+                   | ArrangeAlliance [Power] [Power]
+                   | ArrangePeace [Power]
+                   | ArrangeNot PressProposal
+                   deriving (Show)
+
 data Result = Result (Maybe ResultNormal) (Maybe ResultRetreat)
             deriving (Show)
-                     
+
 data ResultNormal = Success
                   | MoveBounced
                   | SupportCut
                   | DisbandedConvoy
                   | NoSuchOrder
                   deriving (Show)
-                    
+
 data ResultRetreat = ResultRetreat
                    deriving (Show)
 
@@ -188,6 +214,10 @@ data VariantOption = Level Int
                    | TimeBuild Int
                    | DeadlineStop
                    | AnyOrderAccepted
+                   | PartialDraws              -- (10)
+                   | NoPressDuringRetreat      -- (10)
+                   | NoPressDuringBuild        -- (10)
+                   | PressTimeTillDeadline Int -- (10)
                    deriving (Show)
 
 data SupplyCentre = SupplyCentre Power [Province]
@@ -210,8 +240,8 @@ parseDipMessage :: Monad m => Int -> [DipToken] -> ErrorT DipError m DipMessage
 parseDipMessage = parseDip pMsg
 
 parseDip :: Monad m => DipParser a -> Int -> [DipToken] -> ErrorT DipError m a
-parseDip parsr lvl toks = 
-  liftEither . return . mapEitherLeft (SyntaxError . show) . runReader (runParserT parsr () "Whatevs" toks) $ lvl
+parseDip parsr lvl toks =
+  liftEither . return . mapEitherLeft (ParseError . show) . runReader (runParserT parsr () "Whatevs" toks) $ lvl
 
 
 liftEither :: (Error e, Monad m) => m (Either e a) -> ErrorT e m a
@@ -280,9 +310,9 @@ pCancel = return . Cancel =<< (tok1 (DipCmd NOT) >> paren pMsg)
 
 pNme = do
   tok1 (DipCmd NME)
-  startName <- paren pStr
-  startVersion <- paren pStr
-  return (Name startName startVersion)
+  sName <- paren pStr
+  sVersion <- paren pStr
+  return (Name sName sVersion)
 
 pMap = tok1 (DipCmd MAP) >> choice [pMapName, pMapNameReq]
 
@@ -354,8 +384,8 @@ pHlo = tok1 (DipCmd HLO) >> choice [pStart, pStartPing]
 pStart = do
   pow <- paren pPower
   passCode <- paren pInt
-  (level, variantOpts) <- paren pVariant
-  return (Start pow passCode level variantOpts)
+  (lvl, variantOpts) <- paren pVariant
+  return (Start pow passCode lvl variantOpts)
 
 pStartPing = return StartPing
 
@@ -363,8 +393,8 @@ pVariant = do
   options <- many pVariantOpt
   let (lvls, others) = splitWith (\v -> case v of {Level _ -> True ; _ -> False}) options
   case lvls of
-    [] -> parserFail "No LVL option specified in HLO message"
     (Level lvl) : _ -> return (lvl, others)
+    _ -> parserFail "No LVL option specified in HLO message"
 
 pVariantOpt = choice [ return . Level         =<< (tok1 (DipParam LVL) >> pInt)
                      , return . TimeMovement  =<< (tok1 (DipParam MTL) >> pInt)
@@ -473,26 +503,29 @@ pAck = do
   orderNote <- paren pOrderNote
   return (AckOrder order orderNote)
 
-pOrderNote = tok (\t -> case t of {DipOrderNote tk -> return (f tk) ; _ -> Nothing})
-  where
-    f MBV = MovementOK
-    f FAR = NotAdjacent
-    f NSP = NoSuchProvince
-    f NSU = NoSuchUnit
-    f NAS = NotAtSea
-    f NSF = NoSuchFleet
-    f NSA = NoSuchArmy
-    f NYU = NotYourUnit
-    f NRN = NoRetreatNeeded
-    f NVR = InvalidRetreatSpace
-    f YSC = NotYourSC
-    f ESC = NotEmptySC
-    f HSC = NotHomeSC
-    f NSC = NotASC
-    f CST = InvalidBuildLocation
-    f NMB = NoMoreBuildAllowed
-    f NMR = NoMoreRemovalAllowed
-    f NRS = NotCurrentSeason
+pOrderNote = tok (\t -> case t of {DipOrderNote tk ->
+                                      (case tk of
+                                          MBV -> Just MovementOK
+                                          FAR -> Just NotAdjacent
+                                          NSP -> Just NoSuchProvince
+                                          NSU -> Just NoSuchUnit
+                                          NAS -> Just NotAtSea
+                                          NSF -> Just NoSuchFleet
+                                          NSA -> Just NoSuchArmy
+                                          NYU -> Just NotYourUnit
+                                          NRN -> Just NoRetreatNeeded
+                                          NVR -> Just InvalidRetreatSpace
+                                          YSC -> Just NotYourSC
+                                          ESC -> Just NotEmptySC
+                                          HSC -> Just NotHomeSC
+                                          NSC -> Just NotASC
+                                          CST -> Just InvalidBuildLocation
+                                          NMB -> Just NoMoreBuildAllowed
+                                          NMR -> Just NoMoreRemovalAllowed
+                                          NRS -> Just NotCurrentSeason
+                                          BPR -> Nothing -- error message?
+                                          NST -> Nothing -- error message?
+                                      ) ; _ -> Nothing})
 
     -- "try" used because of the freaking 2.3gajillion token lookahead
 pMis = tok1 (DipCmd MIS) >>
@@ -523,16 +556,17 @@ pResult = do
   retreat <- pMaybe pResultRetreat
   when (isNothing normal && isNothing retreat) (parserFail "Empty ORD result")
   return (Result normal retreat)
-  
+
 
 pResultNormal :: DipParser ResultNormal
 pResultNormal = (tok1 (DipResult FLD) >> parserFail "FLD token received") <|>
-                tok (\t -> Just $ case t of 
-                        { DipResult SUC -> Success
-                        ; DipResult BNC -> MoveBounced
-                        ; DipResult CUT -> SupportCut
-                        ; DipResult DSR -> DisbandedConvoy
-                        ; DipResult NSO -> NoSuchOrder
+                tok (\t -> case t of
+                        { DipResult SUC -> Just Success
+                        ; DipResult BNC -> Just MoveBounced
+                        ; DipResult CUT -> Just SupportCut
+                        ; DipResult DSR -> Just DisbandedConvoy
+                        ; DipResult NSO -> Just NoSuchOrder
+                        ; _ -> Nothing
                         })
 
 pResultRetreat = return ResultRetreat << tok1 (DipResult RET)
@@ -541,7 +575,7 @@ pSve = do
   tok1 (DipCmd SVE)
   gameName <- paren pStr
   return (SaveGame gameName)
-  
+
 pLod = do
   tok1 (DipCmd LOD)
   gameName <- paren pStr
@@ -556,26 +590,27 @@ pTme = do
   timeLeft <- paren pInt
   return (TimeUntilDeadline timeLeft)
 
-pError :: DipParser DipMessage
 pError = do
   err <- choice [ pPrn, pHuh, pCcd ]
   return (DipError err)
 
+pToken = tok Just
+
 pPrn = do
   tok1 (DipCmd PRN)
-  message <- paren pStr
+  message <- paren (many pToken)
   return (WrongParen message)
 
 pHuh = do
   tok1 (DipCmd HUH)
-  message <- paren pStr
+  message <- paren (many pToken)
   return (SyntaxError message)
 
 pCcd = do
   tok1 (DipCmd CCD)
   power <- paren pPower
   return (CivilDisorder power)
-  
+
 
 pAdm = do
   tok1 (DipCmd ADM)
@@ -590,7 +625,113 @@ pSlo = do
 
 pDrw = do
   tok1 (DipCmd DRW)
-  return (DrawGame)
+  mPowers <- pMaybe . level 10 . many . paren $ pPower
+  return (DrawGame mPowers)
+
+pSnd = level 10 $ do
+  tok1 (DipCmd SND)
+  mTurn <- pMaybe (paren pTurn)
+  powers <- paren (many pPower)
+  pMessage <- paren pPressMessage
+  return (SendPress mTurn powers pMessage)
+
+pOut = level 10 $ do
+  tok1 (DipCmd OUT)
+  power <- paren pPower
+  return (PowerEliminated power)
+
+pFrm = level 10 $ do
+  tok1 (DipCmd FRM)
+  fromPower <- paren pPower
+  toPowers <- paren (many pPower)
+  msg <- paren pPressMessage
+  return (ReceivePress fromPower toPowers msg)
+
+pPressMessage = level 10 (choice [ pPressProposal
+                                 , pPressReply])
+
+pPressProposal = do
+  tok1 (DipPress PRP)
+  return . PressProposal =<< paren pPressArrangement
+
+pPressArrangement = choice [ pPressPeace
+                           , pPressAlliance
+                           , pPressDraw
+                           , pPressSolo
+                           , pPressArrangeNot ]
+
+pPressDraw = tok1 (DipCmd DRW) >> return ArrangeDraw
+
+pPressSolo = do
+  tok1 (DipCmd SLO)
+  power <- paren pPower
+  return (ArrangeSolo power)
+
+pPressPeace = do
+  tok1 (DipPress PCE)
+  powers <- paren (many pPower)
+  return (ArrangePeace powers)
+
+pPressAlliance = do
+  tok1 (DipPress ALY)
+  allies <- paren (many pPower)
+  tok1 (DipPress VSS)
+  enemies <- paren (many pPower)
+  return (ArrangeAlliance allies enemies)
+
+pPressArrangeNot = do
+  tok1 (DipCmd NOT)
+  arrangement <- pPressArrangement
+  return (ArrangeNot arrangement)
+
+
+pPressReply = return . PressReply =<< choice [ pPressRefuse
+                                             , pPressReject
+                                             , pPressAccept
+                                             , pPressHuh
+                                             ]
+
+pPressHuh = do
+  tok1 (DipCmd HUH)
+  msg <- paren pPressMessage
+  return (PressHuh msg)
+
+pPressAccept = do
+  tok1 (DipCmd YES)
+  msg <- paren pPressMessage
+  return (PressAccept msg)
+
+pPressReject = do
+  tok1 (DipCmd REJ)
+  msg <- paren pPressMessage
+  return (PressReject msg)
+
+pPressRefuse = do
+  tok1 (DipPress BWX)
+  msg <- paren pPressMessage
+  return (PressRefuse msg)
+
+-- pPressCancel = do
+--   tok1 (DipPress CCL)
+--   msg <- paren pPressMessage
+--   return (PressCancel msg)
+
+pPressInfo = do
+  tok1 (DipPress FCT)
+  arrangement <- paren pPressArrangement
+  return (PressInfo arrangement)
+
+pPressTry = do
+  tok1 (DipPress TRY)
+  tks <- paren (many pToken)
+  return (PressCapable tks)
+
+-- pPressArrangeNar = do
+--   tok1 (DipPress NAR)
+--   arrangement <- pPressArrangement
+--   return (ArrangeNar arrangement)
+
+
 
 {-
 pPlayerStat = do

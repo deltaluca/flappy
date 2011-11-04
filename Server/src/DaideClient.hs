@@ -7,14 +7,11 @@ module DaideClient where
 
 import DaideError
 import DaideMessage
-import DiplomacyMessage
 
 import System.IO
 import System.Timeout
 import System.Log.Logger
 import Data.ByteString.Lazy as L
-import Data.ByteString as S
-import Data.Maybe
 import Data.Binary
 import Control.Monad.Error
 import Control.Monad.Reader
@@ -56,33 +53,33 @@ serialise message = return (encode message)
 
 tellClient :: MonadDaideComm m => DaideMessage -> m ()
 tellClient message = do
-  handle <- asks clientHandle
-  serialise message >>= liftIO . L.hPut handle
+  hndle <- asks clientHandle
+  serialise message >>= liftIO . L.hPut hndle
 
 askClient :: MonadDaideClient m => m DaideMessage
 askClient = do
-  handle <- asks clientHandle
-  liftIO (L.hGetContents handle) >>= deserialise
+  hndle <- asks clientHandle
+  liftIO (L.hGetContents hndle) >>= deserialise
 
 askClientTimed :: MonadDaideClient m => Int -> m DaideMessage
 askClientTimed timedelta = do
-  handle <- asks clientHandle
-  byteString <- liftIO $ L.hGetContents handle >>= timeout timedelta . evaluate
+  hndle <- asks clientHandle
+  byteString <- liftIO $ L.hGetContents hndle >>= timeout timedelta . evaluate
   maybe (throwError TimerPopped) deserialise byteString
 
 echoClient :: MonadDaideClient m => m ()
 echoClient = do
-  handle <- asks clientHandle
-  liftIO $ L.hGetContents handle >>= L.hPut handle
+  hndle <- asks clientHandle
+  liftIO $ L.hGetContents hndle >>= L.hPut hndle
 
 
 handleClient :: DaideComm ()
 handleClient = runErrorT handleClient' >>= handleError
 
 handleError :: MonadDaideComm m => Either DaideError a -> m ()
-handleError = flip either (const $ return ()) $ \error -> do
-  liftIO . errorM "handleClient" $ "An error occured: " ++ (show error)
-  tellClient (EM error)
+handleError = flip either (const $ return ()) $ \err -> do
+  liftIO . errorM "handleClient" $ "An error occured: " ++ (show err)
+  tellClient (EM err)
 
 _INITIAL_TIMEOUT = 30000000
 
@@ -90,7 +87,7 @@ handleClient' :: MonadDaideClient m => m ()
 handleClient' = do
   initialMessage <- askClientTimed _INITIAL_TIMEOUT
   case initialMessage of
-    IM version -> return ()
+    IM _ -> return ()
     _ -> throwError IMNotFirst
   tellClient RM
   forever $ do
