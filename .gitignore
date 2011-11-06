@@ -6,4 +6,4 @@ Reports/*.log
 Reports/*.dvi
 Reports/*.txt
 *.pdf
-Server/server
+Server/src/server

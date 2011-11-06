@@ -56,8 +56,7 @@ instance MonadReader Int (DipParser s) where
   -- Things to look out for:
   -- ambiguity: StartPing and MissingReq
   -- Cancel (StartProcessing) means dont process until deadline (ignore?)
-  
-  
+
   -- |class to abstract away the token and text representation
 class Parsec.Stream s (Reader Int) t => DipRep s t | t -> s where
   pChr :: DipParser s Char
@@ -100,112 +99,128 @@ instance DipRep BS.ByteString Char where
   pStr = spaces >> many pChr >>= \r -> spaces >> return r
 
   -- DESC (SENDING PARTY)
-data DipMessage
-               = Name { startName :: String
-                      , startVersion :: String } -- ^first message (CLIENT)
-               | Observer -- ^client is observer (CLIENT)
+data DipMessage =
 
-               | Rejoin { rejoinPower :: Power
-                        , rejoinPasscode :: Int } -- ^client wants to rejoin (CLIENT)
+    -- |first message (CLIENT)
+    Name { startName :: String
+       , startVersion :: String }
 
-               | MapName { mapNameName :: String } -- ^map name (SERVER)
+    -- |client is observer (CLIENT)
+  | Observer
 
-               | MapNameReq -- ^requesting map name (CLIENT)
+    -- |client wants to rejoin (CLIENT)
+  | Rejoin { rejoinPower :: Power
+           , rejoinPasscode :: Int }
 
-               | MapDef { mapDefPowers :: [Power]
-                        , mapDefProvinces :: Provinces
-                        , mapDefAdjacencies :: [Adjacency] } -- ^definition of the map (SERVER)
+    -- |map name (SERVER)
+  | MapName { mapNameName :: String }
 
-               | MapDefReq -- ^requesting the definition of the map (CLIENT)
+    -- |requesting map name (CLIENT)
+  | MapNameReq
 
-               | Accept DipMessage -- ^accept message (SERVER, CLIENT)
+    -- |definition of the map (SERVER)
+  | MapDef { mapDefPowers :: [Power]
+           , mapDefProvinces :: Provinces
+           , mapDefAdjacencies :: [Adjacency] }
 
-               | Reject DipMessage -- ^reject message (SERVER, CLIENT)
+    -- |requesting the definition of the map (CLIENT)
+  | MapDefReq
 
-               | Cancel DipMessage -- ^cancel message (CLIENT)
+    -- |accept message (SERVER, CLIENT)
+  | Accept DipMessage
 
-               | Start { startPower :: Power
-                       , startPasscode :: Int
-                       , startLevel :: Int
-                       , startVariantOpts :: [VariantOption] } -- ^game is starting
+    -- |reject message (SERVER, CLIENT)
+  | Reject DipMessage
 
-               | StartPing -- ^requesting whether game started (CLIENT) or replying yes (SERVER)
+    -- |cancel message (CLIENT)
+  | Cancel DipMessage
 
-               | CurrentPosition [SupplyCentre] -- ^current position (SERVER)
+    -- |game is starting
+  | Start { startPower :: Power
+          , startPasscode :: Int
+          , startLevel :: Int
+          , startVariantOpts :: [VariantOption] }
 
-               | CurrentPositionReq -- ^current position request (CLIENT)
+    -- |requesting whether game started (CLIENT) or replying yes (SERVER)
+  | StartPing
 
-               | CurrentUnitPosition Turn [UnitPosition] (Maybe [ProvinceNode])
-                 -- ^current position of units (SERVER)
+    -- |current position (SERVER)
+  | CurrentPosition [SupplyCentre]
 
-                 -- current position of units request (CLIENT)
-               | CurrentUnitPositionReq
+    -- |current position request (CLIENT)
+  | CurrentPositionReq
 
-                 -- history requested (CLIENT)
-               | HistoryReq Turn
+    -- |current position of units (SERVER)
+  | CurrentUnitPosition Turn [UnitPosition] (Maybe [ProvinceNode])
 
-                 -- submitting orders (CLIENT)
-               | SubmitOrder (Maybe Turn) [Order]
+    -- |current position of units request (CLIENT)
+  | CurrentUnitPositionReq
 
-                 -- acknowledge order (SERVER)
-               | AckOrder Order OrderNote
+    -- |history requested (CLIENT)
+  | HistoryReq Turn
 
-                 -- missing movement orders (SERVER)
-               | MissingMovement [UnitPosition]
+    -- |submitting orders (CLIENT)
+  | SubmitOrder (Maybe Turn) [Order]
 
-                 -- missing retreat orders (SERVER)
-               | MissingRetreat [(UnitPosition, [ProvinceNode])]
+    -- |acknowledge order (SERVER)
+  | AckOrder Order OrderNote
 
-                 -- missing build orders (SERVER)
-               | MissingBuild Int
+    -- |missing movement orders (SERVER)
+  | MissingMovement [UnitPosition]
 
-                 -- missing request (CLIENT) or replying 'no more missing request' (SERVER)
-               | MissingReq
+    -- |missing retreat orders (SERVER)
+  | MissingRetreat [(UnitPosition, [ProvinceNode])]
 
-                 -- start processing orders (CLIENT) (Missing... follows)
-               | StartProcessing
+    -- |missing build orders (SERVER)
+  | MissingBuild Int
 
-                 -- result of an order after turn is processed (SERVER)
-               | OrderResult Turn Order Result
+    -- |missing request (CLIENT) or replying 'no more missing request' (SERVER)
+  | MissingReq
 
-                 -- save game (SERVER)
-               | SaveGame String
+    -- |start processing orders (CLIENT) (Missing... follows)
+  | StartProcessing
 
-                 -- load game (SERVER)
-               | LoadGame String
+    -- |result of an order after turn is processed (SERVER)
+  | OrderResult Turn Order Result
 
-                 -- tell client to exit (SERVER)
-               | ExitClient
+    -- |save game (SERVER)
+  | SaveGame String
 
-                 -- time in seconds until next deadline (SERVER)
-               | TimeUntilDeadline Int
+    -- |load game (SERVER)
+  | LoadGame String
 
-                 -- throw a Diplomacy Error (SERVER, CLIENT)
-               | DipError DipError
+    -- |tell client to exit (SERVER)
+  | ExitClient
 
-                 -- admin message sent from client to server (CLIENT)
-               | AdminMessage { playerName :: String
-                              , adminMessage :: String }
+    -- |time in seconds until next deadline (SERVER)
+  | TimeUntilDeadline Int
 
-                 -- game has ended due to a solo by specified power (SERVER)
-               | SoloWinGame { soloPower :: Power }
+    -- |throw a Diplomacy Error (SERVER, CLIENT)
+  | DipError DipError
 
-                 -- command sent from client to server to indicate a draw (SERVER, CLIENT)
-               | DrawGame (Maybe [Power])
+    -- |admin message sent from client to server (CLIENT)
+  | AdminMessage { playerName :: String
+                 , adminMessage :: String }
 
-                 -- send press (CLIENT)
-               | SendPress (Maybe Turn) [Power] PressMessage
+    -- |game has ended due to a solo by specified power (SERVER)
+  | SoloWinGame { soloPower :: Power }
 
-                 -- receive press (SERVER)
-               | ReceivePress Power [Power] PressMessage
+    -- |command sent from client to server to indicate a draw (SERVER, CLIENT)
+  | DrawGame (Maybe [Power])
 
-                 -- sent if press is to be sent to an eliminated power (SERVER)
-               | PowerEliminated Power
-                 
-               --   -- full statistics at the end of the game
-               -- | EndGameStats Turn [PlayerStat] -}
+    -- |send press (CLIENT)
+  | SendPress (Maybe Turn) [Power] PressMessage
 
-               deriving (Show)
+    -- |receive press (SERVER)
+  | ReceivePress Power [Power] PressMessage
+
+    -- |sent if press is to be sent to an eliminated power (SERVER)
+  | PowerEliminated Power
+
+    --   -- full statistics at the end of the game
+    -- | EndGameStats Turn [PlayerStat] -}
+
+  deriving (Show)
 
 {-data PlayerStat = PlayerStat Power String String Int (Maybe Int)
                 deriving (Show)-}
