@@ -82,7 +82,7 @@ class TokenUtils {
 					coNOT,coCurrentPosition,coObserver,coTurnOff,coOrderResult,
 					coPowerEliminated,coParenthesisError,coReject,coSupplyOwnership,
 					coSolo,coSendMessage,coSubmitOrder,coSaveGame,coThink,coTimeToDeadline,
-					coAccept,coAdmin
+					coAccept,coAdmin,coSMR
 				][kind]);
 			case 0x49: tParameter([
 					paAnyOrder,paBuildTimeLimit,paLocationError,paLevel,paMustRetreat,
@@ -95,7 +95,7 @@ class TokenUtils {
 					prRequestForward,prFact,prForTurn,prHowToAttack,prIDontKnow,prIF,
 					prInsist,null,prOccupy,prOR,prPeace,prPosition,null,prPropose,
 					prQuery,prSupplyDistro,prSorry,prSuggest,prThink,prThen,prTry,null,
-					prVersus,prWhat,prWhy,prDo,prOwes,prTellMe,prChoose,prBCC,prUNT
+					prVersus,prWhat,prWhy,prDo,prOwes,prTellMe,prChoose,prBCC,prUNT,prCCL,prNAR
 				][kind]);
 			case 0x4b: tText(String.fromCharCode(kind));
 			case 0x50: tProvince(proInland   (kind,false));
@@ -225,6 +225,7 @@ class TokenUtils {
 					case coTimeToDeadline:			0x1b;
 					case coAccept:					0x1c;
 					case coAdmin:					0x1d;
+					case coSMR:						0x1e;
 				}];
 			case tParameter(par):
 				[0x4900 | switch(par) {
@@ -278,6 +279,8 @@ class TokenUtils {
 					case prChoose:				0x22;
 					case prBCC:					0x23;
 					case prUNT:					0x24;
+					case prCCL:					0x25;
+					case prNAR:					0x26;
 				}];
 			case tText(str):
 				var ret = [];
@@ -419,6 +422,7 @@ enum Command {
 	/* TME */ coTimeToDeadline;
 	/* YES */ coAccept;
 	/* ADM */ coAdmin;
+	/* SMR */ coSMR;
 }
 
 enum Parameter {
@@ -472,6 +476,8 @@ enum Press {
 	/* CHO */ prChoose;
 	/* BCC */ prBCC;
 	/* UNT */ prUNT;
+	/* CCL */ prCCL;
+	/* NAR */ prNAR;
 }
 
 enum Province {

@@ -97,6 +97,7 @@ $(mixin THX() tCommand(coThink));
 $(mixin TME() tCommand(coTimeToDeadline));
 $(mixin YES() tCommand(coAccept));
 $(mixin ADM() tCommand(coAdmin));
+$(mixin SMR() tCommand(coSMR));
 //...
 $(mixin AOA() tParameter(paAnyOrder));
 $(mixin BTL() tParameter(paBuildTimeLimit));
@@ -146,6 +147,8 @@ $(mixin YDO() tPress(prTellMe));
 $(mixin CHO() tPress(prChoose));
 $(mixin BCC() tPress(prBCC));
 $(mixin UNT() tPress(prUNT));
+$(mixin CCL() tPress(prCCL));
+$(mixin NAR() tPress(prNAR));
 //...
 $(mixin TEXT(x) tText(x));
 
