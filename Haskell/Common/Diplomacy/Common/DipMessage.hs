@@ -1,24 +1,28 @@
-{-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, FunctionalDependencies, NoMonomorphismRestriction #-}
-module DiplomacyMessage where
+{-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, FunctionalDependencies, NoMonomorphismRestriction, GeneralizedNewtypeDeriving, RankNTypes #-}
+module Diplomacy.Common.DipMessage (DipMessage(..), parseDipMessage) where
 
-import DiplomacyToken as Tok
-import DiplomacyData as Dat
-import DiplomacyError
+import Diplomacy.Common.Data as Dat
+import Diplomacy.Common.DipToken
+import Diplomacy.Common.DipError
 
 import Data.Maybe
-import Control.Monad.Identity
 import Control.Monad.Error
 import Control.Monad.Reader
+import Control.Monad.State
 
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS
 import qualified Text.Parsec as Parsec
 import qualified Data.Map as Map
 
--- DipParser is a Reader (for the press level) wrapped in Parsec
-newtype DipParser s a =
-  DipParser {unDipParser :: (Parsec.ParsecT s () (Reader Int) a)}
+  -- level and custom error
+type DipParserInfo = StateT (Maybe DipError) (Reader Int)
 
-type DipParserToken = DipParser [DipToken]
+-- DipParser is a ReaderT (for the press level) wrapped in StateT (for custom errors) wrapped in  Parsec
+newtype DipParser s a =
+  DipParser {unDipParser :: (Parsec.ParsecT s () DipParserInfo a)}
+  deriving (Monad, MonadReader Int, MonadState (Maybe DipError))
+
+
 type DipParserString = DipParser BS.ByteString
 
 -- which is why you should ALWAYS have an accompanying class
@@ -39,26 +43,22 @@ char = DipParser . Parsec.char
 infixl 4 <|>
 a <|> b = DipParser $ unDipParser a Parsec.<|> unDipParser b
 
-instance Monad (DipParser s) where
-  return = DipParser . return
-  a >>= b = DipParser $ unDipParser a >>= \c -> unDipParser (b c)
-
-instance MonadReader Int (DipParser s) where
-  ask = DipParser ask
-  local f = DipParser . local f . unDipParser
+infixl 4 <?>
+a <?> b = (a >> return ()) <|> putDipError b
 
   -- Things to look out for:
   -- ambiguity: StartPing and MissingReq
   -- Cancel (StartProcessing) means dont process until deadline (ignore?)
 
   -- |class to abstract away the token and text representation
-class Parsec.Stream s (Reader Int) t => DipRep s t | t -> s where
+class Parsec.Stream s DipParserInfo t => DipRep s t | t -> s where
   pChr :: DipParser s Char
   pStr :: DipParser s [Char]
   pInt :: DipParser s Int
   tok :: (DipToken -> Maybe a) -> DipParser s a
   tok1 :: DipToken -> DipParser s DipToken
   paren :: DipParser s a -> DipParser s a
+  insertError :: s -> s
 
   -- defaults
   pStr = many pChr
@@ -69,7 +69,7 @@ instance DipRep [DipToken] DipToken where
   pInt = tok (\t -> case t of {DipInt i -> Just i ; _ -> Nothing})
   paren p = tok1 Bra >> p >>= \ret -> tok1 Ket >> return ret
   tok = (\f -> getPosition >>= \p -> tokenPrim show (const . const . const $ p) f)
-  
+  insertError = (:) (DipParam ERR)
 
 instance DipRep BS.ByteString Char where
   tok f = try $ do
@@ -83,21 +83,22 @@ instance DipRep BS.ByteString Char where
   pInt = spaces >> integer >>= \r -> spaces >> return r
   paren p = do
     spaces
-    char '('
+    char '(' <?> WrongParen []
     spaces
     ret <- p
     spaces
-    char ')'
+    char ')' <?> WrongParen []
     spaces
     return ret
   pStr = spaces >> many pChr >>= \r -> spaces >> return r
+  insertError = BS.append (BS.pack "???")
 
   -- DESC (SENDING PARTY)
 data DipMessage =
 
     -- |first message (CLIENT)
     Name { startName :: String
-       , startVersion :: String }
+         , startVersion :: String }
 
     -- |client is observer (CLIENT)
   | Observer
@@ -333,19 +334,23 @@ parseDipMessage :: DipRep s t => Monad m => Int -> s -> ErrorT DipError m DipMes
 parseDipMessage = parseDip pMsg
 
 parseDip :: (Monad m, DipRep s t) => DipParser s a -> Int -> s -> ErrorT DipError m a
-parseDip parsr lvl toks =
-  liftEither . return . mapEitherLeft (ParseError . show) . runReader (Parsec.runParserT (unDipParser parsr) () "Whatevs" toks) $ lvl
+parseDip parsr lvl =   uncurry handleParseErrors
+                     . flip runReader lvl
+                     . flip runStateT Nothing
+                     . Parsec.runParserT (unDipParser parsr) () "DAIDE Message Parser"
 
 
-liftEither :: (Error e, Monad m) => m (Either e a) -> ErrorT e m a
-liftEither a = lift a >>= either throwError return
+handleParseErrors :: Monad m => Either Parsec.ParseError a -> (Maybe DipError) -> ErrorT DipError m a
+handleParseErrors (Left _) (Just err) = throwError err
+handleParseErrors (Left p) Nothing = throwError . ParseError . show $ p
+handleParseErrors (Right a) _ = return a
 
-mapEitherLeft :: (a -> b) -> (Either a c -> Either b c)
-mapEitherLeft f = either (Left . f) (Right . id)
+putDipError :: DipRep s t => DipError -> DipParser s ()
+putDipError = put . Just
 
 infixr 4 <<
 (<<) :: Monad m => m a -> m b -> m a
-a << b = b >>= (\_ -> a)
+(<<) = flip (>>)
 
 mayEq a b = if a == b then Just a else Nothing
 
@@ -359,13 +364,14 @@ level l p = do
     else p
 
 pMsg :: DipRep s t => DipParser s DipMessage
-pMsg = choice [ pAccept, pReject
-              , pNme, pObs
+pMsg = choice [ pAccept, pReject, pCancel
+              , pNme, pIam, pObs
               , pMap, pMdf
               , pHlo
               , pSco, pNow, pHistoryReq
-              , pSub, pMis
+              , pSub, pMis, pAck
               , pGof
+              , pOrd
               , pSve, pLod
               , pOff
               , pTme
@@ -374,6 +380,11 @@ pMsg = choice [ pAccept, pReject
               , pSlo
               , pDrw
               , pSmr
+
+                -- press
+              , pSnd
+              , pOut
+              , pFrm
               ]
 
 pAccept = return . Accept =<< (tok1 (DipCmd YES) >> paren pMsg)
@@ -473,8 +484,8 @@ pVariantOpt = choice [ return . Level         =<< (tok1 (DipParam LVL) >> pInt)
                      , return . TimeMovement  =<< (tok1 (DipParam MTL) >> pInt)
                      , return . TimeRetreat   =<< (tok1 (DipParam RTL) >> pInt)
                      , return . TimeBuild     =<< (tok1 (DipParam BTL) >> pInt)
-                     , return DeadlineStop     << tok1 (DipParam DSD)
-                     , return AnyOrderAccepted << tok1 (DipParam AOA)
+                     , return DeadlineStop     << (tok1 (DipParam DSD))
+                     , return AnyOrderAccepted << (tok1 (DipParam AOA))
                      ]
 
 pSco = tok1 (DipCmd SCO) >> choice [pCurrentPos, pCurrentPosReq]
@@ -717,7 +728,10 @@ pFrm = level 10 $ do
   return (ReceivePress fromPower toPowers msg)
 
 pPressMessage = level 10 (choice [ pPressProposal
-                                 , pPressReply])
+                                 , pPressReply
+                                 , pPressInfo
+                                 , pPressTry
+                                 ])
 
 pPressProposal = do
   tok1 (DipPress PRP)

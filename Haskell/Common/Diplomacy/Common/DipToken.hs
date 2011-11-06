@@ -1,8 +1,8 @@
 {-# LANGUAGE EmptyDataDecls #-}
-module DiplomacyToken where
+module Diplomacy.Common.DipToken where
 
-import DaideError
-import DiplomacyData as Dat
+import Diplomacy.Common.DaideError
+import Diplomacy.Common.Data as Dat
 
 import Data.Binary
 import Control.Exception
@@ -166,6 +166,8 @@ data Press = ALY
            | XOY
            | YDO
            | WRT
+           | BCC
+           | UNT
            | CCL
            | NAR
            deriving (Show, Eq)
@@ -338,8 +340,8 @@ decodePress 0x1F = XDO
 decodePress 0x20 = XOY
 decodePress 0x21 = YDO
 decodePress 0x22 = WRT
--- decodePress 0x23 = ???
--- decodePress 0x24 = ???
+decodePress 0x23 = BCC
+decodePress 0x24 = UNT
 decodePress 0x25 = CCL
 decodePress 0x26 = NAR
 decodePress _ = throw InvalidToken

@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module DaideError where
+module Diplomacy.Common.DaideError where
 
 import Control.Monad.Error
 import Control.Exception

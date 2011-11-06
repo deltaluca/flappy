@@ -1,10 +1,10 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module DaideMessage where
+module Diplomacy.Common.DaideMessage where
 
-import DaideError
-import DiplomacyMessage
-import DiplomacyToken
+import Diplomacy.Common.DaideError
+import Diplomacy.Common.DipMessage
+import Diplomacy.Common.DipToken
 
 import Data.Binary
 import Control.Exception as E

@@ -2,8 +2,8 @@
 
 module Main where
 
-import DaideClient
-import DiplomacyMessage
+import Diplomacy.Control.DaideClient
+import Diplomacy.Control.DipMessage
 
 import Control.Monad
 import Control.Monad.Error

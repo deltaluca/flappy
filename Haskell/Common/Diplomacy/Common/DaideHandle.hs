@@ -3,10 +3,10 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module DaideClient where
+module Diplomacy.Common.DaideHandle where
 
-import DaideError
-import DaideMessage
+import Diplomacy.Common.DaideError
+import Diplomacy.Common.DaideMessage
 
 import System.IO
 import System.Timeout
@@ -19,55 +19,55 @@ import Control.Exception as E
 import Network
 
 -- Daide communication holding client info
-type DaideCommT = ReaderT DaideClientInfo
+type DaideCommT = ReaderT DaideHandleInfo
 
 type DaideComm = DaideCommT IO
 
--- DaideClient is a Daide communication with error handling
-type DaideClientT m = ErrorT DaideError (DaideCommT m)
+-- DaideHandle is a Daide communication with error handling
+type DaideHandleT m = ErrorT DaideError (DaideCommT m)
 
-type DaideClient = DaideClientT IO
+type DaideHandle = DaideHandleT IO
 
-data DaideClientInfo = Client { clientHandle :: Handle
+data DaideHandleInfo = Client { clientHandle :: Handle
                               , clientHostName :: String
                               , clientPort :: PortNumber
                               }
 
-class (MonadIO m, MonadReader DaideClientInfo m) => MonadDaideComm m
-class (MonadDaideComm m, MonadError DaideError m) => MonadDaideClient m
+class (MonadIO m, MonadReader DaideHandleInfo m) => MonadDaideComm m
+class (MonadDaideComm m, MonadError DaideError m) => MonadDaideHandle m
 
 instance MonadDaideComm DaideComm
-instance MonadDaideComm DaideClient
-instance MonadDaideClient DaideClient
+instance MonadDaideComm DaideHandle
+instance MonadDaideHandle DaideHandle
 
 runDaide = runReaderT
 
-deserialise :: MonadDaideClient m => L.ByteString -> m DaideMessage
+deserialise :: MonadDaideHandle m => L.ByteString -> m DaideMessage
 deserialise byteString = do
   msg <- return (decode byteString)
   ret <- liftIO . try . evaluate $ msg
   either throwError return ret
 
-serialise :: MonadReader DaideClientInfo m => DaideMessage -> m L.ByteString
+serialise :: MonadReader DaideHandleInfo m => DaideMessage -> m L.ByteString
 serialise message = return (encode message)
 
-tellClient :: MonadDaideComm m => DaideMessage -> m ()
-tellClient message = do
+tellHandle :: MonadDaideComm m => DaideMessage -> m ()
+tellHandle message = do
   hndle <- asks clientHandle
   serialise message >>= liftIO . L.hPut hndle
 
-askClient :: MonadDaideClient m => m DaideMessage
-askClient = do
+askHandle :: MonadDaideHandle m => m DaideMessage
+askHandle = do
   hndle <- asks clientHandle
   liftIO (L.hGetContents hndle) >>= deserialise
 
-askClientTimed :: MonadDaideClient m => Int -> m DaideMessage
-askClientTimed timedelta = do
+askHandleTimed :: MonadDaideHandle m => Int -> m DaideMessage
+askHandleTimed timedelta = do
   hndle <- asks clientHandle
   byteString <- liftIO $ L.hGetContents hndle >>= timeout timedelta . evaluate
   maybe (throwError TimerPopped) deserialise byteString
 
-echoClient :: MonadDaideClient m => m ()
+echoClient :: MonadDaideHandle m => m ()
 echoClient = do
   hndle <- asks clientHandle
   liftIO $ L.hGetContents hndle >>= L.hPut hndle
@@ -79,24 +79,24 @@ handleClient = runErrorT handleClient' >>= handleError
 handleError :: MonadDaideComm m => Either DaideError a -> m ()
 handleError = flip either (const $ return ()) $ \err -> do
   liftIO . errorM "handleClient" $ "An error occured: " ++ (show err)
-  tellClient (EM err)
+  tellHandle (EM err)
 
 _INITIAL_TIMEOUT = 30000000
 
-handleClient' :: MonadDaideClient m => m ()
+handleClient' :: MonadDaideHandle m => m ()
 handleClient' = do
-  initialMessage <- askClientTimed _INITIAL_TIMEOUT
+  initialMessage <- askHandleTimed _INITIAL_TIMEOUT
   case initialMessage of
     IM _ -> return ()
     _ -> throwError IMNotFirst
-  tellClient RM
+  tellHandle RM
   forever $ do
-    message <- askClient
+    message <- askHandle
     liftIO . print $ "COME ON"
     liftIO . print $ "Message recieved: " ++ (show message)
     handleMessage message
 
-handleMessage :: MonadDaideClient m => DaideMessage -> m ()
+handleMessage :: MonadDaideHandle m => DaideMessage -> m ()
 handleMessage m = case m of
   IM _ -> throwError ManyIMs
   RM -> throwError RMFromClient
