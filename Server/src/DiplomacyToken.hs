@@ -113,6 +113,7 @@ data Cmd = CCD
          | TME
          | YES
          | ADM
+         | SMR
          deriving (Show, Eq)
 
 data Param = AOA
@@ -165,7 +166,9 @@ data Press = ALY
            | XOY
            | YDO
            | WRT
-              deriving (Show, Eq)
+           | CCL
+           | NAR
+           deriving (Show, Eq)
 
 
 decodeToken :: Word8 -> Word8 -> Get DipToken
@@ -280,6 +283,7 @@ decodeCmd 0x1A = THX
 decodeCmd 0x1B = TME
 decodeCmd 0x1C = YES
 decodeCmd 0x1D = ADM
+decodeCmd 0x1E = SMR
 decodeCmd _ = throw InvalidToken
 
 
@@ -334,6 +338,10 @@ decodePress 0x1F = XDO
 decodePress 0x20 = XOY
 decodePress 0x21 = YDO
 decodePress 0x22 = WRT
+-- decodePress 0x23 = ???
+-- decodePress 0x24 = ???
+decodePress 0x25 = CCL
+decodePress 0x26 = NAR
 decodePress _ = throw InvalidToken
 
 type TokenMap = Map.Map [Char] DipToken
@@ -351,10 +359,10 @@ tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
                  , ("BLD", DipOrder BLD)
                  , ("REM", DipOrder REM)
                  , ("WVE", DipOrder WVE)
-                                         
+
                  , ("MBV", DipOrderNote MBV)
                  , ("BPR", DipOrderNote BPR)
-                 , ("CST", DipOrderNote CST)      
+                 , ("CST", DipOrderNote CST)
                  , ("ESC", DipOrderNote ESC)
                  , ("FAR", DipOrderNote FAR)
                  , ("HSC", DipOrderNote HSC)
@@ -372,7 +380,7 @@ tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
                  , ("NVR", DipOrderNote NVR)
                  , ("NYU", DipOrderNote NYU)
                  , ("YSC", DipOrderNote YSC)
-                 
+
                  , ("SUC", DipResult SUC)
                  , ("BNC", DipResult BNC)
                  , ("CUT", DipResult CUT)
@@ -380,7 +388,7 @@ tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
                  , ("FLD", DipResult FLD)
                  , ("NSO", DipResult NSO)
                  , ("RET", DipResult RET)
-                 
+
                  , ("CCD", DipCmd CCD)
                  , ("DRW", DipCmd DRW)
                  , ("FRM", DipCmd FRM)
@@ -411,7 +419,7 @@ tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
                  , ("TME", DipCmd TME)
                  , ("YES", DipCmd YES)
                  , ("ADM", DipCmd ADM)
-                 
+
                  , ("AOA", DipParam AOA)
                  , ("BTL", DipParam BTL)
                  , ("ERR", DipParam ERR)
@@ -425,7 +433,7 @@ tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
                  , ("RTL", DipParam RTL)
                  , ("UNO", DipParam UNO)
                  , ("DSD", DipParam DSD)
-                   
+
                  , ("ALY", DipPress ALY)
                  , ("AND", DipPress AND)
                  , ("BWX", DipPress BWX)
@@ -461,10 +469,10 @@ tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
                  , ("XOY", DipPress XOY)
                  , ("YDO", DipPress YDO)
                  , ("WRT", DipPress WRT)
-                   
+
                  , ("AMY", DipUnitType Army)
                  , ("FLT", DipUnitType Fleet)
-                   
+
                    -- standard map
                    -- provinces
                  , ("BOH", DipProv (Inland 0x00))
@@ -481,7 +489,7 @@ tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
                  , ("SER", DipProv (Inland 0x0B))
                  , ("VIE", DipProv (Inland 0x0C))
                  , ("WAR", DipProv (Inland 0x0D))
-                 
+
                  , ("ADR", DipProv (Sea 0x0E))
                  , ("AEG", DipProv (Sea 0x0F))
                  , ("BAL", DipProv (Sea 0x10))
@@ -501,7 +509,7 @@ tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
                  , ("SKA", DipProv (Sea 0x1E))
                  , ("TYS", DipProv (Sea 0x1F))
                  , ("WES", DipProv (Sea 0x20))
-                 
+
                  , ("ALB", DipProv (Coastal 0x21))
                  , ("APU", DipProv (Coastal 0x22))
                  , ("ARM", DipProv (Coastal 0x23))
@@ -541,11 +549,11 @@ tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
                  , ("TRI", DipProv (Coastal 0x45))
                  , ("TUN", DipProv (Coastal 0x46))
                  , ("VEN", DipProv (Coastal 0x47))
-                 
+
                  , ("BUL", DipProv (BiCoastal 0x48))
                  , ("SPA", DipProv (BiCoastal 0x49))
                  , ("STP", DipProv (BiCoastal 0x4A))
-                 
+
                    -- coasts
                  , ("NCS", DipCoast (Coast 0x00))
                  , ("NEC", DipCoast (Coast 0x02))
@@ -555,7 +563,7 @@ tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
                  , ("SWC", DipCoast (Coast 0x0A))
                  , ("WCS", DipCoast (Coast 0x0C))
                  , ("NWC", DipCoast (Coast 0x0E))
-                   
+
                    -- powers
                  , ("AUS", DipPow (Pow 0x00))
                  , ("ENG", DipPow (Pow 0x01))

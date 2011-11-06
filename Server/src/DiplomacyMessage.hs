@@ -26,19 +26,13 @@ parserFail :: DipRep s t => String -> DipParser s a
 parserFail = DipParser . Parsec.parserFail
 getPosition = DipParser Parsec.getPosition
 tokenPrim a b c = DipParser $ Parsec.tokenPrim a b c
-
 spaces :: DipParserString ()
 spaces = DipParser Parsec.spaces
-
 integer :: DipParserString Int
 integer = pStr >>= return . read
-
 many = DipParser . Parsec.many . unDipParser
-
 letter = DipParser Parsec.letter
-
 choice = DipParser . Parsec.choice . map unDipParser
-
 try = DipParser . Parsec.try . unDipParser
 char = DipParser . Parsec.char
 
@@ -51,7 +45,7 @@ instance Monad (DipParser s) where
 
 instance MonadReader Int (DipParser s) where
   ask = DipParser ask
-  local = undefined
+  local f = DipParser . local f . unDipParser
 
   -- Things to look out for:
   -- ambiguity: StartPing and MissingReq
@@ -217,13 +211,13 @@ data DipMessage =
     -- |sent if press is to be sent to an eliminated power (SERVER)
   | PowerEliminated Power
 
-    --   -- full statistics at the end of the game
-    -- | EndGameStats Turn [PlayerStat] -}
+    -- |full statistics at the end of the game
+  | EndGameStats Turn [PlayerStat]
 
   deriving (Show)
 
-{-data PlayerStat = PlayerStat Power String String Int (Maybe Int)
-                deriving (Show)-}
+data PlayerStat = PlayerStat Power String String Int (Maybe Int)
+                deriving (Show)
 
 data Order = OrderMovement OrderMovement
            | OrderRetreat OrderRetreat
@@ -240,6 +234,7 @@ data PressReply = PressAccept PressMessage
                 | PressReject PressMessage
                 | PressRefuse PressMessage
                 | PressHuh PressMessage
+                | PressCancel PressMessage
                 deriving (Show)
 
 data PressProposal = ArrangeDraw
@@ -247,6 +242,7 @@ data PressProposal = ArrangeDraw
                    | ArrangeAlliance [Power] [Power]
                    | ArrangePeace [Power]
                    | ArrangeNot PressProposal
+                   | ArrangeUndo PressProposal
                    deriving (Show)
 
 data Result = Result (Maybe ResultNormal) (Maybe ResultRetreat)
@@ -377,7 +373,7 @@ pMsg = choice [ pAccept, pReject
               , pAdm
               , pSlo
               , pDrw
-              --, pSmr
+              , pSmr
               ]
 
 pAccept = return . Accept =<< (tok1 (DipCmd YES) >> paren pMsg)
@@ -731,7 +727,9 @@ pPressArrangement = choice [ pPressPeace
                            , pPressAlliance
                            , pPressDraw
                            , pPressSolo
-                           , pPressArrangeNot ]
+                           , pPressArrangeNot
+                           , pPressArrangeUndo
+                           ]
 
 pPressDraw = tok1 (DipCmd DRW) >> return ArrangeDraw
 
@@ -757,10 +755,15 @@ pPressArrangeNot = do
   arrangement <- pPressArrangement
   return (ArrangeNot arrangement)
 
+pPressArrangeUndo = do
+  tok1 (DipPress NAR)
+  arrangement <- pPressArrangement
+  return (ArrangeUndo arrangement)
 
 pPressReply = return . PressReply =<< choice [ pPressRefuse
                                              , pPressReject
                                              , pPressAccept
+                                             , pPressCancel
                                              , pPressHuh
                                              ]
 
@@ -784,10 +787,10 @@ pPressRefuse = do
   msg <- paren pPressMessage
   return (PressRefuse msg)
 
--- pPressCancel = do
---   tok1 (DipPress CCL)
---   msg <- paren pPressMessage
---   return (PressCancel msg)
+pPressCancel = do
+  tok1 (DipPress CCL)
+  msg <- paren pPressMessage
+  return (PressCancel msg)
 
 pPressInfo = do
   tok1 (DipPress FCT)
@@ -799,14 +802,6 @@ pPressTry = do
   tks <- paren (many pToken)
   return (PressCapable tks)
 
--- pPressArrangeNar = do
---   tok1 (DipPress NAR)
---   arrangement <- pPressArrangement
---   return (ArrangeNar arrangement)
-
-
-
-{-
 pPlayerStat = do
   power <- pPower
   name <- paren pStr
@@ -820,5 +815,3 @@ pSmr = do
   turn <- paren pTurn
   playerStats <- many (paren pPlayerStat)
   return (EndGameStats turn playerStats)
--}
-
