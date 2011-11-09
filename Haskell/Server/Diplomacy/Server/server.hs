@@ -4,6 +4,8 @@ module Main where
 
 import Diplomacy.Common.DaideHandle
 import Diplomacy.Common.DipMessage
+import Diplomacy.Common.DaideMessage
+import Diplomacy.Common.DaideError
 
 import Control.Monad
 import Control.Monad.Error
@@ -63,3 +65,25 @@ getCmdlineOpts = do
        }
        &= program progName
        &= summary "Flappy AI server 0.1"
+
+_INITIAL_TIMEOUT = 30000000
+
+handleClient :: MonadDaideHandle m => m ()
+handleClient = do
+  initialMessage <- askHandleTimed _INITIAL_TIMEOUT
+  case initialMessage of
+    IM _ -> return ()
+    _ -> throwError IMNotFirst
+  tellHandle RM
+  forever $ do
+    message <- askHandle
+    liftIO . print $ "COME ON"
+    liftIO . print $ "Message recieved: " ++ (show message)
+    handleMessage message
+
+handleMessage :: MonadDaideHandle m => DaideMessage -> m ()
+handleMessage m = case m of
+  IM _ -> throwError ManyIMs
+  RM -> throwError RMFromClient
+  DM dipMessage -> liftIO . print $ "Diplomacy Message: " ++ show dipMessage
+  _ -> throwError InvalidToken

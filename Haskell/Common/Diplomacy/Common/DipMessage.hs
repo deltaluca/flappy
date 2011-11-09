@@ -90,6 +90,7 @@ instance DipRep [DipToken] DipToken where
   tok = (\f -> getPosition >>= \p -> tokenPrim show (const . const . const $ p) f)
   errPos = getPosition >>= return . Parsec.sourceColumn
   createError (WrongParen pos) toks = Paren $ DipCmd PRN : listify (uParen (insertAt pos (DipParam ERR)) . (appendListify toks))
+  createError (SyntaxError pos) toks = Paren $ DipCmd PRN : listify (uParen (insertAt pos (DipParam ERR)) . (appendListify toks))
 
 instance DipRep BS.ByteString Char where
   tok f = try $ do
@@ -113,6 +114,7 @@ instance DipRep BS.ByteString Char where
   pStr = spaces >> many pChr >>= \r -> spaces >> return r
   errPos = return 0
   createError (WrongParen _) _ = Paren []
+  createError (SyntaxError _) _ = Syntax []
 
   -- DESC (SENDING PARTY)
 data DipMessage =
