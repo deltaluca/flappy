@@ -9,28 +9,171 @@
 \begin{document}
 \maketitle
 
+\section{Challenges for AI player}
+
+Imperfect information about the other players
+move choices (simultaneous moves)
+
+Cooperative game, have to consider alliances of 
+other players and ramifications of own actions
+on trust / relationship to other players.
+
+\section{Iterative AI development}
+
+An iterative approach is envisioned where generic techniques
+like 'State search' are implemented first. The reason for this is that 
+search is generally considered as the easiest to implement. Apart from
+a utility function mapping a game state to a certain metric vector no 
+domain knowledge of the game is required. It is considered a primitive
+approach but is required to create a foundation for further development.
+
+As discussed in the next section powerful AI play requires learning of
+techniques and responses to typical game situations. The 'partial-state
+database' outlined in the next section will form the second iteration
+of the AI. 
+
+Throughout the implementation of the two components 'search' and 'knowledge
+database' emphasis is laid on generality which enables a close integration
+with the 'negotation module', which enables intelligent forming of 
+alliances and communication of intentions to other players.
+
 \section{Short-term game tactics}
+
+For short-term game tactics a search with minimal look-ahead can be used.
 
 \subsection{Searching the game tree}
 
+Having said this a naive search of the game tree is considered
+intractable because of its large branching factor. Even moderate look-ahead
+in the tremendous search space puts a strain on the computational resources.
+To overcome this problem, search heuristics for pruning and scheduling the
+exploration order of the game branches. For the latter future states can be
+ordered by their prospected utility (functions) a
+
+\subsubsection{State evaluation function}
+
+In the event that a deeper search in the game tree is not feasible a
+utility function is used to estimate a players chances to emerge
+as the winner based on the current game state. This analysis is guided
+by the winning condition of the game: the control of a majority of the 
+supply-centers. So an important metric is the odds of winning additional
+centers in the near future. Also a situation is advantageous if 
+units of the AI player can take control of additional provices
+through 'support orders'.
+
 \section{Long-term strategy templates}
+
+\subsection{Strategy acquisation}
+
+Several choices: 
+
+a) Hard-coding of offensive / defensive 
+   strategies that are played in certain
+   situations
+
+b) Start out with rudimentary strategies that
+   are extended through learning from previous games.
+   (see section 'Learning on previous game-databases')
+
+\subsection{Expert game knowledge}
+
+To improve the AIs playing skills over the lifetime, a
+knowledge base with various parts needs to be constructed.
+
+According to the current game state and other parameters, such
+as the remaining time in the game or a model of the other players
+the agent picks a response rule and generates from it a candidate
+move. 
+
+As [SHA08] propose, a game database contains partial-state -> response movement
+pairs. A partial state is a high-level description of a state, omitting
+details which are not relevant to the formulation of strategy / tactics. If
+such a mapping is not found the current state is classified and a candidate move
+is created using search techniques. Having found this move, a new entry in the 
+database is created. At regular time-points in the future a payoff is calculated
+(based on future game metrics) and associated with the new partial-state -> response pair.
+The motivation behind this is to rank responses to typical game situations. This
+approach reduces the computational load as search is a very costly operation in the
+game of Diplomacy. Besides ranking newly-created response upon termination of a game
+all used movements are re-ranked using a process called 'Temporal difference learning'.
+
+\subsubsection{Partial game-state encoding}
+
+A game state can be classifed by
+
+a) The current position of all players units
+b) A model of all other players (see later) in that situation 
+b) Game parameters, including game phase
+c) The history of the game
+
+
+\subsubsection{Opening games}
+
+The opening of games is a special case since a large number
+of tournament opening books exist. Since these initial states are amenable to
+analysis we can assume that master players had ample opportunities to
+pick optimal strategies. Our AI agent has access to such a collection
+and will pick a suitable move according to his denomination.
+
+\subsection{Move generation}
+
+Given a description of the game state the AI players classifies
+it with respect to several properties and assigns to it a 'partial state'
+which is taken from an evolving pattern database. For example in a cooperative
+setting a coordinated attack on an opponent would classify as a distinct
+'partial state'. As this shows the description should be formulated a level
+above move descriptions, so that a chain of movement emerges.
 
 \subsection{Offensive strategies}
 
 \subsection{Defensive strategies}
 
-\section{Modelling of other players}
-
-\section{Evaluation function of a game state}
-
 \subsection{Measures of a player position}
 
 
-\section{Negotiation logics?}
+\section{Negotiation component}
+
+The sub-system of the AI responsible for negotation
+is seen as virtually independent from the search techniques
+and expert database discussed above. Nonetheless it is 
+considered vital when competing against players which
+use negotation. Consider the situation where offensive alliances
+are created against the AI player. To overcome this aggression 
+the AI player needs communication to organize defense and launch
+retaliation attacks. The product of negotiation are commonly
+collective strategies which guide the army movements of the
+individual players. In order to safe-guard against other
+players who propose reckless strategies those are always
+cross-checked against the movements favoured by the search
+and knowledge base components.
+
+\subsection{Internal model of other players}
+
+\subsubsection{Trust}
+
+Trust as a relationship between two players removes contingency
+from the 'move search process'. This is because certain actions such
+as an attack on its own units can be ruled out if a substantial bond of trust
+has been established. Besides consistent actions, communication
+is needed to forge such relationships among players over time. 
 
 \section{Game meta-heuristics}
 
 \subsection{Learning on previous game-databases}
+
+Learning through pattern-weights (see SHA08):
+
+  Idea: Adapt generic initial strategy by performing 
+        self-play, temporal difference method
+
+Reinforcement learning:
+
+  Idea: Represent the environment and use a stochastic
+        transition model contingent on other players
+        moves (could try to fill in gaps of knowledge 
+        with a characterization of other players)
+
+  
 
 \subsection{Genetic -- adapting parameter vector}
 
