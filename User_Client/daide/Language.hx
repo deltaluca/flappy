@@ -55,7 +55,7 @@ enum Arrangement {
 	arNOT(arr:Arrangement);
 	arNAR(arr:Arrangement);
 	arXDo(arr:MsgOrder);
-	arDMZ(powers:Array<Int>, locs:Array<Location>);
+	arDMZ(powers:Array<Int>, locs:Array<Province>);
 	arAND(list:Array<Arrangement>);
 	arOR(list:Array<Arrangement>);
 	arSCD(list:Array<ScOwnershipList>);
@@ -114,21 +114,21 @@ enum NegQuery {
 	negNOT(a:Arrangement);
 }
 
-typedef ScoEntry = { power : Int, locs : Array<Location> };
+typedef ScoEntry = { power : Int, locs : Array<Province> };
 typedef Turn = { phase : Phase, turn : Int };
 typedef Location = { province : Province, coast : Coast };
 typedef UnitWithLoc = { power : Int, type : UnitType, location : Location };
 typedef VariantOption = { par : Parameter, val : Null<Int> };
 typedef Variant = Array<VariantOption>;
 typedef UnitWithLocAndMRT = { unitloc : UnitWithLoc, locs : Array<Location> };
-typedef MdfCentreList = { powers : Array<Int>, locs : Array<Location> }; 
-typedef MdfProvinces = { slocs : Array<MdfCentreList>, locs : Array<Location> };
+typedef MdfCentreList = { powers : Array<Int>, locs : Array<Province> }; 
+typedef MdfProvinces = { slocs : Array<MdfCentreList>, locs : Array<Province> };
 typedef MdfCoastAdjacencies = { unit : UnitType, locs : Array<Location> };
 typedef MdfProAdjacencies = { pro : Province, coasts : Array<MdfCoastAdjacencies> }; 
 typedef CompOrderResult = { note : OrderNote, result:Result, ret:Bool };
-typedef Explanation = { turn : Turn, reply : Message/*TBC: Reply*/ };
+typedef Explanation = { turn : Turn, reply : ReplyMsg };
 typedef Period = { from : Turn, to : Turn };
-typedef ScOwnershipList = { power : Null<Int>, locs : Array<Location> };
+typedef ScOwnershipList = { power : Null<Int>, locs : Array<Province> };
 typedef FutureOffer = Array<Int/*Power*/>;
 typedef LogicalOp = { and:Bool, list:Array<Arrangement>}; 
 typedef ThinkAndFact = { thk:Bool, arr:Arrangement};

@@ -5,6 +5,10 @@ package;
 	import haxe.macro.Context;
 #end
 
+enum Pair<A,B> {
+	pair(a:A,b:B);
+}
+
 class Match {
 #if macro
 	static function mk(e:ExprDef):Expr {

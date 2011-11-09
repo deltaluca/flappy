@@ -1,5 +1,5 @@
 //ignore whitespace
-NULL -1 : ws := ~/[\n\r \t]/~
+NULL -1 : ~/[\n\r \t]/~
 
 %{
 	import daide.Tokens;
@@ -136,6 +136,7 @@ NULL -1 : ws := ~/[\n\r \t]/~
 ~/TME/~ := %{ tCommand(coTimeToDeadline); %}
 ~/YES/~ := %{ tCommand(coAccept); %}
 ~/ADM/~ := %{ tCommand(coAdmin); %}
+~/SMR/~ := %{ tCommand(coSMR); %}
 
 ~/AOA/~ := %{ tParameter(paAnyOrder); %}
 ~/BTL/~ := %{ tParameter(paBuildTimeLimit); %}
@@ -185,5 +186,7 @@ NULL -1 : ws := ~/[\n\r \t]/~
 ~/CHO/~ := %{ tPress(prChoose); %}
 ~/BCC/~ := %{ tPress(prBCC); %}
 ~/UNT/~ := %{ tPress(prUNT); %}
+~/CCL/~ := %{ tPress(prCCL); %}
+~/NAR/~ := %{ tPress(prNAR); %}
 
-attr(error_tok) := %{ HLexLog.log("Error: Unknown char sequence '"+%+"'"); null; %}
+error := %{ HLexLog.log("Error: Unknown char sequence '"+%+"'"); null; %}

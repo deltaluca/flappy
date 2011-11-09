@@ -180,11 +180,80 @@ class Unparser {
 			mDraw(null) 				= [DRW],
 			mDraw(xs) 					= [DRW,BRA].concat(unpower_list(xs)).concat([KET]),
 // send_message
-			
-			mMap(x) = [MAP,BRA,TEXT(x),KET]
-//			mMapDefinition(
+//	mSend(....)
+
+// mAccept(x) - duplicate
+// mReject(x) - duplicate			
+			mMap(x) = [MAP,BRA,TEXT(x),KET],
+// mMapDefinition(
+			mHello(x,y,z) = [HLO,BRA,POWER(x),KET,BRA,INTEGER(y),KET,BRA].concat(unvariant(z)).concat([KET]),
+			mCurrentLocation(x,y) = [NOW,BRA].concat(unturn(x)).concat([KET]).concat(ununit_with_location_and_mrt_list(y)),
+// mSupplyOwnership
+// mThink
+			mMissingOrders(null,x) = [MIS].concat(ununit_with_location_and_mrt_list(x)),
+			mMissingOrders(x,null) = [MIS,BRA,INTEGER(x),KET],
+// mOrderResult
+			mSaveGame(x) = [SVE,BRA,TEXT(x),KET],
+			mLoadGame(x) = [LOD,BRA,TEXT(x),KET],
+			mTurnOff = [OFF],
+// mTimeToDeadline(x) - duplicate
+// mBadBrackets(x) - duplicate
+// mHuh(x) - duplicate
+			mPowerDisorder(x) = [CCD,BRA,POWER(x),KET],
+			mNOT(x) = [NOT,BRA].concat(unparse(x)).concat([KET]),
+// mAdmin(x,y) - duplicate
+			mSolo(x) = [SLO,BRA,INTEGER(x),KET],
+			mPowerEliminated(x) = [OUT,BRA,POWER(x),KET]
+// mDraw(x) - duplicate
 		);
 		return [];
+	}
+
+	static function unmdf_province_list(xs:Array<Location>):Array<Token> {
+		var ret = [];
+		for(x in xs) ret = ret.concat(unmdf_province(x));
+		return ret;
+	}
+	
+	static function ununit_with_location_and_mrt(x:UnitWithLocAndMRT):Array<Token> {
+		return if(x.locs==null) ununit_with_location(x.unitloc);
+		else ununit_with_location(x.unitloc).concat([MRT,BRA]).concat(unmdf_province_list(x.locs)).concat([KET]);
+	}
+
+	static function ununit_with_location_list(xs:Array<UnitWithLoc>):Array<Token> {
+		var ret = [];
+		for(x in xs) {
+			ret.push(BRA);
+			ret = ret.concat(ununit_with_location(x));
+			ret.push(KET);
+		}
+		return ret;
+	}
+
+	static function ununit_with_location_and_mrt_list(xs:Array<UnitWithLocAndMRT>):Array<Token> {
+		var ret = [];
+		for(x in xs) {
+			ret.push(BRA);
+			ret = ret.concat(ununit_with_location_and_mrt(x));
+			ret.push(KET);
+		}
+		return ret;
+	}
+
+	static function unvariant(o:Variant):Array<Token> {
+		var ret = [];
+		for(v in o) {
+			ret.push(BRA);
+			ret = ret.concat(unvariant_option(v));
+			ret.push(KET);
+		}
+		return ret;
+	}
+
+	static function unvariant_option(o:VariantOption):Array<Token> {
+		var ret = [tParameter(o.par)];
+		if(o.val!=null) ret.push(INTEGER(o.val));
+		return ret;
 	}
 
 	static function unturn(t:Turn):Array<Token> return [tPhase(t.phase)].concat([INTEGER(t.turn)])
