@@ -28,7 +28,7 @@ type DaideHandleT m = ErrorT DaideError (DaideCommT m)
 
 type DaideHandle = DaideHandleT IO
 
-data DaideHandleInfo = Client { clientHandle :: Handle
+data DaideHandleInfo = Handle { clientHandle :: Handle
                               , clientHostName :: String
                               , clientPort :: PortNumber
                               }

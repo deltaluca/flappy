@@ -65,8 +65,8 @@ Library
     hslogger,
     containers,
     mtl,
-    network <= 2.3,
-    parsec
+    network,
+    parsec >= 3.0
   
   -- Modules not exported by this package.
   -- Other-modules:       

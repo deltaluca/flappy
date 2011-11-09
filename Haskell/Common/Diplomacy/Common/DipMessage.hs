@@ -15,38 +15,54 @@ import qualified Text.Parsec as Parsec
 import qualified Data.Map as Map
 
   -- level and custom error
-type DipParserInfo = StateT (Maybe DipError) (Reader Int)
+type DipParserInfo = StateT (Maybe DipParseError) (Reader Int)
 
 -- DipParser is a ReaderT (for the press level) wrapped in StateT (for custom errors) wrapped in  Parsec
 newtype DipParser s a =
   DipParser {unDipParser :: (Parsec.ParsecT s () DipParserInfo a)}
-  deriving (Monad, MonadReader Int, MonadState (Maybe DipError))
+  deriving (Monad, MonadReader Int, MonadState (Maybe DipParseError))
 
 
 type DipParserString = DipParser BS.ByteString
 
 -- which is why you should ALWAYS have an accompanying class
 parserFail :: DipRep s t => String -> DipParser s a
-parserFail = DipParser . Parsec.parserFail
-getPosition = DipParser Parsec.getPosition
-tokenPrim a b c = DipParser $ Parsec.tokenPrim a b c
+parserFail = dipCatchError . Parsec.parserFail
+getPosition = dipCatchError Parsec.getPosition
+tokenPrim a b c = dipCatchError $ Parsec.tokenPrim a b c
+
 spaces :: DipParserString ()
-spaces = DipParser Parsec.spaces
+spaces = dipCatchError Parsec.spaces
+
 integer :: DipParserString Int
 integer = pStr >>= return . read
-many = DipParser . Parsec.many . unDipParser
-letter = DipParser Parsec.letter
+
+many :: DipRep s t => DipParser s a -> DipParser s [a]
+many = dipCatchError . Parsec.many . unDipParser
+
+letter = dipCatchError Parsec.letter
 
 choice :: DipRep s t => [DipParser s a] -> DipParser s a
-choice = DipParser . Parsec.choice . map unDipParser
-try = DipParser . Parsec.try . unDipParser
-char = DipParser . Parsec.char
+choice = dipCatchError . Parsec.choice . map unDipParser
+
+try :: DipRep s t => DipParser s a -> DipParser s a
+try = dipCatchError . Parsec.try . unDipParser
+char = dipCatchError . Parsec.char
 
 infixl 4 <|>
 a <|> b = DipParser $ unDipParser a Parsec.<|> unDipParser b
 
 infixl 4 <?>
-a <?> b = (a >> return ()) <|> putDipError b
+a <?> b = a <|> putDipError b
+
+putDipError :: DipRep s t => (Int -> DipParseError) -> DipParser s a
+putDipError e = do
+  pos <- errPos
+  put (Just (e pos))
+  parserFail "XXX"
+
+dipCatchError :: DipRep s t => Parsec.ParsecT s () DipParserInfo a -> DipParser s a
+dipCatchError parsr = DipParser parsr <?> SyntaxError
 
   -- Things to look out for:
   -- ambiguity: StartPing and MissingReq
@@ -60,7 +76,8 @@ class Parsec.Stream s DipParserInfo t => DipRep s t | t -> s where
   tok :: (DipToken -> Maybe a) -> DipParser s a
   tok1 :: DipToken -> DipParser s DipToken
   paren :: DipParser s a -> DipParser s a
-  insertError :: s -> s
+  errPos :: DipParser s Int
+  createError :: DipParseError -> s -> DipError
 
   -- defaults
   pStr = many pChr
@@ -71,7 +88,8 @@ instance DipRep [DipToken] DipToken where
   pInt = tok (\t -> case t of {DipInt i -> Just i ; _ -> Nothing})
   paren p = tok1 Bra >> p >>= \ret -> tok1 Ket >> return ret
   tok = (\f -> getPosition >>= \p -> tokenPrim show (const . const . const $ p) f)
-  insertError = (:) (DipParam ERR)
+  errPos = getPosition >>= return . Parsec.sourceColumn
+  createError (WrongParen pos) toks = Paren $ DipCmd PRN : listify (uParen (insertAt pos (DipParam ERR)) . (appendListify toks))
 
 instance DipRep BS.ByteString Char where
   tok f = try $ do
@@ -85,15 +103,16 @@ instance DipRep BS.ByteString Char where
   pInt = spaces >> integer >>= \r -> spaces >> return r
   paren p = do
     spaces
-    char '(' <?> WrongParen []
+    char '(' <?> WrongParen
     spaces
     ret <- p
     spaces
-    char ')' <?> WrongParen []
+    char ')' <?> WrongParen
     spaces
     return ret
   pStr = spaces >> many pChr >>= \r -> spaces >> return r
-  insertError = BS.append (BS.pack "???")
+  errPos = return 0
+  createError (WrongParen _) _ = Paren []
 
   -- DESC (SENDING PARTY)
 data DipMessage =
@@ -336,19 +355,17 @@ parseDipMessage :: DipRep s t => Monad m => Int -> s -> ErrorT DipError m DipMes
 parseDipMessage = parseDip pMsg
 
 parseDip :: (Monad m, DipRep s t) => DipParser s a -> Int -> s -> ErrorT DipError m a
-parseDip parsr lvl =   uncurry handleParseErrors
-                     . flip runReader lvl
-                     . flip runStateT Nothing
-                     . Parsec.runParserT (unDipParser parsr) () "DAIDE Message Parser"
+parseDip parsr lvl stream =   uncurry (handleParseErrors stream)
+                            . flip runReader lvl
+                            . flip runStateT Nothing
+                            . Parsec.runParserT (unDipParser parsr) () "DAIDE Message Parser"
+                            $ stream
 
 
-handleParseErrors :: Monad m => Either Parsec.ParseError a -> (Maybe DipError) -> ErrorT DipError m a
-handleParseErrors (Left _) (Just err) = throwError err
-handleParseErrors (Left p) Nothing = throwError . ParseError . show $ p
-handleParseErrors (Right a) _ = return a
-
-putDipError :: DipRep s t => DipError -> DipParser s ()
-putDipError = put . Just
+handleParseErrors :: (Monad m, DipRep s t) => s -> Either Parsec.ParseError a -> (Maybe DipParseError) -> ErrorT DipError m a
+handleParseErrors stream (Left _) (Just err) = throwError (createError err stream)
+handleParseErrors _ (Left p) Nothing = throwError . ParseError . show $ p
+handleParseErrors _ (Right a) _ = return a
 
 infixr 4 <<
 (<<) :: Monad m => m a -> m b -> m a
@@ -749,13 +766,13 @@ pPrn :: DipRep s t => DipParser s DipError
 pPrn = do
   tok1 (DipCmd PRN)
   message <- paren (many pToken)
-  return (WrongParen message)
+  return (Paren message)
 
 pHuh :: DipRep s t => DipParser s DipError
 pHuh = do
   tok1 (DipCmd HUH)
   message <- paren (many pToken)
-  return (SyntaxError message)
+  return (Syntax message)
 
 pCcd :: DipRep s t => DipParser s DipError
 pCcd = do
@@ -926,3 +943,20 @@ pSmr = do
   turn <- paren pTurn
   playerStats <- many (paren pPlayerStat)
   return (EndGameStats turn playerStats)
+
+
+-- unparsing
+  
+type AppendList a = [a] -> [a]
+cons  a = ((a :) .)
+lcons a = (. (a :))
+listify = ($ [])
+
+appendListify = foldr cons id
+
+insertAt 0 a l = a : l
+insertAt n a (b : as) = b : insertAt (n - 1) a as
+insertAt _ _ [] = undefined
+
+uParen :: AppendList DipToken -> AppendList DipToken
+uParen = cons Bra . lcons Ket

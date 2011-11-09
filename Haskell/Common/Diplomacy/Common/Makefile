@@ -8,6 +8,3 @@ server: DaideError.hs DaideHandle.hs DaideMessage.hs DaideError.hs DipMessage.hs
 
 clean:
 	rm -f *.o *.hi server
-
-fuck:
-	$(GHC) -o server server.hs -ddump-cmm
