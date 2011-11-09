@@ -1,0 +1,482 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 2
+\tocdepth 2
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Automated negotiation in the game of diplomacy
+\end_layout
+
+\begin_layout Title
+Report 2 : Progress & Revisions
+\end_layout
+
+\begin_layout Author
+Luca Deltodesco, Matthias Hueser, 
+\begin_inset Newline newline
+\end_inset
+
+Andras Slemmer, Cliff Sun, Luke Tomlin
+\end_layout
+
+\begin_layout Date
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+today
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Progress
+\end_layout
+
+\begin_layout Subsection
+Reminder of targets for 2nd iteration (weeks 3 - 4)
+\end_layout
+
+\begin_layout Standard
+Start initial work on the AI.
+ Continue to improve and develop game foundation (work will need to be split
+ between team members here).
+ AI should be able to play a 'holding' game and fulfill all requirements
+ to play with other AIs.
+ Begin research into tactics and how we will develop the AI.
+\end_layout
+
+\begin_layout Subsection
+2nd Iteration (week 3 - 4) Progress
+\end_layout
+
+\begin_layout Itemize
+Currently have a working Haskell server which can communicate with the front-end
+ interface written in Haxe.
+ 
+\end_layout
+
+\begin_layout Itemize
+Parsing on Haskell server side (using Parsec) is complete up to press level
+ 10 
+\end_layout
+
+\begin_layout Itemize
+Front-end interface currently consists of a command-line interface which
+ can accept messages, parse it and send and recieve the message to/from
+ the server
+\end_layout
+
+\begin_layout Itemize
+Representation of the map is complete, i.e.
+ provinces, their adjacencies and whether they're land/coast/sea
+\end_layout
+
+\begin_layout Itemize
+Ability to have expandable maps (or different maps entirely) is implicity
+ from the way the map is stored and represented
+\end_layout
+
+\begin_layout Subsubsection
+Problems in the latest iteration:
+\end_layout
+
+\begin_layout Itemize
+There was a problem initially implementing the Daide low-level errors.
+ If a message fails to parse, an error token needs to be inserted at the
+ place/token it failed to parse.
+ However Parsec takes the message as a stream and therefore it is not possible
+ to insert into a stream.
+ 
+\end_layout
+
+\begin_layout Itemize
+The solution is to save the position where the parsing failed and then insert
+ the error token outside of Parsec where the message is a list rather than
+ a stream
+\end_layout
+
+\begin_layout Section
+Revisions
+\end_layout
+
+\begin_layout Subsection
+Changes/Revision
+\end_layout
+
+\begin_layout Subsubsection
+Time Constraints
+\end_layout
+
+\begin_layout Itemize
+Writing the Haskell server and parser has taken longer than expected and
+ with all the time needed to do courseworks and industrial placement application
+s, the project has gone behind schedule
+\end_layout
+
+\begin_layout Itemize
+This means that there is less time to work on the AI and negotiation features
+ but after discussion, the team has decided that there is still sufficient
+ time to complete all current objectives
+\end_layout
+
+\begin_layout Subsubsection
+(AI) Bot Design 
+\end_layout
+
+\begin_layout Itemize
+Following on, the focus from now until the end of the current iteration
+ will be on designing and implementing a bot with effective AI.
+ An iterative approach will be taken for implementing the bot to ensure
+ that features are properly implemented and that there is always a basis
+ to work on (see below)
+\end_layout
+
+\begin_layout Itemize
+Non-negotiating bot can be tested against Dumb-Bot for benchmarking and
+ to make more optimisations and adjustments to it
+\end_layout
+
+\begin_layout Itemize
+Final negotiating bot can then be tested against other negotiating bots
+ to see it how it matches up, this will be the main test to see the negotiating
+ AI is an improvement over existing AI's
+\end_layout
+
+\begin_layout Subsubsection
+Core/Extension Changes
+\end_layout
+
+\begin_layout Itemize
+Currently none of the core functionality has changed and the plan is still
+ to implement all the features and extensions that were stated in the first
+ report
+\end_layout
+
+\begin_layout Subsubsection
+Project Management and Software Engineering Practices
+\end_layout
+
+\begin_layout Itemize
+Currently an agile software development model is still being followed, specifica
+lly the team development still is much like the Scrum model
+\end_layout
+
+\begin_layout Itemize
+Sprints i.e.
+ 2 week iterations are planned so that at the end of each sprint a deliverable
+ can be presented to the Product Owner (i.e.
+ our supervisor)
+\end_layout
+
+\begin_layout Itemize
+The next iteration is weeks 5-6 followed by the final iteration which is
+ weeks 7-8.
+ Week 9 will be allocated as a buffer week to complete anything that was
+ not completed in the final iteration/sprint
+\end_layout
+
+\begin_layout Itemize
+There are multiple meetings during a week which enables the team to get
+ together to discuss current progress and any problems encountered so far
+\end_layout
+
+\begin_layout Itemize
+There is also a meeting after each iteration to discuss how the current
+ iteration/sprint went and if any goals/aims need to be readjusted for the
+ following iteration
+\end_layout
+
+\begin_layout Subsection
+Revised Schedule for next iteration (weeks 5-6)
+\end_layout
+
+\begin_layout Standard
+Targets for the next iteration were discussed, more specifically on how
+ to design the AI.
+ The team further discussed how to split up the work from this point onwards
+ and decided that 2 people would work on creating the initial AI bot and
+ the other 3 would work on finishing the server (i.e.
+ order resolution).
+ The following is a more detailed account of what the deliverable should
+ look like at the end of the next iteration/sprint:
+\end_layout
+
+\begin_layout Subsubsection
+Order resolution implementation
+\end_layout
+
+\begin_layout Standard
+At the end will be able to resolves all orders in one round sent by the
+ players
+\end_layout
+
+\begin_layout Itemize
+Checks that orders are tactically valid and calculate the end result of
+ all orders, i.e.
+ map state after the round
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Checks if orders clash or conflict and resolve them correctly
+\end_layout
+
+\end_deeper
+\begin_layout Subsubsection
+AI Bot Requirements
+\end_layout
+
+\begin_layout Standard
+The following points show the iterative approach that is to be taken in
+ building up a bot which houses the AI features (which are discussed in
+ the section below in [2.3 AI Techniques and Design]:
+\end_layout
+
+\begin_layout Enumerate
+Initially create a Hold-Bot which will hold for every move
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Hold-Bot will essentially serve as a template to build upon
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Hold-Bot needs to be able to respond to messages from the server, such as
+ negotiation requests with a default response (as such features have not
+ been implemented in the bot at this point)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+Then add features to Hold-Bot to create Random-Bot
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Random-Bot will generate a list of moves that it can make (based on the
+ current state of the game and map) and will randomly choose a move
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+AI techniques for being able to search through the game state to generate
+ a list of possible moves are discussed in [2.3 AI Techniques and Design]
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Random-Bot will still respond to messages from the server in a default way
+ (like Hold-Bot does) but when asked to make a move will choose a random
+ one
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Then add tactics which will enable the bot to choose the best/most appropriate
+ move -> Tactical-Bot
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Tactical-Bot will use defined tactics to choose a move which suits the goals
+ it's trying to achieve
+\end_layout
+
+\begin_layout Itemize
+General tactics need to be defined based on Diplomacy rules (to make it
+ as general as possible with the possbility of using expandable maps)
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Such as prioritising keeping all your provinces in your territory/one area
+\end_layout
+
+\begin_layout Enumerate
+Or trying to capture as much opposing provinces as possible and not care
+ as much about your own
+\end_layout
+
+\begin_layout Enumerate
+Or capturing other provinces may be more important than keeping your own
+ and building as many supply centres as possible
+\end_layout
+
+\begin_layout Enumerate
+Being Offensive (aggresive) or Defensive (passive)
+\end_layout
+
+\begin_layout Itemize
+AI Techniques and theories used to implement such heuristics are discussed
+ below in [2.3 AI Techniques and Design]
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+^ *NEED TO ADD MORE THINGS ABOUT AI SPECIFICATION*
+\end_layout
+
+\begin_layout Itemize
+Many possibilities here and taking the time to experiment around with the
+ tactics will show us which ones are more effective against others
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+In conjunction, negotation can also implemented into a bot -> Negotiation-Bot
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Will be able to deal with negotiating with other bot/players
+\end_layout
+
+\begin_layout Itemize
+The code base for negotiation bot will be seperate but can me made to work
+ together with Tactical-Bot as one bot
+\end_layout
+
+\begin_layout Itemize
+This ensures good modularity between the two bots and means that tactics
+ and negotiations can be built seperately to minimise interference between
+ the two
+\end_layout
+
+\end_deeper
+\begin_layout Subsection
+AI Techniques and Design
+\end_layout
+
+\begin_layout Standard
+[Matthias's bit]
+\end_layout
+
+\begin_layout Section
+People Management
+\end_layout
+
+\begin_layout Subsection
+Team Management
+\end_layout
+
+\begin_layout Itemize
+Working in a team means that people have different skills and therefore
+ may end up contributing more than others, but this can be a positive as
+ the most effective way to work as a team is to use everyone's skills effectivel
+y
+\end_layout
+
+\begin_layout Itemize
+The two main languages used are Haskell and Haxe.
+ There is one member who is strongest at Haskell and one who is strongest
+ at Haxe
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+This has meant that for the first two iterations, the two members mentioned
+ above have led the project and contributed the most
+\end_layout
+
+\begin_layout Itemize
+However for the next 2 iterations, contributions should be more even as
+ the rest of the group has had time to learn the languages required and
+ can make a greater contribution
+\end_layout
+
+\end_deeper
+\begin_layout Section
+Ethical and Environment Impact
+\end_layout
+
+\begin_layout Subsection
+Ethical Issues
+\end_layout
+
+\begin_layout Standard
+Users who register for a game on the system may be required to leave their
+ email addresses and names for authentication.
+ This means we would have to store their personal details and ensure that
+ it is stored safely and away from any possible attacks on the server.
+ In addition we need to make sure we handle such information with care and
+ that this personal information is never given out under any circumstances.
+\begin_inset Newline newline
+\end_inset
+
+In order to avoid any ethical issues we would have to ensure that only team
+ members have access to the database holding this information and perhaps
+ we would need some sort of encryption on the table itself.
+\end_layout
+
+\begin_layout Subsection
+Environmental Impact 
+\end_layout
+
+\end_body
+\end_document

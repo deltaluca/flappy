@@ -1,0 +1,147 @@
+%% LyX 2.0.0 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{babel}
+\begin{document}
+
+\title{Automated negotiation in the game of diplomacy}
+
+
+\title{Report 2 : Progress \& Revisions}
+
+
+\author{Luca Deltodesco, Matthias Hueser, \\
+Andras Slemmer, Cliff Sun, Luke Tomlin}
+
+
+\date{\today}
+
+\maketitle
+
+\section{Progress}
+\begin{itemize}
+\item Reminder of targets for week 3 - 4:
+
+\begin{itemize}
+\item Start initial work on the AI. Continue to improve and develop game
+foundation (work will need to be split between team members here).
+AI should be able to play a 'holding' game and fulfill all requirements
+to play with other AIs. Begin research into tactics and how we will
+develop the AI.
+\end{itemize}
+\item Latest Iteration (week 3 - 4) Progress:
+
+\begin{itemize}
+\item Currently have a working Haskell server which can communicate with
+the front-end interface written in Haxe. 
+\item Parsing on Haskell server side (using Parsec) is complete up to press
+level 10 
+\item Front-end interface currently consists of a command-line interface
+which can accept messages, parse it and send and recieve the message
+to/from the server
+\item Representation of the map is complete, i.e. provinces, their adjacencies
+and whether they're land/coast/sea
+\item Ability to have expandable maps (or different maps entirely) is implicity
+from the way the map is stored and represented
+\end{itemize}
+\item Problems in the latest iteration:
+
+\begin{itemize}
+\item We had a problem initially implementing the Daide low-level errors.
+If a message fails to parse, we need to be able to insert an error
+token at the place/token it failed to parse. However Parsec takes
+the message as a stream and therefore it is not possible to insert
+into a stream. 
+\item The solution is to save the position where the parsing failed and
+then insert the error token outside of Parsec where the message is
+a list
+\end{itemize}
+\end{itemize}
+
+\section{Revisions}
+\begin{itemize}
+\item Changes/Revision
+
+\begin{itemize}
+\item Writing the Haskell server and parser has taken longer than expected
+and in addition to all the other courseworks we have and time needed
+for applications for industrial placements we are behind schedule.
+\item This means that we have less time to work on the AI and negotiation
+features but the remaining time will be allocated appropriately for
+implementing the AI and negotiation
+\item Following on, the focus from now until the end of the current iteration
+will be on designing and implementing an effective AI. We will take
+an iterative approach to implementing the AI to ensure that features
+are properly implemented and we always have a basis to work on (see
+below)
+\end{itemize}
+\item Revised Schedule for next iteration (weeks 5-6)
+
+\begin{itemize}
+\item As a group we discussed our targets for the next iteration and how
+we would go about designing the AI. We also discussed how the work
+would be split up from this point onwards and decided that 2 people
+would work on creating the initial AI bot and the other 3 would work
+on finishing the server (i.e. order resolution). The following is
+a more detailed account of what we should end up with at the end of
+the next iteration
+\item Order resolution implementation
+
+\begin{itemize}
+\item At the end will be able to resolves all orders in one round sent by
+the players
+\item Checks that orders are tactically valid and calculate the end result
+of all orders, i.e. map state after the round
+
+\begin{itemize}
+\item Checks if orders clash or conflict and resolve them correctly
+\end{itemize}
+\end{itemize}
+\item AI design and implementation
+
+\begin{itemize}
+\item Initially create a Hold-Bot which will hold for every move
+
+\begin{itemize}
+\item Hold-Bot will essentially serve as a template to build upon
+\item Hold-Bot needs to be able to respond to messages from the server,
+such as negotiation requests with a default response (as such features
+have not been implemented in the bot at this point)
+\end{itemize}
+\item Then add features to Hold-Bot to create Random-Bot
+
+\begin{itemize}
+\item Random-Bot will generate a list of moves that it can make (based on
+the current state of the game and map) and will randomly choose a
+move
+\item Random-Bot will still respond to messages from the server in a default
+way (like Hold-Bot does) but when asked to make a move will choose
+a random one
+\end{itemize}
+\item Then add tactics which will enable the bot to choose the best/most
+appropriate move -> Tactical-Bot
+
+\begin{itemize}
+\item Tactical-Bot will use defined tactics to choose a move which suits
+the goals it's trying to achieve
+\item General tactics need to be defined based on Diplomacy rules (to make
+it as general as possible with the possbility of using expandable
+maps)
+
+\begin{itemize}
+\item Such as prioritisng keeping all your provinces in your territory/one
+area
+\item Or trying to capture as much opposing provinces as possible and not
+care as much about your own
+\item Or capturing other provinces may be more important than keeping your
+own and building as many supply centres as possible
+\item Offensive (aggresive) v. Defensive (passive)
+\end{itemize}
+\end{itemize}
+\item In conjunction, we can also implement negotiation into a bot -> Negotiation-Bot\end{itemize}
+\end{itemize}
+\end{itemize}
+
+\end{document}
