@@ -11,17 +11,40 @@
 
 \section{Challenges for AI player}
 
-Imperfect information about the other players
-move choices (simultaneous moves)
+Diplomacy is generally seen as an interesting sandbox to explore
+different AI techniques for multiple-player strategy games.
 
-Cooperative game, have to consider alliances of 
-other players and ramifications of own actions
-on trust / relationship to other players.
+It can be classified as a multi-player, cooperative, zero-sum game
+with imperfect information, all of which have important ramifications
+for the development of an AI.
+
+Each player has imperfect information because the game state is not
+changed in reaction to each players movement separately. Instead a 
+so-called 'move-resolution' phase takes place. Here players formulate
+their moves in secret and then submit them simultaneously to the game
+server which resolves any conflicts, 'standoffs'
+in Diplomacy parlance. Being unaware of the others players actions means
+that the immediate effects of its own movement orders are uncertain. The
+game mechanics dictate that at the end of a turn a chain of so-called 
+stand-offs might occur, in case several move order conflict. As a result
+an AI player is uncertain of the effect of its own actions. Another matter
+that increase uncertainty are support orders that bias the resolution of
+stand-offs in favor of a particular player. 
+
+Diplomacy is cooperative since negotiation is at the heart of the game:
+It allows players to communicate their short- / long-term intentions before
+their actual moves are revealed. For instance in stand-off situations it will
+enable two players to attack a field of a third-party. In general negotation
+will decrease uncertainty but it can be a double-edged sword. Players might
+pretend their actual intentions but actually conspire to betray each other. Hence
+in essence an AI player will need to establish whom to trust when considering
+his options based on the messages of other players.
+
 
 \section{Iterative AI development}
 
 An iterative approach is envisioned where generic techniques
-like 'State search' are implemented first. The reason for this is that 
+like 'Game tree search' are implemented first. The reason for this is that 
 search is generally considered as the easiest to implement. Apart from
 a utility function mapping a game state to a certain metric vector no 
 domain knowledge of the game is required. It is considered a primitive
@@ -43,23 +66,51 @@ For short-term game tactics a search with minimal look-ahead can be used.
 
 \subsection{Searching the game tree}
 
-Having said this a naive search of the game tree is considered
-intractable because of its large branching factor. Even moderate look-ahead
-in the tremendous search space puts a strain on the computational resources.
-To overcome this problem, search heuristics for pruning and scheduling the
-exploration order of the game branches. For the latter future states can be
-ordered by their prospected utility (functions) a
+Searching a game tree is considered a generic technique for playing 
+games that have discrete states connected by edges which represent movement
+orders. As outlined in the introductory section there is uncertainty about
+the effects of movement orders, making the viability of this approach doubtable. 
+
+Besides at any given state of the game there is large number of moves possible
+for each player, giving rise to a large branching factor in the game tree. [SHA08]
+have estimated the number of a possible moves in a game situation to be on the order
+of 2_{91} to get a feeling for the numbers involved. Even moderate look-ahead in
+the search space almost certainly puts a strain on the computational resources.
+To overcome this difficulty, search heuristics for pruning the game tree and scheduling
+the exploration order of the game branches are alternative-less extension of a
+brute-force search. Both techniques can be implemented through so-called utility function
+defined on a game state. We discuss the structure of utility functions for Diplomacy
+in a later section.
+
+As [SHA08] have argued, modelling the game with payoff matrices is similarly mis-guided
+as a brute-force game tree search and so we have not considered it for our AI player.
+
+\subsubsection{Search heuristics}
+
+Whenver a brute-force search is not possible we need to assign a utility to an 
+intermediate game state, in which the winner has not yet been determined. On the 
+one hand this enables us to cut-off a game-tree search at a shallow level and
+still propagate move values upwards through a MinMax procedure. On the other hand
+they enable us to guide the MinMax by scheduling the exploration of branches or
+pruning branches with limited attractiveness altogether. Even generic heuristics
+like AlphaBeta-Pruning or NegaScout that do not use any knowledge of the game give
+speed improvements of several orders of magnitude [REFERENCE]. Hence we expect
+informed searches to give us considerable latitude to search deeper. 
 
 \subsubsection{State evaluation function}
 
-In the event that a deeper search in the game tree is not feasible a
-utility function is used to estimate a players chances to emerge
-as the winner based on the current game state. This analysis is guided
-by the winning condition of the game: the control of a majority of the 
-supply-centers. So an important metric is the odds of winning additional
-centers in the near future. Also a situation is advantageous if 
-units of the AI player can take control of additional provices
-through 'support orders'.
+The aforementioned state utility function will need to incorporate knowledge
+of the game to be effective. As the objective of the game is to control the 
+majority of the supply-centers any utility function should consider how likely
+it is to gain additional centers from a given game state. [Loeb92] propose to 
+weight the control centers controlled by a player. Supply centers that are
+prone to be attacked in the next turns have a smaller weight whereas ones with
+a solid defence base have high weight. All of these functions are blind to 
+alliances / cooperations between players in the sense that they treat every 
+player as an adversary. A better heuristic would consider the positions of
+all allied players collectively, given that there exists some trust bond
+between the allied players. 
+
 
 \section{Long-term strategy templates}
 
