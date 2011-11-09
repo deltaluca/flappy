@@ -7,6 +7,19 @@ Progress: to report on the progress of the project so far.
 
    [ It should detail how many iterations and what requirements or features have   been completed so far. Also include what problems - technical or other - have been encountered and what measures have been taken to mitigate their effect on overall success. ]
 
+  - Latest iteration (week 3 - 4) consists --
+    - Working Haskell server which can communicate with the front-end gui written in Haxe. Parsing for the Daide protocol also works up to press level 10.
+    - Front-end gui currently has a CLI and can accept messages, parse it and send and receive messages to/from the server.
+    - Representation of the map is complete, i.e provinces, their adjacancies and whether they're land/coast/sea.
+    - Ability to have expandable maps (or different maps) is implicit from the way the map is stored.
+    
+    - Had a problem initially implementing Daide low-level errors. If a message fails to parse, need to insert an error token at the point it failed to parse. However Parsec takes the message as a stream but it's not possible to insert into a stream. The solution is to save the position where the parsing failed and then insert the error token outside of Parsec where the message becomes a list.  
+  
+
+  - Order resolution still not implemented.
+  - Game state representation not yet implemented.
+  - Discussion on how to design and implement the AI.
+
 
 Revisions: to record any changes to any of the five items in Report One.
 
@@ -20,17 +33,51 @@ Revisions: to record any changes to any of the five items in Report One.
         How many iterations do you still plan?
         Also present a revised, less speculative schedule. ]
 
+  - Changes/Revision
+      - Writing the server and parser has taken longer than expected and means that less time will be spent on writing the AI, however time will still be allocated to implement negotiation which is one of the key extensions to the project
+      - Following on, the focus from now until the end of the current iteration will be on designing and implementing an effective AI. Then we can test this against other AI's which don't negotiate such as Dumb-bot (as at this point negotiation will not have been implemented). 
+
+  - Revised Schedule for next iteration:
     
+    - Order resolution implementation
+      - Resolves all orders in one round sent by the players
+      - Checks that orders are tactically valid and calculate result of such order
+        - Check if orders clash and resolve them correctly    
+    - AI design and implementation
+      - Initially create a Hold-Bot which will hold for every move
+        - Hold-bot essentially a template bot to build upon
+        - Hold-bot needs to be able to respond to messages from the server (perhaps with a default response)
+      - Then add features to Hold-bot to create Random-Bot
+        - Random-bot will generate a list of moves that it can make and will randomly choose a move
+        - Random-bot will still respond to messages from the server in a default way but obviously when asked to make a move will choose a random one
+      - Add tactics to choose the best/appropriate move -> Tactical-Bot
+        - Define generic tactics based on Diplomacy rules
+            - Such as priority of keeping all your provinces in your territory and in one area
+            - Or trying to capture as much opposing provinces as possible and not care as much about your own
+            - Capturing other provinces more important or keeping your own to make supply centres more important
+            - Offensive (aggression) or defensive (passive)
+      - In conjunction, we can also create a Negotation-Bot
+        - Will deal with negotiating with other bots/players 
+        - Seperated in terms of code base of Tactical-Bot but can be made to work together with Tactical-Bot as one bot
+        - Ensures modularity and means that tactics and negotiation can be built seperately
+
+
+
 People management: to document any issues that may have emerged in the work dynamics of your group
 
        [ How do you cope with the fact that group members have different levels or areas of skills?
         how do you ensure that all group members contribute fairly
         How do you resolve any problems? ]
 
-    
+  - one of our group members is by far the strongest in Haskell and one is strongest in Haxe. Naturally this means thus far that these 2 members have contributed the most to the group. The rest of the group have also contributed but are having to learn these languages along side.
+  - contribution will become even when we start designing and implementing the AI and negotation and the order resolution.       
+
+
 Ethical and Environmental Impact:
 
-        Discuss whether your project has any potential ethical issues and explain how you intend to address such issues in your design, implementation, deployment or work practice,
-        Assess the environmental impact of your to-be-deployed system; describe ways in which this impact can be limited without compromising key requirements, or argue why the environmental impact cannot be decreased without such compromise.
+       [ Discuss whether your project has any potential ethical issues and explain how you intend to address such issues in your design, implementation, deployment or work practice,
+        Assess the environmental impact of your to-be-deployed system; describe ways in which this impact can be limited without compromising key requirements, or argue why the environmental impact cannot be decreased without such compromise. ] 
+
+  - When users register for a game they'd have to leave their email addresses for verification and perhaps their name as well. As we would be storing personal information, this means that we would have to make sure that their information is stored safely and away from any outside attacks on the server.
 
 Evaluation Criteria for Report Two: the same as for Report One. But keep in mind that change and its management are the norm, not the exception. 
