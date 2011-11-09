@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, FunctionalDependencies, NoMonomorphismRestriction, GeneralizedNewtypeDeriving, RankNTypes #-}
+{-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, FunctionalDependencies, GeneralizedNewtypeDeriving #-}
 module Diplomacy.Common.DipMessage (DipMessage(..), parseDipMessage) where
 
 import Diplomacy.Common.Data as Dat
@@ -15,36 +15,54 @@ import qualified Text.Parsec as Parsec
 import qualified Data.Map as Map
 
   -- level and custom error
-type DipParserInfo = StateT (Maybe DipError) (Reader Int)
+type DipParserInfo = StateT (Maybe DipParseError) (Reader Int)
 
 -- DipParser is a ReaderT (for the press level) wrapped in StateT (for custom errors) wrapped in  Parsec
 newtype DipParser s a =
   DipParser {unDipParser :: (Parsec.ParsecT s () DipParserInfo a)}
-  deriving (Monad, MonadReader Int, MonadState (Maybe DipError))
+  deriving (Monad, MonadReader Int, MonadState (Maybe DipParseError))
 
 
 type DipParserString = DipParser BS.ByteString
 
 -- which is why you should ALWAYS have an accompanying class
 parserFail :: DipRep s t => String -> DipParser s a
-parserFail = DipParser . Parsec.parserFail
-getPosition = DipParser Parsec.getPosition
-tokenPrim a b c = DipParser $ Parsec.tokenPrim a b c
+parserFail = dipCatchError . Parsec.parserFail
+getPosition = dipCatchError Parsec.getPosition
+tokenPrim a b c = dipCatchError $ Parsec.tokenPrim a b c
+
 spaces :: DipParserString ()
-spaces = DipParser Parsec.spaces
+spaces = dipCatchError Parsec.spaces
+
 integer :: DipParserString Int
 integer = pStr >>= return . read
-many = DipParser . Parsec.many . unDipParser
-letter = DipParser Parsec.letter
-choice = DipParser . Parsec.choice . map unDipParser
-try = DipParser . Parsec.try . unDipParser
-char = DipParser . Parsec.char
+
+many :: DipRep s t => DipParser s a -> DipParser s [a]
+many = dipCatchError . Parsec.many . unDipParser
+
+letter = dipCatchError Parsec.letter
+
+choice :: DipRep s t => [DipParser s a] -> DipParser s a
+choice = dipCatchError . Parsec.choice . map unDipParser
+
+try :: DipRep s t => DipParser s a -> DipParser s a
+try = dipCatchError . Parsec.try . unDipParser
+char = dipCatchError . Parsec.char
 
 infixl 4 <|>
 a <|> b = DipParser $ unDipParser a Parsec.<|> unDipParser b
 
 infixl 4 <?>
-a <?> b = (a >> return ()) <|> putDipError b
+a <?> b = a <|> putDipError b
+
+putDipError :: DipRep s t => (Int -> DipParseError) -> DipParser s a
+putDipError e = do
+  pos <- errPos
+  put (Just (e pos))
+  parserFail "XXX"
+
+dipCatchError :: DipRep s t => Parsec.ParsecT s () DipParserInfo a -> DipParser s a
+dipCatchError parsr = DipParser parsr <?> SyntaxError
 
   -- Things to look out for:
   -- ambiguity: StartPing and MissingReq
@@ -58,7 +76,8 @@ class Parsec.Stream s DipParserInfo t => DipRep s t | t -> s where
   tok :: (DipToken -> Maybe a) -> DipParser s a
   tok1 :: DipToken -> DipParser s DipToken
   paren :: DipParser s a -> DipParser s a
-  insertError :: s -> s
+  errPos :: DipParser s Int
+  createError :: DipParseError -> s -> DipError
 
   -- defaults
   pStr = many pChr
@@ -69,7 +88,8 @@ instance DipRep [DipToken] DipToken where
   pInt = tok (\t -> case t of {DipInt i -> Just i ; _ -> Nothing})
   paren p = tok1 Bra >> p >>= \ret -> tok1 Ket >> return ret
   tok = (\f -> getPosition >>= \p -> tokenPrim show (const . const . const $ p) f)
-  insertError = (:) (DipParam ERR)
+  errPos = getPosition >>= return . Parsec.sourceColumn
+  createError (WrongParen pos) toks = Paren $ DipCmd PRN : listify (uParen (insertAt pos (DipParam ERR)) . (appendListify toks))
 
 instance DipRep BS.ByteString Char where
   tok f = try $ do
@@ -83,15 +103,16 @@ instance DipRep BS.ByteString Char where
   pInt = spaces >> integer >>= \r -> spaces >> return r
   paren p = do
     spaces
-    char '(' <?> WrongParen []
+    char '(' <?> WrongParen
     spaces
     ret <- p
     spaces
-    char ')' <?> WrongParen []
+    char ')' <?> WrongParen
     spaces
     return ret
   pStr = spaces >> many pChr >>= \r -> spaces >> return r
-  insertError = BS.append (BS.pack "???")
+  errPos = return 0
+  createError (WrongParen _) _ = Paren []
 
   -- DESC (SENDING PARTY)
 data DipMessage =
@@ -334,19 +355,17 @@ parseDipMessage :: DipRep s t => Monad m => Int -> s -> ErrorT DipError m DipMes
 parseDipMessage = parseDip pMsg
 
 parseDip :: (Monad m, DipRep s t) => DipParser s a -> Int -> s -> ErrorT DipError m a
-parseDip parsr lvl =   uncurry handleParseErrors
-                     . flip runReader lvl
-                     . flip runStateT Nothing
-                     . Parsec.runParserT (unDipParser parsr) () "DAIDE Message Parser"
+parseDip parsr lvl stream =   uncurry (handleParseErrors stream)
+                            . flip runReader lvl
+                            . flip runStateT Nothing
+                            . Parsec.runParserT (unDipParser parsr) () "DAIDE Message Parser"
+                            $ stream
 
 
-handleParseErrors :: Monad m => Either Parsec.ParseError a -> (Maybe DipError) -> ErrorT DipError m a
-handleParseErrors (Left _) (Just err) = throwError err
-handleParseErrors (Left p) Nothing = throwError . ParseError . show $ p
-handleParseErrors (Right a) _ = return a
-
-putDipError :: DipRep s t => DipError -> DipParser s ()
-putDipError = put . Just
+handleParseErrors :: (Monad m, DipRep s t) => s -> Either Parsec.ParseError a -> (Maybe DipParseError) -> ErrorT DipError m a
+handleParseErrors stream (Left _) (Just err) = throwError (createError err stream)
+handleParseErrors _ (Left p) Nothing = throwError . ParseError . show $ p
+handleParseErrors _ (Right a) _ = return a
 
 infixr 4 <<
 (<<) :: Monad m => m a -> m b -> m a
@@ -364,115 +383,141 @@ level l p = do
     else p
 
 pMsg :: DipRep s t => DipParser s DipMessage
-pMsg = choice [ pAccept, pReject, pCancel
-              , pNme, pIam, pObs
-              , pMap, pMdf
-              , pHlo
-              , pSco, pNow, pHistoryReq
-              , pSub, pMis, pAck
-              , pGof
-              , pOrd
-              , pSve, pLod
-              , pOff
-              , pTme
-              , pError
-              , pAdm
-              , pSlo
-              , pDrw
-              , pSmr
-
-                -- press
-              , pSnd
-              , pOut
-              , pFrm
+pMsg = choice  [ pAccept, pReject, pCancel
+               , pNme, pIam, pObs
+               , pMap, pMdf
+               , pHlo
+               , pSco, pNow, pHistoryReq
+               , pSub, pMis, pAck
+               , pGof
+               , pOrd
+               , pSve, pLod
+               , pOff
+               , pTme
+               , pError
+               , pAdm
+               , pSlo
+               , pDrw
+               , pSmr
+                
+                 -- press
+               , pSnd
+               , pOut
+               , pFrm
               ]
 
+pAccept :: DipRep s t => DipParser s DipMessage
 pAccept = return . Accept =<< (tok1 (DipCmd YES) >> paren pMsg)
+pReject :: DipRep s t => DipParser s DipMessage
 pReject = return . Reject =<< (tok1 (DipCmd REJ) >> paren pMsg)
+pCancel :: DipRep s t => DipParser s DipMessage
 pCancel = return . Cancel =<< (tok1 (DipCmd NOT) >> paren pMsg)
 
+pNme :: DipRep s t => DipParser s DipMessage
 pNme = do
   tok1 (DipCmd NME)
   sName <- paren pStr
   sVersion <- paren pStr
   return (Name sName sVersion)
 
+pMap :: DipRep s t => DipParser s DipMessage
 pMap = tok1 (DipCmd MAP) >> choice [pMapName, pMapNameReq]
 
+pObs :: DipRep s t => DipParser s DipMessage
 pObs = tok1 (DipCmd OBS) >> return Observer
 
+pIam :: DipRep s t => DipParser s DipMessage
 pIam = do
   tok1 (DipCmd IAM)
   power <- paren pPower
   passcode <- paren pInt
   return (Rejoin power passcode)
 
+pMapName :: DipRep s t => DipParser s DipMessage
 pMapName = return . MapName =<< paren pStr
 
+pMapNameReq :: DipRep s t => DipParser s DipMessage
 pMapNameReq = return MapNameReq
 
+pMdf :: DipRep s t => DipParser s DipMessage
 pMdf = tok1 (DipCmd MDF) >> choice [pMapDef, pMapDefReq]
 
+pMapDef :: DipRep s t => DipParser s DipMessage
 pMapDef = do
   powers <- paren (many pPower)
   provinces <- paren pProvinces
   adjacencies <- paren (many (paren pAdjacency))
   return (MapDef powers provinces adjacencies)
 
+pMapDefReq :: DipRep s t => DipParser s DipMessage
 pMapDefReq = return MapDefReq
 
+pPower :: DipRep s t => DipParser s Power
 pPower = tok (\t -> case t of { DipPow (Pow p) -> Just (Power p)
                               ; DipParam UNO -> Just Neutral
                               ; _ -> Nothing})
 
+pProvinces :: DipRep s t => DipParser s Provinces
 pProvinces = do
   supplyCentres <- paren (many (paren pSupplyCentre))
   nonSupplyCentres <- paren (many pProvince)
   return (Provinces supplyCentres nonSupplyCentres)
 
+pAdjacency :: DipRep s t => DipParser s Adjacency
 pAdjacency = do
   province <- pProvince
   unitToProvs <- many (paren (pUnitToProv <|> pCoastalFleetToProv))
   return (Adjacency province unitToProvs)
 
+pUnitToProv :: DipRep s t => DipParser s UnitToProv
 pUnitToProv = do
   unitType <- pUnitType
   provNodes <- many pProvinceNode
   return (UnitToProv unitType provNodes)
 
+pCoastalFleetToProv :: DipRep s t => DipParser s UnitToProv
 pCoastalFleetToProv = do
   coast <- paren (tok1 (DipUnitType Fleet) >> pCoast)
   provNodes <- many pProvinceNode
   return (CoastalFleetToProv coast provNodes)
 
+pUnitType :: DipRep s t => DipParser s UnitType
 pUnitType = tok (\t -> case t of {DipUnitType typ -> Just typ ; _ -> Nothing})
 
 pCoast :: DipRep s t => DipParser s Coast
 pCoast = tok (\t -> case t of {DipCoast c -> Just c ; _ -> Nothing})
 
+pProvinceNode :: DipRep s t => DipParser s ProvinceNode
 pProvinceNode = (return . ProvNode =<< pProvince) <|>
                 (paren $ do
                     prov <- pProvince
                     c <- pCoast
                     return (ProvCoastNode prov c))
 
+pSupplyCentre :: DipRep s t => DipParser s SupplyCentre
 pSupplyCentre = do
   pow <- pPower
   centres <- many pProvince
   return (SupplyCentre pow centres)
 
+pProvince :: DipRep s t => DipParser s Province
 pProvince = tok (\t -> case t of {(DipProv p) -> Just p ; _ -> Nothing})
 
+pHlo :: DipRep s t => DipParser s DipMessage
 pHlo = tok1 (DipCmd HLO) >> choice [pStart, pStartPing]
 
+pStart :: DipRep s t => DipParser s DipMessage
 pStart = do
   pow <- paren pPower
   passCode <- paren pInt
   (lvl, variantOpts) <- paren pVariant
   return (Start pow passCode lvl variantOpts)
 
+pStartPing :: DipRep s t => DipParser s DipMessage
 pStartPing = return StartPing
 
+
+pVariant :: DipRep s t => DipParser s (Int, [VariantOption])
 pVariant = do
   options <- many pVariantOpt
   let (lvls, others) = splitWith (\v -> case v of {Level _ -> True ; _ -> False}) options
@@ -480,6 +525,7 @@ pVariant = do
     (Level lvl) : _ -> return (lvl, others)
     _ -> parserFail "No LVL option specified in HLO message"
 
+pVariantOpt :: DipRep s t => DipParser s VariantOption
 pVariantOpt = choice [ return . Level         =<< (tok1 (DipParam LVL) >> pInt)
                      , return . TimeMovement  =<< (tok1 (DipParam MTL) >> pInt)
                      , return . TimeRetreat   =<< (tok1 (DipParam RTL) >> pInt)
@@ -488,20 +534,28 @@ pVariantOpt = choice [ return . Level         =<< (tok1 (DipParam LVL) >> pInt)
                      , return AnyOrderAccepted << (tok1 (DipParam AOA))
                      ]
 
+pSco :: DipRep s t => DipParser s DipMessage
 pSco = tok1 (DipCmd SCO) >> choice [pCurrentPos, pCurrentPosReq]
 
+pCurrentPos :: DipRep s t => DipParser s DipMessage
 pCurrentPos = return . CurrentPosition =<< many (paren pSupplyCentre)
+
+pCurrentPosReq :: DipRep s t => DipParser s DipMessage
 pCurrentPosReq = return CurrentPositionReq
 
+pPhase :: DipRep s t => DipParser s Phase
 pPhase = tok (\t -> case t of {DipPhase p -> Just p ; _ -> Nothing})
 
+pTurn :: DipRep s t => DipParser s Turn
 pTurn = do
   phase <- pPhase
   year <- pInt
   return (Turn phase year)
 
+pNow :: DipRep s t => DipParser s DipMessage
 pNow = tok1 (DipCmd NOW) >> choice [pCurrentUnitPos, pCurrentUnitPosReq]
 
+pCurrentUnitPos :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPos = do
   turn <- paren pTurn
   unitPoss <- many (paren pUnitPosition)
@@ -509,14 +563,17 @@ pCurrentUnitPos = do
   retreats <- pMaybe ((paren . many . paren) pProvinceNode)
   return (CurrentUnitPosition turn unitPoss retreats)
 
+pCurrentUnitPosReq :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPosReq = return CurrentUnitPositionReq
 
+pUnitPosition :: DipRep s t => DipParser s UnitPosition
 pUnitPosition = do
   pow <- pPower
   typ <- pUnitType
   provNode <- pProvinceNode
   return (UnitPosition pow typ provNode)
 
+pHistoryReq :: DipRep s t => DipParser s DipMessage
 pHistoryReq = return . HistoryReq =<< (tok1 (DipCmd HST) >> paren pTurn)
 
 splitWith b x = (filter b x, filter (not . b) x)
@@ -524,67 +581,83 @@ splitWith b x = (filter b x, filter (not . b) x)
 pMaybe :: DipRep s t => DipParser s a -> DipParser s (Maybe a)
 pMaybe a = (try a >>= return . Just) <|> return Nothing
 
+pSub :: DipRep s t => DipParser s DipMessage
 pSub = do
   turn <- (tok1 (DipCmd SUB) >> pMaybe (paren pTurn))
   orders <- many (paren pOrderOrWaive)
   return (SubmitOrder turn orders)
 
+pOrderOrWaive :: DipRep s t => DipParser s Order
 pOrderOrWaive = pOrder <|> do
   tok1 (DipOrder WVE)
   power <- pPower
   return (OrderBuild (Waive power))
 
+pOrder :: DipRep s t => DipParser s Order
 pOrder = do
   unit <- paren (pUnitPosition)
   choice . map ($ unit) $ [ pHld, pMto, pSup, pCvy, pCto -- move
                           , pRto, pDsb                   -- retreat
                           , pBld, pRem]                  -- build
 
+pHld :: DipRep s t => UnitPosition -> DipParser s Order
 pHld u = do
   tok1 (DipOrder HLD)
   return . OrderMovement . Hold $ u
 
 
+pMto :: DipRep s t => UnitPosition -> DipParser s Order
 pMto u = return . OrderMovement . Move u =<< (tok1 (DipOrder MTO) >> pProvinceNode)
 
 
+pSup :: DipRep s t => UnitPosition -> DipParser s Order
 pSup u1 = do
   tok1 (DipOrder SUP)
   u2 <- paren pUnitPosition
   pSupMove u1 u2 <|> pSupHold u1 u2
 
+pSupMove :: DipRep s t => UnitPosition -> UnitPosition -> DipParser s Order
 pSupMove u1 u2 = do
   tok1 (DipOrder MTO)
   return . OrderMovement . SupportMove u1 u2 =<< pProvince
 
+pSupHold :: DipRep s t => UnitPosition -> UnitPosition -> DipParser s Order
 pSupHold u1 u2 = return . OrderMovement . SupportHold u1 $ u2
 
+pCvy :: DipRep s t => UnitPosition -> DipParser s Order
 pCvy u1 = do
   tok1 (DipOrder CVY)
   u2 <- paren pUnitPosition
   tok1 (DipOrder CTO)
   return . OrderMovement . Convoy u1 u2 =<< pProvinceNode
 
+pCto :: DipRep s t => UnitPosition -> DipParser s Order
 pCto u = do
   tok1 (DipOrder CTO)
   prov <- pProvinceNode
   tok1 (DipOrder VIA)
   return . OrderMovement . MoveConvoy u prov =<< paren (many pProvince)
 
+pRto :: DipRep s t => UnitPosition -> DipParser s Order
 pRto u = return . OrderRetreat . Retreat u =<< (tok1 (DipOrder RTO) >> pProvinceNode)
 
+pDsb :: DipRep s t => UnitPosition -> DipParser s Order
 pDsb u = (return . OrderRetreat . Disband) u << tok1 (DipOrder DSB)
 
+pBld :: DipRep s t => UnitPosition -> DipParser s Order
 pBld u = (return . OrderBuild . Build) u << tok1 (DipOrder BLD)
 
+pRem :: DipRep s t => UnitPosition -> DipParser s Order
 pRem u = (return . OrderBuild . Remove) u << tok1 (DipOrder REM)
 
+pAck :: DipRep s t => DipParser s DipMessage
 pAck = do
   tok1 (DipCmd THX)
   order <- paren pOrder
   orderNote <- paren pOrderNote
   return (AckOrder order orderNote)
 
+pOrderNote :: DipRep s t => DipParser s OrderNote
 pOrderNote = tok (\t -> case t of {DipOrderNote tk ->
                                       (case tk of
                                           MBV -> Just MovementOK
@@ -610,6 +683,7 @@ pOrderNote = tok (\t -> case t of {DipOrderNote tk ->
                                       ) ; _ -> Nothing})
 
     -- "try" used because of the freaking 2.3gajillion token lookahead
+pMis :: DipRep s t => DipParser s DipMessage
 pMis = tok1 (DipCmd MIS) >>
        choice [ return . MissingMovement =<< (try . many . paren) pUnitPosition
               , return . MissingRetreat =<< (try . many . paren . pPair)
@@ -618,13 +692,16 @@ pMis = tok1 (DipCmd MIS) >>
               , return MissingReq
               ]
 
+pPair :: DipRep s t => (DipParser s a, DipParser s b) -> DipParser s (a, b)
 pPair (a, b) = do
   aRes <- a
   bRes <- b
   return (aRes, bRes)
 
+pGof :: DipRep s t => DipParser s DipMessage
 pGof = return StartProcessing << tok1 (DipCmd GOF)
 
+pOrd :: DipRep s t => DipParser s DipMessage
 pOrd = do
   tok1 (DipCmd ORD)
   turn <- paren pTurn
@@ -632,6 +709,7 @@ pOrd = do
   result <- paren pResult
   return (OrderResult turn order result)
 
+pResult :: DipRep s t => DipParser s Result
 pResult = do
   normal <- pMaybe pResultNormal
   retreat <- pMaybe pResultRetreat
@@ -639,6 +717,7 @@ pResult = do
   return (Result normal retreat)
 
 
+pResultNormal :: DipRep s t => DipParser s ResultNormal
 pResultNormal = (tok1 (DipResult FLD) >> parserFail "FLD token received") <|>
                 tok (\t -> case t of
                         { DipResult SUC -> Just Success
@@ -649,65 +728,79 @@ pResultNormal = (tok1 (DipResult FLD) >> parserFail "FLD token received") <|>
                         ; _ -> Nothing
                         })
 
+pResultRetreat :: DipRep s t => DipParser s ResultRetreat
 pResultRetreat = return ResultRetreat << tok1 (DipResult RET)
 
+pSve :: DipRep s t => DipParser s DipMessage
 pSve = do
   tok1 (DipCmd SVE)
   gameName <- paren pStr
   return (SaveGame gameName)
 
+pLod :: DipRep s t => DipParser s DipMessage
 pLod = do
   tok1 (DipCmd LOD)
   gameName <- paren pStr
   return (LoadGame gameName)
 
+pOff :: DipRep s t => DipParser s DipMessage
 pOff = do
   tok1 (DipCmd OFF)
   return (ExitClient)
 
+pTme :: DipRep s t => DipParser s DipMessage
 pTme = do
   tok1 (DipCmd TME)
   timeLeft <- paren pInt
   return (TimeUntilDeadline timeLeft)
 
+pError :: DipRep s t => DipParser s DipMessage
 pError = do
   err <- choice [ pPrn, pHuh, pCcd ]
   return (DipError err)
 
+pToken :: DipRep s t => DipParser s DipToken
 pToken = tok Just
 
+pPrn :: DipRep s t => DipParser s DipError
 pPrn = do
   tok1 (DipCmd PRN)
   message <- paren (many pToken)
-  return (WrongParen message)
+  return (Paren message)
 
+pHuh :: DipRep s t => DipParser s DipError
 pHuh = do
   tok1 (DipCmd HUH)
   message <- paren (many pToken)
-  return (SyntaxError message)
+  return (Syntax message)
 
+pCcd :: DipRep s t => DipParser s DipError
 pCcd = do
   tok1 (DipCmd CCD)
   power <- paren pPower
   return (CivilDisorder power)
 
 
+pAdm :: DipRep s t => DipParser s DipMessage
 pAdm = do
   tok1 (DipCmd ADM)
   name <- paren pStr
   message <- paren pStr
   return (AdminMessage name message)
 
+pSlo :: DipRep s t => DipParser s DipMessage
 pSlo = do
   tok1 (DipCmd SLO)
   power <- paren pPower
   return (SoloWinGame power)
 
+pDrw :: DipRep s t => DipParser s DipMessage
 pDrw = do
   tok1 (DipCmd DRW)
   mPowers <- pMaybe . level 10 . many . paren $ pPower
   return (DrawGame mPowers)
 
+pSnd :: DipRep s t => DipParser s DipMessage
 pSnd = level 10 $ do
   tok1 (DipCmd SND)
   mTurn <- pMaybe (paren pTurn)
@@ -715,11 +808,13 @@ pSnd = level 10 $ do
   pMessage <- paren pPressMessage
   return (SendPress mTurn powers pMessage)
 
+pOut :: DipRep s t => DipParser s DipMessage
 pOut = level 10 $ do
   tok1 (DipCmd OUT)
   power <- paren pPower
   return (PowerEliminated power)
 
+pFrm :: DipRep s t => DipParser s DipMessage
 pFrm = level 10 $ do
   tok1 (DipCmd FRM)
   fromPower <- paren pPower
@@ -727,16 +822,19 @@ pFrm = level 10 $ do
   msg <- paren pPressMessage
   return (ReceivePress fromPower toPowers msg)
 
+pPressMessage :: DipRep s t => DipParser s PressMessage
 pPressMessage = level 10 (choice [ pPressProposal
                                  , pPressReply
                                  , pPressInfo
                                  , pPressTry
                                  ])
 
+pPressProposal :: DipRep s t => DipParser s PressMessage
 pPressProposal = do
   tok1 (DipPress PRP)
   return . PressProposal =<< paren pPressArrangement
 
+pPressArrangement :: DipRep s t => DipParser s PressProposal
 pPressArrangement = choice [ pPressPeace
                            , pPressAlliance
                            , pPressDraw
@@ -745,18 +843,22 @@ pPressArrangement = choice [ pPressPeace
                            , pPressArrangeUndo
                            ]
 
+pPressDraw :: DipRep s t => DipParser s PressProposal
 pPressDraw = tok1 (DipCmd DRW) >> return ArrangeDraw
 
+pPressSolo :: DipRep s t => DipParser s PressProposal
 pPressSolo = do
   tok1 (DipCmd SLO)
   power <- paren pPower
   return (ArrangeSolo power)
 
+pPressPeace :: DipRep s t => DipParser s PressProposal
 pPressPeace = do
   tok1 (DipPress PCE)
   powers <- paren (many pPower)
   return (ArrangePeace powers)
 
+pPressAlliance :: DipRep s t => DipParser s PressProposal
 pPressAlliance = do
   tok1 (DipPress ALY)
   allies <- paren (many pPower)
@@ -764,16 +866,19 @@ pPressAlliance = do
   enemies <- paren (many pPower)
   return (ArrangeAlliance allies enemies)
 
+pPressArrangeNot :: DipRep s t => DipParser s PressProposal
 pPressArrangeNot = do
   tok1 (DipCmd NOT)
   arrangement <- pPressArrangement
   return (ArrangeNot arrangement)
 
+pPressArrangeUndo :: DipRep s t => DipParser s PressProposal
 pPressArrangeUndo = do
   tok1 (DipPress NAR)
   arrangement <- pPressArrangement
   return (ArrangeUndo arrangement)
 
+pPressReply :: DipRep s t => DipParser s PressMessage
 pPressReply = return . PressReply =<< choice [ pPressRefuse
                                              , pPressReject
                                              , pPressAccept
@@ -781,41 +886,49 @@ pPressReply = return . PressReply =<< choice [ pPressRefuse
                                              , pPressHuh
                                              ]
 
+pPressHuh :: DipRep s t => DipParser s PressReply
 pPressHuh = do
   tok1 (DipCmd HUH)
   msg <- paren pPressMessage
   return (PressHuh msg)
 
+pPressAccept :: DipRep s t => DipParser s PressReply
 pPressAccept = do
   tok1 (DipCmd YES)
   msg <- paren pPressMessage
   return (PressAccept msg)
 
+pPressReject :: DipRep s t => DipParser s PressReply
 pPressReject = do
   tok1 (DipCmd REJ)
   msg <- paren pPressMessage
   return (PressReject msg)
 
+pPressRefuse :: DipRep s t => DipParser s PressReply
 pPressRefuse = do
   tok1 (DipPress BWX)
   msg <- paren pPressMessage
   return (PressRefuse msg)
 
+pPressCancel :: DipRep s t => DipParser s PressReply
 pPressCancel = do
   tok1 (DipPress CCL)
   msg <- paren pPressMessage
   return (PressCancel msg)
 
+pPressInfo :: DipRep s t => DipParser s PressMessage
 pPressInfo = do
   tok1 (DipPress FCT)
   arrangement <- paren pPressArrangement
   return (PressInfo arrangement)
 
+pPressTry :: DipRep s t => DipParser s PressMessage
 pPressTry = do
   tok1 (DipPress TRY)
   tks <- paren (many pToken)
   return (PressCapable tks)
 
+pPlayerStat :: DipRep s t => DipParser s PlayerStat
 pPlayerStat = do
   power <- pPower
   name <- paren pStr
@@ -824,8 +937,26 @@ pPlayerStat = do
   yearOfElimination <- pMaybe pInt
   return (PlayerStat power name message centres yearOfElimination)
 
+pSmr :: DipRep s t => DipParser s DipMessage
 pSmr = do
   tok1 (DipCmd SMR)
   turn <- paren pTurn
   playerStats <- many (paren pPlayerStat)
   return (EndGameStats turn playerStats)
+
+
+-- unparsing
+  
+type AppendList a = [a] -> [a]
+cons  a = ((a :) .)
+lcons a = (. (a :))
+listify = ($ [])
+
+appendListify = foldr cons id
+
+insertAt 0 a l = a : l
+insertAt n a (b : as) = b : insertAt (n - 1) a as
+insertAt _ _ [] = undefined
+
+uParen :: AppendList DipToken -> AppendList DipToken
+uParen = cons Bra . lcons Ket

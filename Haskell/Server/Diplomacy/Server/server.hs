@@ -2,14 +2,14 @@
 
 module Main where
 
-import Diplomacy.Control.DaideClient
-import Diplomacy.Control.DipMessage
+import Diplomacy.Common.DaideHandle
+import Diplomacy.Common.DipMessage
 
 import Control.Monad
 import Control.Monad.Error
 import Control.Concurrent
+import System.Environment
 import System.IO
-import System
 import Network
 import System.Console.CmdArgs
 import System.Log.Logger
@@ -32,7 +32,7 @@ listenForClients serverPort = do
     noticeM "Main" $ "Client " ++ hostName ++
       ":" ++ show port ++ " connecting..."
     hSetBuffering hndle NoBuffering
-    forkIO $ runDaide handleClient (Client hndle hostName port) 
+    forkIO $ runDaide handleClient (Handle hndle hostName port) 
 
 -- map
 data DiplomacyMap = Map

@@ -3,11 +3,8 @@ GHC_OPTS=--make -fwarn-missing-methods -Wall -fno-warn-missing-signatures -fno-w
 
 all: server
 
-server: server.hs DaideError.hs DaideHandle.hs DaideMessage.hs DaideError.hs DipMessage.hs DipToken.hs
-	$(GHC) -o server server.hs
+server: DaideError.hs DaideHandle.hs DaideMessage.hs DaideError.hs DipMessage.hs DipToken.hs
+	$(GHC) *.hs
 
 clean:
 	rm -f *.o *.hi server
-
-fuck:
-	$(GHC) -o server server.hs -ddump-cmm
