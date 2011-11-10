@@ -40,6 +40,7 @@ data DaideHandleInfo = Handle { socketHandle :: Handle
                               , hostName :: String
                               , hostPort :: PortNumber
                               }
+                     deriving (Show)
 
 class (MonadIO m, MonadReader DaideHandleInfo m) => MonadDaideComm m
 class (MonadDaideComm m, MonadError DaideError m) => MonadDaideHandle m
@@ -59,7 +60,6 @@ handleError = flip either (const $ return ()) $ \err -> do
 deserialise :: MonadDaideHandle m => L.ByteString -> m DaideMessage
 deserialise byteString = do
   msg <- return (decode byteString)
-  liftIO $ print msg
   ret <- liftIO . try . evaluate $ msg
   either throwError return ret
 
@@ -69,14 +69,13 @@ serialise message = return (encode message)
 tellHandle :: MonadDaideComm m => DaideMessage -> m ()
 tellHandle message = do
   hndle <- asks socketHandle
-  serialise message >>= liftIO . L.hPut hndle
+  liftIO . L.hPut hndle =<< serialise message
 
 askHandle :: MonadDaideHandle m => m DaideMessage
 askHandle = do
   hndle <- asks socketHandle
   contents <- liftIO (L.hGetContents hndle)
-  ret <- deserialise contents
-  return ret
+  return =<< deserialise contents
 
 askHandleTimed :: MonadDaideHandle m => Int -> m DaideMessage
 askHandleTimed timedelta = do

@@ -7,4 +7,5 @@ Reports/*.dvi
 Reports/*.txt
 *.pdf
 Server/src/server
+*/dist
 *#
