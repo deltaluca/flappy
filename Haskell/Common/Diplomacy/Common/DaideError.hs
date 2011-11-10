@@ -39,3 +39,20 @@ errorCode RMNotFirst    = 0x0B
 errorCode ManyRMs       = 0x0C
 errorCode RMFromClient  = 0x0D
 errorCode InvalidToken  = 0x0E
+
+errorFromCode :: Int -> DaideError
+errorFromCode 0x01 =   TimerPopped
+errorFromCode 0x02 =    IMNotFirst
+errorFromCode 0x03 =   WrongEndian
+errorFromCode 0x04 =    WrongMagic
+errorFromCode 0x05 = VersionIncomp
+errorFromCode 0x06 =       ManyIMs
+errorFromCode 0x07 =  IMFromServer
+errorFromCode 0x08 =    UnknownMsg
+errorFromCode 0x09 =   MsgTooShort
+errorFromCode 0x0A =    DMBeforeRM
+errorFromCode 0x0B =    RMNotFirst
+errorFromCode 0x0C =       ManyRMs
+errorFromCode 0x0D =  RMFromClient
+errorFromCode 0x0E =  InvalidToken
+errorFromCode _    = throw UnknownMsg
