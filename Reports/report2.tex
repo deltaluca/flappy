@@ -31,16 +31,16 @@ which can accept messages, parse it and send and recieve the message
 to/from the server
 \item Representation of the map is complete, i.e. provinces, their adjacencies
 and whether they're land/coast/sea
-\item Ability to have expandable maps (or different maps entirely) is implicity
+\item Ability to have expandable maps (or different maps entirely) is implicit
 from the way the map is stored and represented
 \end{itemize}
 
 \subsubsection{Problems in the latest iteration:}
 \begin{itemize}
 \item There was a problem initially implementing the Daide low-level errors.
-If a message fails to parse, an error token needs to be inserted at
-the place/token it failed to parse. However Parsec takes the message
-as a stream and therefore it is not possible to insert into a stream. 
+If a message failed to parse, an error token needed to be inserted at
+the place/token it failed to parse. However Parsec accepts an input message
+as a stream and therefore it is not possible to insert into a stream
 \item The solution is to save the position where the parsing failed and
 then insert the error token outside of Parsec where the message is
 a list rather than a stream
@@ -90,9 +90,7 @@ Targets for the next iteration were discussed, more specifically on
 how to design the AI. The team further discussed how to split up the
 work from this point onwards and decided that 2 people would work
 on creating the initial AI bot and the other 3 would work on finishing
-the server (i.e. order resolution). The following is a more detailed
-account of what the deliverable should look like at the end of the
-next iteration/sprint:
+the server (i.e. order resolution). The following details the aims for the current iteration:
 
 
 \subsubsection{Order resolution implementation}
@@ -156,10 +154,9 @@ care as much about your own
 \item Or capturing other provinces may be more important than keeping your
 own and building as many supply centres as possible
 \item Being Offensive (aggresive) or Defensive (passive)
-\item AI Techniques and theories used to implement such heuristics are discussed
+\item AI techniques and architectures used to implement these tactics are discussed
 below in {[}2.3 AI Techniques and Design{]}
 \end{itemize}
-\item \textasciicircum{} {*}NEED TO ADD MORE THINGS ABOUT AI SPECIFICATION{*}
 \item Many possibilities here and taking the time to experiment around with
 the tactics will show us which ones are more effective against others
 \end{itemize}
@@ -199,13 +196,13 @@ that the immediate effects of its own movement orders are uncertain. The
 game mechanics dictate that at the end of a turn a chain of so-called 
 stand-offs might occur, in case several move order conflict. As a result
 an AI player is uncertain of the effect of its own actions. Another matter
-that increase uncertainty are support orders that bias the resolution of
+that increases uncertainty are support orders that bias the resolution of
 stand-offs in favor of a particular player. 
 
 Diplomacy is cooperative since negotiation is at the heart of the game:
-It allows players to communicate their short- / long-term intentions before
+It allows players to communicate their short/long-term intentions before
 their actual moves are revealed. For instance in stand-off situations it will
-enable two players to attack a field of a third-party. In general negotation
+enable two players to attack a field of a third-party. In general, negotiation
 will decrease uncertainty but it can be a double-edged sword. Players might
 pretend their actual intentions but actually conspire to betray each other. Hence
 in essence an AI player will need to establish whom to trust when considering
@@ -245,7 +242,7 @@ the effects of movement orders, making the viability of this approach doubtable.
 Besides at any given state of the game there is large number of moves possible
 for each player, giving rise to a large branching factor in the game tree. [SHA08]
 have estimated the number of a possible moves in a game situation to be on the order
-of $2_{91}$ to get a feeling for the numbers involved. Even moderate look-ahead in
+of $2^{91}$ to get a feeling for the numbers involved. Even moderate look-ahead in
 the search space almost certainly puts a strain on the computational resources.
 To overcome this difficulty, search heuristics for pruning the game tree and scheduling
 the exploration order of the game branches are alternative-less extension of a
@@ -258,7 +255,7 @@ as a brute-force game tree search and so we have not considered it for our AI pl
 
 \subsubsection{Search heuristics}
 
-Whenver a brute-force search is not possible we need to assign a utility to an 
+Whenever a brute-force search is not possible we need to assign a utility to an 
 intermediate game state, in which the winner has not yet been determined. On the 
 one hand this enables us to cut-off a game-tree search at a shallow level and
 still propagate move values upwards through a MinMax procedure. On the other hand
