@@ -3,7 +3,7 @@
 \usepackage{cite}
 \usepackage{date}
 
-\title{Automated negotiation in the game of diplomacy - Report 2: Progress \& Revisions}
+\title{Automated negotiation in the game of diplomacy - Report 2: Progress & Revisions}
 \author{Matthias Hueser, Andras Slemmer, Luca Deltodesco, Luke Tomlin, Cliff Sun}
 \date{today}
 
@@ -12,173 +12,59 @@
 
 \section{Project progress}
 
-\subsection{Recap: User stories for 2nd iteration (weeks 3 - 4)}
+\subsection{Reminder of targets for 2nd iteration (weeks 3 - 4)}
+
+
+
+Start initial work on the AI. Continue to improve and develop game
+foundation (work will need to be split between team members here).
+AI should be able to play a 'holding' game and fulfill all requirements
+to play with other AIs. Begin research into tactics and how we will
+develop the AI.
+
+\subsection{2nd Iteration (week 3 - 4) Progress}
 
 \begin{itemize}
-
-\item Our primary user story for the 2nd iteration was to have the messaging system
-implementing the DAIDE interface in place. The interaction between
-the GUI client and the server should include messages up to press level
-10 and implement those in a stable way. To achieve robustness the server should
-recover from mal-formed messages from faulty clients. From a client perspective
-the server should always be responsive even though it is not yet advancing the game state in
-response to player messages (see second user story for this)
-
-In effect the interface between the HaXe client (produced for demo purposes)
-and the Haskell server should be seamless with no loss of connectivity and 
-acknowledgement of messages in both directions.
-
-\item The second aim of the iteration was to produce a skeleton for state modification
-and implementing in particular the complex unit standoff rules of Diplomacy.
-
-\item Lastly users should be able to play the game with other maps apart the 'Standard' one.
-To enable this we needed to define a representation of a 'Diplomacy map'. This includes
-a facility to expand the standard maps which is seen as a special case of the
-first requirement.
-
-\subsection{Progress on 'Messaging system' and 'Client-server interface'}
-
-\begin{itemize}
-
-\item The messaging component is working and has been validated with user requests
-ranging up to press-level 10. With regards to the HaXe client a GUI interface is
-seen as a key requirement but was not necessary to implement the Client-Server
-protocol. Currently a command-line interface exists which is used to validate
-the correctness of communication.
- 
-\item In particular on the Haskell server side parsing of messages works correctly.
-Due to the complexity of the language specification this
-
-\item The HaXe client currently consists of a command-line interface which can accept
-messages, parse them and send a response to the server. 
-
+\item Currently have a working Haskell server which can communicate with
+the front-end interface written in Haxe. 
+\item Parsing on Haskell server side (using Parsec) is complete up to press
+level 10 
+\item Front-end interface currently consists of a command-line interface
+which can accept messages, parse it and send and recieve the message
+to/from the server
+\item Representation of the map is complete, i.e. provinces, their adjacencies
+and whether they're land/coast/sea
+\item Ability to have expandable maps (or different maps entirely) is implicity
+from the way the map is stored and represented
 \end{itemize}
 
-\subsection{Progress on 'Game state modification component'}
-
-We could not make as much progress as we liked on the 'state modification' part of
-the server. This was largely due to dependencies to the definition of map representation
-which was finished only relatively late in the time-box. One possibility was to allow
-divergent code for both and later glue it together but we assessed this to be costly and
-confusing down the line. So a delay was deemed to be the better alternative.
-
-\subsection{Progress on the 'Map representation'}
+\subsubsection{Problems in the latest iteration:}
 
 \begin{itemize}
-
-\item The representation of the map is complete. It includes primitives to represent 
-the topology of provinces and their types. There are large overlaps with the internal
-game state representation and this was taken into account to avoid code duplication
-in future iterations.
-
-\item The expandable-map feature (or different maps entirely) is implicit
-from the way the map is stored and represented and caused no further code
-modifications. 
-
-\end{itemize}
-
-\section{Technical issues during the latest iteration:}
-
-\item There was a problem implementing the DAIDE low-level error messages.
+\item There was a problem initially implementing the Daide low-level errors.
 If a message fails to parse, an error token needs to be inserted at
-the erroneous part of the stream. However the parsing tool of our choice - 
-the parser combinatory library Parsec - types the input message
-as a constant stream and cannot insert new tokens into it.
+the place/token it failed to parse. However Parsec takes the message
+as a stream and therefore it is not possible to insert into a stream. 
+\item The solution is to save the position where the parsing failed and
+then insert the error token outside of Parsec where the message is
+a list rather than a stream
+\end{itemize}
 
-A solution we came up with is to save the position where the parsing
-failed and then insert the error token outside of Parsec before resuming
-the parsing at the same position in the input stream
-
-% Put some changes to user stories here 
 
 \section{Revisions}
 
-\subsection{Changes to the schedule}
 
-Due to the complexity of the DAIDE specification language the
-parser, although conceptually straight-forward, took longer than expected.
-To complicate matters certain constructions of the grammar were hard to
-parse without substantial look-ahead. Since we could not change the existing
-DAIDE language for compatibility reasons we had to extend the code to deal
-with these corner cases.
+\subsection{Changes/Revision}
 
-\subsection{Change of core feature set}
 
-Given that the schedule slipped due to the above issues we had to 
-discuss whether it made sense to drop user stories from future iterations. 
-In our case this was not necessary because our project aims are generic.
-in nature. This means that we aim to create an experiment textbed which we can augment
-with multiple bots using different paradigms (for an overview see section
-on AI design). This means that we are very flexible as we reach the end of 
-the project since we can drop the implementation of a particular AI paradigm
-with no impact on the running system. 
-
-\subsection{Requirements for next iteration (weeks 5-6)}
- 
-While the game framework (Haskell server) settles into place the 
-team and the supervisor agreed that it is of utmost importance to
-proceed to the 'Artificial intelligence' / 'Negotiation' phase in the
-next iteration.
-
-\subsubsection{Towards the Artificial intelligence}
-
-As discussed above all future work seeks to establish an experimental
-test-bed to assess different approaches to AI and negotiation.
-
-Having said that we require that all bots share a common structure so
-we could integrate them after performing a first assessment of 
-playing strength. The team agreed that to develop competing bots with
-no exchange of ideas will not lead to satisfying project result. 
-
-While this establishes the 'spirit' of next week's development the 
-immediate problems we need to tackle are as follows:
-
+\subsubsection{Time Constraints}
 \begin{itemize}
-
-\item Formulate a game tree search algorithm.
-
-\item Select a heuristic to score game states. 
-
-\item Create a 'pattern-weight' database as in [SHA08] to enable
-our AI player to learn over the course of several games.
-
-\item Explore the design space for 'negotiation algorithms'.
-
-\end{itemize}
-
-\subsubsection{Order resolution}
-
-At the end of a turn all players simultatenously reveal their orders to the 
-server. In response the server will have to perform the following actions:
-
-\begin{itemize}
-\item Checking that all orders are valid with respect to the syntax. This is
-already implemented by the message parser, who will reject invalid messages.
-
-\item When orders conflict, the server will apply a complex set of rules
-derived from the 'Diplomacy manual'. This includes correctly determining
-the result of 'standoff' situations, where support orders by other units
-need to be taken into account.
-\end{itemize}
-
-
-\subsection{Division of work in the next iteration}
-
-The division of work outlined in the previous report is adapted as follows: 
-
-\begin{itemize}
-
-\item Luca / Andras perform deep-testing of the server-client interface
-to eliminate any remaining bugs which have not been caught yet.
-
-\item Matthias concentrates on exploring the design space for AIs and
-will implement logic to resolve the movement orders for a particular 
-round of the game.
-
-\item Luke / Cliff start devising data structures needed for an 
-automated player, while finalizing the map representation and
-refactoring the existing code base.
-
+\item Writing the Haskell server and parser has taken longer than expected
+and with all the time needed to do courseworks and industrial placement
+applications, the project has gone behind schedule
+\item This means that there is less time to work on the AI and negotiation
+features but after discussion, the team has decided that there is
+still sufficient time to complete all current objectives
 \end{itemize}
 
 \subsubsection{(AI) Bot Design }
@@ -196,8 +82,29 @@ the negotiating AI is an improvement over existing AI's
 \end{itemize}
 
 
+\subsection{Revised Schedule for next iteration (weeks 5-6)}
+
+Targets for the next iteration were discussed, more specifically on
+how to design the AI. The team further discussed how to split up the
+work from this point onwards and decided that 2 people would work
+on creating the initial AI bot and the other 3 would work on finishing
+the server (i.e. order resolution). The following is a more detailed
+account of what the deliverable should look like at the end of the
+next iteration/sprint:
 
 
+\subsubsection{Order resolution implementation}
+
+At the end will be able to resolves all orders in one round sent by
+the players
+\begin{itemize}
+\item Checks that orders are tactically valid and calculate the end result
+of all orders, i.e. map state after the round
+
+\begin{itemize}
+\item Checks if orders clash or conflict and resolve them correctly
+\end{itemize}
+\end{itemize}
 
 \subsubsection{AI Bot Requirements}
 
@@ -247,9 +154,10 @@ care as much about your own
 \item Or capturing other provinces may be more important than keeping your
 own and building as many supply centres as possible
 \item Being Offensive (aggresive) or Defensive (passive)
-\item AI techniques and architectures used to implement these tactics are discussed
+\item AI Techniques and theories used to implement such heuristics are discussed
 below in {[}2.3 AI Techniques and Design{]}
 \end{itemize}
+\item \textasciicircum{} {*}NEED TO ADD MORE THINGS ABOUT AI SPECIFICATION{*}
 \item Many possibilities here and taking the time to experiment around with
 the tactics will show us which ones are more effective against others
 \end{itemize}
@@ -289,13 +197,13 @@ that the immediate effects of its own movement orders are uncertain. The
 game mechanics dictate that at the end of a turn a chain of so-called 
 stand-offs might occur, in case several move order conflict. As a result
 an AI player is uncertain of the effect of its own actions. Another matter
-that increases uncertainty are support orders that bias the resolution of
+that increase uncertainty are support orders that bias the resolution of
 stand-offs in favor of a particular player. 
 
 Diplomacy is cooperative since negotiation is at the heart of the game:
-It allows players to communicate their short/long-term intentions before
+It allows players to communicate their short- / long-term intentions before
 their actual moves are revealed. For instance in stand-off situations it will
-enable two players to attack a field of a third-party. In general, negotiation
+enable two players to attack a field of a third-party. In general negotation
 will decrease uncertainty but it can be a double-edged sword. Players might
 pretend their actual intentions but actually conspire to betray each other. Hence
 in essence an AI player will need to establish whom to trust when considering
@@ -335,7 +243,7 @@ the effects of movement orders, making the viability of this approach doubtable.
 Besides at any given state of the game there is large number of moves possible
 for each player, giving rise to a large branching factor in the game tree. [SHA08]
 have estimated the number of a possible moves in a game situation to be on the order
-of $2^{91}$ to get a feeling for the numbers involved. Even moderate look-ahead in
+of $2_{91}$ to get a feeling for the numbers involved. Even moderate look-ahead in
 the search space almost certainly puts a strain on the computational resources.
 To overcome this difficulty, search heuristics for pruning the game tree and scheduling
 the exploration order of the game branches are alternative-less extension of a
@@ -348,7 +256,7 @@ as a brute-force game tree search and so we have not considered it for our AI pl
 
 \subsubsection{Search heuristics}
 
-Whenever a brute-force search is not possible we need to assign a utility to an 
+Whenver a brute-force search is not possible we need to assign a utility to an 
 intermediate game state, in which the winner has not yet been determined. On the 
 one hand this enables us to cut-off a game-tree search at a shallow level and
 still propagate move values upwards through a MinMax procedure. On the other hand
