@@ -59,6 +59,7 @@ handleError = flip either (const $ return ()) $ \err -> do
 deserialise :: MonadDaideHandle m => L.ByteString -> m DaideMessage
 deserialise byteString = do
   msg <- return (decode byteString)
+  liftIO $ print msg
   ret <- liftIO . try . evaluate $ msg
   either throwError return ret
 
@@ -73,7 +74,9 @@ tellHandle message = do
 askHandle :: MonadDaideHandle m => m DaideMessage
 askHandle = do
   hndle <- asks socketHandle
-  liftIO (L.hGetContents hndle) >>= deserialise
+  contents <- liftIO (L.hGetContents hndle)
+  ret <- deserialise contents
+  return ret
 
 askHandleTimed :: MonadDaideHandle m => Int -> m DaideMessage
 askHandleTimed timedelta = do

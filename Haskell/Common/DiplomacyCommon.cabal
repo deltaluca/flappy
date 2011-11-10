@@ -73,4 +73,5 @@ Library
   
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
   -- Build-tools:         
-  
+
+  Ghc-Options: -Wall -Werror -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods
