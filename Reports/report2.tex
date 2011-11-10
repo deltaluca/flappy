@@ -77,9 +77,11 @@ modifications.
 
 \end{itemize}
 
-\section{Technical issues during the latest iteration:}
+\section{Technical issues during the latest iteration}
 
-\item There was a problem implementing the DAIDE low-level error messages.
+\subsection{Error recovery in Message passing}
+
+There was a problem implementing the DAIDE low-level error messages.
 If a message fails to parse, an error token needs to be inserted at
 the erroneous part of the stream. However the parsing tool of our choice - 
 the parser combinatory library Parsec - types the input message
@@ -89,20 +91,14 @@ A solution we came up with is to save the position where the parsing
 failed and then insert the error token outside of Parsec before resuming
 the parsing at the same position in the input stream
 
-% Put some changes to user stories here 
+\subsection{Ambiguity of DAIDE language}
 
-\section{Revisions}
-
-\subsection{Changes to the schedule}
-
-Due to the complexity of the DAIDE specification language the
-parser, although conceptually straight-forward, took longer than expected.
 To complicate matters certain constructions of the grammar were hard to
 parse without substantial look-ahead. Since we could not change the existing
 DAIDE language for compatibility reasons we had to extend the code to deal
 with these corner cases.
 
-\subsection{Change of core feature set}
+\section{Schedule revisions}
 
 Given that the schedule slipped due to the above issues we had to 
 discuss whether it made sense to drop user stories from future iterations. 
@@ -124,6 +120,10 @@ next iteration.
 
 As discussed above all future work seeks to establish an experimental
 test-bed to assess different approaches to AI and negotiation.
+
+Accordingly we chose an iterative development approach to deliver
+different AI techniques incrementally. Proceeding in this way we will always 
+have a fall-back should certain AI paradigm prove technically challenging.
 
 Having said that we require that all bots share a common structure so
 we could integrate them after performing a first assessment of 
@@ -161,8 +161,14 @@ the result of 'standoff' situations, where support orders by other units
 need to be taken into account.
 \end{itemize}
 
+\subsection{Requirements for iteration (weeks 7-8)
 
-\subsection{Division of work in the next iteration}
+By this time we should have delivered a non-negotiating bot that 
+can be evaluated against the existing DumbBot algorithm. Experiments / 
+benchmarks will need to be run to determine any weaknesses that need
+to adressed in further development.
+
+\section{Division of work in the next iterations}
 
 The division of work outlined in the previous report is adapted as follows: 
 
@@ -181,96 +187,19 @@ refactoring the existing code base.
 
 \end{itemize}
 
-\subsubsection{(AI) Bot Design }
-\begin{itemize}
-\item Following on, the focus from now until the end of the current iteration
-will be on designing and implementing a bot with effective AI. An
-iterative approach will be taken for implementing the bot to ensure
-that features are properly implemented and that there is always a
-basis to work on (see below)
-\item Non-negotiating bot can be tested against Dumb-Bot for benchmarking
-and to make more optimisations and adjustments to it
-\item Final negotiating bot can then be tested against other negotiating
-bots to see it how it matches up, this will be the main test to see
-the negotiating AI is an improvement over existing AI's
-\end{itemize}
+\section{Future project progress measures}
 
+Once some alternative AI algorithms are in place (Week 9-10) they will be matched against
+each other on the DAIDE server. Since every bot implements the DAIDE protocol
+it will also play against other DAIDE-conforming bots, of which
+a large number exists. From this point on the playing strength of our
+bots (which we hope to combine into one system ultimately) will be main 
+progress measure of the project, besides stability of the server and quality
+of user experience in the GUI client.
 
+\section{Design of the AI player(s)}
 
-
-
-\subsubsection{AI Bot Requirements}
-
-The following points show an iterative and high-level approach that
-is to be taken in building up a bot which houses the AI features (further
-discussed below in {[}2.3 AI Techniques and Design{]}:
-\begin{enumerate}
-\item Initially create a Hold-Bot which will hold for every move
-
-\begin{itemize}
-\item Hold-Bot will essentially serve as a template to build upon and will
-need to be able to respond to messages from the server (such as negotiation
-requests) with a default response (as such features have not been
-implemented in the bot at this point)
-\end{itemize}
-\item Features can then be added to Hold-Bot to create Random-Bot
-
-\begin{itemize}
-\item Random-Bot will generate a list of moves that it can make (based on
-the current state of the game and map) and will randomly choose a
-move
-
-\begin{itemize}
-\item AI techniques for being able to search through the game state to generate
-a list of possible moves are discussed in {[}2.3 AI Techniques and
-Design{]}
-\end{itemize}
-\item Random-Bot will still respond to messages from the server in a default
-way (like Hold-Bot does) but when asked to make a move will choose
-a random one
-\end{itemize}
-\item Adding more advanced AI features so that the bot is able to choose
-the best/most appropriate move -> Tactical-Bot
-
-\begin{itemize}
-\item Tactical-Bot will use defined tactics to choose a move which suits
-the goals it's trying to achieve
-\item General tactics need to be defined based on Diplomacy rules (to make
-it as general as possible with the possbility of using expandable
-maps)
-
-\begin{itemize}
-\item Such as prioritising keeping all your provinces in your territory/one
-area
-\item Or trying to capture as much opposing provinces as possible and not
-care as much about your own
-\item Or capturing other provinces may be more important than keeping your
-own and building as many supply centres as possible
-\item Being Offensive (aggresive) or Defensive (passive)
-\item AI techniques and architectures used to implement these tactics are discussed
-below in {[}2.3 AI Techniques and Design{]}
-\end{itemize}
-\item Many possibilities here and taking the time to experiment around with
-the tactics will show us which ones are more effective against others
-\end{itemize}
-\item In conjunction, negotation can also implemented into a bot -> Negotiation-Bot
-
-\begin{itemize}
-\item Will be able to deal with negotiating with other bot/players
-\item The code base for negotiation bot will be seperate but can me made
-to work together with Tactical-Bot as one bot
-\item This ensures good modularity between the two bots and means that tactics
-and negotiations can be built seperately to minimise interference
-between the two
-\end{itemize}
-\end{enumerate}
-
-% Explanation of the Artificial intelligence architecture,
-% including pattern-weights, distributed solving and search heuristics
-
-\section{AI Architecture}
-
-\section{Challenges for AI player}
+\section{Challenges for an AI player in 'Diplomacy'}
 
 Diplomacy is generally seen as an interesting sandbox to explore
 different AI techniques for multiple-player strategy games.
@@ -301,25 +230,101 @@ pretend their actual intentions but actually conspire to betray each other. Henc
 in essence an AI player will need to establish whom to trust when considering
 his options based on the messages of other players.
 
-
 \section{Iterative AI development}
 
-An iterative approach is envisioned where generic techniques
+\subsection{Primitive hold-bot}
+A common feature of every bot is the ability to send trivial but DAIDE-
+conforming messages to the server. Hence the first milestone will
+be a 'Hold-bot' which is able to play a game, but will 'hold' on
+every move. This player has extremely weak playing strength but will
+not impede the progress of the game. When receiving a negotiation
+message it will respond with a default message.
+
+\subsection{Random bot}
+The random bot is an evolution of the 'Hold-bot' and can re-use most
+of its code-base. The difference is that it is selecting a move
+uniformly from all possibilies in the current game-state. As hold-bot it 
+uses default responses in negotiation. We expect this player to be measurably
+stronger 'Hold-bot' but still fare poorly against existing AI bots.
+
+\subsection{Heuristic search bot}
+From here on a layered approach is envisioned where generic techniques
 like 'Game tree search' are implemented first. The reason for this is that 
-search is generally considered as the easiest to implement. Apart from
+search is generally considered as the least risky to implement. Apart from
 a utility function mapping a game state to a certain metric vector no 
 domain knowledge of the game is required. It is considered a primitive
-approach but is required to create a foundation for further development.
+approach but is required to create a bottom layer which can be refined
+by learning approaches on the top layers.
 
+\subsection{Tactical bot}
+This bot will augment the heuristic search with hard-coded tactics and
+the use of an opening book. All of this requires detailed analysis of 
+playing techniques and creating a database of typical responses. This should
+result in average playing-strength but is still primitive as the bot is not
+able to learn from previous actions.
+
+\subsection{Learning / Strategy-bot}
 As discussed in the next section powerful AI play requires learning of
-techniques and responses to typical game situations. The 'partial-state
-database' outlined in the next section will form the second iteration
-of the AI. 
+techniques and responses to typical game situations. A database of 
+'pattern-weights' and 'temporal-difference learning' will enable this bot to consider the
+long-term effects of its moves and improve with increasing experience. Notice
+that at this stage the bot will create knowledge about the 'Game of
+Diplomacy', especially when it determines favorable aspects of a game using
+the 'pattern-weights'.
+
+\subsection{Negotiating bot}
+Once the previous bots are working a negotiation feature can be implemented
+as a new component with relatively low risk. This is important because we
+want to measure the additional playing strength an AI player gains through
+negotiation. The 'Strategy' and 'Negotiation' components should work together as
+follows:  as a result of a negotiation session particular collective strategies
+is proposed, which is then sanity-checked by the 'Strategy' component to avoid grave mistakes. 
+The negotiation bot itself can be broken up into two separate components:
+
+\subsubsection{Alliance / Trust model}
+An AI bot needs to be able to reason about its relation-ship with the other
+players. For instance it would be foolish to work out elaborate strategies
+with a player which has repeatedly stabbed into the back the AI player. 
+
+\subsubsection{Strategy formation}
+Based on the proposals / messages of other players a short- or longterm
+strategy is formed. This part has rich interaction with the 'Strategy'
+planner component of the 'Learning bot' presented above.
+
+\section{Character / personality of an AI player}
+This is not really a refinement of a previous bot but can be implemented 
+independently. The idea is that algorithms of existing bots are tuned to 
+give rise to a particular playing style. For example an offensive player
+is more likely to launch reckless attacks on enemy supply centers or stab
+an opponent in the back (stabbing is a well-established technique and is
+discussed on DiplomacyPouch). On the other hand a defensive player gives
+priority to secure the own supply-centers. For an negotiating bot the
+character also determines how often other players are betrayed etc.
 
 Throughout the implementation of the two components 'search' and 'knowledge
 database' emphasis is laid on generality which enables a close integration
 with the 'negotation module', which enables intelligent forming of 
 alliances and communication of intentions to other players.
+
+\subsubsection{AI Bot Requirements}
+
+\begin{itemize}
+\item Such as prioritising keeping all your provinces in your territory/one
+area
+\item Or trying to capture as much opposing provinces as possible and not
+care as much about your own
+\item Or capturing other provinces may be more important than keeping your
+own and building as many supply centres as possible
+
+\end{itemize}
+\item Many possibilities here and taking the time to experiment around with
+the tactics will show us which ones are more effective against others
+\end{itemize}
+
+% Explanation of the Artificial intelligence architecture,
+% including pattern-weights, distributed solving and search heuristics
+
+\section{Details of the proposed AI iterations}
 
 \section{Short-term game tactics}
 
@@ -448,13 +453,6 @@ setting a coordinated attack on an opponent would classify as a distinct
 'partial state'. As this shows the description should be formulated a level
 above move descriptions, so that a chain of movement emerges.
 
-\subsection{Offensive strategies}
-
-\subsection{Defensive strategies}
-
-\subsection{Measures of a player position}
-
-
 \section{Negotiation component}
 
 The sub-system of the AI responsible for negotation
@@ -496,16 +494,6 @@ Reinforcement learning:
         transition model contingent on other players
         moves (could try to fill in gaps of knowledge 
         with a characterization of other players)
-
-\subsection{Genetic -- adapting parameter vector}
-
-\subsection{bonus, bonus: sentiment analysis of free-form player text}
-
-% All additional bits about agile software development 
-%
-% including incremenetal development, testing strategies,
-% documentation (basically re-state from 1st report to round
-% off the report)
 
 \section{Project management}
 
