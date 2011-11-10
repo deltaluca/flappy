@@ -70,14 +70,16 @@ _INITIAL_TIMEOUT = 30000000
 
 handleClient :: MonadDaideHandle m => m ()
 handleClient = do
+  liftIO . print $ "Connection established, waiting for initial message"
   initialMessage <- askHandleTimed _INITIAL_TIMEOUT
   case initialMessage of
     IM _ -> return ()
     _ -> throwError IMNotFirst
   tellHandle RM
+  liftIO . print $ "Thread forked"
   forever $ do
+    liftIO . print $ "Waiting for message"
     message <- askHandle
-    liftIO . print $ "COME ON"
     liftIO . print $ "Message recieved: " ++ (show message)
     handleMessage message
 
