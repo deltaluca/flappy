@@ -1,11 +1,13 @@
 \documentclass[12pt]{article}
 \usepackage{fullpage}
 \usepackage{cite}
-\usepackage{date}
+\usepackage{datetime}
+\usepackage{geometry}
+\geometry{verbose,lmargin=3cm,rmargin=3cm}
 
 \title{Automated negotiation in the game of diplomacy - Report 2: Progress \& Revisions}
 \author{Matthias Hueser, Andras Slemmer, Luca Deltodesco, Luke Tomlin, Cliff Sun}
-\date{today}
+\date{\today}
 
 \begin{document}
 \maketitle
@@ -161,7 +163,7 @@ the result of 'standoff' situations, where support orders by other units
 need to be taken into account.
 \end{itemize}
 
-\subsection{Requirements for iteration (weeks 7-8)
+\subsection{Requirements for iteration (weeks 7-8)}
 
 By this time we should have delivered a non-negotiating bot that 
 can be evaluated against the existing DumbBot algorithm. Experiments / 
@@ -301,7 +303,7 @@ discussed on DiplomacyPouch). On the other hand a defensive player gives
 priority to secure the own supply-centers. For an negotiating bot the
 character also determines how often other players are betrayed etc.
 
-Throughout the implementation of the two components 'search' and 'knowledge
+Throughout the implementation of the two components 'search' and 'knowledge 
 database' emphasis is laid on generality which enables a close integration
 with the 'negotation module', which enables intelligent forming of 
 alliances and communication of intentions to other players.
@@ -482,22 +484,23 @@ is needed to forge such relationships among players over time.
 \section{Game meta-heuristics}
 
 \subsection{Learning on previous game-databases}
-
 Learning through pattern-weights (see SHA08):
-
-  Idea: Adapt generic initial strategy by performing 
-        self-play, temporal difference method
-
+\vspace{-2mm}
+\begin{itemize}
+\item[] Idea: Adapt generic initial strategy by performing 
+self-play, temporal difference method
+\end{itemize}
 Reinforcement learning:
-
-  Idea: Represent the environment and use a stochastic
-        transition model contingent on other players
-        moves (could try to fill in gaps of knowledge 
-        with a characterization of other players)
+\vspace{-2mm}
+\begin{itemize}
+\item[] Idea: Represent the environment and use a stochastic transition model 
+contingent on other players moves (could try to fill in gaps of knowledge with 
+a characterization of other players)
+\end{itemize}
 
 \section{Project management}
 
-\subsubsection{Software Engineering Process}
+\subsection{Software Engineering Process}
 \begin{itemize}
 \item Currently an agile software development model is still being followed,
 specifically the team development still is much like the Scrum model
@@ -507,14 +510,24 @@ supervisor)
 \item The next iteration is weeks 5-6 followed by the final iteration which
 is weeks 7-8. Week 9 will be allocated as a buffer week to complete
 anything that was not completed in the final iteration/sprint
-\item There are multiple meetings during a week which enables the team to
-get together to discuss current progress and any problems encountered
-so far
-\item There is also a meeting after each iteration to discuss how the current
+\item There is a meeting after each iteration to discuss how the current
 iteration/sprint went and if any goals/aims need to be readjusted
 for the following iteration
 \end{itemize}
-
+\subsubsection{Scrum Meetings}
+Scrum meetings are weekly meetings designed to keep group members updated with 
+the current course of the project and to highlight any problems and/or 
+interesting points of notice. The meetings generally start with a discussion of 
+the progress of each individual member's tasks and whether they are on target for 
+the end of the iteration. Any problems encountered so far by the team members 
+will also be highlighted and targets/deadlines will be adjusted accordingly. 
+Team members will also have to mention if they are particularly busy during a 
+week so that necessary precautions can be made to shift work to the other 
+members in order to maintain the target for the current iteration. 
+A logbook is used during the meetings to record anything mentioned 
+above and to write down the aims for the next meeting and/or iteration. 
+After each meeting, the logbook is updated to the github repository to keep a 
+backlog of all meetings and for reference.
 
 \subsection{Team collaboration}
 
