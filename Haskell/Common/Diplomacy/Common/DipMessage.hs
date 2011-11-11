@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, FunctionalDependencies, GeneralizedNewtypeDeriving #-}
-module Diplomacy.Common.DipMessage (DipMessage(..), parseDipMessage) where
+module Diplomacy.Common.DipMessage (DipMessage(..), parseDipMessage, uParseDipMessage) where
 
 import Diplomacy.Common.Data as Dat
 import Diplomacy.Common.DipToken
@@ -89,8 +89,9 @@ instance DipRep [DipToken] DipToken where
   paren p = tok1 Bra >> p >>= \ret -> tok1 Ket >> return ret
   tok = (\f -> getPosition >>= \p -> tokenPrim show (const . const . const $ p) f)
   errPos = getPosition >>= return . Parsec.sourceColumn
-  createError (WrongParen pos) toks = Paren $ DipCmd PRN : listify (uParen (insertAt pos (DipParam ERR)) . (appendListify toks))
-  createError (SyntaxError pos) toks = Paren $ DipCmd PRN : listify (uParen (insertAt pos (DipParam ERR)) . (appendListify toks))
+  createError (WrongParen pos) toks =
+    Paren $ DipCmd PRN : listify (uParen (insertAt pos) (DipParam ERR) . (appendListify toks))
+  createError (SyntaxError pos) toks = Paren $ DipCmd PRN : listify (uParen (insertAt pos) (DipParam ERR) . (appendListify toks))
 
 instance DipRep BS.ByteString Char where
   tok f = try $ do
@@ -362,7 +363,6 @@ parseDip parsr lvl stream =   uncurry (handleParseErrors stream)
                             . flip runStateT Nothing
                             . Parsec.runParserT (unDipParser parsr) () "DAIDE Message Parser"
                             $ stream
-
 
 handleParseErrors :: (Monad m, DipRep s t) => s -> Either Parsec.ParseError a -> (Maybe DipParseError) -> ErrorT DipError m a
 handleParseErrors stream (Left _) (Just err) = throwError (createError err stream)
@@ -948,17 +948,128 @@ pSmr = do
 
 
 -- unparsing
-  
+
 type AppendList a = [a] -> [a]
-cons  a = ((a :) .)
-lcons a = (. (a :))
+
+type UnParser a b = a -> AppendList b
+
+type UnDipParser a = UnParser a DipToken
+
+uParseDipMessage :: DipMessage -> [DipToken]
+uParseDipMessage = listify . uMsg
+
+cons :: a -> AppendList a
+cons a = (a :)
+
+listify :: AppendList a -> [a]
 listify = ($ [])
 
-appendListify = foldr cons id
+appendListify :: [a] -> AppendList a
+appendListify = foldr (\a -> (cons a .)) id
 
+insertAt :: Int -> UnParser a a
 insertAt 0 a l = a : l
 insertAt n a (b : as) = b : insertAt (n - 1) a as
 insertAt _ _ [] = undefined
 
-uParen :: AppendList DipToken -> AppendList DipToken
-uParen = cons Bra . lcons Ket
+uParen :: UnDipParser a -> UnDipParser a
+uParen up a = (cons Bra .) . (. cons Ket) $ up a
+
+uMany :: UnDipParser a -> UnDipParser [a]
+uMany up = foldl (.) id . map up
+
+uStr :: UnDipParser String
+uStr = appendListify . map Character
+
+uInt :: UnDipParser Int
+uInt = cons . DipInt
+
+uMsg :: UnDipParser DipMessage
+uMsg m = case m of
+  Accept msg -> ( cons (DipCmd YES)
+                . uParen uMsg msg
+                )
+                  
+  Reject msg -> ( cons (DipCmd REJ)
+                . uParen uMsg msg
+                )
+                  
+  Cancel msg -> ( cons (DipCmd NOT) 
+                . uParen uMsg msg
+                )
+                  
+  Name sName sVersion -> ( cons (DipCmd NME)
+                         . uParen uStr sName
+                         . uParen uStr sVersion
+                         )
+                         
+  MapName sName -> ( cons (DipCmd MAP)
+                   . uParen uStr sName
+                   )
+  
+  MapNameReq -> cons (DipCmd MAP)
+  
+  Observer -> cons (DipCmd OBS)
+  
+  Rejoin power passcode -> ( cons (DipCmd IAM)
+                           . uParen uPower power
+                           . uParen uInt passcode
+                           )
+                           
+  MapDef powers provinces adjacencies -> ( cons (DipCmd MDF)
+                                         . uParen (uMany uPower) powers
+                                         . uParen uProvinces provinces
+                                         . uParen (uMany (uParen uAdjacency)) adjacencies
+                                         )
+
+  MapDefReq -> cons (DipCmd MDF)
+  _ -> undefined
+
+uPower :: UnDipParser Power
+uPower (Power p) = cons (DipPow (Pow p))
+uPower Neutral = cons (DipParam UNO)
+
+uProvinces :: UnDipParser Provinces
+uProvinces (Provinces supplyCentres nonSupplyCentres) =
+  ( uParen (uMany (uParen uSupplyCentre)) supplyCentres
+  . uParen (uMany uProvince) nonSupplyCentres
+  )
+
+uAdjacency :: UnDipParser Adjacency
+uAdjacency (Adjacency province unitToProvs) =
+  ( uProvince province
+  . uMany (uParen uUnitToProv) unitToProvs
+  )
+
+uUnitToProv :: UnDipParser UnitToProv
+uUnitToProv (UnitToProv unitType provNodes) =
+  ( uUnitType unitType
+  . uMany uProvinceNode provNodes
+  )
+uUnitToProv (CoastalFleetToProv coast provNodes) =
+  ( uParen (\c -> cons (DipUnitType Fleet) . uCoast c) coast
+  . uMany uProvinceNode provNodes
+  )
+
+uUnitType :: UnDipParser UnitType
+uUnitType typ = cons (DipUnitType typ)
+
+uCoast :: UnDipParser Coast
+uCoast c = cons (DipCoast c)
+
+uProvinceNode :: UnDipParser ProvinceNode
+uProvinceNode (ProvNode prov) = uProvince prov
+uProvinceNode (ProvCoastNode prov c) =
+  ( uProvince prov
+  . uCoast c
+  )
+
+uSupplyCentre :: UnDipParser SupplyCentre
+uSupplyCentre (SupplyCentre pow centres) =
+  ( uPower pow
+  . uMany uProvince centres
+  )
+
+uProvince :: UnDipParser Province
+uProvince prov = cons (DipProv prov)
+

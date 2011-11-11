@@ -21,7 +21,7 @@ instance Exception DipError
 
 data DipParseError = WrongParen Int -- message recieved by server does not have correct parentheses
                    | SyntaxError Int -- message has a syntax error
-                   deriving Typeable
+                   deriving (Show, Typeable)
                             
                             
 -- type LolList a = ([a] -> [a])
