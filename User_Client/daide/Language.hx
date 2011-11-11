@@ -33,6 +33,7 @@ enum Message {
 	mTurnOff;
 	mPowerEliminated(power:Int);
 	mSend(t:Turn,powers:Array<Int>,press:PressMsg,reply:ReplyMsg);
+	mFrom(x:Int,y:Int,powers:Array<Int>,press:PressMsg,reply:ReplyMsg);
 }
 
 enum MsgOrder {

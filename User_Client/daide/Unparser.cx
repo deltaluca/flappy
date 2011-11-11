@@ -9,8 +9,7 @@ $(mixin BRA() tLeftParen);
 $(mixin KET() tRightParen);
 $(mixin POWER(x) tPower(x));
 //...
-$(mixin AMY() tUnitType(utArmy));
-$(mixin FLT() tUnitType(utFleet));
+$(mixin UNITTYPE(x) tUnitType(x));
 //...
 $(mixin CTO() tOrder(oMoveByConvoy));
 $(mixin CVY() tOrder(oConvoy));
@@ -52,20 +51,8 @@ $(mixin FLD() tResult(rFLD));
 $(mixin NSO() tResult(rNoSuchOrder));
 $(mixin RET() tResult(rDislodged));
 //...
-$(mixin NCS() tCoast(cNorth));
-$(mixin NEC() tCoast(cNorthEast));
-$(mixin ECS() tCoast(cEast));
-$(mixin SEC() tCoast(cSouthEast));
-$(mixin SCS() tCoast(cSouth));
-$(mixin SWC() tCoast(cSouthWest));
-$(mixin WCS() tCoast(cWest));
-$(mixin NWC() tCoast(cNorthWest));
-//...
-$(mixin SPR() tPhase(pSpring));
-$(mixin SUM() tPhase(pSummer));
-$(mixin FAL() tPhase(pFall));
-$(mixin AUT() tPhase(pAutumn));
-$(mixin WIN() tPhase(pWinter));
+$(mixin COAST(x) tCoast(x));
+$(mixin PHASE(x) tPhase(x));
 //...
 $(mixin CCD() tCommand(coPowerInCivilDisorder));
 $(mixin DRW() tCommand(coDraw));
@@ -99,19 +86,7 @@ $(mixin YES() tCommand(coAccept));
 $(mixin ADM() tCommand(coAdmin));
 $(mixin SMR() tCommand(coSMR));
 //...
-$(mixin AOA() tParameter(paAnyOrder));
-$(mixin BTL() tParameter(paBuildTimeLimit));
-$(mixin ERR() tParameter(paLocationError));
-$(mixin LVL() tParameter(paLevel));
-$(mixin MRT() tParameter(paMustRetreat));
-$(mixin MTL() tParameter(paMoveTimeLimit));
-$(mixin NPB() tParameter(paNoPressDuringBuild));
-$(mixin NPR() tParameter(paNoPressDuringRetreat));
-$(mixin PDA() tParameter(paPartialDrawsAllowed));
-$(mixin PTL() tParameter(paPressTimeLimit));
-$(mixin RTL() tParameter(paRetreatTimeLimit));
-$(mixin UNO() tParameter(paUnowned));
-$(mixin DSD() tParameter(paDeadlineDisconnect));
+$(mixin PARAMETER(x) tParameter(x));
 //...
 $(mixin ALY() tPress(prAlly));
 $(mixin AND() tPress(prAND));
@@ -150,6 +125,7 @@ $(mixin UNT() tPress(prUNT));
 $(mixin CCL() tPress(prCCL));
 $(mixin NAR() tPress(prNAR));
 //...
+$(mixin PROVINCE(x) tProvince(x));
 $(mixin TEXT(x) tText(x));
 
 class Unparser {
@@ -179,11 +155,16 @@ class Unparser {
 			mOrderResult(null,null,null)= [ORD],
 			mDraw(null) 				= [DRW],
 			mDraw(xs) 					= [DRW,BRA].concat(unpower_list(xs)).concat([KET]),
-// send_message
-//	mSend(....)
+// send_message (vv)
+			mSend(turn,x,y,z) = {
+				var pre = [SND,BRA];
+				if(turn!=null) pre = pre.concat(unturn(turn)).concat([KET,BRA]);
+				pre = pre.concat(unpower_list(x)).concat([KET,BRA]);
+				pre.concat(if(z==null) unpress_message(y) else unreply(z)).concat([KET]);
+			},			
 
-// mAccept(x) - duplicate
-// mReject(x) - duplicate			
+/** mAccept(x) - duplicate **/
+/** mReject(x) - duplicate **/
 			mMap(x) = [MAP,BRA,TEXT(x),KET],
 // mMapDefinition(
 			mHello(x,y,z) = [HLO,BRA,POWER(x),KET,BRA,INTEGER(y),KET,BRA].concat(unvariant(z)).concat([KET]),
@@ -196,15 +177,15 @@ class Unparser {
 			mSaveGame(x) = [SVE,BRA,TEXT(x),KET],
 			mLoadGame(x) = [LOD,BRA,TEXT(x),KET],
 			mTurnOff = [OFF],
-// mTimeToDeadline(x) - duplicate
-// mBadBrackets(x) - duplicate
-// mHuh(x) - duplicate
+/** mTimeToDeadline(x) - duplicate **/
+/** mBadBrackets(x) - duplicate **/
+/** mHuh(x) - duplicate **/
 			mPowerDisorder(x) = [CCD,BRA,POWER(x),KET],
 			mNOT(x) = [NOT,BRA].concat(unparse(x)).concat([KET]),
-// mAdmin(x,y) - duplicate
+/** mAdmin(x,y) - duplicate **/
 			mSolo(x) = [SLO,BRA,INTEGER(x),KET],
 			mPowerEliminated(x) = [OUT,BRA,POWER(x),KET]
-// mDraw(x) - duplicate
+/** mDraw(x) - duplicate **/
 		);
 		return [];
 	}
@@ -251,12 +232,12 @@ class Unparser {
 	}
 
 	static function unvariant_option(o:VariantOption):Array<Token> {
-		var ret = [tParameter(o.par)];
+		var ret = [PARAMETER(o.par)];
 		if(o.val!=null) ret.push(INTEGER(o.val));
 		return ret;
 	}
 
-	static function unturn(t:Turn):Array<Token> return [tPhase(t.phase)].concat([INTEGER(t.turn)])
+	static function unturn(t:Turn):Array<Token> return [PHASE(t.phase)].concat([INTEGER(t.turn)])
 	static function unorder_list(xs:Array<MsgOrder>):Array<Token> {
 		var ret = [];
 		for(i in xs) ret = ret.concat([BRA]).concat(unorder(i)).concat([KET]);
@@ -271,15 +252,151 @@ class Unparser {
 		return [POWER(x.power),tUnitType(x.type)].concat(unmdf_province(x.location));
 	}
 	static function unmdf_province(x:Location):Array<Token> {
-		if(x.coast==null) return [tProvince(x.province)];
+		if(x.coast==null) return [PROVINCE(x.province)];
 		else return [BRA].concat(unprovince_and_coast(x)).concat([KET]);	
 	}
 	static function unprovince_and_coast(x:Location):Array<Token> {
-		return [tProvince(x.province),tCoast(x.coast)];	
+		return [PROVINCE(x.province),COAST(x.coast)];	
 	}
 	static function unpower_list(xs:Array<Int>):Array<Token> {
 		var ret = [];
 		for(i in xs) ret.push(POWER(i));
 		return ret;
 	}
+	static function unprovince_list(xs:Array<Province>):Array<Token> {
+		var ret = [];
+		for(i in xs) ret.push(PROVINCE(i));
+		return ret;
+	}
+
+	static function unexplanation(x:Explanation):Array<Token> {
+		return [EXP,BRA].concat(unturn(x.turn)).concat([KET,BRA]).concat(unreply(x.reply)).concat([KET]);
+	}
+
+	static function unfuture_offer(x:FutureOffer):Array<Token> {
+		return [PCE,BRA].concat(unpower_list(x)).concat([KET]);
+	}
+
+	static function unperiod(x:Period):Array<Token> {
+		 return [BRA].concat(unturn(x.from)).concat([KET,BRA]).concat(unturn(x.to)).concat([KET]);
+	}
+
+	static function unsc_ownership_list(x:ScOwnershipList):Array<Token> {
+		return [if(x.power==null) UNO else POWER(x.power)].concat(unprovince_list(x.locs));
+	}
+
+	static function unsc_ownership_list_list(x:Array<ScOwnershipList>):Array<Token> {
+		var ret = [];
+		for(i in xs) {
+			ret.push(BRA);
+			ret = ret.concat(unsc_ownership_list(i));
+			ret.push(KET);
+		}
+		return ret;
+	}
+
+	static function unarrangement(ar:Arrangement):Array<Token> {
+		return Match.match(ar,
+			arPeace(xs) = [PCE,BRA].concat(unpower_list(xs)).concat([KET]),
+			arAlly(x,y) = [ALY,BRA].concat(unpower_list(x)).concat([KET,VSS,BRA]).concat(unpower_list(y)).concat([KET]),
+			arDraw = [DRW],
+			arSolo(x) = [SLO,BRA,POWER(x),KET],
+			arNOT(x) = [NOT,BRA].concat(unarrangement(x)).concat([KET]),
+			arNAR(x) = [NAR,BRA].concat(unarrangement(x)).concat([KET]),
+			arXDO(x) = [XDO,BRA].concat(unorder(x)).concat([KET]),
+			arDMZ(x,y) = [DMZ,BRA].concat(unpower_list(x)).concat([KET,BRA]).concat(unprovince_list(y)).concat([KET]),
+			arSCD(x) = [SCD].concat(unsc_ownership_list_list(x)),
+			arOCC(x) = [OCC].concat(ununit_with_location_list(x)),
+			arAND(x) = [AND].concat(unarrangement_list(x)),
+			arOR(x)  = [ORR].concat(unarrangement_list(x)),
+			arCHO(x,y,z) = [CHO,BRA,INTEGER(x),INTEGER(y),KET].concat(unfuture_offer(z)).concat([KET]),
+			arFOR(x,null,z) = [FOR,BRA].concat(unturn(x)).concat([KET,BRA]).concat(unfuture_offer(z)).concat([KET]),
+			arFOR(null,y,z) = [FOR,BRA].concat(unperiod(y)).concat([KET,BRA]).concat(unfuture_offer(z)).concat([KET]),
+			arXOY(a,b) = [XOY,BRA,POWER(a),KET,BRA,POWER(b),KET],
+			arYDO(x,y) = [YDO,BRA,POWER(x),KET].concat(ununit_with_location_list(y)),
+			arSND(x,y,z,null) = [SND,BRA,POWER(x),KET,BRA].concat(unpower_list(y)).concat([KET,BRA]).concat(unpress_message(z)).concat([KET]),
+			arSND(x,y,null,z) = [SND,BRA,POWER(x),KET,BRA].concat(unpower_list(y)).concat([KET,BRA]).concat(unreply(y)).concat([KET]),
+			arFWD(x,y,z) = [FWD,BRA].concat(unpower_list(x)).concat([KET,BRA,POWER(y),KET,BRA,POWER(z),KET]),
+			arBCC(x,y,z) = [BCC,BRA,POWER(x),KET,BRA].concat(unpower_list(y)).concat([KET,BRA,POWER(z),KET])
+		);
+	}
+
+	static function unarrangement_list(xs:Array<Arrangement>):Array<Token> {
+		var ret = [];
+		for(x in xs) {
+			ret.push(BRA);
+			ret = ret.concat(unarrangement(x));
+			ret.push(KET);
+		}
+		return ret;
+	}
+
+	static function unquery(x:Arrangement):Array<Token> return [QRY,BRA].concat(unarrangement(x)).concat([KET])
+
+	static function unnegatable_query(x:NegQuery):Array<Token> {
+		return Match.match(x,
+			negQRY(y) = [QRY,BRA].concat(unarrangement(y)).concat([KET]),
+			negNOT(y) = [NOT,BRA].concat(unquery(y)).concat([KET])
+		);
+	}
+
+	static function unlogical_operator(x:LogicalOp):Array<Token> {
+		return [if(x.and) AND else ORR].concat(unarrangement_list(x.list));
+	}
+
+	static function unpress_message(x:PressMsg):Array<Token> {
+		return Match.match(x,
+			pmPRP(x,null) = [PRP,BRA].concat(unarrangement(x)).concat([KET]),
+			pmPRP(null,y) = [PRP,BRA].concat(unlogical_operator(y)).concat([KET]),
+			pmTRY(x) = [TRY,BRA].concat(x).concat([KET]),
+			pmCCL(x) = [CCL,BRA].concat(unpress_message(x)).concat([KET]),
+			pmINS(x) = [INS,BRA].concat(unarrangement(x)).concat([KET]),
+			pmQRY(x) = [QRY,BRA].concat(unarrangement(x)).concat([KET]),
+			pmSUG(x) = [SUG,BRA].concat(unarrangement(x)).concat([KET]),
+			pmTHK(x) = [THK,BRA].concat(unarrangement(x)).concat([KET]),
+			pmFCT(x) = [FCT,BRA].concat(unarrangement(x)).concat([KET]),
+			pmWHT(x) = [WHT,BRA].concat(ununit_with_location(x)).concat([KET]),
+			pmHOW(x,null) = [HOW,BRA].concat(PROVINCE(x)).concat([KET]),
+			pmHOW(null,x) = [HOW,BRA].concat(POWER(x)).concat([KET]),
+			pmEXP(x,y) = [EXP,BRA].concat(unturn(x)).concat([KET,BRA]).concat(unreply(y)).concat([KET]),
+			pmIFF(x,y,null) = [IFF,BRA].concat(unarrangement(x)).concat([KET,THN,BRA]).concat(unpress_message(y)).concat([KET]),
+			pmIFF(x,y,z) = [IFF,BRA].concat(unarrangement(x)).concat([KET,THN,BRA]).concat(unpress_message(y)).concat([KET,ELS,BRA]).concat(unpress_message(z)).concat([KET]),
+			pmFRM(x,y,z,w,null) = [FRM,BRA,POWER(x),INTEGER(y),KET,BRA].concat(unpower_list(z)).concat([KET,BRA]).concat(unpress_message(w)).concat([KET]),
+			pmFRM(x,y,z,null,w) = [FRM,BRA,POWER(x),INTEGER(y),KET,BRA].concat(unpower_list(z)).concat([KET,BRA]).concat(unreply(w)).concat([KET]),
+			pmText(x) = [TEXT(x)]
+		);
+	}
+
+	static function unreply(x:ReplyMsg):Array<Token> {
+		return Match.match(x,
+			rmYes(x,null) = [YES,BRA].concat(unpress_message(x)).concat([KET]),
+			rmYes(null,x) = [YES,BRA].concat(unexplanation(x)).concat([KET]),
+			rmRej(x,null) = [REJ,BRA].concat(unpress_message(x)).concat([KET]),
+			rmRej(null,x) = [REJ,BRA].concat(unexplanation(x)).concat([KET]),
+			rmBWX(x) = [BWX,BRA].concat(unpress_message(x)).concat([KET]),
+			rmHUH(x) = [HUH,BRA].concat(x).concat([KET]),
+			rmTHK(x) = [THK,BRA].concat(unnegatable_query(x)).concat([KET]),
+			rmFCT(x) = [FCT,BRA].concat(unnegatable_query(x)).concat([KET]),
+			rmSRY(x) = [SRY,BRA].concat(unexplanation(x)).concat([KET]),
+			rmPOB(x) = [POB,BRA].concat(unwhy_sequence(x)).concat([KET]),
+			rmWHY(y) = [WHY,BRA].concat(unwhy(y)).concat([KET]),
+			rmIDK(y) = [IDK,BRA].concat(unwhy(y)).concat([KET]),
+			rmPress(x) = unpress_message(x)
+		);
+	}
+	static function unwhy(x:WhyIDK):Array<Token> {
+		return Match.match(x,
+			whyThinkFact(x) = unthink_and_fact(x),
+			whyQry(x) = unquery(x),
+			whyExp(x) = unexplanation(x),
+			whySug(x) = [SUG,BRA].concat(unarrangement(x)).concat([KET]),
+			whyPRP(x) = [PRP,BRA].concat(unarrangement(x)).concat([KET]),
+			whyINS(x) = [INS,BRA].concat(unarrangement(x)).concat([KET])
+		);
+	}
+
+	static function unthink_and_fact(x:ThinkAndFact):Array<Token> {
+		return [if(x.thk) THK else FCT, BRA].concat(unarrangement(x.arr)).concat([KET]);
+	}
+	static function unwhy_sequence(x:ThinkAndFact):Array<Token> return [WHY,BRA].concat(unthink_and_fact(x)).concat([KET])
 }

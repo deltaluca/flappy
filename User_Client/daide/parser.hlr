@@ -140,8 +140,8 @@ class TU {
 	| DRW 										%{ mDraw(null); %}
 	| OUT BRA POWER KET 						%{ mPowerEliminated(TU.power(%2)); %}
 	| DRW BRA POWER power_list KET 				%{ %3.unshift(TU.power(%2)); mDraw(%3); %}
-	| FRM BRA POWER INTEGER KET BRA power_list KET BRA press_message KET
-	| FRM BRA POWER INTEGER KET BRA power_list KET BRA reply KET
+	| FRM BRA POWER INTEGER KET BRA power_list KET BRA press_message KET %{ mFrom(TU.power(%2),TU.integer(%3),%6,%9,null); %}
+	| FRM BRA POWER INTEGER KET BRA power_list KET BRA reply KET         %{ mFrom(TU.power(%2),TU.integer(%3),%6,null,%9); %}
 ;
 
 %acknowledgable_command %{ Message %}
@@ -409,7 +409,7 @@ class TU {
 
 %explanation %{ Explanation %} : EXP BRA turn KET BRA reply KET %{ { turn : %2, reply : %5 }; %};
 
-%future_offer %{ FutureOffer %} : PCE BRA POWER power_list KET %{ %3; %};
+%future_offer %{ FutureOffer %} : PCE BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); %3; %};
 
 %period %{ Period %} : BRA turn KET BRA turn KET %{ { from : %1, to : %4 }; %};
 
