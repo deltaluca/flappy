@@ -319,14 +319,9 @@ class TU {
 	| BRA power_list KET province_list %{ { powers: %1, locs : %3 }; %}
 ;
 
-%mdf_centre_list_list %{ Array<MdfCentreList> %}
-	: BRA mdf_centre_list KET %{ [%1]; %}
-	| mdf_centre_list_list BRA mdf_centre_list KET %{ %0.push(%2); %0; %}
-;
-
 %mdf_supply_centres %{ Array<MdfCentreList> %}
 	: BRA mdf_centre_list KET %{ [%1]; %}
-	| mdf_centre_list_list BRA mdf_centre_list KET %{ %0.push(%2); %0; %}
+	| mdf_supply_centres BRA mdf_centre_list KET %{ %0.push(%2); %0; %}
 ;
 
 %mdf_provinces %{ MdfProvinces %}

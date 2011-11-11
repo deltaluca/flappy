@@ -1,6 +1,6 @@
 package daide;
 
-import Match;
+import scx.Match;
 import daide.Language;
 import daide.Tokens;
 
@@ -23,33 +23,9 @@ $(mixin BLD() tOrder(oBuild));
 $(mixin REM() tOrder(oRemove));
 $(mixin WVE() tOrder(oWaive));
 //...
-$(mixin MBV() tOrderNote(onOkay));
-$(mixin BPR() tOrderNote(onBPR));
-$(mixin CST() tOrderNote(onNoCoastSpecified));
-$(mixin ESC() tOrderNote(onNotEmptySupply));
-$(mixin FAR() tOrderNote(onNotAdjacent));
-$(mixin HSC() tOrderNote(onNotHomeSupply));
-$(mixin NAS() tOrderNote(onNotAtSea));
-$(mixin NMB() tOrderNote(onNoMoreBuilds));
-$(mixin NMR() tOrderNote(onNoMoreRemovals));
-$(mixin NRN() tOrderNote(onNoRetreatNeeded));
-$(mixin NRS() tOrderNote(onNotRightSeason));
-$(mixin NSA() tOrderNote(onNoSuchArmy));
-$(mixin NSC() tOrderNote(onNotSupply));
-$(mixin NSF() tOrderNote(onNoSuchFleet));
-$(mixin NSP() tOrderNote(onNoSuchProvince));
-$(mixin NSU() tOrderNote(onNoSuchUnit));
-$(mixin NVR() tOrderNote(onNotValidRetreat));
-$(mixin NYU() tOrderNote(onNotYourUnit));
-$(mixin YSC() tOrderNote(onNotYourSupply));
-//...
-$(mixin SUC() tResult(rSuccess));
-$(mixin BNC() tResult(rMoveBounced));
-$(mixin CUT() tResult(rSupportCut));
-$(mixin DSR() tResult(rConvoyDisrupted));
-$(mixin FLD() tResult(rFLD));
-$(mixin NSO() tResult(rNoSuchOrder));
-$(mixin RET() tResult(rDislodged));
+$(mixin ORDERNOTE(x) tOrderNote(x));
+$(mixin RESULT(x) tResult(x));
+$(mixin RET() RESULT(rDislodged));
 //...
 $(mixin COAST(x) tCoast(x));
 $(mixin PHASE(x) tPhase(x));
@@ -87,6 +63,8 @@ $(mixin ADM() tCommand(coAdmin));
 $(mixin SMR() tCommand(coSMR));
 //...
 $(mixin PARAMETER(x) tParameter(x));
+$(mixin MRT() PARAMETER(paMustRetreat));
+$(mixin UNO() PARAMETER(paUnowned));
 //...
 $(mixin ALY() tPress(prAlly));
 $(mixin AND() tPress(prAND));
@@ -155,7 +133,6 @@ class Unparser {
 			mOrderResult(null,null,null)= [ORD],
 			mDraw(null) 				= [DRW],
 			mDraw(xs) 					= [DRW,BRA].concat(unpower_list(xs)).concat([KET]),
-// send_message (vv)
 			mSend(turn,x,y,z) = {
 				var pre = [SND,BRA];
 				if(turn!=null) pre = pre.concat(unturn(turn)).concat([KET,BRA]);
@@ -163,29 +140,27 @@ class Unparser {
 				pre.concat(if(z==null) unpress_message(y) else unreply(z)).concat([KET]);
 			},			
 
-/** mAccept(x) - duplicate **/
-/** mReject(x) - duplicate **/
 			mMap(x) = [MAP,BRA,TEXT(x),KET],
-// mMapDefinition(
+			mMapDefinition(x,y,z) = [MDF,BRA].concat(unpower_list(x)).concat([KET,BRA]).concat(unmdf_provinces(y)).concat([KET,BRA]).concat(unmdf_adjacencies(z)).concat([KET]),
 			mHello(x,y,z) = [HLO,BRA,POWER(x),KET,BRA,INTEGER(y),KET,BRA].concat(unvariant(z)).concat([KET]),
 			mCurrentLocation(x,y) = [NOW,BRA].concat(unturn(x)).concat([KET]).concat(ununit_with_location_and_mrt_list(y)),
-// mSupplyOwnership
-// mThink
+			mSupplyOwnership(xs) = [SCO].concat(unsco_entry_list(xs)),
+			mThink(x,y) = [THX,BRA].concat(unorder(x)).concat([KET,BRA,ORDERNOTE(y),KET]),
 			mMissingOrders(null,x) = [MIS].concat(ununit_with_location_and_mrt_list(x)),
 			mMissingOrders(x,null) = [MIS,BRA,INTEGER(x),KET],
-// mOrderResult
+			mOrderResult(x,y,z) = [ORD,BRA].concat(unturn(x)).concat([KET,BRA]).concat(unorder(y)).concat([KET,BRA]).concat(uncompound_order_result(z)).concat([KET]),
 			mSaveGame(x) = [SVE,BRA,TEXT(x),KET],
 			mLoadGame(x) = [LOD,BRA,TEXT(x),KET],
 			mTurnOff = [OFF],
-/** mTimeToDeadline(x) - duplicate **/
-/** mBadBrackets(x) - duplicate **/
-/** mHuh(x) - duplicate **/
 			mPowerDisorder(x) = [CCD,BRA,POWER(x),KET],
 			mNOT(x) = [NOT,BRA].concat(unparse(x)).concat([KET]),
-/** mAdmin(x,y) - duplicate **/
 			mSolo(x) = [SLO,BRA,INTEGER(x),KET],
-			mPowerEliminated(x) = [OUT,BRA,POWER(x),KET]
-/** mDraw(x) - duplicate **/
+			mPowerEliminated(x) = [OUT,BRA,POWER(x),KET],
+			mFrom(x,y,z,w1,w2) = {
+				var pre = [FRM,BRA,POWER(x),INTEGER(y),KET,BRA].concat(unpower_list(z)).concat([KET,BRA]);
+				pre = pre.concat(if(w1==null) unpress_message(w1) else unreply(w2));
+				pre.concat([KET]);
+			}
 		);
 		return [];
 	}
@@ -195,7 +170,53 @@ class Unparser {
 		for(x in xs) ret = ret.concat(unmdf_province(x));
 		return ret;
 	}
-	
+
+	static function unmdf_adjacencies(xs:Array<MdfProAdjacencies>):Array<Token> {
+		var ret = [];
+		for(x in xs) {
+			ret.push(BRA);
+			ret = ret.concat(unmdf_province_adjacencies(x));
+			ret.push(KET);
+		}
+		return ret;
+	}
+
+	static function unmdf_province_adjacencies(x:MdfProAdjacencies):Array<Token> {
+		return [PROVINCE(x.pro)].concat(unmdf_coast_adjacencies_list(x.coasts));
+	}
+	static function unmdf_coast_adjacencies(x:MdfCoastAdjacencies):Array<Token> {
+		return [UNITTYPE(x.unit)].concat(unmdf_province_list(x.locs));
+	}
+	static function unmdf_coast_adjacencies_list(xs:Array<MdfCoastAdjacencies>):Array<Token> {
+		var ret = [];
+		for(x in xs) {
+			ret.push(BRA);
+			ret = ret.concat(unmdf_coast_adjacencies(x));
+			ret.push(KET);
+		}
+		return ret;
+	}
+
+	static function unmdf_centre_list(x:MdfCentreList):Array<Token> {
+		if(x.powers.length==0) return [UNO].concat(unprovince_list(x.locs));
+		else if(x.powers.length==1) return [POWER(x.powers[0])].concat(unprovince_list(x.locs));
+		else return [BRA].concat(unpower_list(x.powers)).concat([KET]).concat(unprovince_list(x.locs));
+	}
+
+	static function unmdf_supply_centres(xs:Array<MdfCentreList>):Array<Token> {
+		var ret = [];
+		for(x in xs) {
+			ret.push(BRA);
+			ret = ret.concat(unmdf_centre_list(x));
+			ret.push(KET);
+		}
+		return ret;
+	}
+
+	static function unmdf_provinces(x:MdfProvinces):Array<Token> {
+		return [BRA].concat(unmdf_supply_centres(x.slocs)).concat([KET,BRA]).concat(unprovince_list(x.locs)).concat([KET]);
+	}
+
 	static function ununit_with_location_and_mrt(x:UnitWithLocAndMRT):Array<Token> {
 		return if(x.locs==null) ununit_with_location(x.unitloc);
 		else ununit_with_location(x.unitloc).concat([MRT,BRA]).concat(unmdf_province_list(x.locs)).concat([KET]);
@@ -234,6 +255,25 @@ class Unparser {
 	static function unvariant_option(o:VariantOption):Array<Token> {
 		var ret = [PARAMETER(o.par)];
 		if(o.val!=null) ret.push(INTEGER(o.val));
+		return ret;
+	}
+
+	static function uncompound_order_result(x:CompOrderResult):Array<Token> {
+		var ret = [if(x.note==null) RESULT(x.result) else ORDERNOTE(x.note)];
+		if(x.ret) ret.push(RET);
+		return ret;
+	}
+
+	static function unsco_entry(x:ScoEntry):Array<Token> {
+		return [POWER(x.power)].concat(unprovince_list(x.locs));
+	}
+	static function unsco_entry_list(xs:Array<ScoEntry>):Array<Token> {
+		var ret = [];
+		for(x in xs) {
+			ret.push(BRA);
+			ret = ret.concat(unsco_entry(x));
+			ret.push(KET);
+		}
 		return ret;
 	}
 
@@ -285,7 +325,7 @@ class Unparser {
 		return [if(x.power==null) UNO else POWER(x.power)].concat(unprovince_list(x.locs));
 	}
 
-	static function unsc_ownership_list_list(x:Array<ScOwnershipList>):Array<Token> {
+	static function unsc_ownership_list_list(xs:Array<ScOwnershipList>):Array<Token> {
 		var ret = [];
 		for(i in xs) {
 			ret.push(BRA);
@@ -297,25 +337,25 @@ class Unparser {
 
 	static function unarrangement(ar:Arrangement):Array<Token> {
 		return Match.match(ar,
-			arPeace(xs) = [PCE,BRA].concat(unpower_list(xs)).concat([KET]),
-			arAlly(x,y) = [ALY,BRA].concat(unpower_list(x)).concat([KET,VSS,BRA]).concat(unpower_list(y)).concat([KET]),
-			arDraw = [DRW],
-			arSolo(x) = [SLO,BRA,POWER(x),KET],
-			arNOT(x) = [NOT,BRA].concat(unarrangement(x)).concat([KET]),
-			arNAR(x) = [NAR,BRA].concat(unarrangement(x)).concat([KET]),
-			arXDO(x) = [XDO,BRA].concat(unorder(x)).concat([KET]),
+			arPeace(xs)= [PCE,BRA].concat(unpower_list(xs)).concat([KET]),
+			arAlly(x,y)= [ALY,BRA].concat(unpower_list(x)).concat([KET,VSS,BRA]).concat(unpower_list(y)).concat([KET]),
+			arDraw     = [DRW],
+			arSolo(x)  = [SLO,BRA,POWER(x),KET],
+			arNOT(x)   = [NOT,BRA].concat(unarrangement(x)).concat([KET]),
+			arNAR(x)   = [NAR,BRA].concat(unarrangement(x)).concat([KET]),
+			arXDo(x)   = [XDO,BRA].concat(unorder(x)).concat([KET]),
 			arDMZ(x,y) = [DMZ,BRA].concat(unpower_list(x)).concat([KET,BRA]).concat(unprovince_list(y)).concat([KET]),
-			arSCD(x) = [SCD].concat(unsc_ownership_list_list(x)),
-			arOCC(x) = [OCC].concat(ununit_with_location_list(x)),
-			arAND(x) = [AND].concat(unarrangement_list(x)),
-			arOR(x)  = [ORR].concat(unarrangement_list(x)),
-			arCHO(x,y,z) = [CHO,BRA,INTEGER(x),INTEGER(y),KET].concat(unfuture_offer(z)).concat([KET]),
-			arFOR(x,null,z) = [FOR,BRA].concat(unturn(x)).concat([KET,BRA]).concat(unfuture_offer(z)).concat([KET]),
-			arFOR(null,y,z) = [FOR,BRA].concat(unperiod(y)).concat([KET,BRA]).concat(unfuture_offer(z)).concat([KET]),
+			arSCD(x)   = [SCD].concat(unsc_ownership_list_list(x)),
+			arOCC(x)   = [OCC].concat(ununit_with_location_list(x)),
+			arAND(x)   = [AND].concat(unarrangement_list(x)),
+			arOR(x)    = [ORR].concat(unarrangement_list(x)),
 			arXOY(a,b) = [XOY,BRA,POWER(a),KET,BRA,POWER(b),KET],
 			arYDO(x,y) = [YDO,BRA,POWER(x),KET].concat(ununit_with_location_list(y)),
+			arFOR(x,null,z) = [FOR,BRA].concat(unturn(x)).concat([KET,BRA]).concat(unfuture_offer(z)).concat([KET]),
+			arFOR(null,y,z) = [FOR,BRA].concat(unperiod(y)).concat([KET,BRA]).concat(unfuture_offer(z)).concat([KET]),
 			arSND(x,y,z,null) = [SND,BRA,POWER(x),KET,BRA].concat(unpower_list(y)).concat([KET,BRA]).concat(unpress_message(z)).concat([KET]),
-			arSND(x,y,null,z) = [SND,BRA,POWER(x),KET,BRA].concat(unpower_list(y)).concat([KET,BRA]).concat(unreply(y)).concat([KET]),
+			arSND(x,y,null,z) = [SND,BRA,POWER(x),KET,BRA].concat(unpower_list(y)).concat([KET,BRA]).concat(unreply(z)).concat([KET]),
+			arCHO(x,y,z) = [CHO,BRA,INTEGER(x),INTEGER(y),KET].concat(unarrangement_list(z)).concat([KET]),
 			arFWD(x,y,z) = [FWD,BRA].concat(unpower_list(x)).concat([KET,BRA,POWER(y),KET,BRA,POWER(z),KET]),
 			arBCC(x,y,z) = [BCC,BRA,POWER(x),KET,BRA].concat(unpower_list(y)).concat([KET,BRA,POWER(z),KET])
 		);
@@ -348,6 +388,9 @@ class Unparser {
 		return Match.match(x,
 			pmPRP(x,null) = [PRP,BRA].concat(unarrangement(x)).concat([KET]),
 			pmPRP(null,y) = [PRP,BRA].concat(unlogical_operator(y)).concat([KET]),
+			pmHOW(x,null) = [HOW,BRA,PROVINCE(x)].concat([KET]),
+			pmHOW(null,x) = [HOW,BRA,POWER(x)].concat([KET]),
+			pmEXP(x,y)    = [EXP,BRA].concat(unturn(x)).concat([KET,BRA]).concat(unreply(y)).concat([KET]),
 			pmTRY(x) = [TRY,BRA].concat(x).concat([KET]),
 			pmCCL(x) = [CCL,BRA].concat(unpress_message(x)).concat([KET]),
 			pmINS(x) = [INS,BRA].concat(unarrangement(x)).concat([KET]),
@@ -356,11 +399,8 @@ class Unparser {
 			pmTHK(x) = [THK,BRA].concat(unarrangement(x)).concat([KET]),
 			pmFCT(x) = [FCT,BRA].concat(unarrangement(x)).concat([KET]),
 			pmWHT(x) = [WHT,BRA].concat(ununit_with_location(x)).concat([KET]),
-			pmHOW(x,null) = [HOW,BRA].concat(PROVINCE(x)).concat([KET]),
-			pmHOW(null,x) = [HOW,BRA].concat(POWER(x)).concat([KET]),
-			pmEXP(x,y) = [EXP,BRA].concat(unturn(x)).concat([KET,BRA]).concat(unreply(y)).concat([KET]),
 			pmIFF(x,y,null) = [IFF,BRA].concat(unarrangement(x)).concat([KET,THN,BRA]).concat(unpress_message(y)).concat([KET]),
-			pmIFF(x,y,z) = [IFF,BRA].concat(unarrangement(x)).concat([KET,THN,BRA]).concat(unpress_message(y)).concat([KET,ELS,BRA]).concat(unpress_message(z)).concat([KET]),
+			pmIFF(x,y,z)    = [IFF,BRA].concat(unarrangement(x)).concat([KET,THN,BRA]).concat(unpress_message(y)).concat([KET,ELS,BRA]).concat(unpress_message(z)).concat([KET]),
 			pmFRM(x,y,z,w,null) = [FRM,BRA,POWER(x),INTEGER(y),KET,BRA].concat(unpower_list(z)).concat([KET,BRA]).concat(unpress_message(w)).concat([KET]),
 			pmFRM(x,y,z,null,w) = [FRM,BRA,POWER(x),INTEGER(y),KET,BRA].concat(unpower_list(z)).concat([KET,BRA]).concat(unreply(w)).concat([KET]),
 			pmText(x) = [TEXT(x)]
