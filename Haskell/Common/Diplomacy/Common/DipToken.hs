@@ -25,7 +25,7 @@ data DipToken = DipInt Int
               | DipPress Press
               | Character Char
               | DipProv Dat.Province
-              deriving (Show, Eq)
+              deriving (Eq)
 
 instance Binary DipToken where
   put (DipInt int) = put . (.&. 0x3FFF) $ (fromIntegral int :: Word16)
@@ -35,6 +35,27 @@ instance Binary DipToken where
     val <- (get :: Get Word8)
     decodeToken typ val
 
+instance Show DipToken where
+  show t = case t of
+    DipInt i -> show i
+    Bra -> "("
+    Ket -> ")"
+    DipPow (Pow p) -> show p
+    DipUnitType Army -> "ARM"
+    DipUnitType Fleet -> "FLT"
+    DipOrder o -> show o
+    DipOrderNote n -> show n
+    DipResult r -> show r
+    DipCoast (Coast c) -> show c
+    DipPhase p -> show p
+    DipCmd c -> show c
+    DipParam p -> show p
+    DipPress p -> show p
+    Character c -> [c]
+    DipProv (Inland i) -> show i
+    DipProv (Sea i) -> show i
+    DipProv (Coastal i) -> show i
+    DipProv (BiCoastal i) -> show i
 
 data Pow = Pow Int
               deriving (Show, Eq)

@@ -1,5 +1,8 @@
 {-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, FunctionalDependencies, GeneralizedNewtypeDeriving #-}
-module Diplomacy.Common.DipMessage (DipMessage(..), parseDipMessage, uParseDipMessage) where
+module Diplomacy.Common.DipMessage ( DipMessage(..)
+                                   , parseDipMessage
+                                   , uParseDipMessage
+                                   , stringyDip) where
 
 import Diplomacy.Common.Data as Dat
 import Diplomacy.Common.DipToken
@@ -27,7 +30,7 @@ type DipParserString = DipParser BS.ByteString
 
 -- which is why you should ALWAYS have an accompanying class
 parserFail :: DipRep s t => String -> DipParser s a
-parserFail = dipCatchError . Parsec.parserFail
+parserFail = DipParser . Parsec.parserFail
 getPosition = dipCatchError Parsec.getPosition
 tokenPrim a b c = dipCatchError $ Parsec.tokenPrim a b c
 
@@ -958,6 +961,9 @@ type UnDipParser a = UnParser a DipToken
 uParseDipMessage :: DipMessage -> [DipToken]
 uParseDipMessage = listify . uMsg
 
+stringyDip :: [DipToken] -> String
+stringyDip toks = toks >>= (' ' :) . show
+
 cons :: a -> AppendList a
 cons a = (a :)
 
@@ -973,7 +979,7 @@ insertAt n a (b : as) = b : insertAt (n - 1) a as
 insertAt _ _ [] = undefined
 
 uParen :: UnDipParser a -> UnDipParser a
-uParen up a = (cons Bra .) . (. cons Ket) $ up a
+uParen up a = cons Bra . up a . cons Ket
 
 uMany :: UnDipParser a -> UnDipParser [a]
 uMany up = foldl (.) id . map up
@@ -1072,4 +1078,3 @@ uSupplyCentre (SupplyCentre pow centres) =
 
 uProvince :: UnDipParser Province
 uProvince prov = cons (DipProv prov)
-
