@@ -20,7 +20,16 @@ class Map extends GuiElem {
 	}
 
 	public override function resize(width:Int,height:Int,scale:ScaleMode) {
-		map.width = width;
-		map.height = height;
+		var ratio = map.height/map.width;
+
+		var width_h  = ratio*width;
+		if(width_h > height) {
+			map.width = width;
+			map.height = width_h;
+		}else {
+			var height_w = height/ratio;
+			map.width = height_w;
+			map.height = height;
+		}
 	}
 }
