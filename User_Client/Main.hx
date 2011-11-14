@@ -10,6 +10,7 @@ import nme.Assets;
 import nme.display.Bitmap;
 
 import Terminal;
+import gui.Gui;
 
 class Main extends Sprite {
 	public static function main() {
@@ -29,11 +30,18 @@ class Main extends Sprite {
 //		var bit = new Bitmap(Assets.getBitmapData("Assets/map-std.png"));
 //		addChild(bit);
 
-		var terminal = new Terminal(stage.stageWidth,stage.stageHeight);
+/*		var terminal = new Terminal(stage.stageWidth,stage.stageHeight);
 		addChild(terminal);
 
 		stage.addEventListener(Event.RESIZE, function(_) {
 			terminal.resize(stage.stageWidth,stage.stageHeight);
+		});*/
+
+		var ggui = new Gui();
+		addChild(ggui);
+
+		stage.addEventListener(Event.RESIZE, function(_) {
+			ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);
 		});
 	}
 }
