@@ -1,5 +1,8 @@
 {-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, FunctionalDependencies, GeneralizedNewtypeDeriving #-}
 module Diplomacy.Common.DipMessage ( DipMessage(..)
+                                   , PressMessage (..)
+                                   , PressProposal (..)
+                                   , PressReply (..)
                                    , parseDipMessage
                                    , uParseDipMessage
                                    , stringyDip) where
@@ -70,7 +73,6 @@ dipCatchError parsr = DipParser parsr <?> SyntaxError
   -- Things to look out for:
   -- ambiguity: StartPing and MissingReq
   -- Cancel (StartProcessing) means dont process until deadline (ignore?)
-
   -- |class to abstract away the token and text representation
 class Parsec.Stream s DipParserInfo t => DipRep s t | t -> s where
   pChr :: DipParser s Char
@@ -506,7 +508,7 @@ pSupplyCentre = do
   return (SupplyCentre pow centres)
 
 pProvince :: DipRep s t => DipParser s Province
-pProvince = tok (\t -> case t of {(DipProv p) -> Just p ; _ -> Nothing})
+pProvince = tok (\t -> case t of {(DipProv s p) -> Just (Province s p) ; _ -> Nothing})
 
 pHlo :: DipRep s t => DipParser s DipMessage
 pHlo = tok1 (DipCmd HLO) >> choice [pStart, pStartPing]
@@ -1105,7 +1107,7 @@ uSupplyCentre (SupplyCentre pow centres) =
   )
 
 uProvince :: UnDipParser Province
-uProvince prov = uTok (DipProv prov)
+uProvince (Province supp prov) = uTok (DipProv supp prov)
 
 uVariantOpt :: UnDipParser VariantOption
 uVariantOpt (Level l)          = uTok (DipParam LVL) . uInt l

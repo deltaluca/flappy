@@ -1,2 +1,2 @@
 all:
-	ghc --make Brain.hs
+	ghc --make *.hs
