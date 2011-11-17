@@ -964,14 +964,14 @@ uParseDipMessage = listify . uMsg
 stringyDip :: [DipToken] -> String
 stringyDip toks = toks >>= (' ' :) . show
 
-cons :: a -> AppendList a
-cons a = (a :)
+uTok :: a -> AppendList a
+uTok a = (a :)
 
 listify :: AppendList a -> [a]
 listify = ($ [])
 
 appendListify :: [a] -> AppendList a
-appendListify = foldr (\a -> (cons a .)) id
+appendListify = foldr (\a -> (uTok a .)) id
 
 insertAt :: Int -> UnParser a a
 insertAt 0 a l = a : l
@@ -979,61 +979,89 @@ insertAt n a (b : as) = b : insertAt (n - 1) a as
 insertAt _ _ [] = undefined
 
 uParen :: UnDipParser a -> UnDipParser a
-uParen up a = cons Bra . up a . cons Ket
+uParen up a = uTok Bra . up a . uTok Ket
 
 uMany :: UnDipParser a -> UnDipParser [a]
 uMany up = foldl (.) id . map up
+
+uMaybe :: UnDipParser a -> UnDipParser (Maybe a)
+uMaybe up = maybe id up
 
 uStr :: UnDipParser String
 uStr = appendListify . map Character
 
 uInt :: UnDipParser Int
-uInt = cons . DipInt
+uInt = uTok . DipInt
 
 uMsg :: UnDipParser DipMessage
 uMsg m = case m of
-  Accept msg -> ( cons (DipCmd YES)
+  Accept msg -> ( uTok (DipCmd YES)
                 . uParen uMsg msg
                 )
                   
-  Reject msg -> ( cons (DipCmd REJ)
+  Reject msg -> ( uTok (DipCmd REJ)
                 . uParen uMsg msg
                 )
                   
-  Cancel msg -> ( cons (DipCmd NOT) 
+  Cancel msg -> ( uTok (DipCmd NOT) 
                 . uParen uMsg msg
                 )
                   
-  Name sName sVersion -> ( cons (DipCmd NME)
+  Name sName sVersion -> ( uTok (DipCmd NME)
                          . uParen uStr sName
                          . uParen uStr sVersion
                          )
                          
-  MapName sName -> ( cons (DipCmd MAP)
+  MapName sName -> ( uTok (DipCmd MAP)
                    . uParen uStr sName
                    )
   
-  MapNameReq -> cons (DipCmd MAP)
+  MapNameReq -> uTok (DipCmd MAP)
   
-  Observer -> cons (DipCmd OBS)
+  Observer -> uTok (DipCmd OBS)
   
-  Rejoin power passcode -> ( cons (DipCmd IAM)
+  Rejoin power passcode -> ( uTok (DipCmd IAM)
                            . uParen uPower power
                            . uParen uInt passcode
                            )
                            
-  MapDef powers provinces adjacencies -> ( cons (DipCmd MDF)
+  MapDef powers provinces adjacencies -> ( uTok (DipCmd MDF)
                                          . uParen (uMany uPower) powers
                                          . uParen uProvinces provinces
                                          . uParen (uMany (uParen uAdjacency)) adjacencies
                                          )
 
-  MapDefReq -> cons (DipCmd MDF)
+  MapDefReq -> uTok (DipCmd MDF)
+  
+  Start pow passCode lvl variantOpts ->
+    ( uTok (DipCmd HLO)
+    . uParen uPower pow
+    . uParen uInt passCode
+    . uTok (DipParam LVL) . uInt lvl
+    . uMany uVariantOpt variantOpts
+    )
+
+  StartPing -> uTok (DipCmd HLO)
+
+  CurrentPosition supplyCentres ->
+    ( uTok (DipCmd SCO)
+    . uMany uSupplyCentre supplyCentres
+    )
+    
+  CurrentPositionReq -> uTok (DipCmd SCO)
+    
+  CurrentUnitPosition turn unitPoss retreats ->
+    uTok (DipCmd NOW)
+    . uParen uTurn turn
+--    . uMany (uParen uUnitPosition)
+    . uTok (DipParam MRT)
+    
+    
   _ -> undefined
 
 uPower :: UnDipParser Power
-uPower (Power p) = cons (DipPow (Pow p))
-uPower Neutral = cons (DipParam UNO)
+uPower (Power p) = uTok (DipPow (Pow p))
+uPower Neutral = uTok (DipParam UNO)
 
 uProvinces :: UnDipParser Provinces
 uProvinces (Provinces supplyCentres nonSupplyCentres) =
@@ -1053,15 +1081,15 @@ uUnitToProv (UnitToProv unitType provNodes) =
   . uMany uProvinceNode provNodes
   )
 uUnitToProv (CoastalFleetToProv coast provNodes) =
-  ( uParen (\c -> cons (DipUnitType Fleet) . uCoast c) coast
+  ( uParen (\c -> uTok (DipUnitType Fleet) . uCoast c) coast
   . uMany uProvinceNode provNodes
   )
 
 uUnitType :: UnDipParser UnitType
-uUnitType typ = cons (DipUnitType typ)
+uUnitType typ = uTok (DipUnitType typ)
 
 uCoast :: UnDipParser Coast
-uCoast c = cons (DipCoast c)
+uCoast c = uTok (DipCoast c)
 
 uProvinceNode :: UnDipParser ProvinceNode
 uProvinceNode (ProvNode prov) = uProvince prov
@@ -1077,4 +1105,19 @@ uSupplyCentre (SupplyCentre pow centres) =
   )
 
 uProvince :: UnDipParser Province
-uProvince prov = cons (DipProv prov)
+uProvince prov = uTok (DipProv prov)
+
+uVariantOpt :: UnDipParser VariantOption
+uVariantOpt (Level l)          = uTok (DipParam LVL) . uInt l
+uVariantOpt (TimeMovement t)   = uTok (DipParam MTL) . uInt t
+uVariantOpt (TimeRetreat t)    = uTok (DipParam RTL) . uInt t
+uVariantOpt (TimeBuild t)      = uTok (DipParam BTL) . uInt t
+uVariantOpt (DeadlineStop)     = uTok (DipParam DSD)
+uVariantOpt (AnyOrderAccepted) = uTok (DipParam AOA)
+
+uPhase :: UnDipParser Phase
+uPhase p = uTok (DipPhase p)
+
+uTurn :: UnDipParser Turn
+uTurn (Turn p y) = uPhase p . uInt y
+

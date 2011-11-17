@@ -1,5 +1,5 @@
 GHC=ghc $(GHC_OPTS)
-GHC_OPTS=--make -fwarn-missing-methods -Wall -fno-warn-missing-signatures -fno-warn-unused-do-bind -Werror
+GHC_OPTS=--make -fwarn-missing-methods -Wall -fno-warn-missing-signatures -fno-warn-unused-do-bind #-Werror
 
 all: server
 

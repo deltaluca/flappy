@@ -24,12 +24,36 @@ data DipToken = DipInt Int
               | DipParam Param
               | DipPress Press
               | Character Char
-              | DipProv Dat.Province
+              | DipProv { dipProvIsSupply :: Bool
+                        , Dat.Province }
               deriving (Eq)
 
 instance Binary DipToken where
   put (DipInt int) = put . (.&. 0x3FFF) $ (fromIntegral int :: Word16)
   put _ = undefined
+  put (Bra) = put (0x40 :: Word8)
+  put (Ket) = put (0x40 :: Word8)
+  put (DipPow p) = put (0x41 :: Word8) >> put (fromIntegral p :: Word8)
+  put (DipUnitType Army) = put (0x42 :: Word8) >> put (0x00 :: Word8)
+  put (DipUnitType Fleet) = put (0x42 :: Word8) >> put (0x01 :: Word8)
+  put (DipOrder) = put (0x43 :: Word8)
+  put (DipOrderNote) = put (0x44 :: Word8)
+  put (DipResult) = put (0x45 :: Word8)
+  put (DipCoast) = put (0x46 :: Word8)
+  put (DipPhase) = put (0x47 :: Word8)
+  put (DipCmd) = put (0x48 :: Word8)
+  put (DipParam) = put (0x49 :: Word8)
+  put (DipPress) = put (0x4A :: Word8)
+  put (Character) = put (0x4B :: Word8)
+  put (DipProv) = put (0x50 :: Word8)
+  put (DipProv) = put (0x51 :: Word8)
+  put (DipProv) = put (0x52 :: Word8)
+  put (DipProv) = put (0x53 :: Word8)
+  put (DipProv) = put (0x54 :: Word8)
+  put (DipProv) = put (0x55 :: Word8)
+  put (DipProv) = put (0x56 :: Word8)
+  put (DipProv) = put (0x57 :: Word8)
+  
   get = do
     typ <- (get :: Get Word8)
     val <- (get :: Get Word8)
@@ -209,14 +233,14 @@ decodeToken 0x48 val = return . DipCmd . decodeCmd $ val
 decodeToken 0x49 val = return . DipParam . decodeParam $ val
 decodeToken 0x4A val = return . DipPress . decodePress $ val
 decodeToken 0x4B val = return . Character . chr . fromIntegral $ val
-decodeToken 0x50 val = return . DipProv . Inland . fromIntegral $ val
-decodeToken 0x51 val = return . DipProv . Inland . fromIntegral $ val
-decodeToken 0x52 val = return . DipProv . Sea . fromIntegral $ val
-decodeToken 0x53 val = return . DipProv . Sea . fromIntegral $ val
-decodeToken 0x54 val = return . DipProv . Coastal . fromIntegral $ val
-decodeToken 0x55 val = return . DipProv . Coastal . fromIntegral $ val
-decodeToken 0x56 val = return . DipProv . BiCoastal . fromIntegral $ val
-decodeToken 0x57 val = return . DipProv . BiCoastal . fromIntegral $ val
+decodeToken 0x50 val = return . DipProv False . Inland . fromIntegral $ val
+decodeToken 0x51 val = return . DipProv True . Inland . fromIntegral $ val
+decodeToken 0x52 val = return . DipProv False . Sea . fromIntegral $ val
+decodeToken 0x53 val = return . DipProv True . Sea . fromIntegral $ val
+decodeToken 0x54 val = return . DipProv False . Coastal . fromIntegral $ val
+decodeToken 0x55 val = return . DipProv True . Coastal . fromIntegral $ val
+decodeToken 0x56 val = return . DipProv False . BiCoastal . fromIntegral $ val
+decodeToken 0x57 val = return . DipProv True . BiCoastal . fromIntegral $ val
 decodeToken typ val
   | typ .&. 0xC0 == 0 = if typ .&. 0x20 == 0        -- if positive
                         then return . DipInt $ (fromIntegral typ :: Int) `shift` 8 + fromIntegral val
