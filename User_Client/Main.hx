@@ -18,6 +18,7 @@ class Main extends Sprite {
 	}
 	function new() {
 		super();
+		cacheAsBitmap = false;
 		addEventListener(Event.ADDED_TO_STAGE, init);
 	}
 
@@ -39,6 +40,7 @@ class Main extends Sprite {
 
 		var ggui = new Gui();
 		addChild(ggui);
+		ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);
 
 		stage.addEventListener(Event.RESIZE, function(_) {
 			ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);

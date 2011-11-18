@@ -18,7 +18,11 @@ enum ScaleMode {
 typedef Rect = {x0:Float,y0:Float,x1:Float,y1:Float};
 typedef RelBounds = {x:Float,y:Float,w:Float,h:Float};
 class GuiElem extends Sprite {
-	public function new() super()
+	public function new() {
+		super();
+		cacheAsBitmap = false;
+	}
+
 	public function resize(width:Int,height:Int,scale:ScaleMode) {
 	}
 	
