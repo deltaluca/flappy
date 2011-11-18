@@ -1,6 +1,12 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, GeneralizedNewtypeDeriving, FunctionalDependencies #-}
+{-# LANGUAGE 
+  MultiParamTypeClasses
+, FlexibleInstances
+, GeneralizedNewtypeDeriving
+, FunctionalDependencies #-}
 
-module Diplomacy.SkelBot.Brain where
+module Diplomacy.SkelBot.Brain ( BrainT, Brain, GameKnowledgeT
+                               , GameKnowledgeMonad(..)
+                               , BrainMonad(..)) where
 
 import Diplomacy.SkelBot.Decision
 import Diplomacy.SkelBot.MapState
@@ -11,8 +17,8 @@ import Control.Monad.State
 import Control.Monad.Identity
 import Data.Functor
 
-newtype Monad m => GameKnowledgeT h m a = GameKnowledge (StateT h (ReaderT MapDef m) a)
-                                        deriving (Monad, MonadReader MapDef, MonadState h)
+newtype GameKnowledgeT h m a = GameKnowledge (StateT h (ReaderT MapDef m) a)
+                             deriving (Monad, MonadReader MapDef, MonadState h)
 
 instance MonadTrans (GameKnowledgeT h) where
   lift = GameKnowledge . lift . lift
@@ -36,8 +42,8 @@ instance (Monad m) => GameKnowledgeMonad h (GameKnowledgeT h m) where
   putHistory = GameKnowledge . put
 
   -- |h = history type, d = decision type
-newtype (Decision d) => BrainT d h m a = Brain (ReaderT MapState (StateT d (GameKnowledgeT h m)) a)
-                                     deriving (Monad, MonadReader MapState, MonadState d)
+newtype BrainT d h m a = Brain (ReaderT MapState (StateT d (GameKnowledgeT h m)) a)
+                       deriving (Monad, MonadReader MapState, MonadState d)
 
 instance Decision d => MonadTrans (BrainT d h) where
   lift = Brain . lift . lift . lift
