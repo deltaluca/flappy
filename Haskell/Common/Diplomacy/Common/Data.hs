@@ -7,6 +7,10 @@ data Power
          deriving (Show)
                       
 data Province 
+         = Province Bool ProvinceInter
+         deriving (Show, Eq)
+
+data ProvinceInter
          = Inland Int
          | Sea Int
          | Coastal Int

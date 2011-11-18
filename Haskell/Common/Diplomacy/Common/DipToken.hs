@@ -24,17 +24,60 @@ data DipToken = DipInt Int
               | DipParam Param
               | DipPress Press
               | Character Char
-              | DipProv Dat.Province
-              deriving (Show, Eq)
+              | DipProv Bool Dat.ProvinceInter
+              deriving (Eq)
 
 instance Binary DipToken where
   put (DipInt int) = put . (.&. 0x3FFF) $ (fromIntegral int :: Word16)
-  put _ = undefined
+  put (Bra) = put (0x40 :: Word8)
+  put (Ket) = put (0x40 :: Word8)
+  put (DipPow (Pow p)) = put (0x41 :: Word8) >> put (fromIntegral p :: Word8)
+  put (DipUnitType Army) = put (0x42 :: Word8) >> put (0x00 :: Word8)
+  put (DipUnitType Fleet) = put (0x42 :: Word8) >> put (0x01 :: Word8)
+  put (DipOrder order) = put (0x43 :: Word8) >> putOrderTok order
+  put (DipOrderNote orderNote) = put (0x44 :: Word8) >> putOrderNoteTok orderNote
+  put (DipResult result) = put (0x45 :: Word8) >> putResult result
+  put (DipCoast coast) = put (0x46 :: Word8) >> putCoast coast
+  put (DipPhase phase) = put (0x47 :: Word8) >> putPhase phase
+  put (DipCmd cmd) = put (0x48 :: Word8) >> putCmd cmd
+  put (DipParam param) = put (0x49 :: Word8) >> putParam param
+  put (DipPress press) = put (0x4A :: Word8) >> putPress press
+  put (Character character) = put (0x4B :: Word8) >> putCharacter character
+  put (DipProv isSupply (Inland prov)) = put (0x50 + (isSupply ? 0 $ 1) :: Word8) >> putProv prov
+  put (DipProv isSupply (Sea prov)) = put (0x52 + (isSupply ? 0 $ 1) :: Word8) >> putProv prov
+  put (DipProv isSupply (Coastal prov)) = put (0x54 + (isSupply ? 0 $ 1) :: Word8) >> putProv prov
+  put (DipProv isSupply (BiCoastal prov)) = put (0x56 + (isSupply ? 0 $ 1) :: Word8) >> putProv prov
+
   get = do
     typ <- (get :: Get Word8)
     val <- (get :: Get Word8)
     decodeToken typ val
 
+infixl 6 ?
+(?) :: Bool -> a -> a -> a
+(?) bool a b = if bool then a else b
+
+instance Show DipToken where
+  show t = case t of
+    DipInt i -> show i
+    Bra -> "("
+    Ket -> ")"
+    DipPow (Pow p) -> show p
+    DipUnitType Army -> "ARM"
+    DipUnitType Fleet -> "FLT"
+    DipOrder o -> show o
+    DipOrderNote n -> show n
+    DipResult r -> show r
+    DipCoast (Coast c) -> show c
+    DipPhase p -> show p
+    DipCmd c -> show c
+    DipParam p -> show p
+    DipPress p -> show p
+    Character c -> [c]
+    DipProv _ (Inland i) -> show i
+    DipProv _ (Sea i) -> show i
+    DipProv _ (Coastal i) -> show i
+    DipProv _ (BiCoastal i) -> show i
 
 data Pow = Pow Int
               deriving (Show, Eq)
@@ -188,14 +231,14 @@ decodeToken 0x48 val = return . DipCmd . decodeCmd $ val
 decodeToken 0x49 val = return . DipParam . decodeParam $ val
 decodeToken 0x4A val = return . DipPress . decodePress $ val
 decodeToken 0x4B val = return . Character . chr . fromIntegral $ val
-decodeToken 0x50 val = return . DipProv . Inland . fromIntegral $ val
-decodeToken 0x51 val = return . DipProv . Inland . fromIntegral $ val
-decodeToken 0x52 val = return . DipProv . Sea . fromIntegral $ val
-decodeToken 0x53 val = return . DipProv . Sea . fromIntegral $ val
-decodeToken 0x54 val = return . DipProv . Coastal . fromIntegral $ val
-decodeToken 0x55 val = return . DipProv . Coastal . fromIntegral $ val
-decodeToken 0x56 val = return . DipProv . BiCoastal . fromIntegral $ val
-decodeToken 0x57 val = return . DipProv . BiCoastal . fromIntegral $ val
+decodeToken 0x50 val = return . DipProv False . Inland . fromIntegral $ val
+decodeToken 0x51 val = return . DipProv True . Inland . fromIntegral $ val
+decodeToken 0x52 val = return . DipProv False . Sea . fromIntegral $ val
+decodeToken 0x53 val = return . DipProv True . Sea . fromIntegral $ val
+decodeToken 0x54 val = return . DipProv False . Coastal . fromIntegral $ val
+decodeToken 0x55 val = return . DipProv True . Coastal . fromIntegral $ val
+decodeToken 0x56 val = return . DipProv False . BiCoastal . fromIntegral $ val
+decodeToken 0x57 val = return . DipProv True . BiCoastal . fromIntegral $ val
 decodeToken typ val
   | typ .&. 0xC0 == 0 = if typ .&. 0x20 == 0        -- if positive
                         then return . DipInt $ (fromIntegral typ :: Int) `shift` 8 + fromIntegral val
@@ -346,6 +389,145 @@ decodePress 0x25 = CCL
 decodePress 0x26 = NAR
 decodePress _ = throw InvalidToken
 
+putOrderTok CTO = 0x20
+putOrderTok CVY = 0x21
+putOrderTok HLD = 0x22
+putOrderTok MTO = 0x23
+putOrderTok SUP = 0x24
+putOrderTok VIA = 0x25
+putOrderTok DSB = 0x40
+putOrderTok RTO = 0x41
+putOrderTok BLD = 0x80
+putOrderTok REM = 0x81
+putOrderTok WVE = 0x82
+
+putOrderNoteTok MBV = 0x00
+putOrderNoteTok BPR = 0x01
+putOrderNoteTok CST = 0x02
+putOrderNoteTok ESC = 0x03
+putOrderNoteTok FAR = 0x04
+putOrderNoteTok HSC = 0x05
+putOrderNoteTok NAS = 0x06
+putOrderNoteTok NMB = 0x07
+putOrderNoteTok NMR = 0x08
+putOrderNoteTok NRN = 0x09
+putOrderNoteTok NRS = 0x0A
+putOrderNoteTok NSA = 0x0B
+putOrderNoteTok NSC = 0x0C
+putOrderNoteTok NSF = 0x0D
+putOrderNoteTok NSP = 0x0E
+putOrderNoteTok NST = 0x0F
+putOrderNoteTok NSU = 0x10
+putOrderNoteTok NVR = 0x11
+putOrderNoteTok NYU = 0x12
+putOrderNoteTok YSC = 0x13
+
+putResult SUC = 0x00
+putResult BNC = 0x01
+putResult CUT = 0x02
+putResult DSR = 0x03
+putResult FLD = 0x04
+putResult NSO = 0x05
+putResult RET = 0x06
+
+putPhase Spring = 0x00
+putPhase Summer = 0x01
+putPhase Fall = 0x02
+putPhase Autumn = 0x03
+putPhase Winter = 0x04
+
+putCmd CCD = 0x00
+putCmd DRW = 0x01
+putCmd FRM = 0x02
+putCmd GOF = 0x03
+putCmd HLO = 0x04
+putCmd HST = 0x05
+putCmd HUH = 0x06
+putCmd IAM = 0x07
+putCmd LOD = 0x08
+putCmd MAP = 0x09
+putCmd MDF = 0x0A
+putCmd MIS = 0x0B
+putCmd NME = 0x0C
+putCmd NOT = 0x0D
+putCmd NOW = 0x0E
+putCmd OBS = 0x0F
+putCmd OFF = 0x10
+putCmd ORD = 0x11
+putCmd OUT = 0x12
+putCmd PRN = 0x13
+putCmd REJ = 0x14
+putCmd SCO = 0x15
+putCmd SLO = 0x16
+putCmd SND = 0x17
+putCmd SUB = 0x18
+putCmd SVE = 0x19
+putCmd THX = 0x1A
+putCmd TME = 0x1B
+putCmd YES = 0x1C
+putCmd ADM = 0x1D
+putCmd SMR = 0x1E
+
+putParam AOA = 0x00
+putParam BTL = 0x01
+putParam ERR = 0x02
+putParam LVL = 0x03
+putParam MRT = 0x04
+putParam MTL = 0x05
+putParam NPB = 0x06
+putParam NPR = 0x07
+putParam PDA = 0x08
+putParam PTL = 0x09
+putParam RTL = 0x0A
+putParam UNO = 0x0B
+putParam DSD = 0x0D
+
+putPress ALY = 0x00
+putPress AND = 0x01
+putPress BWX = 0x02
+putPress DMZ = 0x03
+putPress ELS = 0x04
+putPress EXP = 0x05
+putPress FWD = 0x06
+putPress FCT = 0x07
+putPress FOR = 0x08
+putPress HOW = 0x09
+putPress IDK = 0x0A
+putPress IFF = 0x0B
+putPress INS = 0x0C
+putPress IOU = 0x0D
+putPress OCC = 0x0E
+putPress ORR = 0x0F
+putPress PCE = 0x10
+putPress POB = 0x11
+putPress PPT = 0x12
+putPress PRP = 0x13
+putPress QRY = 0x14
+putPress SCD = 0x15
+putPress SRY = 0x16
+putPress SUG = 0x17
+putPress THK = 0x18
+putPress THN = 0x19
+putPress TRY = 0x1A
+putPress UOM = 0x1B
+putPress VSS = 0x1C
+putPress WHT = 0x1D
+putPress WHY = 0x1E
+putPress XDO = 0x1F
+putPress XOY = 0x20
+putPress YDO = 0x21
+putPress WRT = 0x22
+putPress BCC = 0x23
+putPress UNT = 0x24
+putPress CCL = 0x25
+putPress NAR = 0x26
+
+putCoast (Coast c) = put (fromIntegral c :: Word8)
+
+putCharacter c = put (fromIntegral (ord c) :: Word8) 
+
+putProv prov = put (fromIntegral prov :: Word8)
+
 type TokenMap = Map.Map [Char] DipToken
 
 tokenMap :: TokenMap
@@ -477,84 +659,86 @@ tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
 
                    -- standard map
                    -- provinces
-                 , ("BOH", DipProv (Inland 0x00))
-                 , ("BUR", DipProv (Inland 0x01))
-                 , ("GAL", DipProv (Inland 0x02))
-                 , ("RUH", DipProv (Inland 0x03))
-                 , ("SIL", DipProv (Inland 0x04))
-                 , ("TYR", DipProv (Inland 0x05))
-                 , ("UKR", DipProv (Inland 0x06))
-                 , ("BUD", DipProv (Inland 0x07))
-                 , ("MOS", DipProv (Inland 0x08))
-                 , ("MUN", DipProv (Inland 0x09))
-                 , ("PAR", DipProv (Inland 0x0A))
-                 , ("SER", DipProv (Inland 0x0B))
-                 , ("VIE", DipProv (Inland 0x0C))
-                 , ("WAR", DipProv (Inland 0x0D))
+                 , ("BOH", DipProv False (Inland 0x00))
+                 , ("BUR", DipProv False (Inland 0x01))
+                 , ("GAL", DipProv False (Inland 0x02))
+                 , ("RUH", DipProv False (Inland 0x03))
+                 , ("SIL", DipProv False (Inland 0x04))
+                 , ("TYR", DipProv False (Inland 0x05))
+                 , ("UKR", DipProv False (Inland 0x06))
+                   
+                 , ("BUD", DipProv True (Inland 0x07))
+                 , ("MOS", DipProv True (Inland 0x08))
+                 , ("MUN", DipProv True (Inland 0x09))
+                 , ("PAR", DipProv True (Inland 0x0A))
+                 , ("SER", DipProv True (Inland 0x0B))
+                 , ("VIE", DipProv True (Inland 0x0C))
+                 , ("WAR", DipProv True (Inland 0x0D))
 
-                 , ("ADR", DipProv (Sea 0x0E))
-                 , ("AEG", DipProv (Sea 0x0F))
-                 , ("BAL", DipProv (Sea 0x10))
-                 , ("BAR", DipProv (Sea 0x11))
-                 , ("BLA", DipProv (Sea 0x12))
-                 , ("EAS", DipProv (Sea 0x13))
-                 , ("ECH", DipProv (Sea 0x14))
-                 , ("GOB", DipProv (Sea 0x15))
-                 , ("GOL", DipProv (Sea 0x16))
-                 , ("HEL", DipProv (Sea 0x17))
-                 , ("ION", DipProv (Sea 0x18))
-                 , ("IRI", DipProv (Sea 0x19))
-                 , ("MAO", DipProv (Sea 0x1A))
-                 , ("NAO", DipProv (Sea 0x1B))
-                 , ("NTH", DipProv (Sea 0x1C))
-                 , ("NWG", DipProv (Sea 0x1D))
-                 , ("SKA", DipProv (Sea 0x1E))
-                 , ("TYS", DipProv (Sea 0x1F))
-                 , ("WES", DipProv (Sea 0x20))
+                 , ("ADR", DipProv False (Sea 0x0E))
+                 , ("AEG", DipProv False (Sea 0x0F))
+                 , ("BAL", DipProv False (Sea 0x10))
+                 , ("BAR", DipProv False (Sea 0x11))
+                 , ("BLA", DipProv False (Sea 0x12))
+                 , ("EAS", DipProv False (Sea 0x13))
+                 , ("ECH", DipProv False (Sea 0x14))
+                 , ("GOB", DipProv False (Sea 0x15))
+                 , ("GOL", DipProv False (Sea 0x16))
+                 , ("HEL", DipProv False (Sea 0x17))
+                 , ("ION", DipProv False (Sea 0x18))
+                 , ("IRI", DipProv False (Sea 0x19))
+                 , ("MAO", DipProv False (Sea 0x1A))
+                 , ("NAO", DipProv False (Sea 0x1B))
+                 , ("NTH", DipProv False (Sea 0x1C))
+                 , ("NWG", DipProv False (Sea 0x1D))
+                 , ("SKA", DipProv False (Sea 0x1E))
+                 , ("TYS", DipProv False (Sea 0x1F))
+                 , ("WES", DipProv False (Sea 0x20))
 
-                 , ("ALB", DipProv (Coastal 0x21))
-                 , ("APU", DipProv (Coastal 0x22))
-                 , ("ARM", DipProv (Coastal 0x23))
-                 , ("CLY", DipProv (Coastal 0x24))
-                 , ("FIN", DipProv (Coastal 0x25))
-                 , ("GAS", DipProv (Coastal 0x26))
-                 , ("LVN", DipProv (Coastal 0x27))
-                 , ("NAF", DipProv (Coastal 0x28))
-                 , ("PIC", DipProv (Coastal 0x29))
-                 , ("PIE", DipProv (Coastal 0x2A))
-                 , ("PRU", DipProv (Coastal 0x2B))
-                 , ("SYR", DipProv (Coastal 0x2C))
-                 , ("TUS", DipProv (Coastal 0x2D))
-                 , ("WAL", DipProv (Coastal 0x2E))
-                 , ("YOR", DipProv (Coastal 0x2F))
-                 , ("ANK", DipProv (Coastal 0x30))
-                 , ("BEL", DipProv (Coastal 0x31))
-                 , ("BER", DipProv (Coastal 0x32))
-                 , ("BRE", DipProv (Coastal 0x33))
-                 , ("CON", DipProv (Coastal 0x34))
-                 , ("DEN", DipProv (Coastal 0x35))
-                 , ("EDI", DipProv (Coastal 0x36))
-                 , ("GRE", DipProv (Coastal 0x37))
-                 , ("HOL", DipProv (Coastal 0x38))
-                 , ("KIE", DipProv (Coastal 0x39))
-                 , ("LON", DipProv (Coastal 0x3A))
-                 , ("LVP", DipProv (Coastal 0x3B))
-                 , ("MAR", DipProv (Coastal 0x3C))
-                 , ("NAP", DipProv (Coastal 0x3D))
-                 , ("NWY", DipProv (Coastal 0x3E))
-                 , ("POR", DipProv (Coastal 0x3F))
-                 , ("ROM", DipProv (Coastal 0x40))
-                 , ("RUM", DipProv (Coastal 0x41))
-                 , ("SEV", DipProv (Coastal 0x42))
-                 , ("SMY", DipProv (Coastal 0x43))
-                 , ("SWE", DipProv (Coastal 0x44))
-                 , ("TRI", DipProv (Coastal 0x45))
-                 , ("TUN", DipProv (Coastal 0x46))
-                 , ("VEN", DipProv (Coastal 0x47))
+                 , ("ALB", DipProv False (Coastal 0x21))
+                 , ("APU", DipProv False (Coastal 0x22))
+                 , ("ARM", DipProv False (Coastal 0x23))
+                 , ("CLY", DipProv False (Coastal 0x24))
+                 , ("FIN", DipProv False (Coastal 0x25))
+                 , ("GAS", DipProv False (Coastal 0x26))
+                 , ("LVN", DipProv False (Coastal 0x27))
+                 , ("NAF", DipProv False (Coastal 0x28))
+                 , ("PIC", DipProv False (Coastal 0x29))
+                 , ("PIE", DipProv False (Coastal 0x2A))
+                 , ("PRU", DipProv False (Coastal 0x2B))
+                 , ("SYR", DipProv False (Coastal 0x2C))
+                 , ("TUS", DipProv False (Coastal 0x2D))
+                 , ("WAL", DipProv False (Coastal 0x2E))
+                 , ("YOR", DipProv False (Coastal 0x2F))
+                   
+                 , ("ANK", DipProv True (Coastal 0x30))
+                 , ("BEL", DipProv True (Coastal 0x31))
+                 , ("BER", DipProv True (Coastal 0x32))
+                 , ("BRE", DipProv True (Coastal 0x33))
+                 , ("CON", DipProv True (Coastal 0x34))
+                 , ("DEN", DipProv True (Coastal 0x35))
+                 , ("EDI", DipProv True (Coastal 0x36))
+                 , ("GRE", DipProv True (Coastal 0x37))
+                 , ("HOL", DipProv True (Coastal 0x38))
+                 , ("KIE", DipProv True (Coastal 0x39))
+                 , ("LON", DipProv True (Coastal 0x3A))
+                 , ("LVP", DipProv True (Coastal 0x3B))
+                 , ("MAR", DipProv True (Coastal 0x3C))
+                 , ("NAP", DipProv True (Coastal 0x3D))
+                 , ("NWY", DipProv True (Coastal 0x3E))
+                 , ("POR", DipProv True (Coastal 0x3F))
+                 , ("ROM", DipProv True (Coastal 0x40))
+                 , ("RUM", DipProv True (Coastal 0x41))
+                 , ("SEV", DipProv True (Coastal 0x42))
+                 , ("SMY", DipProv True (Coastal 0x43))
+                 , ("SWE", DipProv True (Coastal 0x44))
+                 , ("TRI", DipProv True (Coastal 0x45))
+                 , ("TUN", DipProv True (Coastal 0x46))
+                 , ("VEN", DipProv True (Coastal 0x47))
 
-                 , ("BUL", DipProv (BiCoastal 0x48))
-                 , ("SPA", DipProv (BiCoastal 0x49))
-                 , ("STP", DipProv (BiCoastal 0x4A))
+                 , ("BUL", DipProv True (BiCoastal 0x48))
+                 , ("SPA", DipProv True (BiCoastal 0x49))
+                 , ("STP", DipProv True (BiCoastal 0x4A))
 
                    -- coasts
                  , ("NCS", DipCoast (Coast 0x00))
@@ -575,3 +759,4 @@ tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
                  , ("RUS", DipPow (Pow 0x05))
                  , ("TUR", DipPow (Pow 0x06))
                  ]
+

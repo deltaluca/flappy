@@ -1,5 +1,11 @@
 {-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, FunctionalDependencies, GeneralizedNewtypeDeriving #-}
-module Diplomacy.Common.DipMessage (DipMessage(..), parseDipMessage) where
+module Diplomacy.Common.DipMessage ( DipMessage(..)
+                                   , PressMessage (..)
+                                   , PressProposal (..)
+                                   , PressReply (..)
+                                   , parseDipMessage
+                                   , uParseDipMessage
+                                   , stringyDip) where
 
 import Diplomacy.Common.Data as Dat
 import Diplomacy.Common.DipToken
@@ -27,7 +33,7 @@ type DipParserString = DipParser BS.ByteString
 
 -- which is why you should ALWAYS have an accompanying class
 parserFail :: DipRep s t => String -> DipParser s a
-parserFail = dipCatchError . Parsec.parserFail
+parserFail = DipParser . Parsec.parserFail
 getPosition = dipCatchError Parsec.getPosition
 tokenPrim a b c = dipCatchError $ Parsec.tokenPrim a b c
 
@@ -67,7 +73,6 @@ dipCatchError parsr = DipParser parsr <?> SyntaxError
   -- Things to look out for:
   -- ambiguity: StartPing and MissingReq
   -- Cancel (StartProcessing) means dont process until deadline (ignore?)
-
   -- |class to abstract away the token and text representation
 class Parsec.Stream s DipParserInfo t => DipRep s t | t -> s where
   pChr :: DipParser s Char
@@ -89,8 +94,9 @@ instance DipRep [DipToken] DipToken where
   paren p = tok1 Bra >> p >>= \ret -> tok1 Ket >> return ret
   tok = (\f -> getPosition >>= \p -> tokenPrim show (const . const . const $ p) f)
   errPos = getPosition >>= return . Parsec.sourceColumn
-  createError (WrongParen pos) toks = Paren $ DipCmd PRN : listify (uParen (insertAt pos (DipParam ERR)) . (appendListify toks))
-  createError (SyntaxError pos) toks = Paren $ DipCmd PRN : listify (uParen (insertAt pos (DipParam ERR)) . (appendListify toks))
+  createError (WrongParen pos) toks =
+    Paren $ DipCmd PRN : listify (uParen (insertAt pos) (DipParam ERR) . (appendListify toks))
+  createError (SyntaxError pos) toks = Paren $ DipCmd PRN : listify (uParen (insertAt pos) (DipParam ERR) . (appendListify toks))
 
 instance DipRep BS.ByteString Char where
   tok f = try $ do
@@ -363,7 +369,6 @@ parseDip parsr lvl stream =   uncurry (handleParseErrors stream)
                             . Parsec.runParserT (unDipParser parsr) () "DAIDE Message Parser"
                             $ stream
 
-
 handleParseErrors :: (Monad m, DipRep s t) => s -> Either Parsec.ParseError a -> (Maybe DipParseError) -> ErrorT DipError m a
 handleParseErrors stream (Left _) (Just err) = throwError (createError err stream)
 handleParseErrors _ (Left p) Nothing = throwError . ParseError . show $ p
@@ -503,7 +508,7 @@ pSupplyCentre = do
   return (SupplyCentre pow centres)
 
 pProvince :: DipRep s t => DipParser s Province
-pProvince = tok (\t -> case t of {(DipProv p) -> Just p ; _ -> Nothing})
+pProvince = tok (\t -> case t of {(DipProv s p) -> Just (Province s p) ; _ -> Nothing})
 
 pHlo :: DipRep s t => DipParser s DipMessage
 pHlo = tok1 (DipCmd HLO) >> choice [pStart, pStartPing]
@@ -948,17 +953,174 @@ pSmr = do
 
 
 -- unparsing
-  
+
 type AppendList a = [a] -> [a]
-cons  a = ((a :) .)
-lcons a = (. (a :))
+
+type UnParser a b = a -> AppendList b
+
+type UnDipParser a = UnParser a DipToken
+
+uParseDipMessage :: DipMessage -> [DipToken]
+uParseDipMessage = listify . uMsg
+
+stringyDip :: [DipToken] -> String
+stringyDip toks = toks >>= (' ' :) . show
+
+uTok :: a -> AppendList a
+uTok a = (a :)
+
+listify :: AppendList a -> [a]
 listify = ($ [])
 
-appendListify = foldr cons id
+appendListify :: [a] -> AppendList a
+appendListify = foldr (\a -> (uTok a .)) id
 
+insertAt :: Int -> UnParser a a
 insertAt 0 a l = a : l
 insertAt n a (b : as) = b : insertAt (n - 1) a as
 insertAt _ _ [] = undefined
 
-uParen :: AppendList DipToken -> AppendList DipToken
-uParen = cons Bra . lcons Ket
+uParen :: UnDipParser a -> UnDipParser a
+uParen up a = uTok Bra . up a . uTok Ket
+
+uMany :: UnDipParser a -> UnDipParser [a]
+uMany up = foldl (.) id . map up
+
+-- uMaybe :: UnDipParser a -> UnDipParser (Maybe a)
+-- uMaybe up = maybe id up
+
+uStr :: UnDipParser String
+uStr = appendListify . map Character
+
+uInt :: UnDipParser Int
+uInt = uTok . DipInt
+
+uMsg :: UnDipParser DipMessage
+uMsg m = case m of
+  Accept msg -> ( uTok (DipCmd YES)
+                . uParen uMsg msg
+                )
+                  
+  Reject msg -> ( uTok (DipCmd REJ)
+                . uParen uMsg msg
+                )
+                  
+  Cancel msg -> ( uTok (DipCmd NOT) 
+                . uParen uMsg msg
+                )
+                  
+  Name sName sVersion -> ( uTok (DipCmd NME)
+                         . uParen uStr sName
+                         . uParen uStr sVersion
+                         )
+                         
+  MapName sName -> ( uTok (DipCmd MAP)
+                   . uParen uStr sName
+                   )
+  
+  MapNameReq -> uTok (DipCmd MAP)
+  
+  Observer -> uTok (DipCmd OBS)
+  
+  Rejoin power passcode -> ( uTok (DipCmd IAM)
+                           . uParen uPower power
+                           . uParen uInt passcode
+                           )
+                           
+  MapDef powers provinces adjacencies -> ( uTok (DipCmd MDF)
+                                         . uParen (uMany uPower) powers
+                                         . uParen uProvinces provinces
+                                         . uParen (uMany (uParen uAdjacency)) adjacencies
+                                         )
+
+  MapDefReq -> uTok (DipCmd MDF)
+  
+  Start pow passCode lvl variantOpts ->
+    ( uTok (DipCmd HLO)
+    . uParen uPower pow
+    . uParen uInt passCode
+    . uTok (DipParam LVL) . uInt lvl
+    . uMany uVariantOpt variantOpts
+    )
+
+  StartPing -> uTok (DipCmd HLO)
+
+  CurrentPosition supplyCentres ->
+    ( uTok (DipCmd SCO)
+    . uMany uSupplyCentre supplyCentres
+    )
+    
+  CurrentPositionReq -> uTok (DipCmd SCO)
+    
+  CurrentUnitPosition turn _ _ -> --unitPoss retreats ->
+    uTok (DipCmd NOW)
+    . uParen uTurn turn
+--    . uMany (uParen uUnitPosition)
+    . uTok (DipParam MRT)
+    
+    
+  _ -> undefined
+
+uPower :: UnDipParser Power
+uPower (Power p) = uTok (DipPow (Pow p))
+uPower Neutral = uTok (DipParam UNO)
+
+uProvinces :: UnDipParser Provinces
+uProvinces (Provinces supplyCentres nonSupplyCentres) =
+  ( uParen (uMany (uParen uSupplyCentre)) supplyCentres
+  . uParen (uMany uProvince) nonSupplyCentres
+  )
+
+uAdjacency :: UnDipParser Adjacency
+uAdjacency (Adjacency province unitToProvs) =
+  ( uProvince province
+  . uMany (uParen uUnitToProv) unitToProvs
+  )
+
+uUnitToProv :: UnDipParser UnitToProv
+uUnitToProv (UnitToProv unitType provNodes) =
+  ( uUnitType unitType
+  . uMany uProvinceNode provNodes
+  )
+uUnitToProv (CoastalFleetToProv coast provNodes) =
+  ( uParen (\c -> uTok (DipUnitType Fleet) . uCoast c) coast
+  . uMany uProvinceNode provNodes
+  )
+
+uUnitType :: UnDipParser UnitType
+uUnitType typ = uTok (DipUnitType typ)
+
+uCoast :: UnDipParser Coast
+uCoast c = uTok (DipCoast c)
+
+uProvinceNode :: UnDipParser ProvinceNode
+uProvinceNode (ProvNode prov) = uProvince prov
+uProvinceNode (ProvCoastNode prov c) =
+  ( uProvince prov
+  . uCoast c
+  )
+
+uSupplyCentre :: UnDipParser SupplyCentre
+uSupplyCentre (SupplyCentre pow centres) =
+  ( uPower pow
+  . uMany uProvince centres
+  )
+
+uProvince :: UnDipParser Province
+uProvince (Province supp prov) = uTok (DipProv supp prov)
+
+uVariantOpt :: UnDipParser VariantOption
+uVariantOpt (Level l)          = uTok (DipParam LVL) . uInt l
+uVariantOpt (TimeMovement t)   = uTok (DipParam MTL) . uInt t
+uVariantOpt (TimeRetreat t)    = uTok (DipParam RTL) . uInt t
+uVariantOpt (TimeBuild t)      = uTok (DipParam BTL) . uInt t
+uVariantOpt (DeadlineStop)     = uTok (DipParam DSD)
+uVariantOpt (AnyOrderAccepted) = uTok (DipParam AOA)
+uVariantOpt _ = undefined
+
+uPhase :: UnDipParser Phase
+uPhase p = uTok (DipPhase p)
+
+uTurn :: UnDipParser Turn
+uTurn (Turn p y) = uPhase p . uInt y
+

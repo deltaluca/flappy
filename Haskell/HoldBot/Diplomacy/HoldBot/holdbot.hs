@@ -40,13 +40,16 @@ communicate = do
   case replyMessage of
     RM -> return ()
     _ -> throwError RMNotFirst
-  forever $ do
-    message <- askHandle
-    handleMessage message
+    
+  undefined
 
-handleMessage :: MonadDaideHandle m => DaideMessage -> m ()
-handleMessage message = do
-  liftIO . print $ message
+handleMessage :: DaideMessage -> TVar (Queue DipMessage) -> DaideHandle ()
+handleMessage (IM _) = throwError IMFromServer
+handleMessage RM = throwError ManyRMs
+handleMessage FM = undefined
+handleMessage (DM dm) = undefined -- communicate with brain
+handleMessage (EM _) = undefined
+handleMessage _ = undefined
 
 -- command line options
 data CLOpts = CLOptions

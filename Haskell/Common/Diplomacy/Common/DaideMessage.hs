@@ -72,3 +72,4 @@ daideMessage 4 size = do
   errCode <- get :: Get Word16
   return . EM . errorFromCode . fromIntegral $ errCode
 daideMessage _ _ = E.throw UnknownMsg
+
