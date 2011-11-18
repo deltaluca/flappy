@@ -1,5 +1,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
-module Diplomacy.SkelBot.Comm(runCommT, popDipMessage, pushDipMessage) where
+module Diplomacy.SkelBot.Comm(CommT, runCommT,
+                              popDipMessage,
+                              pushDipMessage) where
 
 -- |BrainComm is an impure brain the communicates with the message queues
 
@@ -12,16 +14,16 @@ import Data.Sequence
 
 type DipMessageQueue = TChan PressMessage
                        -- (receiver, dispatcher)
-type CommT m = ReaderT DipMessageQueue (ReaderT DipMessageQueue m)
+type CommT m = ReaderT (DipMessageQueue, DipMessageQueue) m
 
-runCommT :: (Monad m) => CommT m a -> DipMessageQueue -> DipMessageQueue -> m a
-runCommT comm rec dis = runReaderT (runReaderT comm rec) dis
+runCommT :: (Monad m) => CommT m a -> (DipMessageQueue, DipMessageQueue) -> m a
+runCommT comm recdis = runReaderT comm recdis
 
 askDispatcher :: (Monad m) => CommT m DipMessageQueue
-askDispatcher = lift ask
+askDispatcher = fmap fst ask
 
 askReceiver :: (Monad m) => CommT m DipMessageQueue
-askReceiver = ask
+askReceiver = fmap snd ask
 
 popDipMessage :: CommT IO DipMessage
 popDipMessage = do
