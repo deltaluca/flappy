@@ -16,19 +16,19 @@ import Control.Monad.State
 import Control.Monad.Identity
 import Data.Functor
 
-newtype GameKnowledgeT h m a = GameKnowledge (StateT h (ReaderT MapDef m) a)
-                             deriving (Monad, MonadReader MapDef, MonadState h)
+newtype GameKnowledgeT h m a = GameKnowledge (StateT h (ReaderT MapDefinition m) a)
+                             deriving (Monad, MonadReader MapDefinition, MonadState h)
 
 instance MonadTrans (GameKnowledgeT h) where
   lift = GameKnowledge . lift . lift
 
-runGameKnowledgeT :: (Monad m) => GameKnowledgeT h m a -> MapDef -> h -> m (a, h)
+runGameKnowledgeT :: (Monad m) => GameKnowledgeT h m a -> MapDefinition -> h -> m (a, h)
 runGameKnowledgeT (GameKnowledge knowledge) mapDef initHistory =
   runReaderT (runStateT knowledge initHistory) mapDef
 
 class (Monad m) => GameKnowledgeMonad h m | m -> h where
-  askMapDef :: m MapDef
-  asksMapDef :: (MapDef -> a) -> m a
+  askMapDef :: m MapDefinition
+  asksMapDefinition :: (MapDefinition -> a) -> m a
   getHistory :: m h
   getsHistory :: (h -> a) -> m a
   putHistory :: h -> m ()
@@ -36,7 +36,7 @@ class (Monad m) => GameKnowledgeMonad h m | m -> h where
 instance (Monad m) => GameKnowledgeMonad h (GameKnowledgeT h m) where
   askMapDef = GameKnowledge ask
   getHistory = GameKnowledge get
-  asksMapDef = GameKnowledge . asks
+  asksMapDefinition = GameKnowledge . asks
   getsHistory = GameKnowledge . gets
   putHistory = GameKnowledge . put
 
@@ -50,7 +50,7 @@ instance Decision d => MonadTrans (BrainT d h) where
 instance (Monad m, Decision d) => GameKnowledgeMonad h (BrainT d h m) where
   askMapDef = liftGameKnowledge askMapDef
   getHistory = liftGameKnowledge getHistory
-  asksMapDef = liftGameKnowledge . asksMapDef
+  asksMapDefinition = liftGameKnowledge . asksMapDefinition
   getsHistory = liftGameKnowledge . getsHistory
   putHistory = liftGameKnowledge . putHistory
   
