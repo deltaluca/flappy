@@ -11,6 +11,8 @@ import Diplomacy.Common.Data as Dat
 import Diplomacy.Common.DipToken
 import Diplomacy.Common.DipError
 
+import Diplomacy.Common.Data.SupplyCentre
+
 import Data.Maybe
 import Control.Monad.Error
 import Control.Monad.Reader
@@ -143,9 +145,7 @@ data DipMessage =
   | MapNameReq
 
     -- |definition of the map (SERVER)
-  | MapDef { mapDefPowers :: [Power]
-           , mapDefProvinces :: Provinces
-           , mapDefAdjacencies :: [Adjacency] }
+  | MapDef MapDefinition
 
     -- |requesting the definition of the map (CLIENT)
   | MapDefReq
@@ -168,17 +168,17 @@ data DipMessage =
     -- |requesting whether game started (CLIENT) or replying yes (SERVER)
   | StartPing
 
-    -- |current position (SERVER)
-  | CurrentPosition [SupplyCentre]
+    -- |current position of supply centers req.(SERVER)
+  | CurrentPosition SupplyCenterOwners
 
     -- |current position request (CLIENT)
   | CurrentPositionReq
 
     -- |current position of units (SERVER)
-  | CurrentUnitPosition Turn [UnitPosition] (Maybe [ProvinceNode])
+  | CurrentUnitPosition UnitPositions
 
-    -- |current position of units request (CLIENT)
-  | CurrentUnitPositionReq
+    -- |current position of units req. (CLIENT)
+  | CurrentUnitPositionReq UnitPositions
 
     -- |history requested (CLIENT)
   | HistoryReq Turn
@@ -345,12 +345,6 @@ data VariantOption = Level Int
                    | NoPressDuringBuild        -- (10)
                    | PressTimeTillDeadline Int -- (10)
                    deriving (Show)
-
-data SupplyCentre = SupplyCentre Power [Province]
-                    deriving (Show)
-
-data Adjacency = Adjacency Province [UnitToProv]
-             deriving (Show)
 
 data UnitToProv = UnitToProv UnitType [ProvinceNode]
                 | CoastalFleetToProv Coast [ProvinceNode]
