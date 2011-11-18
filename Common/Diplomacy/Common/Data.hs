@@ -1,15 +1,30 @@
-
-module Diplomacy.Common.Data where
+module Diplomacy.Common.Data ( Power(..)
+                             , SupplyCentreOwnership(..)
+                             , SupplyCentreOwnerships
+                             , Province(..)
+                             , Provinces(..)
+                             , ProvinceInter(..)
+                             , Coast(..)
+                             , UnitType(..)
+                             , Phase(..)
+                             , MapDefinition(..)
+                             , MapState(..)
+                             , UnitPositions(..)
+                             , UnitPosition(..)
+                             , UnitToProv(..)
+                             , ProvinceNode(..)
+                             , Turn(..)
+                             , Adjacency(..)) where
 
 -- | Numbering fixed in ...
 data Power 
          = Power Int
          | Neutral
-         deriving (Show)
+         deriving (Show, Eq)
                       
 data SupplyCentreOwnership
          = SupplyCentre Power [Province]
-         deriving (Show)                  
+         deriving (Show, Eq)                  
                   
 data Province 
          = Province Bool ProvinceInter
@@ -44,23 +59,38 @@ data Phase
 
 data MapDefinition = MapDefinition { mapDefPowers :: [Power]
                                    , mapDefProvinces :: Provinces
-                                   
                                    , mapDefAdjacencies :: [Adjacency] }
+                   deriving (Show, Eq)
+
+data Provinces = Provinces SupplyCentreOwnerships [Province]
+               deriving (Show, Eq)
 
 -- | Definition of MapState, used by the MessageParser and 
 -- | AI internals
 
-type SupplyCenterOwners = [SupplyCenterOwner]
+type SupplyCentreOwnerships = [SupplyCentreOwnership]
 
-data UnitPositions = Turn [UnitPosition] (Maybe [ProvinceNote])
+data UnitPositions = UnitPositions Turn [UnitPosition] (Maybe [ProvinceNode])
+                   deriving (Show, Eq)
 
-data MapState =
-  
-  MapState { currentSupplyOwners :: SupplyCenterOwners
-           , currentUnitPositions :: UnitPositions }
+data MapState = MapState { supplyOwners :: SupplyCentreOwnerships
+                         , unitPositions :: UnitPositions }
+              deriving (Show, Eq)
 
 data Adjacency = Adjacency Province [UnitToProv]
-               
+               deriving (Show, Eq)
+
+data Turn = Turn Phase Int
+            deriving (Show, Eq)
+
+data UnitPosition = UnitPosition Power UnitType ProvinceNode
+                  deriving (Show, Eq)
+
+data ProvinceNode = ProvNode Province | ProvCoastNode Province Coast
+                  deriving (Show, Eq)
+
+data UnitToProv = UnitToProv UnitType [ProvinceNode]
+                | CoastalFleetToProv Coast [ProvinceNode]
+                deriving (Show, Eq)
+
 -- | -------------------------------------------------------------                 
-                 
-               deriving (Show)

@@ -11,8 +11,6 @@ import Diplomacy.Common.Data as Dat
 import Diplomacy.Common.DipToken
 import Diplomacy.Common.DipError
 
-import Diplomacy.Common.Data.SupplyCentre
-
 import Data.Maybe
 import Control.Monad.Error
 import Control.Monad.Reader
@@ -169,7 +167,7 @@ data DipMessage =
   | StartPing
 
     -- |current position of supply centers req.(SERVER)
-  | CurrentPosition SupplyCenterOwners
+  | CurrentPosition SupplyCentreOwnerships
 
     -- |current position request (CLIENT)
   | CurrentPositionReq
@@ -178,7 +176,7 @@ data DipMessage =
   | CurrentUnitPosition UnitPositions
 
     -- |current position of units req. (CLIENT)
-  | CurrentUnitPositionReq UnitPositions
+  | CurrentUnitPositionReq
 
     -- |history requested (CLIENT)
   | HistoryReq Turn
@@ -325,15 +323,6 @@ data OrderBuild = Build UnitPosition
                 | Waive Power
                 deriving (Show)
 
-data Provinces = Provinces [SupplyCentre] [Province]
-               deriving (Show)
-
-data Turn = Turn Phase Int
-            deriving (Show)
-
-data UnitPosition = UnitPosition Power UnitType ProvinceNode
-                  deriving (Show)
-
 data VariantOption = Level Int
                    | TimeMovement Int
                    | TimeRetreat Int
@@ -345,13 +334,6 @@ data VariantOption = Level Int
                    | NoPressDuringBuild        -- (10)
                    | PressTimeTillDeadline Int -- (10)
                    deriving (Show)
-
-data UnitToProv = UnitToProv UnitType [ProvinceNode]
-                | CoastalFleetToProv Coast [ProvinceNode]
-                deriving (Show)
-
-data ProvinceNode = ProvNode Province | ProvCoastNode Province Coast
-                  deriving (Show)
 
 parseDipMessage :: DipRep s t => Monad m => Int -> s -> ErrorT DipError m DipMessage
 parseDipMessage = parseDip pMsg
@@ -448,7 +430,7 @@ pMapDef = do
   powers <- paren (many pPower)
   provinces <- paren pProvinces
   adjacencies <- paren (many (paren pAdjacency))
-  return (MapDef powers provinces adjacencies)
+  return . MapDef $ MapDefinition powers provinces adjacencies
 
 pMapDefReq :: DipRep s t => DipParser s DipMessage
 pMapDefReq = return MapDefReq
@@ -495,7 +477,7 @@ pProvinceNode = (return . ProvNode =<< pProvince) <|>
                     c <- pCoast
                     return (ProvCoastNode prov c))
 
-pSupplyCentre :: DipRep s t => DipParser s SupplyCentre
+pSupplyCentre :: DipRep s t => DipParser s SupplyCentreOwnership
 pSupplyCentre = do
   pow <- pPower
   centres <- many pProvince
@@ -562,7 +544,7 @@ pCurrentUnitPos = do
   unitPoss <- many (paren pUnitPosition)
   tok1 (DipParam MRT)
   retreats <- pMaybe ((paren . many . paren) pProvinceNode)
-  return (CurrentUnitPosition turn unitPoss retreats)
+  return . CurrentUnitPosition $ UnitPositions turn unitPoss retreats
 
 pCurrentUnitPosReq :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPosReq = return CurrentUnitPositionReq
@@ -1021,11 +1003,11 @@ uMsg m = case m of
                            . uParen uInt passcode
                            )
                            
-  MapDef powers provinces adjacencies -> ( uTok (DipCmd MDF)
-                                         . uParen (uMany uPower) powers
-                                         . uParen uProvinces provinces
-                                         . uParen (uMany (uParen uAdjacency)) adjacencies
-                                         )
+  MapDef (MapDefinition powers provinces adjacencies) -> ( uTok (DipCmd MDF)
+                                                         . uParen (uMany uPower) powers
+                                                         . uParen uProvinces provinces
+                                                         . uParen (uMany (uParen uAdjacency)) adjacencies
+                                                         )
 
   MapDefReq -> uTok (DipCmd MDF)
   
@@ -1046,7 +1028,7 @@ uMsg m = case m of
     
   CurrentPositionReq -> uTok (DipCmd SCO)
     
-  CurrentUnitPosition turn _ _ -> --unitPoss retreats ->
+  CurrentUnitPosition (UnitPositions turn _ _) -> --unitPoss retreats ->
     uTok (DipCmd NOW)
     . uParen uTurn turn
 --    . uMany (uParen uUnitPosition)
@@ -1094,7 +1076,7 @@ uProvinceNode (ProvCoastNode prov c) =
   . uCoast c
   )
 
-uSupplyCentre :: UnDipParser SupplyCentre
+uSupplyCentre :: UnDipParser SupplyCentreOwnership
 uSupplyCentre (SupplyCentre pow centres) =
   ( uPower pow
   . uMany uProvince centres

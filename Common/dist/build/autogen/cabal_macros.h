@@ -36,9 +36,15 @@
   (major1) == 1 && (major2) <  1 || \
   (major1) == 1 && (major2) == 1 && (minor) <= 0
 
-/* package network-2.2.1.7 */
+/* package network-2.3.0.7 */
 #define MIN_VERSION_network(major1,major2,minor) \
   (major1) <  2 || \
-  (major1) == 2 && (major2) <  2 || \
-  (major1) == 2 && (major2) == 2 && (minor) <= 1
+  (major1) == 2 && (major2) <  3 || \
+  (major1) == 2 && (major2) == 3 && (minor) <= 0
+
+/* package parsec-3.1.2 */
+#define MIN_VERSION_parsec(major1,major2,minor) \
+  (major1) <  3 || \
+  (major1) == 3 && (major2) <  1 || \
+  (major1) == 3 && (major2) == 1 && (minor) <= 2
 

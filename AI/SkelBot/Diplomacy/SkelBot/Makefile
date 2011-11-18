@@ -1,2 +1,0 @@
-all:
-	ghc --make *.hs

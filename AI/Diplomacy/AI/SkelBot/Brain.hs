@@ -4,13 +4,12 @@
 , GeneralizedNewtypeDeriving
 , FunctionalDependencies #-}
 
-module Diplomacy.SkelBot.Brain ( BrainT, Brain, GameKnowledgeT
+module Diplomacy.AI.SkelBot.Brain ( BrainT, Brain, GameKnowledgeT
                                , GameKnowledgeMonad(..)
                                , BrainMonad(..)) where
 
-import Diplomacy.SkelBot.Decision
-import Diplomacy.SkelBot.MapState
-import Diplomacy.SkelBot.MapDef
+import Diplomacy.AI.SkelBot.Decision
+import Diplomacy.Common.Data
 
 import Control.Monad.Reader
 import Control.Monad.State

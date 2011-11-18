@@ -759,12 +759,3 @@ tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
                  , ("RUS", DipPow (Pow 0x05))
                  , ("TUR", DipPow (Pow 0x06))
                  ]
-
-Common
-Server
-AI
-  SkelBot
-  MapAspects
-  Bots
-    HoldBot
-    RandomBot

@@ -1,4 +1,4 @@
-module Diplomacy.SkelBot.Decision where
+module Diplomacy.AI.SkelBot.Decision where
 
 import Diplomacy.Common.DipMessage
 
