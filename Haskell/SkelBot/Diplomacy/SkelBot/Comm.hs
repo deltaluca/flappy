@@ -1,9 +1,7 @@
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE TypeSynonymInstances, GeneralizedNewtypeDeriving #-}
 module Diplomacy.SkelBot.Comm(CommT, runCommT,
-                              popDipMessage,
-                              pushDipMessage) where
-
--- |BrainComm is an impure brain the communicates with the message queues
+                              popPressMessage,
+                              pushPressMessage) where
 
 import Diplomacy.Common.DipMessage
 
@@ -12,25 +10,30 @@ import Control.Monad.Trans
 import Control.Concurrent.STM
 import Data.Sequence
 
-type DipMessageQueue = TChan PressMessage
+type PressMessageQueue = TChan PressMessage
                        -- (receiver, dispatcher)
-type CommT m = ReaderT (DipMessageQueue, DipMessageQueue) m
+newtype CommT m a = CommT (ReaderT (PressMessageQueue, PressMessageQueue) m a)
+                  deriving (Monad, Functor, MonadTrans
+                           , MonadReader (PressMessageQueue, PressMessageQueue))
 
-runCommT :: (Monad m) => CommT m a -> (DipMessageQueue, DipMessageQueue) -> m a
-runCommT comm recdis = runReaderT comm recdis
+instance (MonadIO m) => MonadIO (CommT m) where
+  liftIO = lift . liftIO
 
-askDispatcher :: (Monad m) => CommT m DipMessageQueue
+runCommT :: (Monad m) => CommT m a -> (PressMessageQueue, PressMessageQueue) -> m a
+runCommT (CommT comm) recdis = runReaderT comm recdis
+
+askDispatcher :: (Monad m) => CommT m PressMessageQueue
 askDispatcher = fmap fst ask
 
-askReceiver :: (Monad m) => CommT m DipMessageQueue
+askReceiver :: (Monad m) => CommT m PressMessageQueue
 askReceiver = fmap snd ask
 
-popDipMessage :: CommT IO DipMessage
-popDipMessage = do
+popPressMessage :: (MonadIO m) => CommT m PressMessage
+popPressMessage = do
   dispatcher <- askDispatcher
-  (lift . lift) (atomically (readTChan dispatcher))
+  liftIO (atomically (readTChan dispatcher))
 
-pushDipMessage :: DipMessage -> CommT IO ()
-pushDipMessage msg = do
+pushPressMessage :: (MonadIO m) => PressMessage -> CommT m ()
+pushPressMessage msg = do
   receiver <- askReceiver
-  (lift . lift) (atomically (writeTChan receiver msg))
+  liftIO (atomically (writeTChan receiver msg))

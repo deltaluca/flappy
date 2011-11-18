@@ -34,29 +34,28 @@ instance Binary DipToken where
   put (DipPow (Pow p)) = put (0x41 :: Word8) >> put (fromIntegral p :: Word8)
   put (DipUnitType Army) = put (0x42 :: Word8) >> put (0x00 :: Word8)
   put (DipUnitType Fleet) = put (0x42 :: Word8) >> put (0x01 :: Word8)
-  put _ = undefined
--- put (DipOrder) = put (0x43 :: Word8)
-  -- put (DipOrderNote) = put (0x44 :: Word8)
-  -- put (DipResult) = put (0x45 :: Word8)
-  -- put (DipCoast) = put (0x46 :: Word8)
-  -- put (DipPhase) = put (0x47 :: Word8)
-  -- put (DipCmd) = put (0x48 :: Word8)
-  -- put (DipParam) = put (0x49 :: Word8)
-  -- put (DipPress) = put (0x4A :: Word8)
-  -- put (Character) = put (0x4B :: Word8)
-  -- put (DipProv) = put (0x50 :: Word8)
-  -- put (DipProv) = put (0x51 :: Word8)
-  -- put (DipProv) = put (0x52 :: Word8)
-  -- put (DipProv) = put (0x53 :: Word8)
-  -- put (DipProv) = put (0x54 :: Word8)
-  -- put (DipProv) = put (0x55 :: Word8)
-  -- put (DipProv) = put (0x56 :: Word8)
-  -- put (DipProv) = put (0x57 :: Word8)
-  
+  put (DipOrder order) = put (0x43 :: Word8) >> putOrderTok order
+  put (DipOrderNote orderNote) = put (0x44 :: Word8) >> putOrderNoteTok orderNote
+  put (DipResult result) = put (0x45 :: Word8) >> putResult result
+  put (DipCoast coast) = put (0x46 :: Word8) >> putCoast coast
+  put (DipPhase phase) = put (0x47 :: Word8) >> putPhase phase
+  put (DipCmd cmd) = put (0x48 :: Word8) >> putCmd cmd
+  put (DipParam param) = put (0x49 :: Word8) >> putParam param
+  put (DipPress press) = put (0x4A :: Word8) >> putPress press
+  put (Character character) = put (0x4B :: Word8) >> putCharacter character
+  put (DipProv isSupply (Inland prov)) = put (0x50 + (isSupply ? 0 $ 1) :: Word8) >> putProv prov
+  put (DipProv isSupply (Sea prov)) = put (0x52 + (isSupply ? 0 $ 1) :: Word8) >> putProv prov
+  put (DipProv isSupply (Coastal prov)) = put (0x54 + (isSupply ? 0 $ 1) :: Word8) >> putProv prov
+  put (DipProv isSupply (BiCoastal prov)) = put (0x56 + (isSupply ? 0 $ 1) :: Word8) >> putProv prov
+
   get = do
     typ <- (get :: Get Word8)
     val <- (get :: Get Word8)
     decodeToken typ val
+
+infixl 6 ?
+(?) :: Bool -> a -> a -> a
+(?) bool a b = if bool then a else b
 
 instance Show DipToken where
   show t = case t of
@@ -390,6 +389,145 @@ decodePress 0x25 = CCL
 decodePress 0x26 = NAR
 decodePress _ = throw InvalidToken
 
+putOrderTok CTO = 0x20
+putOrderTok CVY = 0x21
+putOrderTok HLD = 0x22
+putOrderTok MTO = 0x23
+putOrderTok SUP = 0x24
+putOrderTok VIA = 0x25
+putOrderTok DSB = 0x40
+putOrderTok RTO = 0x41
+putOrderTok BLD = 0x80
+putOrderTok REM = 0x81
+putOrderTok WVE = 0x82
+
+putOrderNoteTok MBV = 0x00
+putOrderNoteTok BPR = 0x01
+putOrderNoteTok CST = 0x02
+putOrderNoteTok ESC = 0x03
+putOrderNoteTok FAR = 0x04
+putOrderNoteTok HSC = 0x05
+putOrderNoteTok NAS = 0x06
+putOrderNoteTok NMB = 0x07
+putOrderNoteTok NMR = 0x08
+putOrderNoteTok NRN = 0x09
+putOrderNoteTok NRS = 0x0A
+putOrderNoteTok NSA = 0x0B
+putOrderNoteTok NSC = 0x0C
+putOrderNoteTok NSF = 0x0D
+putOrderNoteTok NSP = 0x0E
+putOrderNoteTok NST = 0x0F
+putOrderNoteTok NSU = 0x10
+putOrderNoteTok NVR = 0x11
+putOrderNoteTok NYU = 0x12
+putOrderNoteTok YSC = 0x13
+
+putResult SUC = 0x00
+putResult BNC = 0x01
+putResult CUT = 0x02
+putResult DSR = 0x03
+putResult FLD = 0x04
+putResult NSO = 0x05
+putResult RET = 0x06
+
+putPhase Spring = 0x00
+putPhase Summer = 0x01
+putPhase Fall = 0x02
+putPhase Autumn = 0x03
+putPhase Winter = 0x04
+
+putCmd CCD = 0x00
+putCmd DRW = 0x01
+putCmd FRM = 0x02
+putCmd GOF = 0x03
+putCmd HLO = 0x04
+putCmd HST = 0x05
+putCmd HUH = 0x06
+putCmd IAM = 0x07
+putCmd LOD = 0x08
+putCmd MAP = 0x09
+putCmd MDF = 0x0A
+putCmd MIS = 0x0B
+putCmd NME = 0x0C
+putCmd NOT = 0x0D
+putCmd NOW = 0x0E
+putCmd OBS = 0x0F
+putCmd OFF = 0x10
+putCmd ORD = 0x11
+putCmd OUT = 0x12
+putCmd PRN = 0x13
+putCmd REJ = 0x14
+putCmd SCO = 0x15
+putCmd SLO = 0x16
+putCmd SND = 0x17
+putCmd SUB = 0x18
+putCmd SVE = 0x19
+putCmd THX = 0x1A
+putCmd TME = 0x1B
+putCmd YES = 0x1C
+putCmd ADM = 0x1D
+putCmd SMR = 0x1E
+
+putParam AOA = 0x00
+putParam BTL = 0x01
+putParam ERR = 0x02
+putParam LVL = 0x03
+putParam MRT = 0x04
+putParam MTL = 0x05
+putParam NPB = 0x06
+putParam NPR = 0x07
+putParam PDA = 0x08
+putParam PTL = 0x09
+putParam RTL = 0x0A
+putParam UNO = 0x0B
+putParam DSD = 0x0D
+
+putPress ALY = 0x00
+putPress AND = 0x01
+putPress BWX = 0x02
+putPress DMZ = 0x03
+putPress ELS = 0x04
+putPress EXP = 0x05
+putPress FWD = 0x06
+putPress FCT = 0x07
+putPress FOR = 0x08
+putPress HOW = 0x09
+putPress IDK = 0x0A
+putPress IFF = 0x0B
+putPress INS = 0x0C
+putPress IOU = 0x0D
+putPress OCC = 0x0E
+putPress ORR = 0x0F
+putPress PCE = 0x10
+putPress POB = 0x11
+putPress PPT = 0x12
+putPress PRP = 0x13
+putPress QRY = 0x14
+putPress SCD = 0x15
+putPress SRY = 0x16
+putPress SUG = 0x17
+putPress THK = 0x18
+putPress THN = 0x19
+putPress TRY = 0x1A
+putPress UOM = 0x1B
+putPress VSS = 0x1C
+putPress WHT = 0x1D
+putPress WHY = 0x1E
+putPress XDO = 0x1F
+putPress XOY = 0x20
+putPress YDO = 0x21
+putPress WRT = 0x22
+putPress BCC = 0x23
+putPress UNT = 0x24
+putPress CCL = 0x25
+putPress NAR = 0x26
+
+putCoast (Coast c) = put (fromIntegral c :: Word8)
+
+putCharacter c = put (fromIntegral (ord c) :: Word8) 
+
+putProv prov = put (fromIntegral prov :: Word8)
+
 type TokenMap = Map.Map [Char] DipToken
 
 tokenMap :: TokenMap
@@ -621,3 +759,4 @@ tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
                  , ("RUS", DipPow (Pow 0x05))
                  , ("TUR", DipPow (Pow 0x06))
                  ]
+

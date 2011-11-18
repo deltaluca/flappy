@@ -82,7 +82,7 @@ mapBrainT f mbrain = do
   putHistory h
   return a
 
-mapBrainTId :: (Monad m, Decision d) => BrainT d h Identity a -> BrainT d h m a
-mapBrainTId = mapBrainT (return . runIdentity)
-
 type Brain d h = BrainT d h Identity
+
+mapBrain :: (Monad m, Decision d) => (((a, d), h) -> m ((b, d), h)) -> BrainT d h Identity a -> BrainT d h m b
+mapBrain f = mapBrainT (f . runIdentity)

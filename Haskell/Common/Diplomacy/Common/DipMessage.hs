@@ -986,8 +986,8 @@ uParen up a = uTok Bra . up a . uTok Ket
 uMany :: UnDipParser a -> UnDipParser [a]
 uMany up = foldl (.) id . map up
 
-uMaybe :: UnDipParser a -> UnDipParser (Maybe a)
-uMaybe up = maybe id up
+-- uMaybe :: UnDipParser a -> UnDipParser (Maybe a)
+-- uMaybe up = maybe id up
 
 uStr :: UnDipParser String
 uStr = appendListify . map Character
@@ -1052,7 +1052,7 @@ uMsg m = case m of
     
   CurrentPositionReq -> uTok (DipCmd SCO)
     
-  CurrentUnitPosition turn unitPoss retreats ->
+  CurrentUnitPosition turn _ _ -> --unitPoss retreats ->
     uTok (DipCmd NOW)
     . uParen uTurn turn
 --    . uMany (uParen uUnitPosition)
@@ -1116,6 +1116,7 @@ uVariantOpt (TimeRetreat t)    = uTok (DipParam RTL) . uInt t
 uVariantOpt (TimeBuild t)      = uTok (DipParam BTL) . uInt t
 uVariantOpt (DeadlineStop)     = uTok (DipParam DSD)
 uVariantOpt (AnyOrderAccepted) = uTok (DipParam AOA)
+uVariantOpt _ = undefined
 
 uPhase :: UnDipParser Phase
 uPhase p = uTok (DipPhase p)
