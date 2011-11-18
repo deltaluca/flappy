@@ -4,11 +4,15 @@
 , GeneralizedNewtypeDeriving
 , FunctionalDependencies #-}
 
-module Diplomacy.AI.SkelBot.Brain ( BrainT, Brain, GameKnowledgeT
-                               , GameKnowledgeMonad(..)
-                               , BrainMonad(..)) where
+module Diplomacy.AI.SkelBot.Brain ( Brain, BrainCommT
+                                  , runBrainT
+                                  , runGameKnowledgeT
+                                  , GameKnowledgeT
+                                  , GameKnowledgeMonad(..)
+                                  , BrainMonad(..)) where
 
 import Diplomacy.AI.SkelBot.Decision
+import Diplomacy.AI.SkelBot.Comm
 import Diplomacy.Common.Data
 
 import Control.Monad.Reader
@@ -88,6 +92,7 @@ mapBrainT f mbrain = do
   return a
 
 type Brain d h = BrainT d h Identity
+type BrainCommT d h m = BrainT d h (CommT m)
 
 mapBrain :: (Monad m, Decision d) => (((a, d), h) -> m ((b, d), h)) -> BrainT d h Identity a -> BrainT d h m b
 mapBrain f = mapBrainT (f . runIdentity)
