@@ -38,6 +38,22 @@ class GObj extends GObjContainer {
 
 	public var xform:Matrix;
 
+	public function getBounds(?m:Matrix) {
+		var m2 = xform.clone();
+		if(m!=null) m2.concat(m);
+
+		var ret:Rectangle = null;
+		if(nmeobj!=null)
+			ret = new Rectangle(m2.tx,m2.ty,nmeobj.width*m2.a,nmeobj.height*m2.b);
+		
+		for(c in children) {
+			var t = c.getBounds(m2);
+			ret = if(ret==null) t else if(t==null) ret else ret.union(t);
+		}
+
+		return ret;
+	}
+
 	public var width (getwidth, setwidth ):Float;
 	public var height(getheight,setheight):Float;
 
