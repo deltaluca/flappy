@@ -7,6 +7,6 @@ Reports/*.dvi
 Reports/*.txt
 *.pdf
 Server/src/server
-Haskell/*/dist
+*dist
 Maps
 *#
