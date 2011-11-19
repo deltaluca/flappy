@@ -1,5 +1,7 @@
 package gui;
 
+import gui.GStage;
+
 import nme.display.Sprite;
 import nme.ui.Keyboard;
 import nme.text.TextField;
@@ -65,6 +67,8 @@ class Gui extends GuiElem {
 		addChild(negmenu  = new Menu());
 		addChild(statmenu = new Menu());
 		addChild(mainmenu = new Menu());
+
+		new GStage();
 	}
 
 	public override function resize(width:Int,height:Int,scale:ScaleMode) {

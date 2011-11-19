@@ -11,6 +11,7 @@ import nme.display.Bitmap;
 
 import Terminal;
 import gui.Gui;
+import gui.GStage;
 
 class Main extends Sprite {
 	public static function main() {
@@ -38,12 +39,26 @@ class Main extends Sprite {
 			terminal.resize(stage.stageWidth,stage.stageHeight);
 		});*/
 
-		var ggui = new Gui();
+/*		var ggui = new Gui();
 		addChild(ggui);
 		ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);
 
 		stage.addEventListener(Event.RESIZE, function(_) {
 			ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);
-		});
+		});*/
+
+		var gstage = new GStage();	
+		addChild(gstage.display);
+
+		var map = new GObj(new Bitmap(Assets.getBitmapData("Assets/map-std.png")));
+		gstage.addChild(map);
+
+		function size() {
+			map.width = stage.stageWidth;
+			map.height = stage.stageHeight;
+			gstage.resize(stage.stageWidth,stage.stageHeight);
+		}
+		stage.addEventListener(Event.RESIZE,function (_) size());
+		size();
 	}
 }

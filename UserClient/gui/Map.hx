@@ -3,6 +3,10 @@ package gui;
 import nme.display.Sprite;
 import nme.Assets;
 import nme.display.Bitmap;
+import nme.display.BitmapData;
+import nme.geom.Matrix;
+import nme.geom.Rectangle;
+import nme.geom.Point;
 
 import gui.Gui;
 
@@ -18,18 +22,34 @@ class Map extends GuiElem {
 	var stageWidth :Int;
 	var stageHeight:Int;
 
+	/* get around NME bug */ // (#)
+	var disp:Bitmap;
+	/* =----------------= */
+
 	function build() {
 		map = new Bitmap(Assets.getBitmapData("Assets/map-std.png"));
-		map.cacheAsBitmap = false;
-		addChild(map);
+		// #
+		// addChild(map);
 	}
 
 	public function display() {
-		if(viewport.x==0) map.x = 0 else map.x = -viewport.x*map.width;
-		if(viewport.y==0) map.y = 0 else map.y = -viewport.y*map.height;
+		// #
+		//if(viewport.x==0) map.x = 0 else map.x = -viewport.x*map.width;
+		//if(viewport.y==0) map.y = 0 else map.y = -viewport.y*map.height;
+		var b = new BitmapData(Std.int(0.5+map.width),Std.int(0.5+map.height));
+		b.draw(map);
+		//disp.bitmapData.draw(map, new Matrix(1,0,0,1,-viewport.x*map.width,-viewport.y*map.height));
+		//disp.bitmapData.copyPixels(b, new Rectangle(viewport.x*map.width,viewport.y*map.height,viewport.w*map.width,viewport.h*map.height), new Point(0,0))
+		disp.bitmapData.copyPixels(b, new Rectangle(0,0,map.width,map.height), new Point(-viewport.x*map.width,-viewport.y*map.height));
 	}
 
 	public override function resize(width:Int,height:Int,scale:ScaleMode) {
+		//#
+		if(disp!=null) removeChild(disp);
+		disp = new Bitmap(new BitmapData(width,height));
+		addChild(disp);
+		//¬#
+
 		stageWidth  = width;
 		stageHeight = height;
 		var ratio = map.height/map.width;
