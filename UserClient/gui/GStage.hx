@@ -67,55 +67,67 @@ class GObj extends GObjContainer {
 		nmeobj = obj;
 		parent = null;
 		xform = new Matrix();
+		slabmat = new Matrix();
+	}
+
+	public var slab:BitmapData;
+	var slabmat:Matrix;
+
+	public function validate(nmat:Matrix) {
+		if(nmat.a != slabmat.a || nmat.d != slabmat.d) {
+			slab = GStage.resizer(slab, Std.int(0.5+nmeobj.width*nmat.a),Std.int(0.5+nmeobj.height*nmat.d));
+
+			slabmat.a = nmat.a;
+			slabmat.d = nmat.d;
+			slab.draw(nmeobj,slabmat);
+		}
 	}
 }
 
 class GStage extends GObjContainer {
 
 	public var display:Bitmap;
-	var slab:BitmapData;
-	var slabrect:Rectangle;
-	var slabmat:Matrix;
+	static var slabrect:Rectangle = new Rectangle();
 	var slabpoint:Point;
 
 	public function new() {
 		super();
 		display = new Bitmap();
-		slab = new BitmapData(2048,2048,true,0);
-		slabrect = new Rectangle();
-		slabmat = new Matrix();
 		slabpoint = new Point();
 	}
 
-	public function resize(width:Int,height:Int) {
-		display.bitmapData = new BitmapData(width,height);
-		render();
+	public static function resizer(x:BitmapData, w:Int,h:Int) {
+		if(x==null
+		|| x.width < w
+		|| x.height < h)
+			return new BitmapData(w,h,true,0);
+		else {
+			slabrect.width = w;
+			slabrect.height = h;
+			x.fillRect(slabrect,0);
+			return x;	
+		}
 	}
 
-	public function render() {
+	public function resize(width:Int,height:Int) {
+		display.bitmapData = resizer(display.bitmapData, width,height);
+
 		for(c in children)
 			__render(c, new Matrix());
 	}
+
 	function __render(x:GObj, m:Matrix) {
 		var m2 = x.xform.clone();
 		m2.concat(m);
 
 		if(x.nmeobj!=null) {
-			slabrect.x = slabrect.y = 0;
-			slabrect.width = x.nmeobj.width;
-			slabrect.height = x.nmeobj.height;
+			x.validate(m2);
 
-			slab.fillRect(slabrect,0);
-			
-			slabmat.a = m2.a;
-			slabmat.d = m2.d;
-			slab.draw(x.nmeobj, slabmat);
-		
-			slabrect.width  *= m2.a;
-			slabrect.height *= m2.d;
+			slabrect.width  = m2.a*x.nmeobj.width;
+			slabrect.height = m2.d*x.nmeobj.height;
 			slabpoint.x = -m2.tx;
 			slabpoint.y = -m2.ty;
-			display.bitmapData.copyPixels(slab, slabrect, slabpoint);
+			display.bitmapData.copyPixels(x.slab, slabrect, slabpoint);
 		}
 
 		for(c in x.children)
