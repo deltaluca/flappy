@@ -50,12 +50,13 @@ class Main extends Sprite {
 		var gstage = new GStage();	
 		addChild(gstage.display);
 
-		var map = new GObj(new Bitmap(Assets.getBitmapData("Assets/map-std.png")));
-		gstage.addChild(map);
+/*		var map = new GObj(new Bitmap(Assets.getBitmapData("Assets/map-std.png")));
+		gstage.addChild(map);*/
+		var ggui = new Gui();
+		gstage.addChild(ggui);
 
 		function size() {
-			map.width = stage.stageWidth;
-			map.height = stage.stageHeight;
+			ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);
 			gstage.resize(stage.stageWidth,stage.stageHeight);
 		}
 		stage.addEventListener(Event.RESIZE,function (_) size());

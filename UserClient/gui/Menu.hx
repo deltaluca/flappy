@@ -4,7 +4,7 @@ import nme.display.Sprite;
 import nme.Assets;
 
 import gui.Gui;
-
+/*
 class Menu extends GuiElem {
 	public var elts:Array<GuiElem>;	
 
@@ -28,4 +28,4 @@ class Menu extends GuiElem {
 			px = e.x+bnd.w;
 		}
 	}
-}
+}*/

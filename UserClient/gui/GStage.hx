@@ -78,7 +78,7 @@ class GObj extends GObjContainer {
 		function sety(y:Float) return xform.ty = y
 	
 	public var nmeobj:DisplayObject;
-	public function new(?obj:DisplayObject) {
+	public function new(?obj:DisplayObject=null) {
 		super();
 		nmeobj = obj;
 		parent = null;
@@ -90,7 +90,7 @@ class GObj extends GObjContainer {
 	var slabmat:Matrix;
 
 	public function validate(nmat:Matrix) {
-		if(nmat.a != slabmat.a || nmat.d != slabmat.d) {
+		if(nmat.a != slabmat.a || nmat.d != slabmat.d || slab==null) {
 			slab = GStage.resizer(slab, Std.int(0.5+nmeobj.width*nmat.a),Std.int(0.5+nmeobj.height*nmat.d));
 
 			slabmat.a = nmat.a;
@@ -141,8 +141,8 @@ class GStage extends GObjContainer {
 
 			slabrect.width  = m2.a*x.nmeobj.width;
 			slabrect.height = m2.d*x.nmeobj.height;
-			slabpoint.x = -m2.tx;
-			slabpoint.y = -m2.ty;
+			slabpoint.x = m2.tx;
+			slabpoint.y = m2.ty;
 			display.bitmapData.copyPixels(x.slab, slabrect, slabpoint);
 		}
 
