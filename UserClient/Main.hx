@@ -29,29 +29,9 @@ class Main extends Sprite {
 		stage.scaleMode = StageScaleMode.NO_SCALE;
 		stage.align = StageAlign.TOP_LEFT;
 
-//		var bit = new Bitmap(Assets.getBitmapData("Assets/map-std.png"));
-//		addChild(bit);
-
-/*		var terminal = new Terminal(stage.stageWidth,stage.stageHeight);
-		addChild(terminal);
-
-		stage.addEventListener(Event.RESIZE, function(_) {
-			terminal.resize(stage.stageWidth,stage.stageHeight);
-		});*/
-
-/*		var ggui = new Gui();
-		addChild(ggui);
-		ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);
-
-		stage.addEventListener(Event.RESIZE, function(_) {
-			ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);
-		});*/
-
 		var gstage = new GStage();	
 		addChild(gstage.display);
 
-/*		var map = new GObj(new Bitmap(Assets.getBitmapData("Assets/map-std.png")));
-		gstage.addChild(map);*/
 		var ggui = new Gui();
 		gstage.addChild(ggui);
 

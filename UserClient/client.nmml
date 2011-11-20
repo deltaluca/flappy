@@ -7,7 +7,7 @@
 	<set name="fullscreen" if="target_ios"/>
 	<set name="fullscreen" if="target_android"/>
 
-	<window width="1024" height="768" fps="60" orientation="landscape" hardware="false"/>
+	<window width="1024" height="768" fps="60" orientation="landscape" hardware="true" resizable="true"/>
 	<window width="0" height="0" if="fullscreen"/>
 
 	<set name="BUILD_DIR" value="Export"/>

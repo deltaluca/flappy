@@ -4,7 +4,7 @@ import nme.display.Sprite;
 import nme.Assets;
 
 import gui.Gui;
-/*
+
 class Menu extends GuiElem {
 	public var elts:Array<GuiElem>;	
 
@@ -22,10 +22,10 @@ class Menu extends GuiElem {
 		var px = 0.0;
 		for(e in elts) {
 			e.resize(-1,-1,scale);
-			var bnd = e.bounds();
+			var bnd = e.getBounds();
 			e.y = -bnd.y;
 			e.x = px-bnd.x;
-			px = e.x+bnd.w;
+			px = e.x+bnd.width;
 		}
 	}
-}*/
+}

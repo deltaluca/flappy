@@ -26,11 +26,48 @@ class Map extends GuiElem {
 	function build() {
 		map = new GObj(new Bitmap(Assets.getBitmapData("Assets/map-std.png")));
 		addChild(map);
+
+		var drag = false;
+		var px:Float; var py:Float;
+		var stage = flash.Lib.current.stage;
+		stage.addEventListener(nme.events.MouseEvent.MOUSE_DOWN, function(_) {
+			drag = true;
+			px = stage.mouseX;
+			py = stage.mouseY;
+		});
+		stage.addEventListener(nme.events.MouseEvent.MOUSE_UP, function(_) {
+			drag = false;
+		});
+
+		var me = this;
+		stage.addEventListener(nme.events.MouseEvent.MOUSE_MOVE, function(_) {
+			if(!drag) return;
+
+			var cx = stage.mouseX;
+			var cy = stage.mouseY;
+
+			viewport.x -= (cx-px)/map.width;
+			viewport.y -= (cy-py)/map.width;
+			clamp_viewport();
+
+			display();
+			me.render(); //re-render gui
+
+			px = cx;
+			py = cy;
+		});
 	}
 
 	public function display() {
 		map.x = -viewport.x*map.width;
 		map.y = -viewport.y*map.height;
+	}
+
+	public function clamp_viewport() {
+		if(viewport.x<0) viewport.x = 0;
+		if(viewport.y<0) viewport.y = 0;
+		if(viewport.width +viewport.x > 1) viewport.x = 1-viewport.width;
+		if(viewport.height+viewport.y > 1) viewport.y = 1-viewport.height;
 	}
 
 	public override function resize(width:Int,height:Int,scale:ScaleMode) {
@@ -61,11 +98,7 @@ class Map extends GuiElem {
 			viewport.y -= 0.5*(nh-viewport.height); 
 			viewport.width = nw;
 			viewport.height = nh;
-	
-			if(viewport.x<0) viewport.x = 0;
-			if(viewport.y<0) viewport.y = 0;
-			if(viewport.width+viewport.x > 1) viewport.x = 1-viewport.width;
-			if(viewport.height+viewport.y > 1) viewport.y = 1-viewport.height;
+			clamp_viewport();	
 		}
 
 		display();

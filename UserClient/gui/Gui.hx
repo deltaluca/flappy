@@ -32,36 +32,36 @@ class Gui extends GuiElem {
 
 	var map:Map;
 
-//	var negmenu :Menu; //negotiations
-//	var statmenu:Menu; //status
-//	var mainmenu:Menu; //main
+	var negmenu :Menu; //negotiations
+	var statmenu:Menu; //status
+	var mainmenu:Menu; //main
 
 	function build() {
 		addChild(map = new Map());
 		
-//		addChild(negmenu  = new Menu());
-//		addChild(statmenu = new Menu());
-//		addChild(mainmenu = new Menu());
+		addChild(negmenu  = new Menu());
+		addChild(statmenu = new Menu());
+		addChild(mainmenu = new Menu());
 	}
 
 	public override function resize(width:Int,height:Int,scale:ScaleMode) {
 		map.resize(width,height,scale);
-/*
+
 		negmenu .resize(-1,-1,scale);
 		statmenu.resize(-1,-1,scale);
 		mainmenu.resize(-1,-1,scale);
 
-		bnds = negmenu.bounds();
+		var bnds = negmenu.getBounds();
 		negmenu.x = -bnds.x;
-		negmenu.y = height-bnds.h+bnds.y;
+		negmenu.y = height-bnds.height+bnds.y;
 
-		bnds = statmenu.bounds();
-		statmenu.y = height-bnds.h+bnds.y;
-		statmenu.x = width-bnds.w+bnds.x;
+		bnds = statmenu.getBounds();
+		statmenu.y = height-bnds.height+bnds.y;
+		statmenu.x = width-bnds.width+bnds.x;
 		
-		bnds = mainmenu.bounds();
-		mainmenu.x = width-bnds.w+bnds.x;
-		mainmenu.y = -bnds.y;*/
+		bnds = mainmenu.getBounds();
+		mainmenu.x = width-bnds.width+bnds.x;
+		mainmenu.y = -bnds.y;
 	}
 }
 

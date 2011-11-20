@@ -10,6 +10,7 @@ import nme.geom.Point;
 class GObjContainer {
 	public var children:Array<GObj>;
 
+	var _stage:GStage;
 	public function new() {
 		children = new Array<GObj>();
 	}
@@ -36,6 +37,17 @@ class GObjContainer {
 class GObj extends GObjContainer {
 	public var parent:GObjContainer;
 
+	public var stage(getstage,null):GStage;
+		function getstage() {
+			var cur = this;
+			while(cur.parent!=null && Std.is(cur.parent,GObj)) cur = cast(cur.parent,GObj);
+			return cur.parent._stage;
+		}
+
+	public function render() {
+		stage.render();
+	}
+
 	public var xform:Matrix;
 
 	public function getBounds(?m:Matrix) {
@@ -44,11 +56,12 @@ class GObj extends GObjContainer {
 
 		var ret:Rectangle = null;
 		if(nmeobj!=null)
-			ret = new Rectangle(m2.tx,m2.ty,nmeobj.width*m2.a,nmeobj.height*m2.b);
+		 	 ret = new Rectangle(m2.tx,m2.ty,nmeobj.width*m2.a,nmeobj.height*m2.b);
+		else ret = new Rectangle();
 		
 		for(c in children) {
 			var t = c.getBounds(m2);
-			ret = if(ret==null) t else if(t==null) ret else ret.union(t);
+			ret = ret.union(t);
 		}
 
 		return ret;
@@ -110,6 +123,7 @@ class GStage extends GObjContainer {
 		super();
 		display = new Bitmap();
 		slabpoint = new Point();
+		_stage = this;
 	}
 
 	public static function resizer(x:BitmapData, w:Int,h:Int) {
@@ -127,7 +141,16 @@ class GStage extends GObjContainer {
 
 	public function resize(width:Int,height:Int) {
 		display.bitmapData = resizer(display.bitmapData, width,height);
+		
+		for(c in children)
+			__render(c, new Matrix());
+	}
 
+	public function render() {
+		slabrect.width  = display.bitmapData.width;
+		slabrect.height = display.bitmapData.height;
+		display.bitmapData.fillRect(slabrect,0);
+		
 		for(c in children)
 			__render(c, new Matrix());
 	}
