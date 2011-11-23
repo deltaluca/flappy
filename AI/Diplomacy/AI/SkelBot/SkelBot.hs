@@ -15,6 +15,8 @@ import Diplomacy.AI.SkelBot.Decision
 import Control.Monad
 import Control.Monad.Error
 import Control.Monad.Reader
+import Control.Concurrent.STM
+import Control.Concurrent
 import System.Log.Logger
 import System.Console.CmdArgs
 import System.Environment
@@ -69,12 +71,12 @@ communicate bot = do
 initGame :: DaideHandle GameInfo
 initGame = undefined
 
-dispatcher :: DipMessageQueue -> DaideHandle ()
+dispatcher :: OutMessageQueue -> DaideHandle ()
 dispatcher q = forever $ do
   msg <- atomically (readTChan q)
-  tellHandle msg
+  tellHandle (DM (PressMessage msg))
 
-receiver :: DipMessageQueue -> DaideHandle ()
+receiver :: InMessageQueue -> DaideHandle ()
 receiver = forever $ do
   msg <- askHandle
   atomically (writeTChan q msg)

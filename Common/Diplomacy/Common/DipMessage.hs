@@ -175,6 +175,9 @@ data DipMessage =
     -- |current position of units (SERVER)
   | CurrentUnitPosition UnitPositions
 
+    -- |current positions with retreat options (SERVER)
+  | CurrentUnitPositionRet UnitPositionsRet
+
     -- |current position of units req. (CLIENT)
   | CurrentUnitPositionReq
 
@@ -541,10 +544,10 @@ pNow = tok1 (DipCmd NOW) >> choice [pCurrentUnitPos, pCurrentUnitPosReq]
 pCurrentUnitPos :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPos = do
   turn <- paren pTurn
-  unitPoss <- many (paren pUnitPosition)
-  tok1 (DipParam MRT)
-  retreats <- pMaybe ((paren . many . paren) pProvinceNode)
-  return . CurrentUnitPosition $ UnitPositions turn unitPoss retreats
+  unitPoss <- many . pPair pUnitPosition . pMaybe $ do
+    tok1 (DipParam MRT)
+    paren . many . paren $ pProvinceNode
+  return . CurrentUnitPosition $ UnitPositions turn unitPoss
 
 pCurrentUnitPosReq :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPosReq = return CurrentUnitPositionReq
@@ -669,14 +672,15 @@ pOrderNote = tok (\t -> case t of {DipOrderNote tk ->
 pMis :: DipRep s t => DipParser s DipMessage
 pMis = tok1 (DipCmd MIS) >>
        choice [ return . MissingMovement =<< (try . many . paren) pUnitPosition
-              , return . MissingRetreat =<< (try . many . paren . pPair)
-                (pUnitPosition, tok1 (DipParam MRT) >> paren (many pProvinceNode))
+              , return . MissingRetreat =<<
+                (try . many . paren . pPair pUnitPosition 
+                 $ tok1 (DipParam MRT) >> paren (many pProvinceNode))
               , return . MissingBuild =<< paren pInt
               , return MissingReq
               ]
 
-pPair :: DipRep s t => (DipParser s a, DipParser s b) -> DipParser s (a, b)
-pPair (a, b) = do
+pPair :: DipRep s t => DipParser s a -> DipParser s b -> DipParser s (a, b)
+pPair a b = do
   aRes <- a
   bRes <- b
   return (aRes, bRes)
@@ -1028,7 +1032,7 @@ uMsg m = case m of
     
   CurrentPositionReq -> uTok (DipCmd SCO)
     
-  CurrentUnitPosition (UnitPositions turn _ _) -> --unitPoss retreats ->
+  CurrentUnitPosition (UnitPositions turn _) -> --unitPoss retreats ->
     uTok (DipCmd NOW)
     . uParen uTurn turn
 --    . uMany (uParen uUnitPosition)

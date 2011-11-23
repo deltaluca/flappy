@@ -2,11 +2,27 @@ module Main where
 
 import Diplomacy.AI.SkelBot.SkelBot
 
-data HoldDecision = Hold
+data HoldDecision = HoldDecision [Unit]
 
-type HoldBrain = BrainCommT HoldDecision () IO
+instance Decision HoldBrain HoldDecision where
+  diplomise :: Decision -> [DipMessage]
+  diplomise (HoldDecision units) = 
+
+
+diplomise Hold = asd
+
+type HoldBrain = BrainComm HoldDecision ()
 
 main = skelBot holdBrain
 
-holdBrain :: HoldBrain IO a
-holdBrain = undefined
+holdBrain :: HoldBrain ()
+holdBrain = forever $ do
+  liftIO $ print "whatevs"
+  unitPoss <- asksMapState unitPositions
+  inMessage <- popInMessage
+  
+  result <- think pureBrain inMessage
+  map someFunction unitPoss
+
+
+

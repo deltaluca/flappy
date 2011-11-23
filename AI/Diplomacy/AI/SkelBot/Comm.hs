@@ -1,8 +1,12 @@
 {-# LANGUAGE TypeSynonymInstances, GeneralizedNewtypeDeriving #-}
 module Diplomacy.AI.SkelBot.Comm( CommT, runCommT
-                                , popPressMessage
-                                , pushPressMessage
-                                , DipMessageQueue) where
+                                , popInMessage
+                                , pushOutMessage
+                                , InMessage(..)
+                                , OutMessage(..)
+                                , InMessageQueue
+                                , OutMessageQueue
+                                , PressMessageQueue) where
 
 import Diplomacy.Common.DipMessage
 
@@ -10,30 +14,40 @@ import Control.Monad.Reader
 import Control.Monad.Trans
 import Control.Concurrent.STM
 
-type DipMessageQueue = TChan DipMessage
+data InMessage = InMessage { inMessageFrom :: Power
+                           , inMessageTo :: [Power]
+                           , inMessageMessage :: PressMessage }
+               deriving (Show)
+
+data OutMessage = OutMessage { outMessageTo :: [Power]
+                             , outMessageMessage :: PressMessage }
+
+type InMessageQueue = TChan InMessage
+type OutMessageQueue = TChan OutMessage
+
                        -- (receiver, dispatcher)
-newtype CommT m a = CommT (ReaderT (DipMessageQueue, DipMessageQueue) m a)
-                  deriving (Monad, Functor, MonadTrans
-                           , MonadReader (DipMessageQueue, DipMessageQueue))
+newtype CommT m a = CommT (ReaderT (InMessageQueue, OutMessageQueue) m a)
+                  deriving (Monad, MonadTrans
+                           , MonadReader (PressMessageQueue, PressMessageQueue))
 
 instance (MonadIO m) => MonadIO (CommT m) where
   liftIO = lift . liftIO
 
-runCommT :: (Monad m) => CommT m a -> (DipMessageQueue, DipMessageQueue) -> m a
+runCommT :: (Monad m) => CommT m a -> (PressMessageQueue, PressMessageQueue) -> m a
 runCommT (CommT comm) recdis = runReaderT comm recdis
 
-askDispatcher :: (Monad m) => CommT m DipMessageQueue
-askDispatcher = fmap fst ask
+askDispatcher :: (Monad m) => CommT m InMessageQueue
+askDispatcher = liftM fst ask
 
-askReceiver :: (Monad m) => CommT m DipMessageQueue
-askReceiver = fmap snd ask
+askReceiver :: (Monad m) => CommT m OutMessageQueue
+askReceiver = liftM snd ask
 
-popDipMessage :: (MonadIO m) => CommT m DipMessage
-popDipMessage = do
+popInMessage :: (MonadIO m) => CommT m InMessage
+popInMessage = do
   dispatcher <- askDispatcher
   liftIO (atomically (readTChan dispatcher))
 
-pushDipMessage :: (MonadIO m) => DipMessage -> CommT m ()
-pushDipMessage msg = do
+pushOutMessage :: (MonadIO m) => OutMessage -> CommT m ()
+pushOutMessage msg = do
   receiver <- askReceiver
   liftIO (atomically (writeTChan receiver msg))
