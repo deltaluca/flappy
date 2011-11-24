@@ -9,7 +9,7 @@ import nme.geom.Rectangle;
 import nme.geom.Point;
 
 import gui.Gui;
-import gui.GStage;
+import gui.MipMap;
 
 class Map extends GuiElem {
 	public function new() {
@@ -18,29 +18,42 @@ class Map extends GuiElem {
 		viewport = null; 
 	}
 
-	var map:GObj;
+	var map:MipMap;
 	var viewport:Rectangle;
+	public var zoom:Int;
+
 	var stageWidth :Int;
 	var stageHeight:Int;
+	var stageScale:ScaleMode;
 
 	function build() {
-		map = new GObj(new Bitmap(Assets.getBitmapData("Assets/map-std.png")));
+		map = new MipMap([
+			Assets.getBitmapData("Assets/map-std-big1.png"),
+			Assets.getBitmapData("Assets/map-std.png"),
+			Assets.getBitmapData("Assets/map-std-sm1.png")
+		]);
 		addChild(map);
+
+		zoom = 0;	
 
 		var drag = false;
 		var px:Float; var py:Float;
 		var stage = flash.Lib.current.stage;
-		stage.addEventListener(nme.events.MouseEvent.MOUSE_DOWN, function(_) {
+		addEventListener(nme.events.MouseEvent.MOUSE_DOWN, function(_) {
 			drag = true;
 			px = stage.mouseX;
 			py = stage.mouseY;
 		});
-		stage.addEventListener(nme.events.MouseEvent.MOUSE_UP, function(_) {
+		addEventListener(nme.events.MouseEvent.MOUSE_UP, function(_) {
 			drag = false;
 		});
 
+		addEventListener(nme.events.MouseEvent.MOUSE_WHEEL, function(ev) {
+			setzoom(zoom-ev.delta);
+		});
+
 		var me = this;
-		stage.addEventListener(nme.events.MouseEvent.MOUSE_MOVE, function(_) {
+		addEventListener(nme.events.MouseEvent.MOUSE_MOVE, function(_) {
 			if(!drag) return;
 
 			var cx = stage.mouseX;
@@ -51,7 +64,6 @@ class Map extends GuiElem {
 			clamp_viewport();
 
 			display();
-			me.render(); //re-render gui
 
 			px = cx;
 			py = cy;
@@ -70,19 +82,26 @@ class Map extends GuiElem {
 		if(viewport.height+viewport.y > 1) viewport.y = 1-viewport.height;
 	}
 
+	public function setzoom(z:Int) {
+		zoom = z; if(zoom<0) zoom = 0; if(zoom>10) zoom = 10;
+		resize(stageWidth,stageHeight,stageScale);
+	}
+
 	public override function resize(width:Int,height:Int,scale:ScaleMode) {
 		stageWidth  = width;
 		stageHeight = height;
-		var ratio = map.height/map.width;
+		stageScale = scale;
 
-		var width_h  = ratio*width;
-		if(width_h > height) {
-			map.width = width;
-			map.height = width_h;
+		var ratio = map.ratio;
+
+		var zoomv = Math.pow(1.2,zoom);
+
+		var width_h  = ratio*width*zoomv;
+		if(width_h > height*zoomv) {
+			map.resize(Std.int(width*zoomv), Std.int(width_h));
 		}else {
-			var height_w = height/ratio;
-			map.width = height_w;
-			map.height = height;
+			var height_w = height*zoomv/ratio;
+			map.resize(Std.int(height_w),Std.int(height*zoomv));
 		}
 
 		if(viewport==null) {

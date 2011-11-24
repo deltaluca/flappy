@@ -1,7 +1,7 @@
 package gui;
 
-import gui.GStage;
-
+import nme.geom.Rectangle;
+import nme.geom.Matrix;
 import nme.display.Sprite;
 import nme.ui.Keyboard;
 import nme.text.TextField;
@@ -9,6 +9,7 @@ import nme.text.TextFormat;
 import nme.text.TextFieldType;
 import nme.Assets;
 import nme.display.DisplayObject;
+import nme.display.DisplayObjectContainer;
 
 enum ScaleMode {
 	sSmall;
@@ -16,7 +17,21 @@ enum ScaleMode {
 	sLarge;
 }
 
-class GuiElem extends GObj {
+class GuiElem extends Sprite {
+	
+	public function getBounds(?m:Matrix) {
+		var m2 = transform.matrix.clone();
+		if(m!=null) m2.concat(m);
+
+		var ret = new Rectangle(m2.tx,m2.ty,width*m2.a,height*m2.b);
+		for(c in 0...numChildren) {
+			var t = cast(getChildAt(c),GuiElem).getBounds(m2);
+			ret = ret.union(t);
+		}
+
+		return ret;
+	}
+
 	public function new() {
 		super();
 	}

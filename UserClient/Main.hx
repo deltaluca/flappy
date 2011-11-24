@@ -11,7 +11,6 @@ import nme.display.Bitmap;
 
 import Terminal;
 import gui.Gui;
-import gui.GStage;
 
 class Main extends Sprite {
 	public static function main() {
@@ -29,15 +28,11 @@ class Main extends Sprite {
 		stage.scaleMode = StageScaleMode.NO_SCALE;
 		stage.align = StageAlign.TOP_LEFT;
 
-		var gstage = new GStage();	
-		addChild(gstage.display);
-
 		var ggui = new Gui();
-		gstage.addChild(ggui);
+		addChild(ggui);
 
 		function size() {
 			ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);
-			gstage.resize(stage.stageWidth,stage.stageHeight);
 		}
 		stage.addEventListener(Event.RESIZE,function (_) size());
 		size();
