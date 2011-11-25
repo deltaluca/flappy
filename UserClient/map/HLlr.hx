@@ -9,17 +9,17 @@ package map;
 		static public function index(t:PathToken) return Type.enumIndex(t)
 	}
 
-	typedef Path = Array<PathCommand>;
-	enum PathCommand {
-		pMoveTo(rel:Bool, x:Float,y:Float);
-		pLineTo(rel:Bool, x:Float,y:Float);
-		pHLineTo(rel:Bool, x:Float);
-		pVLineTo(rel:Bool, y:Float);
-		pCurveTo(rel:Bool, x:Float,y:Float,cx:Float,cy:Float);
-		pCubicTo(rel:Bool, x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float);
-		pSmoothQTo(rel:Bool, x:Float,y:Float);
-		pSmoothTo(rel:Bool, x:Float,y:Float, cx2:Float,cy2:Float);
-		pClose;
+	typedef VerbosePath = Array<VerbosePathCommand>;
+	enum VerbosePathCommand {
+		vpMoveTo(rel:Bool, x:Float,y:Float);
+		vpLineTo(rel:Bool, x:Float,y:Float);
+		vpHLineTo(rel:Bool, x:Float);
+		vpVLineTo(rel:Bool, y:Float);
+		vpCurveTo(rel:Bool, x:Float,y:Float,cx:Float,cy:Float);
+		vpCubicTo(rel:Bool, x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float);
+		vpSmoothQTo(rel:Bool, x:Float,y:Float);
+		vpSmoothTo(rel:Bool, x:Float,y:Float, cx2:Float,cy2:Float);
+		vpClose;
 	}
 
 
@@ -423,7 +423,7 @@ class HLlr {
 		return aE;
 	}
 
-	public static function parse(input:Array<PathToken>): Path  {
+	public static function parse(input:Array<PathToken>): VerbosePath  {
 		init();
 
 		errors = new Array<String>();
@@ -466,16 +466,16 @@ return if(ret.length==0) null else ret[0];
 	}
 	private static inline function R1(ret:Array<Dynamic>) {
 		//assign arguments.
-var hllr__1: Path  = ret.pop();
-var hllr__0: Path  = ret.pop();
-		var retret: Path  = ({ hllr__0.concat(hllr__1); });
+var hllr__1: VerbosePath  = ret.pop();
+var hllr__0: VerbosePath  = ret.pop();
+		var retret: VerbosePath  = ({ hllr__0.concat(hllr__1); });
 		ret.push(retret);
 	}
 	private static inline function R2(ret:Array<Dynamic>) {
 		//assign arguments.
-var hllr__1: Path  = ret.pop();
-var hllr__0: Path  = ret.pop();
-		var retret: Path  = ({ hllr__0.concat(hllr__1); });
+var hllr__1: VerbosePath  = ret.pop();
+var hllr__0: VerbosePath  = ret.pop();
+		var retret: VerbosePath  = ({ hllr__0.concat(hllr__1); });
 		ret.push(retret);
 	}
 	private static inline function R3(ret:Array<Dynamic>) {
@@ -484,15 +484,15 @@ var hllr__0: Path  = ret.pop();
 	}
 	private static inline function R4(ret:Array<Dynamic>) {
 		//assign arguments.
-var hllr__1: Path  = ret.pop();
-var hllr__0: Path  = ret.pop();
-		var retret: Path  = ({ hllr__0.concat(hllr__1); });
+var hllr__1: VerbosePath  = ret.pop();
+var hllr__0: VerbosePath  = ret.pop();
+		var retret: VerbosePath  = ({ hllr__0.concat(hllr__1); });
 		ret.push(retret);
 	}
 	private static inline function R5(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
-		var retret: Path  = ({ [pClose]; });
+		var retret: VerbosePath  = ({ [vpClose]; });
 		ret.push(retret);
 	}
 	private static inline function R6(ret:Array<Dynamic>) {
@@ -527,11 +527,11 @@ var hllr__0:PathToken = ret.pop();
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
-		var retret: Path  = ({
+		var retret: VerbosePath  = ({
 		var fst = hllr__1.shift();
-		var ret = [pMoveTo(hllr__0,fst.x,fst.y)];
+		var ret = [vpMoveTo(hllr__0,fst.x,fst.y)];
 		for(c in hllr__1)
-			ret.push(pLineTo(hllr__0,c.x,c.y));
+			ret.push(vpLineTo(hllr__0,c.x,c.y));
 		ret;
 	});
 		ret.push(retret);
@@ -540,9 +540,9 @@ var hllr__0: Bool  = ret.pop();
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
-		var retret: Path  = ({
+		var retret: VerbosePath  = ({
 		var ret = [];
-		for(c in hllr__1) ret.push(pLineTo(hllr__0,c.x,c.y));
+		for(c in hllr__1) ret.push(vpLineTo(hllr__0,c.x,c.y));
 		ret;
 	});
 		ret.push(retret);
@@ -551,9 +551,9 @@ var hllr__0: Bool  = ret.pop();
 		//assign arguments.
 var hllr__1: Array<Float>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
-		var retret: Path  = ({
+		var retret: VerbosePath  = ({
 		var ret = [];
-		for(v in hllr__1) ret.push(pHLineTo(hllr__0,v));
+		for(v in hllr__1) ret.push(vpHLineTo(hllr__0,v));
 		ret;
 	});
 		ret.push(retret);
@@ -562,9 +562,9 @@ var hllr__0: Bool  = ret.pop();
 		//assign arguments.
 var hllr__1: Array<Float>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
-		var retret: Path  = ({
+		var retret: VerbosePath  = ({
 		var ret = [];
-		for(v in hllr__1) ret.push(pVLineTo(hllr__0,v));
+		for(v in hllr__1) ret.push(vpVLineTo(hllr__0,v));
 		ret;
 	});
 		ret.push(retret);
@@ -573,9 +573,9 @@ var hllr__0: Bool  = ret.pop();
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
-		var retret: Path  = ({
+		var retret: VerbosePath  = ({
 		var ret = [];
-		for(c in hllr__1) ret.push(pCubicTo(hllr__0, c.x,c.y,c.cx1,c.cy1,c.cx2,c.cy2));
+		for(c in hllr__1) ret.push(vpCubicTo(hllr__0, c.x,c.y,c.cx1,c.cy1,c.cx2,c.cy2));
 		ret;
 	});
 		ret.push(retret);
@@ -584,9 +584,9 @@ var hllr__0: Bool  = ret.pop();
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float,cx:Float,cy:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
-		var retret: Path  = ({
+		var retret: VerbosePath  = ({
 		var ret = [];
-		for(c in hllr__1) ret.push(pSmoothTo(hllr__0, c.x,c.y,c.cx,c.cy));
+		for(c in hllr__1) ret.push(vpSmoothTo(hllr__0, c.x,c.y,c.cx,c.cy));
 		ret;
 	});
 		ret.push(retret);
@@ -595,9 +595,9 @@ var hllr__0: Bool  = ret.pop();
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float,cx:Float,cy:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
-		var retret: Path  = ({
+		var retret: VerbosePath  = ({
 		var ret = [];
-		for(c in hllr__1) ret.push(pCurveTo(hllr__0, c.x,c.y,c.cx,c.cy));
+		for(c in hllr__1) ret.push(vpCurveTo(hllr__0, c.x,c.y,c.cx,c.cy));
 		ret;
 	});
 		ret.push(retret);
@@ -606,9 +606,9 @@ var hllr__0: Bool  = ret.pop();
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
-		var retret: Path  = ({
+		var retret: VerbosePath  = ({
 		var ret = [];
-		for(c in hllr__1) ret.push(pSmoothQTo(hllr__0, c.x,c.y));
+		for(c in hllr__1) ret.push(vpSmoothQTo(hllr__0, c.x,c.y));
 		ret;
 	});
 		ret.push(retret);

@@ -9,38 +9,38 @@
 		static public function index(t:PathToken) return Type.enumIndex(t)
 	}
 
-	typedef Path = Array<PathCommand>;
-	enum PathCommand {
-		pMoveTo(rel:Bool, x:Float,y:Float);
-		pLineTo(rel:Bool, x:Float,y:Float);
-		pHLineTo(rel:Bool, x:Float);
-		pVLineTo(rel:Bool, y:Float);
-		pCurveTo(rel:Bool, x:Float,y:Float,cx:Float,cy:Float);
-		pCubicTo(rel:Bool, x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float);
-		pSmoothQTo(rel:Bool, x:Float,y:Float);
-		pSmoothTo(rel:Bool, x:Float,y:Float, cx2:Float,cy2:Float);
-		pClose;
+	typedef VerbosePath = Array<VerbosePathCommand>;
+	enum VerbosePathCommand {
+		vpMoveTo(rel:Bool, x:Float,y:Float);
+		vpLineTo(rel:Bool, x:Float,y:Float);
+		vpHLineTo(rel:Bool, x:Float);
+		vpVLineTo(rel:Bool, y:Float);
+		vpCurveTo(rel:Bool, x:Float,y:Float,cx:Float,cy:Float);
+		vpCubicTo(rel:Bool, x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float);
+		vpSmoothQTo(rel:Bool, x:Float,y:Float);
+		vpSmoothTo(rel:Bool, x:Float,y:Float, cx2:Float,cy2:Float);
+		vpClose;
 	}
 %} 
 
 %entry pathdata
 
-%pathdata %{ Path %}
+%pathdata %{ VerbosePath %}
 	: movetodrawto
 	| pathdata movetodrawto %{ %0.concat(%1); %}
 ;
 
-%movetodrawto %{ Path %}
+%movetodrawto %{ VerbosePath %}
 	: moveto drawtocommands %{ %0.concat(%1); %}
 ;
 
-%drawtocommands %{ Path %}
+%drawtocommands %{ VerbosePath %}
 	: drawtocommand
 	| drawtocommands drawtocommand %{ %0.concat(%1); %}
 ;
 
-%drawtocommand %{ Path %}
-	: CLOSE %{ [pClose]; %}
+%drawtocommand %{ VerbosePath %}
+	: CLOSE %{ [vpClose]; %}
 	| lineto
 	| hlineto
 	| vlineto
@@ -50,67 +50,67 @@
 	| smoothqto
 ;
 
-%moveto %{ Path %}
+%moveto %{ VerbosePath %}
 	: move coords %{
 		var fst = %1.shift();
-		var ret = [pMoveTo(%0,fst.x,fst.y)];
+		var ret = [vpMoveTo(%0,fst.x,fst.y)];
 		for(c in %1)
-			ret.push(pLineTo(%0,c.x,c.y));
+			ret.push(vpLineTo(%0,c.x,c.y));
 		ret;
 	%}
 ;
 
-%lineto %{ Path %}
+%lineto %{ VerbosePath %}
 	: line coords %{
 		var ret = [];
-		for(c in %1) ret.push(pLineTo(%0,c.x,c.y));
+		for(c in %1) ret.push(vpLineTo(%0,c.x,c.y));
 		ret;
 	%}	
 ;
 
-%hlineto %{ Path %}
+%hlineto %{ VerbosePath %}
 	: hline values %{
 		var ret = [];
-		for(v in %1) ret.push(pHLineTo(%0,v));
+		for(v in %1) ret.push(vpHLineTo(%0,v));
 		ret;
 	%}
 ;
-%vlineto %{ Path %}
+%vlineto %{ VerbosePath %}
 	: vline values %{
 		var ret = [];
-		for(v in %1) ret.push(pVLineTo(%0,v));
+		for(v in %1) ret.push(vpVLineTo(%0,v));
 		ret;
 	%}
 ;
 
-%curveto %{ Path %}
+%curveto %{ VerbosePath %}
 	: curve coords3 %{
 		var ret = [];
-		for(c in %1) ret.push(pCubicTo(%0, c.x,c.y,c.cx1,c.cy1,c.cx2,c.cy2));
+		for(c in %1) ret.push(vpCubicTo(%0, c.x,c.y,c.cx1,c.cy1,c.cx2,c.cy2));
 		ret;
 	%}
 ;
 
-%smoothto %{ Path %}
+%smoothto %{ VerbosePath %}
 	: smooth coords2 %{
 		var ret = [];
-		for(c in %1) ret.push(pSmoothTo(%0, c.x,c.y,c.cx,c.cy));
+		for(c in %1) ret.push(vpSmoothTo(%0, c.x,c.y,c.cx,c.cy));
 		ret;
 	%}
 ;
 
-%quadto %{ Path %}
+%quadto %{ VerbosePath %}
 	: quad coords2 %{
 		var ret = [];
-		for(c in %1) ret.push(pCurveTo(%0, c.x,c.y,c.cx,c.cy));
+		for(c in %1) ret.push(vpCurveTo(%0, c.x,c.y,c.cx,c.cy));
 		ret;
 	%}
 ; 
 
-%smoothqto %{ Path %}
+%smoothqto %{ VerbosePath %}
 	: smoothq coords %{
 		var ret = [];
-		for(c in %1) ret.push(pSmoothQTo(%0, c.x,c.y));
+		for(c in %1) ret.push(vpSmoothQTo(%0, c.x,c.y));
 		ret;
 	%}
 ;
