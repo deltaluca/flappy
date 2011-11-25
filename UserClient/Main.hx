@@ -13,6 +13,7 @@ import Terminal;
 import gui.Gui;
 
 import map.MapReader;
+import map.Path;
 
 class Main extends Sprite {
 	public static function main() {
@@ -41,6 +42,20 @@ class Main extends Sprite {
 
 		// test map shiz
 		var mapdata = Assets.getText("Assets/europe.svg");
-		MapReader.parse(mapdata);
+		var provinces = MapReader.parse(mapdata);
+	
+		var sprite = new Sprite();
+		var g = sprite.graphics;
+		var cols = [0xff,0xff00,0xff0000,0xff00ff,0xffff00,0xffff]; var cnt = 0;
+		for(p in provinces) {
+			for(path in p.paths) {
+				g.lineStyle(1,cols[cnt++],1);
+				PathUtils.draw(path,g);
+				var b = PathUtils.bounds(path);
+				g.drawRect(b.x,b.y,b.width,b.height);
+			}
+		}
+
+		addChild(sprite);
 	}
 }

@@ -2,6 +2,7 @@ package map;
 
 import scx.Match;
 import nme.geom.Rectangle;
+import nme.display.Graphics;
 
 import map.HLlr;
 import map.HLex;
@@ -69,6 +70,33 @@ class PathUtils {
 			pre = v;
 		}
 		return ret;
+	}
+
+	//draw to software Graphic
+	public static function draw(path:Path, g:Graphics) {
+		//TMP:
+		function cubic_t(p0:Float,p1:Float,p2:Float,p3:Float,t:Float) {
+			var it = 1-t;
+			return it*it*(it*p0 + 3*t*p1) + t*t*(3*it*p2 + t*p3);
+		}
+
+		//turtle (cubic)
+		var tx:Float = 0; var ty:Float = 0;
+
+		for(p in path) {
+			switch(p) {
+				case pMoveTo(x,y): g.moveTo(x,y); tx = x; ty = y;
+				case pLineTo(x,y): g.lineTo(x,y); tx = x; ty = y;
+				case pCurveTo(x,y,cx,cy): g.curveTo(cx,cy,x,y); tx = x; ty = y;
+				case pCubicTo(x,y,cx1,cy1,cx2,cy2):
+					//TMP:
+					for(tt in 0...21) {
+						var t = tt/20;
+						g.lineTo(cubic_t(tx,cx1,cx2,x, t), cubic_t(ty,cy1,cy1,y, t));
+					}
+					tx = x; ty = y;
+			}
+		}
 	}
 
 	//compute theoretical bounds of a path (actual rendering via approximate of cubic curves might be slightly off)
