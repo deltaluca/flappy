@@ -92,7 +92,7 @@ class PathUtils {
 					//TMP:
 					for(tt in 0...21) {
 						var t = tt/20;
-						g.lineTo(cubic_t(tx,cx1,cx2,x, t), cubic_t(ty,cy1,cy1,y, t));
+						g.lineTo(cubic_t(tx,cx1,cx2,x, t), cubic_t(ty,cy1,cy2,y, t));
 					}
 					tx = x; ty = y;
 			}
@@ -139,7 +139,7 @@ class PathUtils {
 			var A = 3*(p1-p2) + p3-p0;
 			if(A*A<eps) return []; //no root exists
 
-			var B = 2*p0 - 6*p1 + 3*p2;
+			var B = 2*p0 - 4*p1 + 2*p2;
 			var C = p1-p0;
 			var D = B*B-4*A*C;
 
@@ -160,7 +160,7 @@ class PathUtils {
 			var cur = Match.match(p,
 				pMoveTo(x,y) = { tx = x; ty = y; null; },
 				pLineTo(x,y) = { 
-					var ret = fromrange(range(range(null,tx),x),range(range(null,ty),y));
+					var ret = fromrange(range(range(tx),x),range(range(ty),y));
 					tx = x; ty = y;
 					ret;
 				},
@@ -177,15 +177,22 @@ class PathUtils {
 					var rx = range(range(tx),x);
 					var ry = range(range(ty),y);
 					for(root in cubic(tx,cx1,cx2,x)) rx = range(rx, cubic_t(tx,cx1,cx2,x, root));
-					for(root in cubic(ty,cy1,cy2,y)) ry = range(ry, cubic_t(ty,cy1,cy1,y, root));
+					for(root in cubic(ty,cy1,cy2,y)) ry = range(ry, cubic_t(ty,cy1,cy2,y, root));
 
 					tx = x; ty = y;
 					fromrange(rx,ry);	
 				}
 			);
-			ret = if(ret==null) cur else if(cur==null) ret else ret.union(cur);
+			if(ret==null) ret = cur;
+			else if(cur!=null) {
+				var x0 = cur.x < ret.x ? cur.x : ret.x;
+				var y0 = cur.y < ret.y ? cur.y : ret.y;
+				var x1 = (cur.x+cur.width) > (ret.x+ret.width) ? (cur.x+cur.width) : (ret.x+ret.width);
+				var y1 = (cur.y+cur.height) > (ret.y+ret.height) ? (cur.y+cur.height) : (ret.y+ret.height);
+				ret.x = x0; ret.y = y0;
+				ret.width = x1-x0; ret.height = y1-y0;
+			}
 		}
-		
 		return ret;
 	}
 

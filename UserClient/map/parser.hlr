@@ -120,12 +120,12 @@
 	| coords num num %{ %0.push({x:%1,y:%2}); %0; %}
 ;
 %coords2 %{ Array<{x:Float,y:Float,cx:Float,cy:Float}> %}
-	: num num num num %{ [{x:%0,y:%1,cx:%2,cy:%3}]; %}
-	| coords2 num num num num %{ %0.push({x:%1,y:%2,cx:%3,cy:%4}); %0; %}
+	: num num num num %{ [{cx:%0,cy:%1,x:%2,y:%3}]; %}
+	| coords2 num num num num %{ %0.push({cx:%1,cy:%2,x:%3,y:%4}); %0; %}
 ;
 %coords3 %{ Array<{x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float}> %}
-	: num num num num num num %{ [{x:%0,y:%1,cx1:%2,cy1:%3,cx2:%4,cy2:%5}]; %}
-	| coords3 num num num num num num %{ %0.push({x:%1,y:%2,cx1:%3,cy1:%4,cx2:%5,cy2:%6}); %0; %}
+	: num num num num num num %{ [{cx1:%0,cy1:%1,cx2:%2,cy2:%3,x:%4,y:%5}]; %}
+	| coords3 num num num num num num %{ %0.push({cx1:%1,cy1:%2,cx2:%3,cy2:%4,x:%5,y:%6}); %0; %}
 ;
 %values %{ Array<Float> %}
 	: num %{ [%0]; %}

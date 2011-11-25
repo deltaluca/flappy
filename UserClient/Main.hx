@@ -52,6 +52,7 @@ class Main extends Sprite {
 				g.lineStyle(1,cols[cnt++],1);
 				PathUtils.draw(path,g);
 				var b = PathUtils.bounds(path);
+				g.lineStyle(1,cols[cnt++],1);
 				g.drawRect(b.x,b.y,b.width,b.height);
 			}
 		}
