@@ -94,5 +94,7 @@ mapBrainT f mbrain = do
 type Brain d h = BrainT d h Identity
 type BrainCommT d h m = BrainT d h (CommT m)
 
+type BrainComm d h = BrainCommT d h IO
+
 mapBrain :: (Monad m, Decision d) => (((a, d), h) -> m ((b, d), h)) -> BrainT d h Identity a -> BrainT d h m b
 mapBrain f = mapBrainT (f . runIdentity)

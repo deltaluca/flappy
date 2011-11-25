@@ -7,6 +7,7 @@ Reports/*.dvi
 Reports/*.txt
 *.pdf
 Server/src/server
-*dist
+*/dist/
 Maps
-*#
+*#*
+*Setup

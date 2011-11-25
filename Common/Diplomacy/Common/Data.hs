@@ -70,10 +70,11 @@ data Provinces = Provinces SupplyCentreOwnerships [Province]
 
 type SupplyCentreOwnerships = [SupplyCentreOwnership]
 
-data UnitPositions = UnitPositions Turn [UnitPosition] (Maybe [ProvinceNode])
+data UnitPositions = UnitPositions Turn [UnitPosition]
+                   | UnitPositionsRet Turn [(UnitPosition, [ProvinceNode])]
                    deriving (Show, Eq)
 
-data MapState = MapState { supplyOwners :: SupplyCentreOwnerships
+data MapState = MapState { supplyOwnerships :: SupplyCentreOwnerships
                          , unitPositions :: UnitPositions }
               deriving (Show, Eq)
 

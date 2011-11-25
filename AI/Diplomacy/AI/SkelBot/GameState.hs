@@ -4,8 +4,9 @@ module Diplomacy.AI.SkelBot.GameState where
 
 import Diplomacy.Common.Data
 
-data GameState = GameState { currentState :: MapState,  
-                             gameRound :: Int }
+data GameState = GameState { gameStateMap :: MapState
+                           , gameStateRound :: Int
+                           , gameStatePhase :: Phase }
                deriving (Show)
     
 

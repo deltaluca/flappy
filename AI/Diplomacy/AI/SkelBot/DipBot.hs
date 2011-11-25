@@ -1,9 +1,10 @@
-module Diplomacy.AI.DipBot where
+module Diplomacy.AI.SkelBot.DipBot where
 
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.Decision
 
-data DipBot d h = { botBrain :: BrainCommT d h IO () 
-                  , defaultDecision :: IO d 
-                  , initHistory :: IO h }
-  
+data DipBot d h = DipBot { botBrain :: BrainCommT d h IO () d
+                         , defaultDecision :: IO d 
+                         , initHistory :: IO h }
+
+
