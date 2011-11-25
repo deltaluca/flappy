@@ -32,7 +32,7 @@ class Main extends Sprite {
 		stage.align = StageAlign.TOP_LEFT;
 
 		var ggui = new Gui();
-		addChild(ggui);
+//		addChild(ggui);
 
 		function size() {
 			ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);
@@ -55,6 +55,8 @@ class Main extends Sprite {
 				g.drawRect(b.x,b.y,b.width,b.height);
 			}
 		}
+
+		addChild(new Bitmap(Assets.getBitmapData("Assets/europe.png")));
 
 		addChild(sprite);
 	}
