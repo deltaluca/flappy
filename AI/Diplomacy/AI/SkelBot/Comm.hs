@@ -9,7 +9,7 @@ module Diplomacy.AI.SkelBot.Comm( CommT, runCommT
                                 , PressMessageQueue) where
 
 import Diplomacy.Common.DipMessage
-
+import Diplomacy.Common.Data
 import Control.Monad.Reader
 import Control.Monad.Trans
 import Control.Concurrent.STM
