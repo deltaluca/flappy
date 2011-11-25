@@ -10,7 +10,7 @@ class MapReader {
 			for(epath in g.elementsNamed("path")) {
 				var id = epath.get("id");
 				var path = PathUtils.parse(epath.get("d"));
-				trace(id +" path= "+path);
+				var bounds = PathUtils.bounds(path);
 			}
 		}
 	}	

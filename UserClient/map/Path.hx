@@ -73,14 +73,92 @@ class PathUtils {
 
 	//compute theoretical bounds of a path (actual rendering via approximate of cubic curves might be slightly off)
 	public static function bounds(path:Path):Rectangle {
-		var ret = null;
+		var ret:Rectangle = null;
+
+		//turtle
+		var tx:Float = 0; var ty:Float = 0;
+
+		function range(?r:{x:Float,e:Float}, x:Float) {
+			return if(r==null) {x:x,e:0.0}
+			  else if(x < r.x) {x:x,e:r.e + r.x-x}
+			  else if(x > r.x+r.e) {x:r.x,e:x-r.x};
+			  else r;
+		}
+		function fromrange(x:{x:Float,e:Float},y:{x:Float,e:Float}) {
+			return new Rectangle(x.x,y.x,x.e,y.e);
+		}
+
+		function cap(x:Float):Float return x<0 ? 0 : x>1 ? 1 : x;
+		var eps = 1e-6;
+
+		//solve quadratic bezier derivative.
+		function quad(p0:Float,p1:Float,p2:Float):Array<Float> {
+			var D = p0-2*p1+p2;
+
+			if(D*D < eps) return []; //no root exists.
+			else {
+				var root = cap(p0-p1)/(p0-2*p1+p2);
+				return [root];
+			}
+		}
+		function quad_t(p0:Float,p1:Float,p2:Float,t:Float) {
+			var it = 1-t;
+			return it*(it*p0 + 2*t*p1) + t*t*p2;
+		}
+
+		//solve cubic bezier derivative
+		function cubic(p0:Float,p1:Float,p2:Float,p3:Float):Array<Float> {
+			var A = 3*(p1-p2) + p3-p0;
+			if(A*A<eps) return []; //no root exists
+
+			var B = 2*p0 - 6*p1 + 3*p2;
+			var C = p1-p0;
+			var D = B*B-4*A*C;
+
+			if(D<0) return []; //no root exists
+			else if(D*D < eps) return [-B/(2*A)];
+			else {
+				D = Math.sqrt(D); A = 1/(2*A);
+				var r1 = cap(-(B+D)*A); var r2 = cap((D-B)*A);
+				return [r1,r2];
+			}
+		}
+		function cubic_t(p0:Float,p1:Float,p2:Float,p3:Float,t:Float) {
+			var it = 1-t;
+			return it*it*(it*p0 + 3*t*p1) + t*t*(3*it*p2 + t*p3);
+		}
+
 		for(p in path) {
 			var cur = Match.match(p,
-				pLineTo(
-				_ = null						
+				pMoveTo(x,y) = { tx = x; ty = y; null; },
+				pLineTo(x,y) = { 
+					var ret = fromrange(range(range(null,tx),x),range(range(null,ty),y));
+					tx = x; ty = y;
+					ret;
+				},
+				pCurveTo(x,y,cx,cy) = {
+					var rx = range(range(tx),x);
+					var ry = range(range(ty),y);
+					for(root in quad(tx,cx,x)) rx = range(rx, quad_t(tx,cx,x, root));
+					for(root in quad(ty,cy,y)) ry = range(ry, quad_t(ty,cy,y, root));
+
+					tx = x; ty = y;
+					fromrange(rx,ry);
+				},
+				pCubicTo(x,y,cx1,cy1,cx2,cy2) = {
+					var rx = range(range(tx),x);
+					var ry = range(range(ty),y);
+					for(root in cubic(tx,cx1,cx2,x)) rx = range(rx, cubic_t(tx,cx1,cx2,x, root));
+					for(root in cubic(ty,cy1,cy2,y)) ry = range(ry, cubic_t(ty,cy1,cy1,y, root));
+
+					tx = x; ty = y;
+					fromrange(rx,ry);	
+				}
 			);
-			ret = if(ret==null) cur else if(cur==null) ret else ret.toUnion(cur);
+			ret = if(ret==null) cur else if(cur==null) ret else ret.union(cur);
 		}
+		
+		return ret;
 	}
 
 }
