@@ -1,20 +1,28 @@
 module Main where
 
-import AI.Diplomacy.AI.SkelBot.SkelBot
-import AI.Diplomacy.AI.SkelBot.Brain
-import Common.Diplomacy.Common.DipMessage
+import Diplomacy.AI.SkelBot.SkelBot
+import Diplomacy.AI.SkelBot.Brain
+import Diplomacy.Common.DipMessage
+import Diplomacy.Common.Data
 
 data HoldDecision = HoldDecision [UnitPosition]
 data DisbandDecision = DisbandDecision [UnitPosition]
 data WaiveDecision Power = WaiveDecision Power
 
 instance Decision HoldBrain HoldDecision where
-  diplomise :: Decision -> [DipMessage] -- <- Maybe not actually DipMessages
-  diplomise (HoldDecision units) = SubmitOrder map holdOrderForUnit units 
-  diplomise (DisbandDecision units) = SubmitOrder map disbandOrderForUnit units
-  diplomise (WaiveDecision power) = SubmitOrder Order OrderBuild Waive power
+  diplomise :: Decision -> [DipMessage] 
+  diplomise (HoldDecision units) = {-SubmitOrder-} map holdOrderForUnit units 
 
-diplomise Hold = asd
+instance Decision HoldBrain DisbandDecision where
+  diplomise :: Decision -> [DipMessage]
+  diplomise (DisbandDecision units) = {-SubmitOrder-} map disbandOrderForUnit units
+
+instance Decision HoldBrain WaiveDecision where
+  diplomise :: Decision -> [DipMessage]
+  diplomise (WaiveDecision power) = {-SubmitOrder-} Order OrderBuild Waive power
+--will go Order OrderBuild Waive Power Int
+
+--diplomise Hold = asd
 
 --produces an order to hold the unit
 holdOrderForUnit :: UnitPosition -> Order
@@ -26,6 +34,8 @@ disbandOrderForUnit unit = Order OrderRetreat Disband unit
 
 getPower :: Power
 getPower = --gets our power, from gameInfo, Slemi still hasn't pushed his changes for that >.<
+--power is just an int remember, so just need to make sure the int is correct
+
 
 type HoldBrain = BrainComm HoldDecision ()
 
