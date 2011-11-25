@@ -1,0 +1,9 @@
+bug-fix:
+	opengl context not resized in linux-64: Fix is to remove the 'windows hack' from sdl/SDLStage.cpp :: Resize
+	this also fixes the negative-y coordinate bug in hardware renderer
+
+bug-fix:
+	colour inversion on linux machines not able to fully use the hardware render, remove the 'opengl' check from sdl/SDLStage.cpp when setting ColourHint on context.
+
+bugs still existing:
+	negative x-coordinate in software renderer (including for linux machines not able to fully use hardware renderer) causes object to dissapear <-- FUCK YOU NME
