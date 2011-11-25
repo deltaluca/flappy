@@ -1,0 +1,28 @@
+//ignore whitespace (and commas)
+NULL -1 : ~/[\n\r \t,]/~
+
+%{
+	enum PathToken {
+		ptMove(rel:Bool);
+		ptClose;
+		ptLine(rel:Bool);
+		ptVert(rel:Bool);
+		ptHorz(rel:Bool);
+		ptCubic(rel:Bool);
+		ptSmooth(rel:Bool);	
+		ptQuad(rel:Bool);
+		ptSmoothQ(rel:Bool);
+		ptNum(x:Float);
+	}
+%}
+
+~/[mM]/~ := %{ ptMove(%=="m"); %}
+~/[zZ]/~ := %{ ptClose; %}
+~/[lL]/~ := %{ ptLine(%=="l"); %}
+~/[vV]/~ := %{ ptVert(%=="v"); %}
+~/[cC]/~ := %{ ptCubic(%=="c"); %}
+~/[sS]/~ := %{ ptSmooth(%=="s"); %}
+~/[qQ]/~ := %{ ptQuad(%=="q"); %}
+~/[tT]/~ := %{ ptSmoothQ(%=="t"); %}
+
+~/[\+\-]?(([0-9]+)|([0-9]*\.[0-9]+))([eE][\+\-]?[0-9]+)?/~ := %{ ptNum(Std.parseFloat(%)); %}

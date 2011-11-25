@@ -1,0 +1,146 @@
+%token MOVE CLOSE LINE VERT HORZ CUBIC SMOOTH QUAD SMOOTHQ
+%token NUM
+
+%{
+	import map.HLex;
+	import scx.Match;
+
+	class PTU {
+		static public function index(t:PathToken) return Type.enumIndex(t)
+	}
+
+	typedef Path = Array<PathCommand>;
+	enum PathCommand {
+		pMoveTo(rel:Bool, x:Float,y:Float);
+		pLineTo(rel:Bool, x:Float,y:Float);
+		pHLineTo(rel:Bool, x:Float);
+		pVLineTo(rel:Bool, y:Float);
+		pCurveTo(rel:Bool, x:Float,y:Float,cx:Float,cy:Float);
+		pCubicTo(rel:Bool, x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float);
+		pSmoothQTo(rel:Bool, x:Float,y:Float);
+		pSmoothTo(rel:Bool, x:Float,y:Float, cx2:Float,cy2:Float);
+		pClose;
+	}
+%} 
+
+%entry pathdata
+
+%pathdata %{ Path %}
+	: movetodrawto
+	| pathdata movetodrawto %{ %0.concat(%1); %}
+;
+
+%movetodrawto %{ Path %}
+	: moveto drawtocommands %{ %0.concat(%1); %}
+;
+
+%drawtocommands %{ Path %}
+	: drawtocommand
+	| drawtocommands drawtocommand %{ %0.concat(%1); %}
+;
+
+%drawtocommand %{ Path %}
+	: CLOSE %{ [pClose]; %}
+	| lineto
+	| hlineto
+	| vlineto
+	| curveto
+	| smoothto
+	| quadto
+	| smoothqto
+;
+
+%moveto %{ Path %}
+	: move coords %{
+		var fst = %1.shift();
+		var ret = [pMoveTo(%0,fst.x,fst.y)];
+		for(c in %1)
+			ret.push(pLineTo(%0,c.x,c.y));
+		ret;
+	%}
+;
+
+%lineto %{ Path %}
+	: line coords %{
+		var ret = [];
+		for(c in %1) ret.push(pLineTo(%0,c.x,c.y));
+		ret;
+	%}	
+;
+
+%hlineto %{ Path %}
+	: hline values %{
+		var ret = [];
+		for(v in %1) ret.push(pHLineTo(%0,v));
+		ret;
+	%}
+;
+%vlineto %{ Path %}
+	: vline values %{
+		var ret = [];
+		for(v in %1) ret.push(pVLineTo(%0,v));
+		ret;
+	%}
+;
+
+%curveto %{ Path %}
+	: curve coords3 %{
+		var ret = [];
+		for(c in %1) ret.push(pCubicTo(%0, c.x,c.y,c.cx1,c.cy1,c.cx2,c.cy2));
+		ret;
+	%}
+;
+
+%smoothto %{ Path %}
+	: smooth coords2 %{
+		var ret = [];
+		for(c in %1) ret.push(pSmoothTo(%0, c.x,c.y,c.cx,c.cy));
+		ret;
+	%}
+;
+
+%quadto %{ Path %}
+	: quad coords2 %{
+		var ret = [];
+		for(c in %1) ret.push(pCurveTo(%0, c.x,c.y,c.cx,c.cy));
+		ret;
+	%}
+; 
+
+%smoothqto %{ Path %}
+	: smoothq coords %{
+		var ret = [];
+		for(c in %1) ret.push(pSmoothQTo(%0, c.x,c.y));
+		ret;
+	%}
+;
+
+%coords %{ Array<{x:Float,y:Float}> %}
+	: num num %{ [{x:%0,y:%1}]; %}
+	| coords num num %{ %0.push({x:%1,y:%2}); %0; %}
+;
+%coords2 %{ Array<{x:Float,y:Float,cx:Float,cy:Float}> %}
+	: num num num num %{ [{x:%0,y:%1,cx:%2,cy:%3}]; %}
+	| coords2 num num num num %{ %0.push({x:%1,y:%2,cx:%3,cy:%4}); %0; %}
+;
+%coords3 %{ Array<{x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float}> %}
+	: num num num num num num %{ [{x:%0,y:%1,cx1:%2,cy1:%3,cx2:%4,cy2:%5}]; %}
+	| coords3 num num num num num num %{ %0.push({x:%1,y:%2,cx1:%3,cy1:%4,cx2:%5,cy2:%6}); %0; %}
+;
+%values %{ Array<Float> %}
+	: num %{ [%0]; %}
+	| values num %{ %0.push(%1); %0; %}
+;
+
+//----------------------------
+
+%num %{ Float %} : NUM %{ Match.match(%0,ptNum(x)=x); %} ;
+
+%move %{ Bool %} : MOVE %{ Match.match(%0,ptMove(x)=x); %} ;
+%line %{ Bool %} : LINE %{ Match.match(%0,ptLine(x)=x); %} ;
+%hline %{ Bool %} : HORZ %{ Match.match(%0,ptHorz(x)=x); %} ;
+%vline %{ Bool %} : VERT %{ Match.match(%0,ptVert(x)=x); %} ;
+%curve %{ Bool %} : CUBIC %{ Match.match(%0,ptCubic(x)=x); %} ;
+%smooth %{ Bool %} : SMOOTH %{ Match.match(%0,ptSmooth(x)=x); %} ;
+%quad %{ Bool %} : QUAD %{ Match.match(%0,ptQuad(x)=x); %} ;
+%smoothq %{ Bool %} : SMOOTHQ %{ Match.match(%0,ptSmoothQ(x)=x); %} ;

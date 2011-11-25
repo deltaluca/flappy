@@ -12,6 +12,8 @@ import nme.display.Bitmap;
 import Terminal;
 import gui.Gui;
 
+import map.MapReader;
+
 class Main extends Sprite {
 	public static function main() {
 		Lib.current.addChild(new Main());
@@ -36,5 +38,9 @@ class Main extends Sprite {
 		}
 		stage.addEventListener(Event.RESIZE,function (_) size());
 		size();
+
+		// test map shiz
+		var mapdata = Assets.getText("Assets/europe.svg");
+		MapReader.parse(mapdata);
 	}
 }
