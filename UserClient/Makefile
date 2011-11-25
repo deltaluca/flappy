@@ -3,7 +3,9 @@ all:
 	haxelib run nme build client.nmml linux -64
 
 unparser: daide/Unparser.cx
-	caxe $(SCX) daide -o . --times
+	caxe $(SCX) daide -o daide --times
+mipmap: gui/MipMap.cx
+	caxe gui -o gui --times
 	
 lexer : daide/lexer.hlx
 	hlex daide/lexer.hlx -haxe daide/HLex.hx -package daide -token Token
