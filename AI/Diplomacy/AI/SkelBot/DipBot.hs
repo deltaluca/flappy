@@ -7,10 +7,9 @@ import Diplomacy.AI.SkelBot.Decision
 
 import Control.Monad.State
 
-  -- |results of a turn
+-- |results of a turn
 data Results = ASD
 
-class (Decision d) => DipBot d h b where
-  botBrain :: (MonadIO m) => b -> BrainCommT d h m ()
-  processResults :: b -> Results -> h -> h
-  initHistory :: (MonadIO m) => b -> m h
+data DipBot m d h = DipBot { dipBotBrainComm :: BrainCommT d h m ()
+                           , dipBotProcessResults :: Results -> h -> h
+                           , dipBotInitHistory :: m h }
