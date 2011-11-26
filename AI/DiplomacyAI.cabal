@@ -62,7 +62,8 @@ Library
     network,
     unix,
     cmdargs,
-    hslogger
+    hslogger,
+    MaybeT
     
   -- Modules not exported by this package.
   -- Other-modules:       

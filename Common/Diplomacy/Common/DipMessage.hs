@@ -539,14 +539,22 @@ pTurn = do
   return (Turn phase year)
 
 pNow :: DipRep s t => DipParser s DipMessage
-pNow = tok1 (DipCmd NOW) >> choice [pCurrentUnitPos, pCurrentUnitPosReq]
+pNow = tok1 (DipCmd NOW) >> choice [ try pCurrentUnitPosRet
+                                   , pCurrentUnitPos
+                                   , pCurrentUnitPosReq ]
+
+pCurrentUnitPosRet :: DipRep s t => DipParser s DipMessage
+pCurrentUnitPosRet = do
+  turn <- paren pTurn
+  unitPoss <- many . pPair pUnitPosition $ do
+    tok1 (DipParam MRT)
+    paren . many . paren $ pProvinceNode  
+  return . CurrentUnitPositionRet $ UnitPositionsRet turn unitPoss
 
 pCurrentUnitPos :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPos = do
   turn <- paren pTurn
-  unitPoss <- many . pPair pUnitPosition . pMaybe $ do
-    tok1 (DipParam MRT)
-    paren . many . paren $ pProvinceNode
+  unitPoss <- many pUnitPosition
   return . CurrentUnitPosition $ UnitPositions turn unitPoss
 
 pCurrentUnitPosReq :: DipRep s t => DipParser s DipMessage
