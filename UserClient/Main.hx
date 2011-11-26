@@ -41,19 +41,23 @@ class Main extends Sprite {
 		size();
 
 		// test map shit
-		var mapdata = Assets.getText("Assets/europe.svg");
+//		var mapdata = Assets.getText("Assets/europe.svg");
+		var mapdata = Assets.getText("Assets/drawing.svg");
 		var provinces = MapReader.parse(mapdata);
 	
 		var sprite = new Sprite();
 		var g = sprite.graphics;
-		var cols = [0xff,0xff00,0xff0000,0xffff,0xffff00,0xff00ff,0x0];
+		var cols = [0x88,0x8800,0x880000,0x8888,0x888800,0x880088,0x0];
 		var cnt = 0;
 		for(p in provinces) {
 			for(path in p.paths) {
-				g.lineStyle(1,0,1);
+				g.lineStyle(0,0,0);
 				g.beginFill(cols[cnt++],1);
-				PathUtils.draw(path,g);
+				PathUtils.nape_draw(path,g);
 				g.endFill();
+
+				g.lineStyle(1,0,1);
+				PathUtils.draw(path,g);
 			}
 		}
 

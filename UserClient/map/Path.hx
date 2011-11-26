@@ -7,6 +7,9 @@ import nme.display.Graphics;
 import map.HLlr;
 import map.HLex;
 
+import nape.geom.GeomPoly;
+import nape.geom.Vec2;
+
 typedef Path = Array<PathCommand>;
 enum PathCommand {
 	pMoveTo(x:Float,y:Float);
@@ -72,7 +75,71 @@ class PathUtils {
 		return ret;
 	}
 
-	//draw to software Graphic
+	//step in avoiding NME hardware Graphics bug.
+	//take path and flatten to a polygon, then perform the convex decomposition
+	//and finally render convex sub-polygons
+	//
+	//this is needed to render filled paths
+	//standard paths can still use NME renderer
+	public static function nape_draw(path:Path,g:Graphics) {
+		var ret = new GeomPoly();
+		//turtle (bezier)
+		var tx:Float = 0; var ty:Float = 0;
+
+		for(p in path) {
+			switch(p) {
+				case pMoveTo(x,y): tx = x; ty = y;
+				case pLineTo(x,y): ret.push(Vec2.weak(x,y)); tx = x; ty = y;
+				//quadratic bezier is promoted to a cubic for flattening.
+				//cubic curve flattens more effeciently in terms of segment counts.
+				case pCurveTo(x,y,cx,cy): cubicpolygon(ret,tx,ty, (2*cx+tx)/3,(2*cy+ty)/3, (2*cx+x)/3,(2*cy+y)/3 ,x,y); tx = x; ty = y;
+				case pCubicTo(x,y,cx1,cy1,cx2,cy2): cubicpolygon(ret,tx,ty,cx1,cy1,cx2,cy2,x,y); tx = x; ty = y;
+			}
+		}
+
+		var decomp = ret.convex_decomposition();
+		for(gp in decomp) {
+			var fst = gp.current();
+			for(v in gp) {
+				if(v==fst) g.moveTo(v.x,v.y);
+				else       g.lineTo(v.x,v.y);
+			}
+			g.lineTo(fst.x,fst.y);
+		}
+	}
+
+	static function cubicpolygon(ret:GeomPoly, p0x:Float,p0y:Float,p1x:Float,p1y:Float,p2x:Float,p2y:Float,p3x:Float,p3y:Float) {
+		var stack = [[p0x,p0y,p1x,p1y,p2x,p2y,p3x,p3y]];
+		while(stack.length>0) {
+			var elt = stack.shift();
+			var p0x = elt[0]; var p0y = elt[1];
+			var p1x = elt[2]; var p1y = elt[3];
+			var p2x = elt[4]; var p2y = elt[5];
+			var p3x = elt[6]; var p3y = elt[7];
+			
+			var cx = cubic_t(p0x,p1x,p2x,p3x,0.5); var cy = cubic_t(p0y,p1y,p2y,p3y,0.5);
+			var lx = 0.5*(p0x+p3x); var ly = 0.5*(p0y+p3y);
+			var dx = cx-lx; var dy = cy-ly;
+			if(dx*dx+dy*dy<1)
+				ret.push(Vec2.weak(p3x,p3y));
+			else {
+				//sad face :(
+				//split cubic in half
+				var p12x = 0.5*(p1x+p2x); var p12y = 0.5*(p1y+p2y);
+				var p01x = 0.5*(p0x+p1x); var p01y = 0.5*(p0y+p1y);
+				var p23x = 0.5*(p2x+p3x); var p23y = 0.5*(p2y+p3y);
+				var pax = 0.5*(p01x+p12x); var pay = 0.5*(p01y+p12y);
+				var pbx = 0.5*(p23x+p12x); var pby = 0.5*(p23y+p12y);
+				var pcx = 0.5*(pax+pbx); var pcy = 0.5*(pay+pby);
+		
+				stack.unshift([pcx,pcy,pbx,pby,p23x,p23y,p3x,p3y]);
+				stack.unshift([p0x,p0y,p01x,p01y,pax,pay,pcx,pcy]);
+			}
+		}
+	}
+
+	//draw to Graphic
+	//NME hardware bug ahoy! :(
 	public static function draw(path:Path, g:Graphics) {
 		//turtle (cubic)
 		var tx:Float = 0; var ty:Float = 0;
