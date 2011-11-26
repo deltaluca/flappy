@@ -175,9 +175,6 @@ data DipMessage =
     -- |current position of units (SERVER)
   | CurrentUnitPosition UnitPositions
 
-    -- |current positions with retreat options (SERVER)
-  | CurrentUnitPositionRet UnitPositionsRet
-
     -- |current position of units req. (CLIENT)
   | CurrentUnitPositionReq
 
@@ -549,7 +546,7 @@ pCurrentUnitPosRet = do
   unitPoss <- many . pPair pUnitPosition $ do
     tok1 (DipParam MRT)
     paren . many . paren $ pProvinceNode  
-  return . CurrentUnitPositionRet $ UnitPositionsRet turn unitPoss
+  return . CurrentUnitPosition $ UnitPositionsRet turn unitPoss
 
 pCurrentUnitPos :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPos = do
