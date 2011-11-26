@@ -7,3 +7,4 @@ bug-fix:
 
 bugs still existing:
 	negative x-coordinate in software renderer (including for linux machines not able to fully use hardware renderer) causes object to dissapear <-- FUCK YOU NME
+	hardware renderer of graphics paths assumes complete convexity (using triangle-fans) and we cannot force it to use software here without putting the entire gui into software mode... SIGH. Going to have to add part of my physics library for geom. utils and perform convex decompositions on the SVG graphics before feeding them to nme for rendering, or otherwise render them in haxe in software which will be far slower.

@@ -40,24 +40,22 @@ class Main extends Sprite {
 		stage.addEventListener(Event.RESIZE,function (_) size());
 		size();
 
-		// test map shiz
+		// test map shit
 		var mapdata = Assets.getText("Assets/europe.svg");
 		var provinces = MapReader.parse(mapdata);
 	
 		var sprite = new Sprite();
 		var g = sprite.graphics;
-		var cols = [0xff,0xff00,0xff0000,0xff00ff,0xffff00,0xffff]; var cnt = 0;
+		var cols = [0xff,0xff00,0xff0000,0xffff,0xffff00,0xff00ff,0x0];
+		var cnt = 0;
 		for(p in provinces) {
 			for(path in p.paths) {
-				g.lineStyle(1,cols[cnt++],1);
+				g.lineStyle(1,0,1);
+				g.beginFill(cols[cnt++],1);
 				PathUtils.draw(path,g);
-				var b = PathUtils.bounds(path);
-				g.lineStyle(1,cols[cnt++],1);
-				g.drawRect(b.x,b.y,b.width,b.height);
+				g.endFill();
 			}
 		}
-
-		addChild(new Bitmap(Assets.getBitmapData("Assets/europe.png")));
 
 		addChild(sprite);
 	}

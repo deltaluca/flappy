@@ -74,12 +74,6 @@ class PathUtils {
 
 	//draw to software Graphic
 	public static function draw(path:Path, g:Graphics) {
-		//TMP:
-		function cubic_t(p0:Float,p1:Float,p2:Float,p3:Float,t:Float) {
-			var it = 1-t;
-			return it*it*(it*p0 + 3*t*p1) + t*t*(3*it*p2 + t*p3);
-		}
-
 		//turtle (cubic)
 		var tx:Float = 0; var ty:Float = 0;
 
@@ -89,15 +83,115 @@ class PathUtils {
 				case pLineTo(x,y): g.lineTo(x,y); tx = x; ty = y;
 				case pCurveTo(x,y,cx,cy): g.curveTo(cx,cy,x,y); tx = x; ty = y;
 				case pCubicTo(x,y,cx1,cy1,cx2,cy2):
-					//TMP:
-					for(tt in 0...21) {
-						var t = tt/20;
-						g.lineTo(cubic_t(tx,cx1,cx2,x, t), cubic_t(ty,cy1,cy2,y, t));
+					var stack = [[tx,ty,cx1,cy1,cx2,cy2,x,y]];
+					while(stack.length>0) {
+						var elt = stack.shift();
+						var p0x = elt[0]; var p0y = elt[1];
+						var p1x = elt[2]; var p1y = elt[3];
+						var p2x = elt[4]; var p2y = elt[5];
+						var p3x = elt[6]; var p3y = elt[7];
+
+						var quad = intersect(p0x,p0y,p1x,p1y,p2x,p2y,p3x,p3y);
+						if(quad==null) {
+							//check we don't have a straight line!
+							var cx = cubic_t(p0x,p1x,p2x,p3x,0.5); var cy = cubic_t(p0y,p1y,p2y,p3y,0.5);
+							var lx = 0.5*(p0x+p3x); var ly = 0.5*(p0y+p3y);
+							var dx = cx-lx; var dy = cy-ly;
+							if(dx*dx+dy*dy<10) { //use a straight line!
+								g.lineTo(p3x,p3y);
+								continue;
+							}
+						}else {
+							//check if quadratic is good enough yet
+							var qx = quad_t (p0x,quad.x, p3x,0.5); var qy = quad_t (p0y,quad.y, p3y,0.5);
+							var cx = cubic_t(p0x,p1x,p2x,p3x,0.5); var cy = cubic_t(p0y,p1y,p2y,p3y,0.5);
+							var dx = qx-cx; var dy = qy-cy;
+							if(dx*dx+dy*dy<10) { //use a quadratic!
+								g.curveTo(quad.x,quad.y,p3x,p3y);
+								continue;
+							}
+						}
+
+						//sad face :(
+						//split cubic in half
+						var p12x = 0.5*(p1x+p2x); var p12y = 0.5*(p1y+p2y);
+						var p01x = 0.5*(p0x+p1x); var p01y = 0.5*(p0y+p1y);
+						var p23x = 0.5*(p2x+p3x); var p23y = 0.5*(p2y+p3y);
+						var pax = 0.5*(p01x+p12x); var pay = 0.5*(p01y+p12y);
+						var pbx = 0.5*(p23x+p12x); var pby = 0.5*(p23y+p12y);
+						var pcx = 0.5*(pax+pbx); var pcy = 0.5*(pay+pby);
+		
+						stack.unshift([pcx,pcy,pbx,pby,p23x,p23y,p3x,p3y]);
+						stack.unshift([p0x,p0y,p01x,p01y,pax,pay,pcx,pcy]);
 					}
 					tx = x; ty = y;
 			}
 		}
 	}
+
+	static function intersect(p0x:Float,p0y:Float,p1x:Float,p1y:Float,p2x:Float,p2y:Float,p3x:Float,p3y:Float) {
+		var ux = p1x-p0x; var uy = p1y-p0y;
+		var vx = p2x-p3x; var vy = p2y-p3y;
+		var denom = ux*vy - uy*vx;
+		if(denom*denom < eps) return null;
+
+		var t = ((p3x-p0x)*vy - (p3y-p0y)*vx)/denom;
+		return {x:p0x + ux*t, y:p0y + uy*t};
+	}
+
+	//evaluate quadratic and cubic
+	static function quad_t(p0:Float,p1:Float,p2:Float,t:Float) {
+		var it = 1-t;
+		return it*(it*p0 + 2*t*p1) + t*t*p2;
+	}
+	static function cubic_t(p0:Float,p1:Float,p2:Float,p3:Float,t:Float) {
+		var it = 1-t;
+		return it*it*(it*p0 + 3*t*p1) + t*t*(3*it*p2 + t*p3);
+	}
+
+	static function cap(x:Float):Float return x<0 ? 0 : x>1 ? 1 : x
+
+	inline static var eps = 1e-6;
+	//solve quadratic bezier derivative.
+	static function quad(p0:Float,p1:Float,p2:Float):Array<Float> {
+		var D = p0-2*p1+p2;
+
+		if(D*D < eps) return []; //no root exists.
+		else {
+			var root = cap(p0-p1)/(p0-2*p1+p2);
+			return [root];
+		}
+	}
+
+	//solve cubic bezier derivative
+	static function cubic(p0:Float,p1:Float,p2:Float,p3:Float):Array<Float> {
+		var A = 3*(p1-p2) + p3-p0;
+		if(A*A<eps) return []; //no root exists
+
+		var B = 2*p0 - 4*p1 + 2*p2;
+		var C = p1-p0;
+		var D = B*B-4*A*C;
+
+		if(D<0) return []; //no root exists
+		else if(D*D < eps) return [-B/(2*A)];
+		else {
+			D = Math.sqrt(D); A = 1/(2*A);
+			var r1 = cap(-(B+D)*A); var r2 = cap((D-B)*A);
+			return [r1,r2];
+		}
+	}
+
+	//1d range
+	static function range(?r:{x:Float,e:Float}, x:Float) {
+		return if(r==null) {x:x,e:0.0}
+		  else if(x < r.x) {x:x,e:r.e + r.x-x}
+		  else if(x > r.x+r.e) {x:r.x,e:x-r.x};
+		  else r;
+	}
+	static function fromrange(x:{x:Float,e:Float},y:{x:Float,e:Float}) {
+		return new Rectangle(x.x,y.x,x.e,y.e);
+	}
+
 
 	//compute theoretical bounds of a path (actual rendering via approximate of cubic curves might be slightly off)
 	public static function bounds(path:Path):Rectangle {
@@ -105,56 +199,6 @@ class PathUtils {
 
 		//turtle
 		var tx:Float = 0; var ty:Float = 0;
-
-		function range(?r:{x:Float,e:Float}, x:Float) {
-			return if(r==null) {x:x,e:0.0}
-			  else if(x < r.x) {x:x,e:r.e + r.x-x}
-			  else if(x > r.x+r.e) {x:r.x,e:x-r.x};
-			  else r;
-		}
-		function fromrange(x:{x:Float,e:Float},y:{x:Float,e:Float}) {
-			return new Rectangle(x.x,y.x,x.e,y.e);
-		}
-
-		function cap(x:Float):Float return x<0 ? 0 : x>1 ? 1 : x;
-		var eps = 1e-6;
-
-		//solve quadratic bezier derivative.
-		function quad(p0:Float,p1:Float,p2:Float):Array<Float> {
-			var D = p0-2*p1+p2;
-
-			if(D*D < eps) return []; //no root exists.
-			else {
-				var root = cap(p0-p1)/(p0-2*p1+p2);
-				return [root];
-			}
-		}
-		function quad_t(p0:Float,p1:Float,p2:Float,t:Float) {
-			var it = 1-t;
-			return it*(it*p0 + 2*t*p1) + t*t*p2;
-		}
-
-		//solve cubic bezier derivative
-		function cubic(p0:Float,p1:Float,p2:Float,p3:Float):Array<Float> {
-			var A = 3*(p1-p2) + p3-p0;
-			if(A*A<eps) return []; //no root exists
-
-			var B = 2*p0 - 4*p1 + 2*p2;
-			var C = p1-p0;
-			var D = B*B-4*A*C;
-
-			if(D<0) return []; //no root exists
-			else if(D*D < eps) return [-B/(2*A)];
-			else {
-				D = Math.sqrt(D); A = 1/(2*A);
-				var r1 = cap(-(B+D)*A); var r2 = cap((D-B)*A);
-				return [r1,r2];
-			}
-		}
-		function cubic_t(p0:Float,p1:Float,p2:Float,p3:Float,t:Float) {
-			var it = 1-t;
-			return it*it*(it*p0 + 3*t*p1) + t*t*(3*it*p2 + t*p3);
-		}
 
 		for(p in path) {
 			var cur = Match.match(p,
