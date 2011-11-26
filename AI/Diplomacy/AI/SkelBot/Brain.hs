@@ -5,10 +5,11 @@
 , FunctionalDependencies #-}
 
 module Diplomacy.AI.SkelBot.Brain ( Brain, BrainT
-                                  , BrainComm, BrainCommT
+                                  , BrainCommT
                                   , mapBrainT
                                   , runBrainT
                                   , runBrain
+                                  , liftBrain
                                   , runBrainCommT
                                   , runGameKnowledgeT
                                   , decide
@@ -118,7 +119,6 @@ mapBrainT f mbrain = do
   return ret
 
 type Brain d h = BrainT d h Identity
-type BrainComm d h = BrainCommT d h IO
 
 mapBrain :: (Monad m, Decision d) => (((a, Maybe d), h) -> m ((b, Maybe d), h)) -> Brain d h a -> BrainT d h m b
 mapBrain f = mapBrainT (f . runIdentity)

@@ -2,51 +2,88 @@ module Main where
 
 import Diplomacy.AI.SkelBot.SkelBot
 import Diplomacy.AI.SkelBot.Brain
+import Diplomacy.AI.SkelBot.Decision
+import Diplomacy.AI.SkelBot.GameInfo
+import Diplomacy.AI.SkelBot.GameState
+import Diplomacy.AI.SkelBot.DipBot
 import Diplomacy.Common.DipMessage
 import Diplomacy.Common.Data
+import Control.Monad.Reader
+import Control.Monad.State
+import Control.Monad.Identity
 
-data HoldDecision = HoldDecision [UnitPosition]
-data DisbandDecision = DisbandDecision [UnitPosition]
-data WaiveDecision Power = WaiveDecision Power
+data HoldBotDecision = HoldDecision [UnitPosition]
+                     | DisbandDecision [UnitPosition]
+                     | WaiveDecision Power
 
-instance Decision HoldBrain HoldDecision where
-  diplomise :: Decision -> [DipMessage] 
-  diplomise (HoldDecision units) = {-SubmitOrder-} map holdOrderForUnit units 
+type HoldBotHistory = ()
 
-instance Decision HoldBrain DisbandDecision where
-  diplomise :: Decision -> [DipMessage]
-  diplomise (DisbandDecision units) = {-SubmitOrder-} map disbandOrderForUnit units
+instance Decision HoldBotDecision where
+  diplomise (HoldDecision units) = [SubmitOrder Nothing (map holdOrderForUnit units)]
+  diplomise (DisbandDecision units) = [SubmitOrder Nothing (map disbandOrderForUnit units)]
+  diplomise (WaiveDecision power) = [SubmitOrder Nothing [OrderBuild (Waive power)]]
 
-instance Decision HoldBrain WaiveDecision where
-  diplomise :: Decision -> [DipMessage]
-  diplomise (WaiveDecision power) = {-SubmitOrder-} Order OrderBuild Waive power
---will go Order OrderBuild Waive Power Int
-
---diplomise Hold = asd
 
 --produces an order to hold the unit
 holdOrderForUnit :: UnitPosition -> Order
-holdOrderForUnit unit = Order OrderMovement Hold unit 
+holdOrderForUnit unit = OrderMovement (Hold unit)
 
 --produces an order to disband the unit
 disbandOrderForUnit :: UnitPosition -> Order
-disbandOrderForUnit unit = Order OrderRetreat Disband unit
+disbandOrderForUnit unit = OrderRetreat (Disband unit)
 
-getPower :: Power
-getPower = --gets our power, from gameInfo, Slemi still hasn't pushed his changes for that >.<
---power is just an int remember, so just need to make sure the int is correct
+getPower :: HoldBrain Power
+getPower = asksGameInfo gameInfoPower
+{-
+do
+  let a = someFunction
+  b :: a <- someOtherFunction :: m a
+  return :: a -> m a
+  (>>=) :: m a -> (a -> m b) -> m b
+
+  a <- f
+  b <- g a
+  c <- h b
+
+  c <- h =<< (g =<< f :: m b)
+  return c
+
+  f >>= (\a -> g a >>= (\b -> h b >>= \c -> return c)) -}
+
+type HoldBrainCommT m = BrainCommT HoldBotDecision () m
+type HoldBrain = Brain HoldBotDecision ()
+
+main = skelBot holdBot
+
+holdBot :: (MonadIO m) => DipBot m HoldBotDecision HoldBotHistory
+holdBot = DipBot { dipBotBrainComm = holdBrainComm
+                 , dipBotProcessResults = holdProcessResults
+                 , dipBotInitHistory = holdInitHistory }
 
 
-type HoldBrain = BrainComm HoldDecision ()
-
-main = skelBot holdBrain
+holdBrainComm :: (MonadIO m) => HoldBrainCommT m ()
+holdBrainComm = liftBrain (runBrain holdBrain)
 
 holdBrain :: HoldBrain ()
 holdBrain = do
   curMapState <- asksGameState gameStateMap
   let unitPoss = unitPositions curMapState
-  let ownSupplies = getOwnSupplies $ supplyOwnerships curMapState --need to define getOwnSupplies here
-  decide $ holdUnits unitPoss ownSupplies
+  ownSupplies <- getOwnSupplies $ supplyOwnerships curMapState --need to define getOwnSupplies here
+  myDecision <- holdUnits unitPoss ownSupplies
+  putDecision $ Just myDecision
+
+--decide . holdUnits unitPoss =<< ownSupplies
+  
+  {-do
+  supplies <- ownSupplies
+  let h = holdUnits unitposs supplies)-}
+    
+
+holdProcessResults :: Results -> HoldBotHistory -> HoldBotHistory
+holdProcessResults = undefined
+
+holdInitHistory :: (MonadIO m) => m HoldBotHistory
+holdInitHistory = return ()
 
   {-forever $ do
   # Stuff not really to do with holdbot but Luke likes keeping it here # 
@@ -58,57 +95,51 @@ holdBrain = do
   map someFunction unitPoss
 -}
 
-getOwnSupplies :: [SupplyCentreOwnership] -> [Provinces]
-getOwnSupplies supplies = 
-  [provinces | (power provinces) <- supplies, power = getPower]
+getOwnSupplies :: [SupplyCentreOwnership] -> HoldBrain [Province]
+getOwnSupplies supplies = do
+  myPower <- getPower
+  return . head $ [provinces | (SupplyCentre power provinces) <- supplies, myPower == power]
 
-holdUnits :: UnitPositions -> [SupplyCentreOwnership] -> Decision
-holdUnits (UnitPositions Spring units) _ =
-  HoldDecision units
+holdUnits :: UnitPositions -> [Province] -> HoldBrain HoldBotDecision
+holdUnits (UnitPositions (Turn Spring _) units) _ =
+  return $ HoldDecision units
 -- tell all units to hold
 
-holdUnits (UnitPositions Fall units) _	 =
-  HoldDecision units
+holdUnits (UnitPositions (Turn Fall _) units) _	 =
+  return $ HoldDecision units
 -- tell all units to hold
 
-holdUnits (UnitPositionsRet Summer unitsAndRets) _ =
-  retreatUnits unitsAndRets
+holdUnits (UnitPositionsRet (Turn Summer _) unitsAndRets) _ =
+  return $ retreatUnits unitsAndRets
 -- need to retreat our units that need retreating
 -- unitsAndRets is a list of units that need to be retreating and
 -- each unit will have a corresponding list of provinces it can retreat to
--- in our holdbot case we just disband. Lol.
+-- in our holdbot case we just disband.
 
-holdUnits (UnitPositionsRet Autumn unitsAndRets) _ =
-  retreatUnits unitsAndRets
+holdUnits (UnitPositionsRet (Turn Autumn _) unitsAndRets) _ =
+  return $ retreatUnits unitsAndRets
 -- similar to above
 
-holdUnits (UnitPositions Winter units) ownSupplies =
+holdUnits (UnitPositions (Turn Winter _) units) ownSupplies =
   disbandOrWaive units ownSupplies
 {- need to disband if we have too many units or waive builds if we have the 
    opportunity to build i.e. we have more supply centres than units and units have         
    controlled the province for at least 2 turns 
 -}
 
-retreatUnits :: [(UnitPosition, [ProvinceNode])] -> Decision
+retreatUnits :: [(UnitPosition, [ProvinceNode])] -> HoldBotDecision
 retreatUnits unitsAndRetreats = 
   DisbandDecision [unit| (unit, _) <- unitsAndRetreats]
 
-disbandOrWaive :: [UnitPosition] ->  [Provinces] -> Decision
-disbandOrWaive units supplyCentres =
-  | difference > 0 = DisbandDecision $ take difference units
-  | otherwise      = WaiveDecision getPower
+disbandOrWaive :: [UnitPosition] ->  [Province] -> HoldBrain HoldBotDecision
+disbandOrWaive units supplyCentres 
+  | difference > 0 = return $ DisbandDecision $ take difference units
+  | otherwise      = do
+                        myPower <- getPower
+                        return $ WaiveDecision myPower
+  where
+    difference = (length units) - (length supplyCentres)  
      {- here we need to waive a build on a unit on a province in our home territory 
         which we are still in control of and doesn't have a unit on it currently -}
     -- waive builds on all units? Technically waiving a build means not submitting any sort of build order whatsoever
-  where
-    difference = (length units) - (length supplyCentres)  
-
-{- if |unitpositions| > |provinces where supply centres are| then 
-   we need to disband some units as we aren't allowed more units than supply
-   centres, holdbot.cpp just disbands from the beginning
-   else
-   we need to waive builds, we never build so we just say no thanks don't want to
-   build
-  UPDATE: just waive power does the same thing. BOOM.
--}
 

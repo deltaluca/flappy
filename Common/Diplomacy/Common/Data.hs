@@ -14,7 +14,12 @@ module Diplomacy.Common.Data ( Power(..)
                              , UnitToProv(..)
                              , ProvinceNode(..)
                              , Turn(..)
-                             , Adjacency(..)) where
+                             , Adjacency(..)
+                             , Order(..)
+                             , OrderRetreat(..)
+                             , OrderBuild(..)
+                             , OrderMovement(..)
+                             ) where
 
 -- | Numbering fixed in ...
 data Power 
@@ -93,5 +98,29 @@ data ProvinceNode = ProvNode Province | ProvCoastNode Province Coast
 data UnitToProv = UnitToProv UnitType [ProvinceNode]
                 | CoastalFleetToProv Coast [ProvinceNode]
                 deriving (Show, Eq)
+
+data Order = OrderMovement OrderMovement
+           | OrderRetreat OrderRetreat
+           | OrderBuild OrderBuild
+           deriving (Show)
+
+data OrderMovement = Hold UnitPosition
+                   | Move UnitPosition ProvinceNode
+                   | SupportHold UnitPosition UnitPosition
+                   | SupportMove UnitPosition UnitPosition Province
+                   | Convoy UnitPosition UnitPosition ProvinceNode
+                   | MoveConvoy UnitPosition ProvinceNode [Province]
+                   deriving (Show)
+
+data OrderRetreat = Retreat UnitPosition ProvinceNode
+                  | Disband UnitPosition
+                  deriving (Show)
+
+data OrderBuild = Build UnitPosition
+                | Remove UnitPosition
+                | Waive Power
+                deriving (Show)
+
+
 
 -- | -------------------------------------------------------------                 

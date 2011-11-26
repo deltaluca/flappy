@@ -247,11 +247,6 @@ data DipMessage =
 data PlayerStat = PlayerStat Power String String Int (Maybe Int)
                 deriving (Show)
 
-data Order = OrderMovement OrderMovement
-           | OrderRetreat OrderRetreat
-           | OrderBuild OrderBuild
-           deriving (Show)
-
 data PressMessage = PressProposal PressProposal
                   | PressReply PressReply
                   | PressInfo PressProposal
@@ -305,23 +300,6 @@ data OrderNote = MovementOK
                | NoMoreRemovalAllowed
                | NotCurrentSeason
                deriving (Show)
-
-data OrderMovement = Hold UnitPosition
-                   | Move UnitPosition ProvinceNode
-                   | SupportHold UnitPosition UnitPosition
-                   | SupportMove UnitPosition UnitPosition Province
-                   | Convoy UnitPosition UnitPosition ProvinceNode
-                   | MoveConvoy UnitPosition ProvinceNode [Province]
-                   deriving (Show)
-
-data OrderRetreat = Retreat UnitPosition ProvinceNode
-                  | Disband UnitPosition
-                  deriving (Show)
-
-data OrderBuild = Build UnitPosition
-                | Remove UnitPosition
-                | Waive Power
-                deriving (Show)
 
 data VariantOption = Level Int
                    | TimeMovement Int
