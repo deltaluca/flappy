@@ -187,14 +187,8 @@ data DipMessage =
     -- |acknowledge order (SERVER)
   | AckOrder Order OrderNote
 
-    -- |missing movement orders (SERVER)
-  | MissingMovement [UnitPosition]
-
-    -- |missing retreat orders (SERVER)
-  | MissingRetreat [(UnitPosition, [ProvinceNode])]
-
-    -- |missing build orders (SERVER)
-  | MissingBuild Int
+    -- |missing orders (SERVER)
+  | Missing Missing
 
     -- |missing request (CLIENT) or replying 'no more missing request' (SERVER)
   | MissingReq
@@ -242,6 +236,17 @@ data DipMessage =
     -- |full statistics at the end of the game
   | EndGameStats Turn [PlayerStat]
 
+  deriving (Show)
+
+data Missing =
+  -- |missing movement orders (SERVER)
+    MissingMovement [UnitPosition]
+
+    -- |missing retreat orders (SERVER)
+  | MissingRetreat [(UnitPosition, [ProvinceNode])]
+
+    -- |missing build orders (SERVER)
+  | MissingBuild Int
   deriving (Show)
 
 data PlayerStat = PlayerStat Power String String Int (Maybe Int)
@@ -360,7 +365,7 @@ pMsg = choice  [ pAccept, pReject, pCancel
                , pSlo
                , pDrw
                , pSmr
-                
+
                  -- press
                , pSnd
                , pOut
@@ -521,15 +526,15 @@ pNow = tok1 (DipCmd NOW) >> choice [ try pCurrentUnitPosRet
 pCurrentUnitPosRet :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPosRet = do
   turn <- paren pTurn
-  unitPoss <- many . pPair pUnitPosition $ do
+  unitPoss <- many . paren . pPair pUnitPosition $ do
     tok1 (DipParam MRT)
-    paren . many . paren $ pProvinceNode  
+    paren . many $ pProvinceNode
   return . CurrentUnitPosition $ UnitPositionsRet turn unitPoss
 
 pCurrentUnitPos :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPos = do
   turn <- paren pTurn
-  unitPoss <- many pUnitPosition
+  unitPoss <- many . paren $ pUnitPosition
   return . CurrentUnitPosition $ UnitPositions turn unitPoss
 
 pCurrentUnitPosReq :: DipRep s t => DipParser s DipMessage
@@ -558,8 +563,8 @@ pSub = do
 
 pOrderOrWaive :: DipRep s t => DipParser s Order
 pOrderOrWaive = pOrder <|> do
-  tok1 (DipOrder WVE)
   power <- pPower
+  tok1 (DipOrder WVE)
   return (OrderBuild (Waive power))
 
 pOrder :: DipRep s t => DipParser s Order
@@ -654,11 +659,11 @@ pOrderNote = tok (\t -> case t of {DipOrderNote tk ->
     -- "try" used because of the freaking 2.3gajillion token lookahead
 pMis :: DipRep s t => DipParser s DipMessage
 pMis = tok1 (DipCmd MIS) >>
-       choice [ return . MissingMovement =<< (try . many . paren) pUnitPosition
-              , return . MissingRetreat =<<
-                (try . many . paren . pPair pUnitPosition 
+       choice [ return . Missing . MissingMovement =<< (try . many . paren) pUnitPosition
+              , return . Missing . MissingRetreat =<<
+                (try . many . paren . pPair pUnitPosition
                  $ tok1 (DipParam MRT) >> paren (many pProvinceNode))
-              , return . MissingBuild =<< paren pInt
+              , return . Missing . MissingBuild =<< paren pInt
               , return MissingReq
               ]
 
@@ -949,8 +954,11 @@ uParen up a = uTok Bra . up a . uTok Ket
 uMany :: UnDipParser a -> UnDipParser [a]
 uMany up = foldl (.) id . map up
 
--- uMaybe :: UnDipParser a -> UnDipParser (Maybe a)
--- uMaybe up = maybe id up
+uPair :: UnDipParser a -> UnDipParser b -> UnDipParser (a, b)
+uPair ua ub (a, b) = ua a . ub b
+
+uMaybe :: UnDipParser a -> UnDipParser (Maybe a)
+uMaybe up m = maybe id up m
 
 uStr :: UnDipParser String
 uStr = appendListify . map Character
@@ -963,33 +971,33 @@ uMsg m = case m of
   Accept msg -> ( uTok (DipCmd YES)
                 . uParen uMsg msg
                 )
-                  
+
   Reject msg -> ( uTok (DipCmd REJ)
                 . uParen uMsg msg
                 )
-                  
-  Cancel msg -> ( uTok (DipCmd NOT) 
+
+  Cancel msg -> ( uTok (DipCmd NOT)
                 . uParen uMsg msg
                 )
-                  
+
   Name sName sVersion -> ( uTok (DipCmd NME)
                          . uParen uStr sName
                          . uParen uStr sVersion
                          )
-                         
+
   MapName sName -> ( uTok (DipCmd MAP)
                    . uParen uStr sName
                    )
-  
+
   MapNameReq -> uTok (DipCmd MAP)
-  
+
   Observer -> uTok (DipCmd OBS)
-  
+
   Rejoin power passcode -> ( uTok (DipCmd IAM)
                            . uParen uPower power
                            . uParen uInt passcode
                            )
-                           
+
   MapDef (MapDefinition powers provinces adjacencies) -> ( uTok (DipCmd MDF)
                                                          . uParen (uMany uPower) powers
                                                          . uParen uProvinces provinces
@@ -997,7 +1005,7 @@ uMsg m = case m of
                                                          )
 
   MapDefReq -> uTok (DipCmd MDF)
-  
+
   Start pow passCode lvl variantOpts ->
     ( uTok (DipCmd HLO)
     . uParen uPower pow
@@ -1012,17 +1020,320 @@ uMsg m = case m of
     ( uTok (DipCmd SCO)
     . uMany uSupplyCentre supplyCentres
     )
-    
+
   CurrentPositionReq -> uTok (DipCmd SCO)
-    
-  CurrentUnitPosition (UnitPositions turn _) -> --unitPoss retreats ->
+
+  CurrentUnitPosition uPoss ->
     uTok (DipCmd NOW)
+    . case uPoss of
+      UnitPositions turn unitPoss -> ( uParen uTurn turn
+                                     . uMany (uParen uUnitPosition) unitPoss
+                                     )
+      UnitPositionsRet turn unitPoss -> uParen uTurn turn
+                                        . uMany (uParen (uPair uUnitPosition
+                                                         (\n -> ( uTok (DipParam MRT)
+                                                                . uParen (uMany uProvinceNode) n
+                                                                )))) unitPoss
+
+  CurrentUnitPositionReq ->
+    uTok (DipCmd NOW)
+
+  HistoryReq turn ->
+    ( uTok (DipCmd HST)
     . uParen uTurn turn
---    . uMany (uParen uUnitPosition)
-    . uTok (DipParam MRT)
-    
-    
-  _ -> undefined
+    )
+
+  SubmitOrder mturn orders ->
+    ( uTok (DipCmd SUB)
+    . uMaybe uTurn mturn
+    . uMany (uParen uOrder) orders
+    )
+
+  AckOrder order orderNote ->
+    ( uTok (DipCmd THX)
+    . uParen uOrder order
+    . uParen uOrderNote orderNote
+    )
+
+  Missing missing ->
+    uTok (DipCmd MIS)
+    . case missing of
+      MissingMovement unitPoss -> uMany uUnitPosition unitPoss
+      MissingRetreat unitPosRets -> uMany (uParen (uPair uUnitPosition
+                                                   (\n -> ( uTok (DipParam MRT)
+                                                          . uParen (uMany uProvinceNode) n
+                                                          )))) unitPosRets
+      MissingBuild n -> uParen uInt n
+  
+  MissingReq ->
+    uTok (DipCmd MIS)
+
+  StartProcessing ->
+    uTok (DipCmd GOF)
+
+  OrderResult turn order result ->
+    ( uTok (DipCmd ORD)
+    . uParen uTurn turn
+    . uParen uOrder order
+    . uParen uResult result
+    )
+
+  SaveGame gameName ->
+    ( uTok (DipCmd SVE)
+    . uParen uStr gameName
+    )
+
+  LoadGame gameName ->
+    ( uTok (DipCmd LOD)
+    . uParen uStr gameName
+    )
+
+  ExitClient ->
+    uTok (DipCmd OFF)
+
+  TimeUntilDeadline timeLeft ->
+    ( uTok (DipCmd TME)
+    . uParen uInt timeLeft
+    )
+
+  DipError (Paren message) ->
+    ( uTok (DipCmd PRN)
+    . uParen (uMany uTok) message
+    )
+
+  DipError (Syntax message) ->
+    ( uTok (DipCmd HUH)
+    . uParen (uMany uTok) message
+    )
+
+  DipError (CivilDisorder power) ->
+    ( uTok (DipCmd CCD)
+    . uParen uPower power
+    )
+
+  DipError (ParseError _) ->
+    ( uTok (DipCmd HUH)
+    . uParen (uMany uTok) []
+    )
+
+  AdminMessage name message ->
+    ( uTok (DipCmd ADM)
+    . uParen uStr name
+    . uParen uStr message
+    )
+
+  SoloWinGame power ->
+    ( uTok (DipCmd SLO)
+    . uParen uPower power
+    )
+
+  DrawGame mPowers ->
+    ( uTok (DipCmd DRW)
+    . uMaybe (uMany (uParen uPower)) mPowers
+    )
+
+  SendPress mTurn powers pMessage ->
+    ( uTok (DipCmd SND)
+    . uMaybe (uParen uTurn) mTurn
+    . uParen (uMany uPower) powers
+    . uParen uPressMessage pMessage
+    )
+
+  PowerEliminated power ->
+    ( uTok (DipCmd OUT)
+    . uParen uPower power
+    )
+
+  ReceivePress fromPower toPowers msg ->
+    ( uTok (DipCmd FRM)
+    . uParen uPower fromPower
+    . uParen (uMany uPower) toPowers
+    . uParen uPressMessage msg
+    )
+
+  EndGameStats turn playerStats ->
+    ( uTok (DipCmd SMR)
+    . uParen uTurn turn
+    . uMany (uParen uPlayerStat) playerStats
+    )
+
+uPlayerStat :: UnDipParser PlayerStat
+uPlayerStat (PlayerStat power name message centres yearOfElimination) =
+  ( uPower power
+  . uParen uStr name
+  . uParen uStr message
+  . uInt centres
+  . uMaybe uInt yearOfElimination
+  )
+
+
+uPressMessage :: UnDipParser PressMessage
+uPressMessage pm = case pm of
+  PressProposal pressArr ->
+    ( uTok (DipPress PRP)
+    . uParen uPressArrangement pressArr
+    )
+  PressReply reply -> case reply of
+    PressHuh msg ->
+      ( uTok (DipCmd HUH)
+      . uParen uPressMessage msg
+      )
+    PressAccept msg ->
+      ( uTok (DipCmd YES)
+      . uParen uPressMessage msg
+      )
+    PressReject msg ->
+      ( uTok (DipCmd REJ)
+      . uParen uPressMessage msg
+      )
+    PressRefuse msg ->
+      ( uTok (DipPress BWX)
+      . uParen uPressMessage msg
+      )
+    PressCancel msg ->
+      ( uTok (DipPress CCL)
+      . uParen uPressMessage msg
+      )
+  PressInfo arrangement ->
+    ( uTok (DipPress FCT)
+    . uParen uPressArrangement arrangement
+    )
+  PressCapable tks ->
+    ( uTok (DipPress TRY)
+    . uParen (uMany uTok) tks
+    )
+
+uPressArrangement arr = case arr of
+  ArrangeDraw ->
+    uTok (DipCmd DRW)
+  ArrangeSolo power ->
+    ( uTok (DipCmd SLO)
+    . uParen uPower power
+    )
+  ArrangePeace powers ->
+    ( uTok (DipPress PCE)
+    . uParen (uMany uPower) powers
+    )
+  ArrangeAlliance allies enemies ->
+    ( uTok (DipPress ALY)
+    . uParen (uMany uPower) allies
+    . uTok (DipPress VSS)
+    . uParen (uMany uPower) enemies
+    )
+  ArrangeNot arrangement ->
+    ( uTok (DipCmd NOT)
+    . uPressArrangement arrangement
+    )
+  ArrangeUndo arrangement ->
+    ( uTok (DipPress NAR)
+    . uPressArrangement arrangement
+    )
+
+uResult :: UnDipParser Result
+uResult (Result normal retreat) =
+  ( uMaybe uResultNormal normal
+  . uMaybe uResultRetreat retreat
+  )
+
+uResultNormal :: UnDipParser ResultNormal
+uResultNormal res = case res of
+  Success -> uTok (DipResult SUC)
+  MoveBounced -> uTok (DipResult BNC)
+  SupportCut -> uTok (DipResult CUT)
+  DisbandedConvoy -> uTok (DipResult DSR)
+  NoSuchOrder -> uTok (DipResult NSO)
+
+uResultRetreat :: UnDipParser ResultRetreat
+uResultRetreat ResultRetreat =
+  uTok (DipResult RET)
+
+uOrder :: UnDipParser Order
+uOrder (OrderBuild (Waive power)) =
+  ( uPower power
+  . uTok (DipOrder WVE)
+  )
+uOrder (OrderMovement (Hold unit)) =
+  ( uParen uUnitPosition unit
+  . uTok (DipOrder HLD)
+  )
+uOrder (OrderMovement (Move unit provinceNode)) =
+  ( uParen uUnitPosition unit
+  . uTok (DipOrder MTO)
+  . uProvinceNode provinceNode
+  )
+uOrder (OrderMovement (SupportMove u1 u2 province)) =
+  ( uParen uUnitPosition u1
+  . uTok (DipOrder SUP)
+  . uParen uUnitPosition u2
+  . uTok (DipOrder MTO)
+  . uProvince province
+  )
+uOrder (OrderMovement (SupportHold u1 u2)) =
+  ( uParen uUnitPosition u1
+  . uTok (DipOrder SUP)
+  . uParen uUnitPosition u2
+  )
+uOrder (OrderMovement (Convoy u1 u2 provinceNode)) =
+  ( uParen uUnitPosition u1
+  . uTok (DipOrder CVY)
+  . uParen uUnitPosition u2
+  . uTok (DipOrder CTO)
+  . uProvinceNode provinceNode
+  )
+uOrder (OrderMovement (MoveConvoy unit provinceNode provinces)) =
+  ( uParen uUnitPosition unit
+  . uTok (DipOrder CTO)
+  . uProvinceNode provinceNode
+  . uTok (DipOrder VIA)
+  . uParen (uMany uProvince) provinces
+  )
+uOrder (OrderRetreat (Retreat unit provinceNode)) =
+  ( uParen uUnitPosition unit
+  . uTok (DipOrder RTO)
+  . uProvinceNode provinceNode
+  )
+uOrder (OrderRetreat (Disband unit)) =
+  ( uParen uUnitPosition unit
+  . uTok (DipOrder DSB)
+  )
+uOrder (OrderBuild (Build unit)) =
+  ( uParen uUnitPosition unit
+  . uTok (DipOrder BLD)
+  )
+uOrder (OrderBuild (Remove unit)) =
+  ( uParen uUnitPosition unit
+  . uTok (DipOrder REM)
+  )
+
+uUnitPosition :: UnDipParser UnitPosition
+uUnitPosition (UnitPosition pow typ provNode) =
+  ( uPower pow
+  . uUnitType typ
+  . uProvinceNode provNode
+  )
+
+uOrderNote :: UnDipParser OrderNote
+uOrderNote n = case n of
+  MovementOK -> uTok (DipOrderNote MBV)
+  NotAdjacent -> uTok (DipOrderNote FAR)
+  NoSuchProvince -> uTok (DipOrderNote NSP)
+  NoSuchUnit -> uTok (DipOrderNote NSU)
+  NotAtSea -> uTok (DipOrderNote NAS)
+  NoSuchFleet -> uTok (DipOrderNote NSF)
+  NoSuchArmy -> uTok (DipOrderNote NSA)
+  NotYourUnit -> uTok (DipOrderNote NYU)
+  NoRetreatNeeded -> uTok (DipOrderNote NRN)
+  InvalidRetreatSpace -> uTok (DipOrderNote NVR)
+  NotYourSC -> uTok (DipOrderNote YSC)
+  NotEmptySC -> uTok (DipOrderNote ESC)
+  NotHomeSC -> uTok (DipOrderNote HSC)
+  NotASC -> uTok (DipOrderNote NSC)
+  InvalidBuildLocation -> uTok (DipOrderNote CST)
+  NoMoreBuildAllowed -> uTok (DipOrderNote NMB)
+  NoMoreRemovalAllowed -> uTok (DipOrderNote NMR)
+  NotCurrentSeason -> uTok (DipOrderNote NRS)
+
+
 
 uPower :: UnDipParser Power
 uPower (Power p) = uTok (DipPow (Pow p))

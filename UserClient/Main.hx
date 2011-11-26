@@ -42,7 +42,6 @@ class Main extends Sprite {
 
 		// test map shit
 		var mapdata = Assets.getText("Assets/europe.svg");
-//		var mapdata = Assets.getText("Assets/drawing.svg");
 		var provinces = MapReader.parse(mapdata);
 	
 		var sprite = new Sprite();
@@ -51,15 +50,20 @@ class Main extends Sprite {
 		var cnt = 0;
 		for(p in provinces) {
 			for(path in p.paths) {
-				var poly = PathUtils.flatten(path);
-
-				g.lineStyle(0,0,0);
-				g.beginFill(cols[cnt++],1);
-				PathUtils.draw_filled(poly,g);
-				g.endFill();
-
-				g.lineStyle(1,0,1);
-				PathUtils.draw(poly,g);
+				var polys = PathUtils.flatten(path);
+				for(poly in polys) {
+					g.lineStyle(0,0,0);
+					g.beginFill(cols[cnt++],1); if(cnt>=cols.length) cnt = 0;
+					try {
+						PathUtils.draw_filled(poly,g);
+					}catch(e:Dynamic) {
+						trace(e);
+					}
+					g.endFill();
+	
+					g.lineStyle(1,0,1);
+					PathUtils.draw(poly,g);
+				}
 			}
 		}
 
