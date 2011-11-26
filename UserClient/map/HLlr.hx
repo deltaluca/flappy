@@ -65,6 +65,8 @@ class HLlr {
 		ret.push(new ActionRule(2,aR(0)));
 		actions.push(ret);
 		var ret = [];
+		ret.push(new ActionRule(0,aR(2)));
+		ret.push(new ActionRule(2,aR(2)));
 		ret.push(new ActionRule(3,aS(10)));
 		ret.push(new ActionRule(4,aS(37)));
 		ret.push(new ActionRule(5,aS(41)));
@@ -84,8 +86,8 @@ class HLlr {
 		ret.push(new ActionRule(35,aG(30)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(0,aR(2)));
-		ret.push(new ActionRule(2,aR(2)));
+		ret.push(new ActionRule(0,aR(3)));
+		ret.push(new ActionRule(2,aR(3)));
 		ret.push(new ActionRule(3,aS(10)));
 		ret.push(new ActionRule(4,aS(37)));
 		ret.push(new ActionRule(5,aS(41)));
@@ -109,21 +111,18 @@ class HLlr {
 		ret.push(new ActionRule(36,aG(35)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(3,aR(13),10));
+		ret.push(new ActionRule(0,aR(14)));
+		ret.push(new ActionRule(2,aR(14),10));
 		ret.push(new ActionRule(11,aS(66)));
 		ret.push(new ActionRule(36,aG(33)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(0,aR(4)));
-		ret.push(new ActionRule(2,aR(4),10));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(3)));
-		ret.push(new ActionRule(2,aR(3),10));
-		actions.push(ret);
-		var ret = [];
 		ret.push(new ActionRule(0,aR(5)));
 		ret.push(new ActionRule(2,aR(5),10));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(4)));
+		ret.push(new ActionRule(2,aR(4),10));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aR(6)));
@@ -154,30 +153,23 @@ class HLlr {
 		ret.push(new ActionRule(2,aR(12),10));
 		actions.push(ret);
 		var ret = [];
+		ret.push(new ActionRule(0,aR(13)));
+		ret.push(new ActionRule(2,aR(13),10));
+		actions.push(ret);
+		var ret = [];
 		ret.push(new ActionRule(11,aS(66)));
 		ret.push(new ActionRule(25,aG(19)));
 		ret.push(new ActionRule(36,aG(35)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(0,aR(14)));
-		ret.push(new ActionRule(2,aR(14),10));
+		ret.push(new ActionRule(0,aR(15)));
+		ret.push(new ActionRule(2,aR(15),10));
 		ret.push(new ActionRule(11,aS(66)));
 		ret.push(new ActionRule(36,aG(33)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aS(66)));
 		ret.push(new ActionRule(28,aG(21)));
-		ret.push(new ActionRule(36,aG(40)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(15)));
-		ret.push(new ActionRule(2,aR(15),10));
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(39)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(28,aG(23)));
 		ret.push(new ActionRule(36,aG(40)));
 		actions.push(ret);
 		var ret = [];
@@ -188,29 +180,29 @@ class HLlr {
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(31,aG(25)));
-		ret.push(new ActionRule(36,aG(49)));
+		ret.push(new ActionRule(28,aG(23)));
+		ret.push(new ActionRule(36,aG(40)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aR(17)));
 		ret.push(new ActionRule(2,aR(17),10));
+		ret.push(new ActionRule(11,aS(66)));
+		ret.push(new ActionRule(36,aG(39)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(66)));
+		ret.push(new ActionRule(31,aG(25)));
+		ret.push(new ActionRule(36,aG(49)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(18)));
+		ret.push(new ActionRule(2,aR(18),10));
 		ret.push(new ActionRule(11,aS(66)));
 		ret.push(new ActionRule(36,aG(43)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aS(66)));
 		ret.push(new ActionRule(33,aG(27)));
-		ret.push(new ActionRule(36,aG(60)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(18)));
-		ret.push(new ActionRule(2,aR(18),10));
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(56)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(33,aG(29)));
 		ret.push(new ActionRule(36,aG(60)));
 		actions.push(ret);
 		var ret = [];
@@ -221,53 +213,64 @@ class HLlr {
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(25,aG(31)));
-		ret.push(new ActionRule(36,aG(35)));
+		ret.push(new ActionRule(33,aG(29)));
+		ret.push(new ActionRule(36,aG(60)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aR(20)));
 		ret.push(new ActionRule(2,aR(20),10));
 		ret.push(new ActionRule(11,aS(66)));
+		ret.push(new ActionRule(36,aG(56)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(66)));
+		ret.push(new ActionRule(25,aG(31)));
+		ret.push(new ActionRule(36,aG(35)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(21)));
+		ret.push(new ActionRule(2,aR(21),10));
+		ret.push(new ActionRule(11,aS(66)));
 		ret.push(new ActionRule(36,aG(33)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aR(30)));
+		ret.push(new ActionRule(11,aR(31)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aS(66)));
 		ret.push(new ActionRule(36,aG(34)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(0,aR(22)));
-		ret.push(new ActionRule(2,aR(22),11));
+		ret.push(new ActionRule(0,aR(23)));
+		ret.push(new ActionRule(2,aR(23),11));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aS(66)));
 		ret.push(new ActionRule(36,aG(36)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(0,aR(21)));
-		ret.push(new ActionRule(2,aR(21),11));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aR(31)));
+		ret.push(new ActionRule(0,aR(22)));
+		ret.push(new ActionRule(2,aR(22),11));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aR(32)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aR(33)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(29)));
+		ret.push(new ActionRule(2,aR(29),11));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aR(28)));
 		ret.push(new ActionRule(2,aR(28),11));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(0,aR(27)));
-		ret.push(new ActionRule(2,aR(27),11));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aR(33)));
-		actions.push(ret);
-		var ret = [];
 		ret.push(new ActionRule(11,aR(34)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aR(35)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aS(66)));
@@ -290,8 +293,8 @@ class HLlr {
 		ret.push(new ActionRule(36,aG(48)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(0,aR(26)));
-		ret.push(new ActionRule(2,aR(26),11));
+		ret.push(new ActionRule(0,aR(27)));
+		ret.push(new ActionRule(2,aR(27),11));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aS(66)));
@@ -314,11 +317,11 @@ class HLlr {
 		ret.push(new ActionRule(36,aG(54)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(0,aR(25)));
-		ret.push(new ActionRule(2,aR(25),11));
+		ret.push(new ActionRule(0,aR(26)));
+		ret.push(new ActionRule(2,aR(26),11));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aR(35)));
+		ret.push(new ActionRule(11,aR(36)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aS(66)));
@@ -333,8 +336,8 @@ class HLlr {
 		ret.push(new ActionRule(36,aG(59)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(0,aR(24)));
-		ret.push(new ActionRule(2,aR(24),11));
+		ret.push(new ActionRule(0,aR(25)));
+		ret.push(new ActionRule(2,aR(25),11));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aS(66)));
@@ -349,27 +352,27 @@ class HLlr {
 		ret.push(new ActionRule(36,aG(63)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(0,aR(23)));
-		ret.push(new ActionRule(2,aR(23),11));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aR(36)));
+		ret.push(new ActionRule(0,aR(24)));
+		ret.push(new ActionRule(2,aR(24),11));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aR(37)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(0,aR(29)));
-		ret.push(new ActionRule(2,aR(29),11));
+		ret.push(new ActionRule(11,aR(38)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(30)));
+		ret.push(new ActionRule(2,aR(30),11));
 		actions.push(ret);
 
 		rules = new Array<{cb:Array<Dynamic>->Void,sym:Int,cnt:Int}>();
 		rules.push({cb:R0, sym:12, cnt:1});
 		rules.push({cb:R1, sym:12, cnt:2});
-		rules.push({cb:R2, sym:13, cnt:2});
-		rules.push({cb:R3, sym:15, cnt:1});
-		rules.push({cb:R4, sym:15, cnt:2});
-		rules.push({cb:R5, sym:16, cnt:1});
+		rules.push({cb:R2, sym:13, cnt:1});
+		rules.push({cb:R3, sym:13, cnt:2});
+		rules.push({cb:R4, sym:15, cnt:1});
+		rules.push({cb:R5, sym:15, cnt:2});
 		rules.push({cb:R6, sym:16, cnt:1});
 		rules.push({cb:R7, sym:16, cnt:1});
 		rules.push({cb:R8, sym:16, cnt:1});
@@ -377,31 +380,32 @@ class HLlr {
 		rules.push({cb:R10, sym:16, cnt:1});
 		rules.push({cb:R11, sym:16, cnt:1});
 		rules.push({cb:R12, sym:16, cnt:1});
-		rules.push({cb:R13, sym:14, cnt:2});
-		rules.push({cb:R14, sym:17, cnt:2});
-		rules.push({cb:R15, sym:18, cnt:2});
-		rules.push({cb:R16, sym:19, cnt:2});
-		rules.push({cb:R17, sym:20, cnt:2});
-		rules.push({cb:R18, sym:21, cnt:2});
-		rules.push({cb:R19, sym:22, cnt:2});
-		rules.push({cb:R20, sym:23, cnt:2});
-		rules.push({cb:R21, sym:25, cnt:2});
-		rules.push({cb:R22, sym:25, cnt:3});
-		rules.push({cb:R23, sym:33, cnt:4});
-		rules.push({cb:R24, sym:33, cnt:5});
-		rules.push({cb:R25, sym:31, cnt:6});
-		rules.push({cb:R26, sym:31, cnt:7});
-		rules.push({cb:R27, sym:28, cnt:1});
-		rules.push({cb:R28, sym:28, cnt:2});
-		rules.push({cb:R29, sym:36, cnt:1});
-		rules.push({cb:R30, sym:24, cnt:1});
-		rules.push({cb:R31, sym:26, cnt:1});
-		rules.push({cb:R32, sym:27, cnt:1});
-		rules.push({cb:R33, sym:29, cnt:1});
-		rules.push({cb:R34, sym:30, cnt:1});
-		rules.push({cb:R35, sym:32, cnt:1});
-		rules.push({cb:R36, sym:34, cnt:1});
-		rules.push({cb:R37, sym:35, cnt:1});
+		rules.push({cb:R13, sym:16, cnt:1});
+		rules.push({cb:R14, sym:14, cnt:2});
+		rules.push({cb:R15, sym:17, cnt:2});
+		rules.push({cb:R16, sym:18, cnt:2});
+		rules.push({cb:R17, sym:19, cnt:2});
+		rules.push({cb:R18, sym:20, cnt:2});
+		rules.push({cb:R19, sym:21, cnt:2});
+		rules.push({cb:R20, sym:22, cnt:2});
+		rules.push({cb:R21, sym:23, cnt:2});
+		rules.push({cb:R22, sym:25, cnt:2});
+		rules.push({cb:R23, sym:25, cnt:3});
+		rules.push({cb:R24, sym:33, cnt:4});
+		rules.push({cb:R25, sym:33, cnt:5});
+		rules.push({cb:R26, sym:31, cnt:6});
+		rules.push({cb:R27, sym:31, cnt:7});
+		rules.push({cb:R28, sym:28, cnt:1});
+		rules.push({cb:R29, sym:28, cnt:2});
+		rules.push({cb:R30, sym:36, cnt:1});
+		rules.push({cb:R31, sym:24, cnt:1});
+		rules.push({cb:R32, sym:26, cnt:1});
+		rules.push({cb:R33, sym:27, cnt:1});
+		rules.push({cb:R34, sym:29, cnt:1});
+		rules.push({cb:R35, sym:30, cnt:1});
+		rules.push({cb:R36, sym:32, cnt:1});
+		rules.push({cb:R37, sym:34, cnt:1});
+		rules.push({cb:R38, sym:35, cnt:1});
 	}
 	static function getaction(cstate:Int,ind:Int) {
 		var acts = actions[cstate];
@@ -472,32 +476,32 @@ var hllr__0: VerbosePath  = ret.pop();
 		ret.push(retret);
 	}
 	private static inline function R2(ret:Array<Dynamic>) {
-		//assign arguments.
-var hllr__1: VerbosePath  = ret.pop();
-var hllr__0: VerbosePath  = ret.pop();
-		var retret: VerbosePath  = ({ hllr__0.concat(hllr__1); });
-		ret.push(retret);
-	}
-	private static inline function R3(ret:Array<Dynamic>) {
 		//default action. (do nothing in particular)
 		// --> keep on stack <-- ret.pop();
 	}
-	private static inline function R4(ret:Array<Dynamic>) {
+	private static inline function R3(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: VerbosePath  = ret.pop();
 var hllr__0: VerbosePath  = ret.pop();
 		var retret: VerbosePath  = ({ hllr__0.concat(hllr__1); });
 		ret.push(retret);
 	}
+	private static inline function R4(ret:Array<Dynamic>) {
+		//default action. (do nothing in particular)
+		// --> keep on stack <-- ret.pop();
+	}
 	private static inline function R5(ret:Array<Dynamic>) {
+		//assign arguments.
+var hllr__1: VerbosePath  = ret.pop();
+var hllr__0: VerbosePath  = ret.pop();
+		var retret: VerbosePath  = ({ hllr__0.concat(hllr__1); });
+		ret.push(retret);
+	}
+	private static inline function R6(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: VerbosePath  = ({ [vpClose]; });
 		ret.push(retret);
-	}
-	private static inline function R6(ret:Array<Dynamic>) {
-		//default action. (do nothing in particular)
-		// --> keep on stack <-- ret.pop();
 	}
 	private static inline function R7(ret:Array<Dynamic>) {
 		//default action. (do nothing in particular)
@@ -524,6 +528,10 @@ var hllr__0:PathToken = ret.pop();
 		// --> keep on stack <-- ret.pop();
 	}
 	private static inline function R13(ret:Array<Dynamic>) {
+		//default action. (do nothing in particular)
+		// --> keep on stack <-- ret.pop();
+	}
+	private static inline function R14(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -536,7 +544,7 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R14(ret:Array<Dynamic>) {
+	private static inline function R15(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -547,7 +555,7 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R15(ret:Array<Dynamic>) {
+	private static inline function R16(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<Float>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -558,7 +566,7 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R16(ret:Array<Dynamic>) {
+	private static inline function R17(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<Float>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -569,7 +577,7 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R17(ret:Array<Dynamic>) {
+	private static inline function R18(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -580,7 +588,7 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R18(ret:Array<Dynamic>) {
+	private static inline function R19(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float,cx:Float,cy:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -591,7 +599,7 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R19(ret:Array<Dynamic>) {
+	private static inline function R20(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float,cx:Float,cy:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -602,7 +610,7 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R20(ret:Array<Dynamic>) {
+	private static inline function R21(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -613,14 +621,14 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R21(ret:Array<Dynamic>) {
+	private static inline function R22(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Float  = ret.pop();
 var hllr__0: Float  = ret.pop();
 		var retret: Array<{x:Float,y:Float}>  = ({ [{x:hllr__0,y:hllr__1}]; });
 		ret.push(retret);
 	}
-	private static inline function R22(ret:Array<Dynamic>) {
+	private static inline function R23(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__2: Float  = ret.pop();
 var hllr__1: Float  = ret.pop();
@@ -628,7 +636,7 @@ var hllr__0: Array<{x:Float,y:Float}>  = ret.pop();
 		var retret: Array<{x:Float,y:Float}>  = ({ hllr__0.push({x:hllr__1,y:hllr__2}); hllr__0; });
 		ret.push(retret);
 	}
-	private static inline function R23(ret:Array<Dynamic>) {
+	private static inline function R24(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__3: Float  = ret.pop();
 var hllr__2: Float  = ret.pop();
@@ -637,7 +645,7 @@ var hllr__0: Float  = ret.pop();
 		var retret: Array<{x:Float,y:Float,cx:Float,cy:Float}>  = ({ [{cx:hllr__0,cy:hllr__1,x:hllr__2,y:hllr__3}]; });
 		ret.push(retret);
 	}
-	private static inline function R24(ret:Array<Dynamic>) {
+	private static inline function R25(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__4: Float  = ret.pop();
 var hllr__3: Float  = ret.pop();
@@ -647,7 +655,7 @@ var hllr__0: Array<{x:Float,y:Float,cx:Float,cy:Float}>  = ret.pop();
 		var retret: Array<{x:Float,y:Float,cx:Float,cy:Float}>  = ({ hllr__0.push({cx:hllr__1,cy:hllr__2,x:hllr__3,y:hllr__4}); hllr__0; });
 		ret.push(retret);
 	}
-	private static inline function R25(ret:Array<Dynamic>) {
+	private static inline function R26(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__5: Float  = ret.pop();
 var hllr__4: Float  = ret.pop();
@@ -658,7 +666,7 @@ var hllr__0: Float  = ret.pop();
 		var retret: Array<{x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float}>  = ({ [{cx1:hllr__0,cy1:hllr__1,cx2:hllr__2,cy2:hllr__3,x:hllr__4,y:hllr__5}]; });
 		ret.push(retret);
 	}
-	private static inline function R26(ret:Array<Dynamic>) {
+	private static inline function R27(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__6: Float  = ret.pop();
 var hllr__5: Float  = ret.pop();
@@ -670,68 +678,68 @@ var hllr__0: Array<{x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float}>  =
 		var retret: Array<{x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float}>  = ({ hllr__0.push({cx1:hllr__1,cy1:hllr__2,cx2:hllr__3,cy2:hllr__4,x:hllr__5,y:hllr__6}); hllr__0; });
 		ret.push(retret);
 	}
-	private static inline function R27(ret:Array<Dynamic>) {
+	private static inline function R28(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0: Float  = ret.pop();
 		var retret: Array<Float>  = ({ [hllr__0]; });
 		ret.push(retret);
 	}
-	private static inline function R28(ret:Array<Dynamic>) {
+	private static inline function R29(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Float  = ret.pop();
 var hllr__0: Array<Float>  = ret.pop();
 		var retret: Array<Float>  = ({ hllr__0.push(hllr__1); hllr__0; });
 		ret.push(retret);
 	}
-	private static inline function R29(ret:Array<Dynamic>) {
+	private static inline function R30(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Float  = ({ Match.match(hllr__0,ptNum(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R30(ret:Array<Dynamic>) {
+	private static inline function R31(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptMove(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R31(ret:Array<Dynamic>) {
+	private static inline function R32(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptLine(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R32(ret:Array<Dynamic>) {
+	private static inline function R33(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptHorz(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R33(ret:Array<Dynamic>) {
+	private static inline function R34(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptVert(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R34(ret:Array<Dynamic>) {
+	private static inline function R35(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptCubic(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R35(ret:Array<Dynamic>) {
+	private static inline function R36(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptSmooth(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R36(ret:Array<Dynamic>) {
+	private static inline function R37(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptQuad(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R37(ret:Array<Dynamic>) {
+	private static inline function R38(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptSmoothQ(x)=x); });

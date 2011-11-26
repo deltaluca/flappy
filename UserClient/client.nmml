@@ -14,8 +14,10 @@
 
 	<classpath name="."/>
 
-	<classpath name="/home/luca/Projects/nape/src"/>
-	<haxedef name="NAPE_RELEASE_BUILD"/>
+	<classpath name="../../nape/src"/>
+<!--	<haxedef name="NAPE_RELEASE_BUILD"/> -->
+	<haxedef name="NAPE_ASSERT"/>
+	
 
 	<haxelib name="nme"/>
 

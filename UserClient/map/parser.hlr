@@ -31,7 +31,8 @@
 ;
 
 %movetodrawto %{ VerbosePath %}
-	: moveto drawtocommands %{ %0.concat(%1); %}
+	: moveto
+	| moveto drawtocommands %{ %0.concat(%1); %}
 ;
 
 %drawtocommands %{ VerbosePath %}

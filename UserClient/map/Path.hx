@@ -24,7 +24,8 @@ class PathUtils {
 	//consisting of only absolute moveTo, (quadratic) curveTo and lineTo, and a (cubic) cubicTo
 	//which is maintained so as to render appropriate approximations as curveTo' at run-time.
 	public static function parse(data:String):Path {
-		var verbose = HLlr.parse(HLex.lexify(data));
+		var tokens = HLex.lexify(data);
+		var verbose = HLlr.parse(tokens);
 		var ret = [];
 
 		//turtle
@@ -98,23 +99,27 @@ class PathUtils {
 
 	//produce GeomPoly for flattened path.
 	//this is used to get around NME hardware Graphics bug todo with rendering non-convex paths.
-	public static function flatten(path:Path, ?threshold:Float=1):GeomPoly {
-		var ret = new GeomPoly();
+	public static function flatten(path:Path, ?threshold:Float=1):Array<GeomPoly> {
+		var rets = new Array<GeomPoly>();
+		var ret:GeomPoly = null;
+
 		//turtle (bezier)
 		var tx:Float = 0; var ty:Float = 0;
 
 		for(p in path) {
 			switch(p) {
-				case pMoveTo(x,y): tx = x; ty = y;
+				case pMoveTo(x,y): tx = x; ty = y; ret = new GeomPoly(); rets.push(ret);
 				case pLineTo(x,y): ret.push(Vec2.weak(x,y)); tx = x; ty = y;
 				//quadratic bezier is promoted to a cubic for flattening.
 				//cubic curve flattens more effeciently in terms of segment counts.
-				case pCurveTo(x,y,cx,cy): cubicpolygon(ret,tx,ty, (2*cx+tx)/3,(2*cy+ty)/3, (2*cx+x)/3,(2*cy+y)/3 ,x,y, threshold); tx = x; ty = y;
-				case pCubicTo(x,y,cx1,cy1,cx2,cy2): cubicpolygon(ret,tx,ty,cx1,cy1,cx2,cy2,x,y, threshold); tx = x; ty = y;
+//				case pCurveTo(x,y,cx,cy): cubicpolygon(ret,tx,ty, (2*cx+tx)/3,(2*cy+ty)/3, (2*cx+x)/3,(2*cy+y)/3 ,x,y, threshold); tx = x; ty = y;
+//				case pCubicTo(x,y,cx1,cy1,cx2,cy2): cubicpolygon(ret,tx,ty,cx1,cy1,cx2,cy2,x,y, threshold); tx = x; ty = y;
+				case pCurveTo(x,y,_,_): ret.push(Vec2.weak(x,y)); tx = x; ty = y;
+				case pCubicTo(x,y,_,_,_,_): ret.push(Vec2.weak(x,y)); tx = x; ty = y;
 			}
 		}
 
-		return ret;
+		return rets;
 	}
 
 	static function cubicpolygon(ret:GeomPoly, p0x:Float,p0y:Float,p1x:Float,p1y:Float,p2x:Float,p2y:Float,p3x:Float,p3y:Float, threshold:Float) {
