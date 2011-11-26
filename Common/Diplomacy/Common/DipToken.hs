@@ -25,7 +25,7 @@ data DipToken = DipInt Int
               | DipPress Press
               | Character Char
               | DipProv Bool Dat.ProvinceInter
-              deriving (Eq)
+              deriving (Show, Eq)
 
 instance Binary DipToken where
   put (DipInt int) = put . (.&. 0x3FFF) $ (fromIntegral int :: Word16)
@@ -57,27 +57,27 @@ infixl 6 ?
 (?) :: Bool -> a -> a -> a
 (?) bool a b = if bool then a else b
 
-instance Show DipToken where
-  show t = case t of
-    DipInt i -> show i
-    Bra -> "("
-    Ket -> ")"
-    DipPow (Pow p) -> show p
-    DipUnitType Army -> "ARM"
-    DipUnitType Fleet -> "FLT"
-    DipOrder o -> show o
-    DipOrderNote n -> show n
-    DipResult r -> show r
-    DipCoast (Coast c) -> show c
-    DipPhase p -> show p
-    DipCmd c -> show c
-    DipParam p -> show p
-    DipPress p -> show p
-    Character c -> [c]
-    DipProv _ (Inland i) -> show i
-    DipProv _ (Sea i) -> show i
-    DipProv _ (Coastal i) -> show i
-    DipProv _ (BiCoastal i) -> show i
+-- instance Show DipToken where
+--   show t = case t of
+--     DipInt i -> show i
+--     Bra -> "("
+--     Ket -> ")"
+--     DipPow (Pow p) -> show p
+--     DipUnitType Army -> "ARM"
+--     DipUnitType Fleet -> "FLT"
+--     DipOrder o -> show o
+--     DipOrderNote n -> show n
+--     DipResult r -> show r
+--     DipCoast (Coast c) -> show c
+--     DipPhase p -> show p
+--     DipCmd c -> show c
+--     DipParam p -> show p
+--     DipPress p -> show p
+--     Character c -> [c]
+--     DipProv _ (Inland i) -> show i
+--     DipProv _ (Sea i) -> show i
+--     DipProv _ (Coastal i) -> show i
+--     DipProv _ (BiCoastal i) -> show i
 
 data Pow = Pow Int
               deriving (Show, Eq)

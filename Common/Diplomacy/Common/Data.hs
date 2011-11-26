@@ -21,6 +21,8 @@ module Diplomacy.Common.Data ( Power(..)
                              , OrderMovement(..)
                              ) where
 
+import Test.QuickCheck
+
 -- | Numbering fixed in ...
 data Power 
          = Power Int
@@ -102,7 +104,7 @@ data UnitToProv = UnitToProv UnitType [ProvinceNode]
 data Order = OrderMovement OrderMovement
            | OrderRetreat OrderRetreat
            | OrderBuild OrderBuild
-           deriving (Show)
+           deriving (Eq, Show)
 
 data OrderMovement = Hold UnitPosition
                    | Move UnitPosition ProvinceNode
@@ -110,17 +112,88 @@ data OrderMovement = Hold UnitPosition
                    | SupportMove UnitPosition UnitPosition Province
                    | Convoy UnitPosition UnitPosition ProvinceNode
                    | MoveConvoy UnitPosition ProvinceNode [Province]
-                   deriving (Show)
+                   deriving (Eq, Show)
 
 data OrderRetreat = Retreat UnitPosition ProvinceNode
                   | Disband UnitPosition
-                  deriving (Show)
+                  deriving (Eq, Show)
 
 data OrderBuild = Build UnitPosition
                 | Remove UnitPosition
                 | Waive Power
-                deriving (Show)
+                deriving (Eq, Show)
 
 
 
 -- | -------------------------------------------------------------                 
+
+instance Arbitrary Power where
+  arbitrary = frequency [ (1, return Neutral)
+                        , (9, return . Power =<< arbitrary)
+                        ]
+
+
+instance Arbitrary MapDefinition where
+  arbitrary = do
+    p1 <- listOf1 arbitrary
+    p2 <- arbitrary
+    a <- listOf1 arbitrary
+    return $ MapDefinition p1 p2 a
+
+instance Arbitrary Provinces where
+  arbitrary = do
+    s <- listOf1 arbitrary
+    p <- listOf1 arbitrary
+    return $ Provinces s p
+
+instance Arbitrary SupplyCentreOwnership where
+  arbitrary = do
+    p <- arbitrary
+    ps <- listOf1 arbitrary
+    return $ SupplyCentre p ps
+
+instance Arbitrary Province where
+  arbitrary = do
+    b <- arbitrary
+    p <- arbitrary
+    return $ Province b p
+
+instance Arbitrary ProvinceInter where
+  arbitrary = oneof [ return . Inland =<< arbitrary
+                    , return . Sea =<< arbitrary
+                    , return . Coastal =<< arbitrary
+                    , return . BiCoastal =<< arbitrary
+                    ]
+
+instance Arbitrary Adjacency where
+  arbitrary = do
+    p <- arbitrary
+    up <- listOf1 arbitrary
+    return $ Adjacency p up
+
+instance Arbitrary UnitToProv where
+  arbitrary = frequency [ (2, do
+                              u <- arbitrary
+                              pn <- listOf1 arbitrary
+                              return $ UnitToProv u pn)
+                        , (1, do
+                              c <- arbitrary
+                              pn <- listOf1 arbitrary
+                              return $ CoastalFleetToProv c pn)
+                        ]
+
+instance Arbitrary ProvinceNode where
+  arbitrary = oneof [ return . ProvNode =<< arbitrary
+                    , do
+                      p <- arbitrary
+                      c <- arbitrary
+                      return $ ProvCoastNode p c
+                    ]
+
+instance Arbitrary UnitType where
+  arbitrary = oneof [ return Army
+                    , return Fleet
+                    ]
+
+instance Arbitrary Coast where
+  arbitrary = return . Coast =<< arbitrary
