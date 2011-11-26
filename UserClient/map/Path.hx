@@ -73,15 +73,32 @@ class PathUtils {
 			pre = v;
 		}
 		return ret;
+	}	
+
+	//seperate method to draw filled paths due to NME bug.
+	public static function draw_filled(poly:GeomPoly, g:Graphics) {
+		var decomp = poly.convex_decomposition();
+		for(gp in decomp) {
+			var fst = gp.current();
+			for(v in gp) {
+				if(v==fst) g.moveTo(v.x,v.y);
+				else       g.lineTo(v.x,v.y);
+			}
+			g.lineTo(fst.x,fst.y);
+		}
+	}
+	public static function draw(poly:GeomPoly, g:Graphics) {
+		var fst = poly.current();
+		for(v in poly) {
+			if(v==fst) g.moveTo(v.x,v.y);
+			else       g.lineTo(v.x,v.y);
+		}
+		g.lineTo(fst.x,fst.y);
 	}
 
-	//step in avoiding NME hardware Graphics bug.
-	//take path and flatten to a polygon, then perform the convex decomposition
-	//and finally render convex sub-polygons
-	//
-	//this is needed to render filled paths
-	//standard paths can still use NME renderer
-	public static function nape_draw(path:Path,g:Graphics) {
+	//produce GeomPoly for flattened path.
+	//this is used to get around NME hardware Graphics bug todo with rendering non-convex paths.
+	public static function flatten(path:Path, ?threshold:Float=1):GeomPoly {
 		var ret = new GeomPoly();
 		//turtle (bezier)
 		var tx:Float = 0; var ty:Float = 0;
@@ -92,23 +109,15 @@ class PathUtils {
 				case pLineTo(x,y): ret.push(Vec2.weak(x,y)); tx = x; ty = y;
 				//quadratic bezier is promoted to a cubic for flattening.
 				//cubic curve flattens more effeciently in terms of segment counts.
-				case pCurveTo(x,y,cx,cy): cubicpolygon(ret,tx,ty, (2*cx+tx)/3,(2*cy+ty)/3, (2*cx+x)/3,(2*cy+y)/3 ,x,y); tx = x; ty = y;
-				case pCubicTo(x,y,cx1,cy1,cx2,cy2): cubicpolygon(ret,tx,ty,cx1,cy1,cx2,cy2,x,y); tx = x; ty = y;
+				case pCurveTo(x,y,cx,cy): cubicpolygon(ret,tx,ty, (2*cx+tx)/3,(2*cy+ty)/3, (2*cx+x)/3,(2*cy+y)/3 ,x,y, threshold); tx = x; ty = y;
+				case pCubicTo(x,y,cx1,cy1,cx2,cy2): cubicpolygon(ret,tx,ty,cx1,cy1,cx2,cy2,x,y, threshold); tx = x; ty = y;
 			}
 		}
 
-		var decomp = ret.convex_decomposition();
-		for(gp in decomp) {
-			var fst = gp.current();
-			for(v in gp) {
-				if(v==fst) g.moveTo(v.x,v.y);
-				else       g.lineTo(v.x,v.y);
-			}
-			g.lineTo(fst.x,fst.y);
-		}
+		return ret;
 	}
 
-	static function cubicpolygon(ret:GeomPoly, p0x:Float,p0y:Float,p1x:Float,p1y:Float,p2x:Float,p2y:Float,p3x:Float,p3y:Float) {
+	static function cubicpolygon(ret:GeomPoly, p0x:Float,p0y:Float,p1x:Float,p1y:Float,p2x:Float,p2y:Float,p3x:Float,p3y:Float, threshold:Float) {
 		var stack = [[p0x,p0y,p1x,p1y,p2x,p2y,p3x,p3y]];
 		while(stack.length>0) {
 			var elt = stack.shift();
@@ -120,7 +129,7 @@ class PathUtils {
 			var cx = cubic_t(p0x,p1x,p2x,p3x,0.5); var cy = cubic_t(p0y,p1y,p2y,p3y,0.5);
 			var lx = 0.5*(p0x+p3x); var ly = 0.5*(p0y+p3y);
 			var dx = cx-lx; var dy = cy-ly;
-			if(dx*dx+dy*dy<1)
+			if(dx*dx+dy*dy<threshold)
 				ret.push(Vec2.weak(p3x,p3y));
 			else {
 				//sad face :(
@@ -134,64 +143,6 @@ class PathUtils {
 		
 				stack.unshift([pcx,pcy,pbx,pby,p23x,p23y,p3x,p3y]);
 				stack.unshift([p0x,p0y,p01x,p01y,pax,pay,pcx,pcy]);
-			}
-		}
-	}
-
-	//draw to Graphic
-	//NME hardware bug ahoy! :(
-	public static function draw(path:Path, g:Graphics) {
-		//turtle (cubic)
-		var tx:Float = 0; var ty:Float = 0;
-
-		for(p in path) {
-			switch(p) {
-				case pMoveTo(x,y): g.moveTo(x,y); tx = x; ty = y;
-				case pLineTo(x,y): g.lineTo(x,y); tx = x; ty = y;
-				case pCurveTo(x,y,cx,cy): g.curveTo(cx,cy,x,y); tx = x; ty = y;
-				case pCubicTo(x,y,cx1,cy1,cx2,cy2):
-					var stack = [[tx,ty,cx1,cy1,cx2,cy2,x,y]];
-					while(stack.length>0) {
-						var elt = stack.shift();
-						var p0x = elt[0]; var p0y = elt[1];
-						var p1x = elt[2]; var p1y = elt[3];
-						var p2x = elt[4]; var p2y = elt[5];
-						var p3x = elt[6]; var p3y = elt[7];
-
-						var quad = intersect(p0x,p0y,p1x,p1y,p2x,p2y,p3x,p3y);
-						if(quad==null) {
-							//check we don't have a straight line!
-							var cx = cubic_t(p0x,p1x,p2x,p3x,0.5); var cy = cubic_t(p0y,p1y,p2y,p3y,0.5);
-							var lx = 0.5*(p0x+p3x); var ly = 0.5*(p0y+p3y);
-							var dx = cx-lx; var dy = cy-ly;
-							if(dx*dx+dy*dy<10) { //use a straight line!
-								g.lineTo(p3x,p3y);
-								continue;
-							}
-						}else {
-							//check if quadratic is good enough yet
-							var qx = quad_t (p0x,quad.x, p3x,0.5); var qy = quad_t (p0y,quad.y, p3y,0.5);
-							var cx = cubic_t(p0x,p1x,p2x,p3x,0.5); var cy = cubic_t(p0y,p1y,p2y,p3y,0.5);
-							var dx = qx-cx; var dy = qy-cy;
-							if(dx*dx+dy*dy<10) { //use a quadratic!
-								g.curveTo(quad.x,quad.y,p3x,p3y);
-								continue;
-							}
-						}
-
-						//sad face :(
-						//split cubic in half
-						var p12x = 0.5*(p1x+p2x); var p12y = 0.5*(p1y+p2y);
-						var p01x = 0.5*(p0x+p1x); var p01y = 0.5*(p0y+p1y);
-						var p23x = 0.5*(p2x+p3x); var p23y = 0.5*(p2y+p3y);
-						var pax = 0.5*(p01x+p12x); var pay = 0.5*(p01y+p12y);
-						var pbx = 0.5*(p23x+p12x); var pby = 0.5*(p23y+p12y);
-						var pcx = 0.5*(pax+pbx); var pcy = 0.5*(pay+pby);
-		
-						stack.unshift([pcx,pcy,pbx,pby,p23x,p23y,p3x,p3y]);
-						stack.unshift([p0x,p0y,p01x,p01y,pax,pay,pcx,pcy]);
-					}
-					tx = x; ty = y;
 			}
 		}
 	}
@@ -258,7 +209,6 @@ class PathUtils {
 	static function fromrange(x:{x:Float,e:Float},y:{x:Float,e:Float}) {
 		return new Rectangle(x.x,y.x,x.e,y.e);
 	}
-
 
 	//compute theoretical bounds of a path (actual rendering via approximate of cubic curves might be slightly off)
 	public static function bounds(path:Path):Rectangle {

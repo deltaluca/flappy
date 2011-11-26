@@ -13,7 +13,10 @@
 	<set name="BUILD_DIR" value="Export"/>
 
 	<classpath name="."/>
+
 	<classpath name="/home/luca/Projects/nape/src"/>
+	<haxedef name="NAPE_RELEASE_BUILD"/>
+
 	<haxelib name="nme"/>
 
 	<assets path="Assets" include="*"/>
