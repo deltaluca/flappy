@@ -41,7 +41,7 @@ class Main extends Sprite {
 		size();
 
 		// test map shit
-		var mapdata = Assets.getText("Assets/europe.svg");
+		var mapdata = Assets.getText("Assets/europe_working.svg");
 		var provinces = MapReader.parse(mapdata);
 	
 		var sprite = new Sprite();
@@ -55,7 +55,7 @@ class Main extends Sprite {
 					g.lineStyle(0,0,0);
 					g.beginFill(cols[cnt++],1); if(cnt>=cols.length) cnt = 0;
 					try {
-						PathUtils.draw_filled(poly,g);
+//						PathUtils.draw_filled(poly,g);
 					}catch(e:Dynamic) {
 						trace(e);
 					}

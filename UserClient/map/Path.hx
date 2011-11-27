@@ -112,10 +112,10 @@ class PathUtils {
 				case pLineTo(x,y): ret.push(Vec2.weak(x,y)); tx = x; ty = y;
 				//quadratic bezier is promoted to a cubic for flattening.
 				//cubic curve flattens more effeciently in terms of segment counts.
-//				case pCurveTo(x,y,cx,cy): cubicpolygon(ret,tx,ty, (2*cx+tx)/3,(2*cy+ty)/3, (2*cx+x)/3,(2*cy+y)/3 ,x,y, threshold); tx = x; ty = y;
-//				case pCubicTo(x,y,cx1,cy1,cx2,cy2): cubicpolygon(ret,tx,ty,cx1,cy1,cx2,cy2,x,y, threshold); tx = x; ty = y;
-				case pCurveTo(x,y,_,_): ret.push(Vec2.weak(x,y)); tx = x; ty = y;
-				case pCubicTo(x,y,_,_,_,_): ret.push(Vec2.weak(x,y)); tx = x; ty = y;
+				case pCurveTo(x,y,cx,cy): cubicpolygon(ret,tx,ty, (2*cx+tx)/3,(2*cy+ty)/3, (2*cx+x)/3,(2*cy+y)/3 ,x,y, threshold); tx = x; ty = y;
+				case pCubicTo(x,y,cx1,cy1,cx2,cy2): cubicpolygon(ret,tx,ty,cx1,cy1,cx2,cy2,x,y, threshold); tx = x; ty = y;
+//				case pCurveTo(x,y,_,_): ret.push(Vec2.weak(x,y)); tx = x; ty = y;
+//				case pCubicTo(x,y,_,_,_,_): ret.push(Vec2.weak(x,y)); tx = x; ty = y;
 			}
 		}
 
