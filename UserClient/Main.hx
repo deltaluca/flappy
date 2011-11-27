@@ -33,7 +33,7 @@ class Main extends Sprite {
 		stage.align = StageAlign.TOP_LEFT;
 
 		var ggui = new Gui();
-		ggui.load(Assets.getText("Assets/europe.svg"),
+		ggui.load(Assets.getText("Assets/europe_regions.svg"),
 			[Assets.getBitmapData("Assets/europe-big2.png"),
 			 Assets.getBitmapData("Assets/europe-big1.png"),
 			 Assets.getBitmapData("Assets/europe.png"),
