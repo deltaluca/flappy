@@ -2,6 +2,7 @@ package map;
 
 import scx.Match;
 import nme.geom.Rectangle;
+import nme.geom.Point;
 import nme.display.Graphics;
 
 import map.HLlr;
@@ -9,6 +10,7 @@ import map.HLex;
 
 import nape.geom.GeomPoly;
 import nape.geom.Vec2;
+import nape.geom.Mat23;
 
 typedef Path = Array<PathCommand>;
 enum PathCommand {
@@ -23,7 +25,8 @@ class PathUtils {
 	//and produce a (badly named) un-verbose version (which is actually 'more' verbose)
 	//consisting of only absolute moveTo, (quadratic) curveTo and lineTo, and a (cubic) cubicTo
 	//which is maintained so as to render appropriate approximations as curveTo' at run-time.
-	public static function parse(data:String):Path {
+	//
+	public static function parse(data:String, ?xform:Mat23):Path {
 		var tokens = HLex.lexify(data);
 		var verbose = HLlr.parse(tokens);
 		var ret = [];
@@ -73,6 +76,24 @@ class PathUtils {
 			));
 			pre = v;
 		}
+
+		if(xform!=null) {
+			function xf(x:Float,y:Float):Point {
+				return new Point(x*xform.a+y*xform.b+xform.tx,
+								 x*xform.c+y*xform.d+xform.ty);
+			}
+
+			var rl = ret.length;
+			for(i in 0...rl) {
+				ret[i] = Match.match(ret[i],
+					pMoveTo(x,y) = { var xy = xf(x,y); pMoveTo(xy.x,xy.y); },
+					pLineTo(x,y) = { var xy = xf(x,y); pLineTo(xy.x,xy.y); },
+					pCurveTo(x,y,cx,cy) = { var xy = xf(x,y); var cy = xf(cx,cy); pCurveTo(xy.x,xy.y,cy.x,cy.y); },
+					pCubicTo(x,y,cx1,cy1,cx2,cy2) = { var xy = xf(x,y); var cy1 = xf(cx1,cy1); var cy2 = xf(cx2,cy2); pCubicTo(xy.x,xy.y,cy1.x,cy1.y,cy2.x,cy2.y); }
+				);
+			}
+		}
+
 		return ret;
 	}	
 
@@ -114,8 +135,6 @@ class PathUtils {
 				//cubic curve flattens more effeciently in terms of segment counts.
 				case pCurveTo(x,y,cx,cy): cubicpolygon(ret,tx,ty, (2*cx+tx)/3,(2*cy+ty)/3, (2*cx+x)/3,(2*cy+y)/3 ,x,y, threshold); tx = x; ty = y;
 				case pCubicTo(x,y,cx1,cy1,cx2,cy2): cubicpolygon(ret,tx,ty,cx1,cy1,cx2,cy2,x,y, threshold); tx = x; ty = y;
-//				case pCurveTo(x,y,_,_): ret.push(Vec2.weak(x,y)); tx = x; ty = y;
-//				case pCubicTo(x,y,_,_,_,_): ret.push(Vec2.weak(x,y)); tx = x; ty = y;
 			}
 		}
 

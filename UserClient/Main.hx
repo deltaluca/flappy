@@ -41,26 +41,26 @@ class Main extends Sprite {
 		size();
 
 		// test map shit
-		var mapdata = Assets.getText("Assets/europe_working.svg");
+		var mapdata = Assets.getText("Assets/europe.svg");
 		var provinces = MapReader.parse(mapdata);
 	
 		var sprite = new Sprite();
 		var g = sprite.graphics;
-		var cols = [0x88,0x8800,0x880000,0x8888,0x888800,0x880088,0x0];
-		var cnt = 0;
 		for(p in provinces) {
 			for(path in p.paths) {
 				var polys = PathUtils.flatten(path);
+				var c = Std.int(Math.random()*0xffffff);
 				for(poly in polys) {
-					g.lineStyle(0,0,0);
-					g.beginFill(cols[cnt++],1); if(cnt>=cols.length) cnt = 0;
+					g.lineStyle(1,c,1);
+					g.beginFill(c,1);
 					try {
-//						PathUtils.draw_filled(poly,g);
+						PathUtils.draw_filled(poly,g);
 					}catch(e:Dynamic) {
 						trace(e);
+						trace(p.id);
 					}
 					g.endFill();
-	
+
 					g.lineStyle(1,0,1);
 					PathUtils.draw(poly,g);
 				}
@@ -68,5 +68,6 @@ class Main extends Sprite {
 		}
 
 		addChild(sprite);
+		sprite.scaleX = sprite.scaleY = 2;
 	}
 }
