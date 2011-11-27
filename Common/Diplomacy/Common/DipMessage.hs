@@ -5,6 +5,7 @@ module Diplomacy.Common.DipMessage ( DipMessage(..)
                                    , PressReply (..)
                                    , parseDipMessage
                                    , uParseDipMessage
+                                   , idParse -- for testing
                                    , stringyDip) where
 
 import Diplomacy.Common.Data as Dat
@@ -15,11 +16,14 @@ import Data.Maybe
 import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.State
+import Control.Monad.Identity
 
 import qualified Data.ByteString.Char8 as BS
 import qualified Text.Parsec as Parsec
 import qualified Data.Map as Map
 
+  -- QUICKCHECK --
+import Test.QuickCheck hiding (Success, Result)
   -- level and custom error
 type DipParserInfo = StateT (Maybe DipParseError) (Reader Int)
 
@@ -236,7 +240,7 @@ data DipMessage =
     -- |full statistics at the end of the game
   | EndGameStats Turn [PlayerStat]
 
-  deriving (Show)
+  deriving (Eq, Show)
 
 data Missing =
   -- |missing movement orders (SERVER)
@@ -247,23 +251,23 @@ data Missing =
 
     -- |missing build orders (SERVER)
   | MissingBuild Int
-  deriving (Show)
+  deriving (Eq, Show)
 
 data PlayerStat = PlayerStat Power String String Int (Maybe Int)
-                deriving (Show)
+                deriving (Eq, Show)
 
 data PressMessage = PressProposal PressProposal
                   | PressReply PressReply
                   | PressInfo PressProposal
                   | PressCapable [DipToken]
-                  deriving (Show)
+                  deriving (Eq, Show)
 
 data PressReply = PressAccept PressMessage
                 | PressReject PressMessage
                 | PressRefuse PressMessage
                 | PressHuh PressMessage
                 | PressCancel PressMessage
-                deriving (Show)
+                deriving (Eq, Show)
 
 data PressProposal = ArrangeDraw
                    | ArrangeSolo Power
@@ -271,20 +275,20 @@ data PressProposal = ArrangeDraw
                    | ArrangePeace [Power]
                    | ArrangeNot PressProposal
                    | ArrangeUndo PressProposal
-                   deriving (Show)
+                   deriving (Eq, Show)
 
 data Result = Result (Maybe ResultNormal) (Maybe ResultRetreat)
-            deriving (Show)
+            deriving (Eq, Show)
 
 data ResultNormal = Success
                   | MoveBounced
                   | SupportCut
                   | DisbandedConvoy
                   | NoSuchOrder
-                  deriving (Show)
+                  deriving (Eq, Show)
 
 data ResultRetreat = ResultRetreat
-                   deriving (Show)
+                   deriving (Eq, Show)
 
 data OrderNote = MovementOK
                | NotAdjacent
@@ -304,7 +308,7 @@ data OrderNote = MovementOK
                | NoMoreBuildAllowed
                | NoMoreRemovalAllowed
                | NotCurrentSeason
-               deriving (Show)
+               deriving (Eq, Show)
 
 data VariantOption = Level Int
                    | TimeMovement Int
@@ -316,7 +320,7 @@ data VariantOption = Level Int
                    | NoPressDuringRetreat      -- (10)
                    | NoPressDuringBuild        -- (10)
                    | PressTimeTillDeadline Int -- (10)
-                   deriving (Show)
+                   deriving (Eq, Show)
 
 parseDipMessage :: DipRep s t => Monad m => Int -> s -> ErrorT DipError m DipMessage
 parseDipMessage = parseDip pMsg
@@ -329,8 +333,8 @@ parseDip parsr lvl stream =   uncurry (handleParseErrors stream)
                             $ stream
 
 handleParseErrors :: (Monad m, DipRep s t) => s -> Either Parsec.ParseError a -> (Maybe DipParseError) -> ErrorT DipError m a
-handleParseErrors stream (Left _) (Just err) = throwError (createError err stream)
-handleParseErrors _ (Left p) Nothing = throwError . ParseError . show $ p
+handleParseErrors _{-stream-} (Left a) (Just _{-err-}) = error (show a) -- throwError (createError err stream)
+handleParseErrors _ (Left p) Nothing = error (show p) -- throwError . ParseError . show $ p
 handleParseErrors _ (Right a) _ = return a
 
 infixr 4 <<
@@ -931,6 +935,8 @@ type UnDipParser a = UnParser a DipToken
 uParseDipMessage :: DipMessage -> [DipToken]
 uParseDipMessage = listify . uMsg
 
+idParse d = runIdentity (runErrorT (parseDipMessage 10 (uParseDipMessage d)))
+
 stringyDip :: [DipToken] -> String
 stringyDip toks = toks >>= (' ' :) . show
 
@@ -1064,7 +1070,7 @@ uMsg m = case m of
                                                           . uParen (uMany uProvinceNode) n
                                                           )))) unitPosRets
       MissingBuild n -> uParen uInt n
-  
+
   MissingReq ->
     uTok (DipCmd MIS)
 
@@ -1369,10 +1375,10 @@ uCoast c = uTok (DipCoast c)
 
 uProvinceNode :: UnDipParser ProvinceNode
 uProvinceNode (ProvNode prov) = uProvince prov
-uProvinceNode (ProvCoastNode prov c) =
-  ( uProvince prov
-  . uCoast c
-  )
+uProvinceNode (ProvCoastNode prov coast) =
+  uParen (\c -> uProvince prov
+         . uCoast c
+         ) coast
 
 uSupplyCentre :: UnDipParser SupplyCentreOwnership
 uSupplyCentre (SupplyCentre pow centres) =
@@ -1398,3 +1404,22 @@ uPhase p = uTok (DipPhase p)
 uTurn :: UnDipParser Turn
 uTurn (Turn p y) = uPhase p . uInt y
 
+                   -- TESTING --
+
+
+
+instance Arbitrary DipMessage where
+  arbitrary = frequency [ (1, do
+                              s1 <- arbitrary
+                              s2 <- arbitrary
+                              return (Name s1 s2))
+                        , (1, return Observer)
+                        , (1, do
+                              p <- arbitrary
+                              i <- arbitrary
+                              return (Rejoin p i))
+                        , (1, return . MapName =<< arbitrary)
+                        , (1, return MapNameReq)
+                        , (9, return . MapDef =<< arbitrary)
+                          -- FINISH THIS
+                        ]

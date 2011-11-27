@@ -66,7 +66,8 @@ Library
     containers,
     mtl,
     network,
-    parsec >= 3.0
+    parsec >= 3.0,
+    QuickCheck
   
   -- Modules not exported by this package.
   -- Other-modules:       
