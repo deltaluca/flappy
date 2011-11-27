@@ -3,7 +3,7 @@ package map;
 import map.Path;
 import nape.geom.Mat23;
 
-typedef MapProvince = {id:String, paths:Array<Path>};
+typedef MapProvince = {id:String, paths:Array<Path>, sea:Bool};
 
 class MapReader {
 
@@ -31,13 +31,18 @@ class MapReader {
 		for(g in x.elementsNamed("g")) {
 			for(epath in g.elementsNamed("path")) {
 				var id = epath.get("id");
+				var issea = false;
+				if(id.substr(0,3)=="SEA") {
+					issea = true; id = id.substr(3);
+				}
+
 				var xform = gettransform(epath.get("transform"));
 				var path = PathUtils.parse(epath.get("d"), xform);
 
 				if(dict.exists(id))
 					dict.get(id).paths.push(path);
 				else {
-					var prov = {id:id, paths:[path]};
+					var prov = {id:id, paths:[path], sea:issea};
 					ret.push(prov);
 					dict.set(id, prov);
 				}

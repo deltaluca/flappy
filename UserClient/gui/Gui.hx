@@ -1,5 +1,6 @@
 package gui;
 
+import nme.display.BitmapData;
 import nme.geom.Rectangle;
 import nme.geom.Matrix;
 import nme.display.Sprite;
@@ -58,6 +59,8 @@ class Gui extends GuiElem {
 		addChild(statmenu = new Menu());
 		addChild(mainmenu = new Menu());
 	}
+
+	public function load(mapdata:String, graphics:Array<BitmapData>) map.load(mapdata, graphics)
 
 	public override function resize(width:Int,height:Int,scale:ScaleMode) {
 		map.resize(width,height,scale);

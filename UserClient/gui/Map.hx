@@ -11,6 +11,9 @@ import nme.geom.Point;
 import gui.Gui;
 import gui.MipMap;
 
+import map.MapReader;
+import map.MapRender;
+
 class Map extends GuiElem {
 	public function new() {
 		super();
@@ -26,14 +29,14 @@ class Map extends GuiElem {
 	var stageHeight:Int;
 	var stageScale:ScaleMode;
 
-	function build() {
-		map = new MipMap([
-			Assets.getBitmapData("Assets/map-std-big1.png"),
-			Assets.getBitmapData("Assets/map-std.png"),
-			Assets.getBitmapData("Assets/map-std-sm1.png")
-		]);
+	public function load(mapdata:String, graphics:Array<BitmapData>) {
+		var mapp = MapReader.parse(mapdata);
+		if(map!=null) removeChild(map);
+		map = new MipMap(graphics);
 		addChild(map);
+	}
 
+	function build() {
 		zoom = 0;	
 
 		var drag = false;
@@ -59,9 +62,11 @@ class Map extends GuiElem {
 			var cx = stage.mouseX;
 			var cy = stage.mouseY;
 
-			viewport.x -= (cx-px)/map.width;
-			viewport.y -= (cy-py)/map.width;
-			clamp_viewport();
+			if(map!=null) {
+				viewport.x -= (cx-px)/map.width;
+				viewport.y -= (cy-py)/map.width;
+				clamp_viewport();
+			}
 
 			display();
 
@@ -71,6 +76,8 @@ class Map extends GuiElem {
 	}
 
 	public function display() {
+		if(map==null) return;
+
 		map.x = -viewport.x*map.width;
 		map.y = -viewport.y*map.height;
 	}
@@ -88,6 +95,8 @@ class Map extends GuiElem {
 	}
 
 	public override function resize(width:Int,height:Int,scale:ScaleMode) {
+		if(map==null) return;
+
 		stageWidth  = width;
 		stageHeight = height;
 		stageScale = scale;

@@ -13,6 +13,7 @@ import Terminal;
 import gui.Gui;
 
 import map.MapReader;
+import map.MapRender;
 import map.Path;
 
 class Main extends Sprite {
@@ -32,42 +33,18 @@ class Main extends Sprite {
 		stage.align = StageAlign.TOP_LEFT;
 
 		var ggui = new Gui();
-//		addChild(ggui);
+		ggui.load(Assets.getText("Assets/europe.svg"),
+			[Assets.getBitmapData("Assets/europe-big2.png"),
+			 Assets.getBitmapData("Assets/europe-big1.png"),
+			 Assets.getBitmapData("Assets/europe.png"),
+			 Assets.getBitmapData("Assets/europe-sm1.png")]
+		);
+		addChild(ggui);
 
 		function size() {
 			ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);
 		}
 		stage.addEventListener(Event.RESIZE,function (_) size());
 		size();
-
-		// test map shit
-		var mapdata = Assets.getText("Assets/europe.svg");
-		var provinces = MapReader.parse(mapdata);
-	
-		var sprite = new Sprite();
-		var g = sprite.graphics;
-		for(p in provinces) {
-			for(path in p.paths) {
-				var polys = PathUtils.flatten(path);
-				var c = Std.int(Math.random()*0xffffff);
-				for(poly in polys) {
-					g.lineStyle(1,c,1);
-					g.beginFill(c,1);
-					try {
-						PathUtils.draw_filled(poly,g);
-					}catch(e:Dynamic) {
-						trace(e);
-						trace(p.id);
-					}
-					g.endFill();
-
-					g.lineStyle(1,0,1);
-					PathUtils.draw(poly,g);
-				}
-			}
-		}
-
-		addChild(sprite);
-		sprite.scaleX = sprite.scaleY = 2;
 	}
 }
