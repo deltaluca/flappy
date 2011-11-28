@@ -9,9 +9,8 @@ import nme.display.Graphics;
 import map.HLlr;
 import map.HLex;
 
-//assert: Path contains at most 1 moveTo.
-//pre: from map.svg, a path must contain only complex paths (allowing more than one) <-- aka no holes allowed
-//pre: these paths do not overlap!! <-- means we can optimise the search of point containment and exit at first result rather than continuing to search and using precedences
+//assert: Path contains at most one moveTo <-- this is enforced in the svg parsing, the svg file may contain paths with many subpaths and holes
+//pre: from map.svg: these paths do not overlap!! <-- means we can optimise the search of point containment and exit at first result rather than continuing to search and using precedences
 typedef Path = Array<PathCommand>;
 
 enum PathCommand {
@@ -144,12 +143,15 @@ class PathUtils {
 			var cx1 = cubic_t(p0x,p1x,p2x,p3x,0.333); var cy1 = cubic_t(p0y,p1y,p2y,p3y,0.333);
 			var lx1 = p0x+0.333*(p3x-p3x); var ly1 = p0y+0.333*(p3y-p3y);
 			var dx1 = cx1-lx1; var dy1 = cy1-ly1;
+			var dist1 = dx1*dx1+dy1*dy1;
 
 			var cx2 = cubic_t(p0x,p1x,p2x,p3x,0.666); var cy2 = cubic_t(p0y,p1y,p2y,p3y,0.666);
 			var lx2 = p0x+0.666*(p3x-p3x); var ly2 = p0y+0.666*(p3y-p0y);
 			var dx2 = cx2-lx2; var dy2 = cy2-ly2;
-
-			if(dx1*dx1+dy1*dy1 + dx2*dx2+dy2*dy2 < threshold)
+			var dist2 = dx2*dx2+dy2*dy2;
+	
+			if(dist2>dist1) dist1 = dist2;
+			if(dist1*dist1 < threshold*threshold)
 				ret.push(new Point(p3x,p3y));
 			else {
 				//sad face :(
