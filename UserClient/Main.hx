@@ -13,7 +13,6 @@ import Terminal;
 import gui.Gui;
 
 import map.MapReader;
-import map.MapRender;
 import map.Path;
 
 class Main extends Sprite {

@@ -14,9 +14,6 @@
 
 	<classpath name="."/>
 
-	<classpath name="../../nape/src"/>
-	<haxedef name="NAPE_RELEASE_BUILD"/>
-
 	<haxelib name="nme"/>
 
 	<assets path="Assets" include="*"/>

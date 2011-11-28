@@ -8,11 +8,12 @@ import nme.geom.Matrix;
 import nme.geom.Rectangle;
 import nme.geom.Point;
 
+import nme.filters.BlurFilter;
+
 import gui.Gui;
 import gui.MipMap;
 
 import map.MapReader;
-import map.MapRender;
 
 class Map extends GuiElem {
 	public function new() {
@@ -21,7 +22,8 @@ class Map extends GuiElem {
 		viewport = null; 
 	}
 
-	var map:MipMap;
+	var map:MipMap; var mapdata:map.Map;
+	var highlight:Sprite;
 	var viewport:Rectangle;
 	public var zoom:Int;
 
@@ -30,14 +32,23 @@ class Map extends GuiElem {
 	var stageScale:ScaleMode;
 
 	public function load(mapdata:String, graphics:Array<BitmapData>) {
-		var mapp = MapReader.parse(mapdata);
+		this.mapdata = MapReader.parse(mapdata);
 		if(map!=null) removeChild(map);
 		map = new MipMap(graphics);
 		addChild(map);
+		swapChildren(highlight,map);
+		var invbox = new Sprite();
+		invbox.graphics.lineStyle(1,0,0);
+		invbox.graphics.drawRect(0,0,this.mapdata.width,this.mapdata.height);
+		highlight.addChild(invbox);
 	}
 
 	function build() {
-		zoom = 0;	
+		zoom = 0;
+
+		highlight = new Sprite();	
+		addChild(highlight);
+		highlight.filters= [new BlurFilter(4,4,1)];
 
 		var drag = false;
 		var px:Float; var py:Float;
@@ -46,6 +57,26 @@ class Map extends GuiElem {
 			drag = true;
 			px = stage.mouseX;
 			py = stage.mouseY;
+
+			if(mapdata!=null) {
+				var mapp = new Point(
+					(px/stageWidth*viewport.width + viewport.x)*mapdata.width,
+					(py/stageHeight*viewport.height + viewport.y)*mapdata.height
+				);
+				var province:MapProvince = mapdata.province(mapp);
+				if(province!=null) trace(province.id); else trace("nada");
+			
+				if(province!=null) {
+					var g = highlight.graphics;
+					g.clear();
+					g.lineStyle(2,0xff0000,1);
+					for(path in province.paths) {
+						g.moveTo(path[0].x,path[0].y);
+						for(i in 1...path.length) g.lineTo(path[i].x,path[i].y);
+						g.lineTo(path[0].x,path[0].y);
+					} 
+				}
+			}
 		});
 		addEventListener(nme.events.MouseEvent.MOUSE_UP, function(_) {
 			drag = false;
@@ -80,6 +111,11 @@ class Map extends GuiElem {
 
 		map.x = -viewport.x*map.width;
 		map.y = -viewport.y*map.height;
+
+		highlight.x = map.x;
+		highlight.y = map.y;
+		highlight.width = map.width;
+		highlight.height = map.height;
 	}
 
 	public function clamp_viewport() {
