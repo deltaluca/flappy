@@ -87,3 +87,20 @@ Executable holdbot
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
   -- Build-tools:         
   
+Executable randombot
+  Main-is:           Diplomacy/AI/Bots/RandomBot/randombot.hs
+  -- Packages needed in order to build this package.
+  Build-depends:       
+    base >= 4,
+    cmdargs,
+    hslogger,
+    mtl,
+    DiplomacyCommon <= 1,
+    MonadRandom,
+    random
+
+  -- Modules not exported by this package.
+  -- Other-modules:       
+  
+  -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
+  -- Build-tools:     

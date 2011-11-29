@@ -101,23 +101,25 @@ getOwnSupplies supplies = do
   return . head $ [provinces | (SupplyCentre power provinces) <- supplies, myPower == power]
 
 holdUnits :: UnitPositions -> [Province] -> HoldBrain HoldBotDecision
-holdUnits (UnitPositions (Turn Spring _) units) _ =
-  return $ HoldDecision units
+holdUnits (UnitPositions (Turn Spring _) units) _ = do
+  myPower <- getPower    
+  return $ HoldDecision $ filter (isMyPower myPower) units
 -- tell all units to hold
 
-holdUnits (UnitPositions (Turn Fall _) units) _	 =
-  return $ HoldDecision units
+holdUnits (UnitPositions (Turn Fall _) units) _	 = do
+  myPower <- getPower    
+  return $ HoldDecision $ filter (isMyPower myPower) units
 -- tell all units to hold
 
 holdUnits (UnitPositionsRet (Turn Summer _) unitsAndRets) _ =
-  return $ retreatUnits unitsAndRets
+  retreatUnits unitsAndRets
 -- need to retreat our units that need retreating
 -- unitsAndRets is a list of units that need to be retreating and
 -- each unit will have a corresponding list of provinces it can retreat to
 -- in our holdbot case we just disband.
 
 holdUnits (UnitPositionsRet (Turn Autumn _) unitsAndRets) _ =
-  return $ retreatUnits unitsAndRets
+  retreatUnits unitsAndRets
 -- similar to above
 
 holdUnits (UnitPositions (Turn Winter _) units) ownSupplies =
@@ -127,13 +129,17 @@ holdUnits (UnitPositions (Turn Winter _) units) ownSupplies =
    controlled the province for at least 2 turns 
 -}
 
-retreatUnits :: [(UnitPosition, [ProvinceNode])] -> HoldBotDecision
-retreatUnits unitsAndRetreats = 
-  DisbandDecision [unit| (unit, _) <- unitsAndRetreats]
+retreatUnits :: [(UnitPosition, [ProvinceNode])] -> HoldBrain HoldBotDecision
+retreatUnits unitsAndRetreats = do 
+  let units = [unit| (unit, _) <- unitsAndRetreats]
+  myPower <- getPower
+  return $ DisbandDecision $ filter (isMyPower myPower) units
 
 disbandOrWaive :: [UnitPosition] ->  [Province] -> HoldBrain HoldBotDecision
 disbandOrWaive units supplyCentres 
-  | difference > 0 = return $ DisbandDecision $ take difference units
+  | difference > 0 = do
+                        myPower <- getPower    
+                        return $ DisbandDecision $ filter (isMyPower myPower) (take difference units)
   | otherwise      = do
                         myPower <- getPower
                         return $ WaiveDecision myPower
@@ -142,4 +148,8 @@ disbandOrWaive units supplyCentres
      {- here we need to waive a build on a unit on a province in our home territory 
         which we are still in control of and doesn't have a unit on it currently -}
     -- waive builds on all units? Technically waiving a build means not submitting any sort of build order whatsoever
+
+--checks if this UnitPosition is ours (if it contains our power number)
+isMyPower :: Power -> UnitPosition -> Bool
+isMyPower myPower (UnitPosition power _ _) = power == myPower 
 
