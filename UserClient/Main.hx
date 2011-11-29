@@ -3,6 +3,7 @@ package;
 import nme.Lib;
 import nme.display.Sprite;
 import nme.events.Event;
+import nme.events.KeyboardEvent;
 import nme.display.StageScaleMode;
 import nme.display.StageAlign;
 
@@ -40,8 +41,17 @@ class Main extends Sprite {
 		);
 		addChild(ggui);
 
+		var terminal = new Terminal(stage.stageWidth,stage.stageHeight);
+		addChild(terminal);
+		terminal.visible = false;
+		stage.addEventListener(KeyboardEvent.KEY_DOWN, function (ev) {
+			if(ev.keyCode == 192) //`¬ key
+				terminal.visible = !terminal.visible; 
+		});
+
 		function size() {
 			ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);
+			terminal.resize(stage.stageWidth,stage.stageHeight);
 		}
 		stage.addEventListener(Event.RESIZE,function (_) size());
 		size();

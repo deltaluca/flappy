@@ -22,13 +22,6 @@ enum PathCommand {
 
 typedef Polygon = Array<Point>;
 
-class Range {
-	public var min:Float;
-	public var max:Float;
-
-	public function new(min=0.0,max=0.0) { this.min = min; this.max = max; }
-}
-
 class PathUtils {
 	//take the raw output from parser
 	//and produce a (badly named) un-verbose version (which is actually 'more' verbose)
@@ -169,108 +162,9 @@ class PathUtils {
 		}
 	}
 
-	static function intersect(p0x:Float,p0y:Float,p1x:Float,p1y:Float,p2x:Float,p2y:Float,p3x:Float,p3y:Float) {
-		var ux = p1x-p0x; var uy = p1y-p0y;
-		var vx = p2x-p3x; var vy = p2y-p3y;
-		var denom = ux*vy - uy*vx;
-		if(denom*denom < eps) return null;
-
-		var t = ((p3x-p0x)*vy - (p3y-p0y)*vx)/denom;
-		return {x:p0x + ux*t, y:p0y + uy*t};
-	}
-
-	//evaluate quadratic and cubic
-	static function quad_t(p0:Float,p1:Float,p2:Float,t:Float) {
-		var it = 1-t;
-		return it*(it*p0 + 2*t*p1) + t*t*p2;
-	}
-	static function cubic_t(p0:Float,p1:Float,p2:Float,p3:Float,t:Float) {
+	//evaluate cubic
+	static inline function cubic_t(p0:Float,p1:Float,p2:Float,p3:Float,t:Float) {
 		var it = 1-t;
 		return it*it*(it*p0 + 3*t*p1) + t*t*(3*it*p2 + t*p3);
 	}
-
-	static function cap(x:Float):Float return x<0 ? 0 : x>1 ? 1 : x
-
-	inline static var eps = 1e-6;
-	//solve quadratic bezier derivative.
-	static function quad(p0:Float,p1:Float,p2:Float):Array<Float> {
-		var D = p0-2*p1+p2;
-
-		if(D*D < eps) return []; //no root exists.
-		else {
-			var root = cap(p0-p1)/(p0-2*p1+p2);
-			return [root];
-		}
-	}
-
-	//solve cubic bezier derivative
-	static function cubic(p0:Float,p1:Float,p2:Float,p3:Float):Array<Float> {
-		var A = 3*(p1-p2) + p3-p0;
-		if(A*A<eps) return []; //no root exists
-
-		var B = 2*p0 - 4*p1 + 2*p2;
-		var C = p1-p0;
-		var D = B*B-4*A*C;
-
-		if(D<0) return []; //no root exists
-		else if(D*D < eps) return [-B/(2*A)];
-		else {
-			D = Math.sqrt(D); A = 1/(2*A);
-			var r1 = cap(-(B+D)*A); var r2 = cap((D-B)*A);
-			return [r1,r2];
-		}
-	}
-
-	//range folded-point-combine
-	static function range(r:Range=null, x:Float) {
-		return if(r==null) new Range(x,x);
- 		  else if(x<r.min) { r.min = x; r; }
- 		  else if(x>r.max) { r.max = x; r; }
-		  else r;
-	}
-	static function fromrange(x:Range, y:Range) {
-		return new AABB(x.min,y.min,x.max,y.max);
-	}
-
-	//compute theoretical bounds of a path (actual rendering via approximate of cubic curves might be slightly off)
-	public static function bounds(path:Path):AABB {
-		var ret:AABB = null;
-
-		//turtle
-		var tx:Float = 0; var ty:Float = 0;
-
-		for(p in path) {
-			var cur = Match.match(p,
-				pMoveTo(x,y) = { tx = x; ty = y; null; },
-				pLineTo(x,y) = { 
-					var ret = fromrange(range(range(tx),x),range(range(ty),y));
-					tx = x; ty = y;
-					ret;
-				},
-				pCurveTo(x,y,cx,cy) = {
-					var rx = range(range(tx),x);
-
-					var ry = range(range(ty),y);
-					for(root in quad(tx,cx,x)) rx = range(rx, quad_t(tx,cx,x, root));
-					for(root in quad(ty,cy,y)) ry = range(ry, quad_t(ty,cy,y, root));
-
-					tx = x; ty = y;
-					fromrange(rx,ry);
-				},
-				pCubicTo(x,y,cx1,cy1,cx2,cy2) = {
-					var rx = range(range(tx),x);
-					var ry = range(range(ty),y);
-					for(root in cubic(tx,cx1,cx2,x)) rx = range(rx, cubic_t(tx,cx1,cx2,x, root));
-					for(root in cubic(ty,cy1,cy2,y)) ry = range(ry, cubic_t(ty,cy1,cy2,y, root));
-
-					tx = x; ty = y;
-					fromrange(rx,ry);	
-				}
-			);
-			if(ret==null) ret = cur;
-			else if(cur!=null) ret.merge(cur);
-		}
-		return ret;
-	}
-
 }

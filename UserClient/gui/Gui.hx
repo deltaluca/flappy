@@ -46,24 +46,41 @@ class Gui extends GuiElem {
 		build();
 	}
 
-	var map:Map;
+	//mapg is placed on display list by default so that initial map load can swap it's place.
+	var map:Map; var mapg:Sprite;
 
 	var negmenu :Menu; //negotiations
 	var statmenu:Menu; //status
 	var mainmenu:Menu; //main
 
 	function build() {
-		addChild(map = new Map());
+		addChild(mapg = new Sprite());
 		
 		addChild(negmenu  = new Menu());
 		addChild(statmenu = new Menu());
 		addChild(mainmenu = new Menu());
 	}
 
-	public function load(mapdata:String, graphics:Array<BitmapData>) map.load(mapdata, graphics)
+	public function load(mapdata:String, graphics:Array<BitmapData>) {
+		var nmap = new Map(mapdata,graphics);
+		addChild(nmap);
+
+		if(map==null) {
+			swapChildren(nmap,mapg);
+			removeChild(mapg);
+			mapg = null;
+		}else {
+			swapChildren(nmap,map);
+			removeChild(map);
+			map.dispose();
+		}
+		
+		map = nmap;
+	}
 
 	public override function resize(width:Int,height:Int,scale:ScaleMode) {
-		map.resize(width,height,scale);
+		if(map!=null)
+			map.resize(width,height,scale);
 
 		negmenu .resize(-1,-1,scale);
 		statmenu.resize(-1,-1,scale);

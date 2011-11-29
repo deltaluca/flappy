@@ -9,6 +9,7 @@ import nme.geom.Rectangle;
 import nme.geom.Point;
 
 import nme.filters.BlurFilter;
+import nme.events.MouseEvent;
 
 import gui.Gui;
 import gui.MipMap;
@@ -16,99 +17,141 @@ import gui.MipMap;
 import map.MapReader;
 
 class Map extends GuiElem {
-	public function new() {
+	//mapdata corresponding to the input .svg file for clickable regions and other metadata.
+	//graphics being ordered large to small for building mipmap.
+	public function new(mapdata:String, graphics:Array<BitmapData>) {
 		super();
+
+		this.mapdata = MapReader.parse(mapdata);
+		map = new MipMap(graphics);
+
 		build();
-		viewport = null; 
+		viewport = null;
 	}
 
+	//--------------------------------------------------------------------------------------------
+
+	//mipmap of map graphics + mapdata for pointer selection and highlighting etc.
 	var map:MipMap; var mapdata:map.Map;
+
+	//highlighting of current region.
 	var highlight:Sprite;
+
+	//viewport corresponding to the application display in unit map coordinates.
+	// viewport.xy, viewport.xy + viewport.wh in [0,1]
 	var viewport:Rectangle;
+
+	//zoom level, mapped to a real scale on display
+	//bounds defined and enforced in setzoom
 	public var zoom:Int;
 
+	//application display with/height and DPI scale mode for graphics.
 	var stageWidth :Int;
 	var stageHeight:Int;
 	var stageScale:ScaleMode;
 
-	public function load(mapdata:String, graphics:Array<BitmapData>) {
-		this.mapdata = MapReader.parse(mapdata);
-		if(map!=null) removeChild(map);
-		map = new MipMap(graphics);
-		addChild(map);
-		swapChildren(highlight,map);
-		var invbox = new Sprite();
-		invbox.graphics.lineStyle(1,0,0);
-		invbox.graphics.drawRect(0,0,this.mapdata.width,this.mapdata.height);
-		highlight.addChild(invbox);
+	//--------------------------------------------------------------------------------------------
+
+	public function dispose() {
+		//another bug in NME means we cannot use weak reference event handlers.
+		//or atleast not to anonymous functions but i don't trust it
+
+		removeEventListener(MouseEvent.MOUSE_DOWN, mdown);
+		removeEventListener(MouseEvent.MOUSE_UP, mup);
+		removeEventListener(MouseEvent.MOUSE_WHEEL, mwheel);
+		removeEventListener(MouseEvent.MOUSE_MOVE, mmove);
 	}
+
+	//--------------------------------------------------------------------------------------------
+	/// event handlers
+
+	//dragging of mouse
+	var drag:Bool;
+	var px:Float; var py:Float;
+
+	function mdown(_) {
+		drag = true;
+		px = stage.mouseX;
+		py = stage.mouseY;
+	}
+	function mmove(_) {
+		var cx = stage.mouseX;
+		var cy = stage.mouseY;
+
+		if(drag) {
+			viewport.x -= (cx-px)/map.width;
+			viewport.y -= (cy-py)/map.height;
+			clamp_viewport();
+			display();
+
+			px = cx; py = cy;
+		}
+
+		setprovince();
+	}
+	function mup(_) {
+		drag = false;
+	}
+	function mwheel(ev) {
+		setzoom(zoom - ev.delta);
+		setprovince();
+	} 
+
+	//--------------------------------------------------------------------------------------------
+
+	var selected:MapProvince;
+
+	function setprovince() {
+		var mapp = new Point();
+		mapp.x = (stage.mouseX/stageWidth *viewport.width  + viewport.x)*mapdata.width;
+		mapp.y = (stage.mouseY/stageHeight*viewport.height + viewport.y)*mapdata.height;
+
+		var province = mapdata.province(mapp);
+		var g = highlight.graphics;
+
+		if(province != selected) {
+			g.clear();
+			if(province!=null) {
+				g.lineStyle(2,0xff0000,1);
+				for(path in province.paths) {
+					g.moveTo(path[0].x,path[0].y);
+					for(i in 1...path.length) g.lineTo(path[i].x,path[i].y);
+					g.lineTo(path[0].x,path[0].y);
+				}
+			}		
+		}
+
+		selected = province;
+	}
+
+	//--------------------------------------------------------------------------------------------
 
 	function build() {
 		zoom = 0;
 
+		addChild(map);
+
 		highlight = new Sprite();	
 		addChild(highlight);
 		highlight.filters= [new BlurFilter(4,4,1)];
+		
+		//highlight has this invisible box defined to match map dimensions
+		//so that highlighted region drawn inside can be scaled and displayed correctly
+		var invbox = new Sprite();
+		invbox.graphics.lineStyle(1,0,0);
+		invbox.graphics.drawRect(0,0,this.mapdata.width,this.mapdata.height);
+		highlight.addChild(invbox);
 
-		var drag = false;
-		var px:Float; var py:Float;
-		var stage = flash.Lib.current.stage;
-		addEventListener(nme.events.MouseEvent.MOUSE_DOWN, function(_) {
-			drag = true;
-			px = stage.mouseX;
-			py = stage.mouseY;
-
-			if(mapdata!=null) {
-				var mapp = new Point(
-					(px/stageWidth*viewport.width + viewport.x)*mapdata.width,
-					(py/stageHeight*viewport.height + viewport.y)*mapdata.height
-				);
-				var province:MapProvince = mapdata.province(mapp);
-				if(province!=null) trace(province.id); else trace("nada");
-			
-				if(province!=null) {
-					var g = highlight.graphics;
-					g.clear();
-					g.lineStyle(2,0xff0000,1);
-					for(path in province.paths) {
-						g.moveTo(path[0].x,path[0].y);
-						for(i in 1...path.length) g.lineTo(path[i].x,path[i].y);
-						g.lineTo(path[0].x,path[0].y);
-					} 
-				}
-			}
-		});
-		addEventListener(nme.events.MouseEvent.MOUSE_UP, function(_) {
-			drag = false;
-		});
-
-		addEventListener(nme.events.MouseEvent.MOUSE_WHEEL, function(ev) {
-			setzoom(zoom-ev.delta);
-		});
-
-		var me = this;
-		addEventListener(nme.events.MouseEvent.MOUSE_MOVE, function(_) {
-			if(!drag) return;
-
-			var cx = stage.mouseX;
-			var cy = stage.mouseY;
-
-			if(map!=null) {
-				viewport.x -= (cx-px)/map.width;
-				viewport.y -= (cy-py)/map.width;
-				clamp_viewport();
-			}
-
-			display();
-
-			px = cx;
-			py = cy;
-		});
+		///event handlers
+		addEventListener(MouseEvent.MOUSE_DOWN, mdown);
+		addEventListener(MouseEvent.MOUSE_UP, mup);
+		addEventListener(MouseEvent.MOUSE_WHEEL, mwheel);
+		addEventListener(MouseEvent.MOUSE_MOVE, mmove);
 	}
 
-	public function display() {
-		if(map==null) return;
+	//--------------------------------------------------------------------------------------------
 
+	public function display() {
 		map.x = -viewport.x*map.width;
 		map.y = -viewport.y*map.height;
 
@@ -130,9 +173,9 @@ class Map extends GuiElem {
 		resize(stageWidth,stageHeight,stageScale);
 	}
 
-	public override function resize(width:Int,height:Int,scale:ScaleMode) {
-		if(map==null) return;
+	//--------------------------------------------------------------------------------------------
 
+	public override function resize(width:Int,height:Int,scale:ScaleMode) {
 		stageWidth  = width;
 		stageHeight = height;
 		stageScale = scale;

@@ -20,6 +20,7 @@ using StringTools;
 class Terminal extends Sprite {
 	var logger:TextField;
 	var inp:TextField;
+	var backg:Sprite;
 
 	var logcnt:Int;
 	var logsize:Int;
@@ -44,18 +45,24 @@ class Terminal extends Sprite {
 		super();
 
 		var font = Assets.getFont("Assets/Courier.ttf");
-		logger = new TextField();
-		logger.multiline = true;
-		logger.defaultTextFormat = new TextFormat(font.fontName,10,0);
-		addChild(logger);
 
 		inp = new TextField();
 		inp.type = TextFieldType.INPUT;
 		inp.defaultTextFormat = new TextFormat(font.fontName,10,0);
+		inp.backgroundColor = 0xaeaeae;
 		inp.background = true;
-		inp.backgroundColor = 0xcecece;
 		inp.height = 16;
 		addChild(inp);
+		
+		backg = new Sprite();
+		backg.graphics.beginFill(0,0.75);
+		backg.graphics.drawRect(0,0,100,100);
+		addChild(backg);
+
+		logger = new TextField();
+		logger.multiline = true;
+		logger.defaultTextFormat = new TextFormat(font.fontName,10,0xffffff);
+		addChild(logger);
 
 		resize(width,height);
 
@@ -99,6 +106,9 @@ class Terminal extends Sprite {
 
 		logsize = Std.int(logger.height/10.02);
 		logcnt--; crop(); logcnt++;
+
+		backg.width = logger.width;
+		backg.height = logger.height;
 	}
 
 	var sock:Socket;

@@ -19,7 +19,7 @@ class MapProvince {
 
 	public function concat(paths:Array<Path>) for(path in paths) push(path)
 	inline public function push(path:Path) {
-		paths.push(PathUtils.flatten(path,1));
+		paths.push(PathUtils.flatten(path,2));
 	}	
 
 	public function bounds():AABB {
