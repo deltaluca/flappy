@@ -60,8 +60,8 @@ communicate bot = do
   gameInfo <- initGame
 
   -- Create messaging queues
-  dispatcherQueue <- liftIO newTChanIO
-  receiverQueue <- liftIO newTChanIO
+  dispatcherQueue <- liftIO newTSeqIO
+  receiverQueue <- liftIO newTSeqIO
   
   -- Create messaging threads
   hndleInfo <- ask
@@ -93,8 +93,6 @@ communicate bot = do
     modifyHistory (dipBotProcessResults bot results)
   return ()
 
--- TODO: change from TChan to TVar Seq !!! need finer control over queue (ex. brain finished but we keep getting press messages -> need to flush / signal receiver)
-
 runGameKnowledgeTTimed :: MonadIO m => Int -> GameKnowledgeT h m (Maybe a) -> MaybeT (GameKnowledgeT h m) a
 runGameKnowledgeTTimed timedelta gameKnowledge = do
   gameIO <- lift $ liftM return gameKnowledge
@@ -112,7 +110,7 @@ getMoveResults = undefined
 
 dispatcher :: OutMessageQueue -> DaideHandle ()
 dispatcher q = forever $ do
-  msg <- liftIO . atomically $ readTChan q
+  msg <- liftIO . atomically $ readTSeq q
   undefined
 --  tellHandle (DM (PressMessage msg))
 
@@ -120,7 +118,7 @@ receiver :: InMessageQueue -> DaideHandle ()
 receiver q = forever $ do
   msg <- askHandle
   undefined
-  -- atomically (writeTChan q msg)
+  -- atomically (writeTSeq q msg)
 
 handleMessage :: DaideMessage -> DaideHandle ()
 handleMessage (IM _) = throwError IMFromServer

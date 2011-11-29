@@ -10,6 +10,7 @@ module Diplomacy.AI.SkelBot.Comm( CommT, runCommT
 
 import Diplomacy.Common.DipMessage
 import Diplomacy.Common.Data
+import Diplomacy.Common.TSeq
 
 import Control.Monad.Reader
 import Control.Monad.Trans
@@ -23,8 +24,8 @@ data InMessage = InMessage { inMessageFrom :: Power
 data OutMessage = OutMessage { outMessageTo :: [Power]
                              , outMessageMessage :: PressMessage }
 
-type InMessageQueue = TChan InMessage
-type OutMessageQueue = TChan OutMessage
+type InMessageQueue = TSeq InMessage
+type OutMessageQueue = TSeq OutMessage
 
                        -- (receiver, dispatcher)
 newtype CommT m a = CommT (ReaderT (InMessageQueue, OutMessageQueue) m a)
@@ -49,7 +50,7 @@ askReceiver = liftM snd ask
 instance MonadIO m => MonadComm (CommT m) where
   popInMessage = do
     dispatcher <- askDispatcher
-    liftIO (atomically (readTChan dispatcher))
+    liftIO (atomically (readTSeq dispatcher))
   pushOutMessage msg = do
     receiver <- askReceiver
-    liftIO (atomically (writeTChan receiver msg))
+    liftIO (atomically (writeTSeq receiver msg))

@@ -47,12 +47,13 @@ class (Monad m) => MonadGameKnowledge h m | m -> h where
   modifyHistory :: (h -> h) -> m ()
   putHistory :: h -> m ()
 
+  askGameInfo = asksGameInfo id
+  getHistory = getsHistory id
+  modifyHistory f = putHistory . f =<< getHistory
+
 instance (Monad m) => MonadGameKnowledge h (GameKnowledgeT h m) where
-  askGameInfo = GameKnowledge ask
-  getHistory = GameKnowledge get
   asksGameInfo = GameKnowledge . asks
   getsHistory = GameKnowledge . gets
-  modifyHistory = GameKnowledge . modify
   putHistory = GameKnowledge . put
 
   -- |h = history type, d = decision type
@@ -80,24 +81,17 @@ instance (MonadIO m, Decision d) => MonadIO (BrainCommT d h m) where
   liftIO = BrainComm . lift . lift . lift . liftIO
 
 instance (Monad m, Decision d) => MonadGameKnowledge h (BrainT d h m) where
-  askGameInfo = liftGameKnowledge askGameInfo
-  getHistory = liftGameKnowledge getHistory
   asksGameInfo = liftGameKnowledge . asksGameInfo
   getsHistory = liftGameKnowledge . getsHistory
-  modifyHistory = liftGameKnowledge . modifyHistory
   putHistory = liftGameKnowledge . putHistory
   
 class (Monad m, Decision d) => MonadBrain d m | m -> d where
-  askGameState :: m GameState
   asksGameState :: (GameState -> a) -> m a
-  getDecision :: m (Maybe d)
   getsDecision :: (d -> a) -> m (Maybe a)
   putDecision :: Maybe d -> m ()
 
 instance (Monad m, Decision d) => MonadBrain d (BrainT d h m) where
-  askGameState = Brain ask
   asksGameState = Brain . asks
-  getDecision = Brain get
   getsDecision f = maybe (return Nothing) (return . Just . f) =<< getDecision
   putDecision = Brain . put
 
@@ -134,18 +128,13 @@ instance (MonadIO m, Decision d) => MonadComm (BrainCommT d h m) where
   pushOutMessage = BrainComm . lift . pushOutMessage
 
 instance (Monad m, Decision d) => MonadBrain d (BrainCommT d h m) where
-  askGameState = liftBrain askGameState
   asksGameState = liftBrain . asksGameState
-  getDecision = liftBrain getDecision
   getsDecision = liftBrain . getsDecision
   putDecision = liftBrain . putDecision
 
 instance (Monad m, Decision d) => MonadGameKnowledge h (BrainCommT d h m) where
-  askGameInfo = liftBrain askGameInfo
-  getHistory = liftBrain getHistory
   asksGameInfo = liftBrain . asksGameInfo
   getsHistory = liftBrain . getsHistory
-  modifyHistory = liftBrain . modifyHistory
   putHistory = liftBrain . putHistory
 
 runBrainCommT :: (Monad m, Decision d) => BrainCommT d h m a -> DecisionVar d -> InMessageQueue -> OutMessageQueue -> BrainT d h m a

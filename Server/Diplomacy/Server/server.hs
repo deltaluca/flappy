@@ -7,6 +7,8 @@ import Diplomacy.Common.DipMessage
 import Diplomacy.Common.DaideMessage
 import Diplomacy.Common.DaideError
 
+import Diplomacy.Server.Client
+
 import Control.Monad
 import Control.Monad.Error
 import Control.Concurrent
@@ -35,30 +37,6 @@ listenForClients serverPort = do
       ":" ++ show port ++ " connecting..."
     hSetBuffering hndle NoBuffering
     forkIO $ runDaide handleClient (Handle hndle hostName port) 
-
-_INITIAL_TIMEOUT = 30000000
-
-handleClient :: MonadDaideHandle m => m ()
-handleClient = do
-  liftIO . print $ "Connection established, waiting for initial message"
-  initialMessage <- askHandleTimed _INITIAL_TIMEOUT
-  case initialMessage of
-    IM _ -> return ()
-    _ -> throwError IMNotFirst
-  tellHandle RM
-  liftIO . print $ "Thread forked"
-  forever $ do
-    liftIO . print $ "Waiting for message"
-    message <- askHandle
-    liftIO . print $ "Message recieved: " ++ (show message)
-    handleMessage message
-
-handleMessage :: MonadDaideHandle m => DaideMessage -> m ()
-handleMessage m = case m of
-  IM _ -> throwError ManyIMs
-  RM -> throwError RMFromClient
-  DM dipMessage -> liftIO . print $ "Diplomacy Message: " ++ show dipMessage
-  _ -> throwError InvalidToken
 
 -- map
 data DiplomacyMap = Map

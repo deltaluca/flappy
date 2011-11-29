@@ -69,7 +69,8 @@ Library
     network,
     parsec >= 3.0,
     stm,
-    QuickCheck
+    QuickCheck,
+    time
   
   -- Modules not exported by this package.
   -- Other-modules:       
