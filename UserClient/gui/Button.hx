@@ -22,8 +22,15 @@ class Button extends GuiElem {
 	var isdown:Bool;
 	function mover(_) mouseOver()
 	function mdown(_) { isdown = true; mouseDown(); }
-	function mup  (_) { isdown = false; mouseOver(); }
+	function mup  (_) { isdown = false; mouseOver(); if(onClick!=null) onClick(); }
 	function mout (_) { isdown = false; mouseUp(); }
+
+	public var onResize:Int->Int->ScaleMode->Void;
+	public var onClick:Void->Void;
+
+	public override function resize(w:Int,h:Int,s) {
+		if(onResize!=null) onResize(w,h,s);
+	}
 
 	function new() {
 		super();
@@ -78,10 +85,11 @@ class RoundButton extends Button {
 		down.resize(radius,radius);
 	}
 
-	override public function resize(_,_,scale:ScaleMode) {
-		var sx = Match.match(scale, sSmall = 0.5, sDefault = 1.0, sLarge = 2.0);
-		sx *= radius;
-		display(Std.int(sx));
+	override public function resize(w:Int,h:Int,scale:ScaleMode) {
+		var sx = Std.int(radius*Match.match(scale, sSmall = 0.5, sDefault = 1.0, sLarge = 2.0));
+		display(sx);
+
+		super.resize(sx,sx,scale);
 	}
 
 }
