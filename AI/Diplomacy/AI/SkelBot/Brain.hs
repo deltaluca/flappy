@@ -88,7 +88,12 @@ instance (Monad m, Decision d) => MonadGameKnowledge h (BrainT d h m) where
 class (Monad m, Decision d) => MonadBrain d m | m -> d where
   asksGameState :: (GameState -> a) -> m a
   getsDecision :: (d -> a) -> m (Maybe a)
+  askGameState :: m GameState
+  getDecision :: m (Maybe d)
   putDecision :: Maybe d -> m ()
+
+  askGameState = asksGameState id
+  getDecision = getsDecision id
 
 instance (Monad m, Decision d) => MonadBrain d (BrainT d h m) where
   asksGameState = Brain . asks
