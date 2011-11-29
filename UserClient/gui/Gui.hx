@@ -1,5 +1,9 @@
 package gui;
 
+import gui.Menu;
+import gui.Button;
+import gui.Map;
+
 import nme.display.BitmapData;
 import nme.geom.Rectangle;
 import nme.geom.Matrix;
@@ -21,13 +25,19 @@ enum ScaleMode {
 class GuiElem extends Sprite {
 	
 	public function getBounds(?m:Matrix) {
-		var m2 = transform.matrix.clone();
+		var m2 = new Matrix(1,0,0,1, x,y);
 		if(m!=null) m2.concat(m);
 
-		var ret = new Rectangle(m2.tx,m2.ty,width*m2.a,height*m2.b);
+		var ret = new Rectangle(m2.tx,m2.ty,width,height);
 		for(c in 0...numChildren) {
-			var t = cast(getChildAt(c),GuiElem).getBounds(m2);
-			ret = ret.union(t);
+			var ch = getChildAt(c);
+			if(Std.is(ch, GuiElem)) {
+				var t = cast(ch,GuiElem).getBounds(m2);
+				ret = ret.union(t);
+			}else {
+				var t = new Rectangle(m2.tx+x,m2.ty+y,ch.width,ch.height);
+				ret = ret.union(t);
+			}
 		}
 
 		return ret;
@@ -59,6 +69,8 @@ class Gui extends GuiElem {
 		addChild(negmenu  = new Menu());
 		addChild(statmenu = new Menu());
 		addChild(mainmenu = new Menu());
+
+		mainmenu.insert(new RoundButton(30));
 	}
 
 	public function load(mapdata:String, graphics:Array<BitmapData>) {
@@ -95,8 +107,8 @@ class Gui extends GuiElem {
 		statmenu.x = width-bnds.width+bnds.x;
 		
 		bnds = mainmenu.getBounds();
-		mainmenu.x = width-bnds.width+bnds.x;
-		mainmenu.y = -bnds.y;
+		mainmenu.x += width-bnds.width-bnds.x;
+		mainmenu.y += -bnds.y;
 	}
 }
 

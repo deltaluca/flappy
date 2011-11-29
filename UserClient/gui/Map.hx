@@ -176,36 +176,39 @@ class Map extends GuiElem {
 	//--------------------------------------------------------------------------------------------
 
 	public override function resize(width:Int,height:Int,scale:ScaleMode) {
-		stageWidth  = width;
-		stageHeight = height;
-		stageScale = scale;
-
-		var ratio = map.ratio;
-
-		var zoomv = Math.pow(1.2,zoom);
-
-		var width_h  = ratio*width*zoomv;
-		if(width_h > height*zoomv) {
-			map.resize(Std.int(width*zoomv), Std.int(width_h));
-		}else {
-			var height_w = height*zoomv/ratio;
-			map.resize(Std.int(height_w),Std.int(height*zoomv));
-		}
-
-		if(viewport==null) {
-			viewport = new Rectangle();
-			viewport.width = stageWidth/map.width;
-			viewport.height = stageHeight/map.height;
-			viewport.x = 0.5*(1-viewport.width);
-			viewport.y = 0.5*(1-viewport.height);
-		}else {
-			var nw = stageWidth/map.width;
-			var nh = stageHeight/map.height;
-			viewport.x -= 0.5*(nw-viewport.width); 
-			viewport.y -= 0.5*(nh-viewport.height); 
-			viewport.width = nw;
-			viewport.height = nh;
-			clamp_viewport();	
+		//else assume on scale mode has changed
+		if(width>0 && height>0) {
+			stageWidth  = width;
+			stageHeight = height;
+			stageScale = scale;
+	
+			var ratio = map.ratio;
+	
+			var zoomv = Math.pow(1.2,zoom);
+	
+			var width_h  = ratio*width*zoomv;
+			if(width_h > height*zoomv) {
+				map.resize(Std.int(width*zoomv), Std.int(width_h));
+			}else {
+				var height_w = height*zoomv/ratio;
+				map.resize(Std.int(height_w),Std.int(height*zoomv));
+			}
+	
+			if(viewport==null) {
+				viewport = new Rectangle();
+				viewport.width = stageWidth/map.width;
+				viewport.height = stageHeight/map.height;
+				viewport.x = 0.5*(1-viewport.width);
+				viewport.y = 0.5*(1-viewport.height);
+			}else {
+				var nw = stageWidth/map.width;
+				var nh = stageHeight/map.height;
+				viewport.x -= 0.5*(nw-viewport.width); 
+				viewport.y -= 0.5*(nh-viewport.height); 
+				viewport.width = nw;
+				viewport.height = nh;
+				clamp_viewport();	
+			}
 		}
 
 		display();

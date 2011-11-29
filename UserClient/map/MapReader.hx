@@ -31,7 +31,7 @@ class MapProvince {
 		return ret;
 	}
 
-	// pre : p contained in path AABB
+	// pre : though uneccesary, we note that we assume xy in bounds() at entry so we need not evaluate that
 	public function contains(xy:Point) {
 		var ret = false;
 	
