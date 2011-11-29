@@ -7,6 +7,7 @@ import Diplomacy.Common.DaideMessage
 import Diplomacy.Common.DaideError
 import Diplomacy.Common.DipMessage
 import Diplomacy.Common.Data
+import Diplomacy.Common.TSeq
 
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.Comm
@@ -67,16 +68,13 @@ communicate bot = do
   liftIO . forkIO $ runDaide (dispatcher dispatcherQueue) hndleInfo
   liftIO . forkIO $ runDaide (receiver receiverQueue) hndleInfo
   
-  -- create TVar for getting the decision
+  -- create TVar for getting partial move
   decVar <- liftIO $ newTVarIO Nothing
 
   -- initialise history
   initHist <- dipBotInitHistory bot
 
   let mapDef = gameInfoMapDef gameInfo
-
-  -- initial game state
-  initGameState <- getGameState
 
   -- Run the main game loop
   (\loop -> runGameKnowledgeT loop gameInfo initHist) . forever $ do
@@ -94,6 +92,8 @@ communicate bot = do
     results <- lift getMoveResults       -- get move results
     modifyHistory (dipBotProcessResults bot results)
   return ()
+
+-- TODO: change from TChan to TVar Seq !!! need finer control over queue (ex. brain finished but we keep getting press messages -> need to flush / signal receiver)
 
 runGameKnowledgeTTimed :: MonadIO m => Int -> GameKnowledgeT h m (Maybe a) -> MaybeT (GameKnowledgeT h m) a
 runGameKnowledgeTTimed timedelta gameKnowledge = do
