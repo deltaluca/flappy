@@ -16,9 +16,17 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.1 r9760"
-   sodipodi:docname="europe.svg">
+   sodipodi:docname="europe.svg"
+   inkscape:export-filename="/home/luca/Projects/flappy/UserClient/europe-sm1.png"
+   inkscape:export-xdpi="45"
+   inkscape:export-ydpi="45">
   <defs
      id="defs4">
+    <pattern
+       inkscape:collect="always"
+       xlink:href="#Strips1_1"
+       id="pattern5982"
+       patternTransform="matrix(4.6820837,3.5390686,-6.5672201,8.688239,0,0)" />
     <pattern
        inkscape:collect="always"
        xlink:href="#Strips1_1"
@@ -127,7 +135,7 @@
        inkscape:collect="always"
        xlink:href="#Strips1_1"
        id="pattern5708"
-       patternTransform="matrix(4.8697121,4.5276008,-10.611688,11.413521,0,0)" />
+       patternTransform="matrix(4.5491413,4.2295509,-12.204343,13.126519,0,0)" />
     <pattern
        inkscape:stockid="Sand (bitmap)"
        id="pattern5700"
@@ -895,16 +903,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.89533676"
-     inkscape:cx="530.41495"
-     inkscape:cy="482.50001"
+     inkscape:zoom="0.63309869"
+     inkscape:cx="688.22656"
+     inkscape:cy="266.12798"
      inkscape:document-units="px"
-     inkscape:current-layer="g5080"
+     inkscape:current-layer="layer3"
      showgrid="false"
      inkscape:window-width="1920"
-     inkscape:window-height="1052"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-height="1028"
+     inkscape:window-x="1920"
+     inkscape:window-y="24"
      inkscape:window-maximized="1"
      inkscape:snap-bbox="false"
      inkscape:object-paths="false"
@@ -920,7 +928,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -2103,5 +2111,13 @@
          inkscape:connector-curvature="0"
          transform="translate(0,-87.362183)" />
     </g>
+    <path
+       inkscape:label="#path8514"
+       sodipodi:nodetypes="sssssscssscsscsscsssscs"
+       style="opacity:0.2;fill:url(#pattern5982);fill-opacity:1;stroke:#000000;stroke-opacity:1;display:inline"
+       d="m 499.15505,747.58526 c 0,0.99845 -7.53255,1.49767 -9.79231,1.74728 -2.25976,0.24961 -4.07898,5.04757 -7.03038,5.74105 -1.83761,0.43179 -3.93257,-0.23754 -5.52386,-1.24805 -5.07887,-3.22521 -5.02379,-11.80276 -11.04773,-11.98134 -4.32843,-0.12832 -4.52261,5.87381 -8.53688,7.48834 -3.65972,1.47192 -10.37496,-1.24676 -14.29942,-0.81985 0,0 1.99993,-7.90981 -0.2635,-10.66227 -1.90185,-2.31275 -6.64754,-1.0547 -9.54122,-0.24961 -3.81885,1.06248 -3.86182,7.07412 -7.78362,6.48989 -1.88929,-0.28144 -2.39961,-1.22809 -2.48397,-3.1254 -0.10093,-2.27033 1.47963,-7.8575 2.48397,-8.10711 1.00433,-0.24961 6.36189,-5.66107 9.03904,-7.98755 7.16585,-6.2272 12.12211,-14.20133 18.7012,-20.61311 1.60927,-1.56834 3.14318,1.64265 4.3986,2.14187 1.25543,0.49923 6.5282,-1.74727 8.03471,-1.74727 1.50651,0 13.9739,-0.78251 19.50643,2.60678 2.66793,1.63441 4.8488,6.37922 5.09988,7.62727 0.25109,1.24806 5.52386,10.48368 6.02603,11.73174 0.50217,1.24806 9.03906,5.49145 10.54557,6.98911 1.5065,1.49767 3.11608,2.87566 3.01301,4.74261 -0.18371,3.32774 -6.2688,7.81834 -6.2688,7.81834 0,-1.99689 -4.27675,0.41883 -4.27675,1.41728 z"
+       id="path3777"
+       inkscape:connector-curvature="0"
+       transform="translate(0,-87.362183)" />
   </g>
 </svg>
