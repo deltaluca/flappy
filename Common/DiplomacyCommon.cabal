@@ -56,7 +56,8 @@ Library
     Diplomacy.Common.DaideMessage
     Diplomacy.Common.DaideError
     Diplomacy.Common.DaideHandle
-  
+    Diplomacy.Common.TSeq  
+
   -- Packages needed in order to build this package.
   Build-depends:
     base >= 4,
@@ -67,6 +68,7 @@ Library
     mtl,
     network,
     parsec >= 3.0,
+    stm,
     QuickCheck
   
   -- Modules not exported by this package.
