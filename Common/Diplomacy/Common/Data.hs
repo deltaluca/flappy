@@ -25,7 +25,7 @@ import Test.QuickCheck
 
 -- | Numbering fixed in ...
 data Power 
-         = Power Int
+         = Power { powerId :: Int }
          | Neutral
          deriving (Show, Eq)
                       
@@ -34,20 +34,20 @@ data SupplyCentreOwnership
          deriving (Show, Eq)                  
                   
 data Province 
-         = Province Bool ProvinceInter
+         = Province { provinceIsSupply :: Bool, 
+                      provinceO :: Province }
          deriving (Show, Eq)
 
-data ProvinceInter
-         = Inland Int
-         | Sea Int
-         | Coastal Int
-         | BiCoastal Int
+data Province = 
+  ProvinceType { provinceId :: Int }
+            
+data ProvinceType
+         = Inland | Sea | Coastal | BiCoastal
          deriving (Show, Eq)
-
+                  
 data Coast 
-         = Coast Int
+         = Coast { coastId :: Int }
          deriving (Show, Eq)
-
 
 data UnitType 
          = Army
@@ -55,11 +55,7 @@ data UnitType
          deriving (Show, Eq)
 
 data Phase 
-         = Spring
-         | Summer
-         | Fall 
-         | Autumn
-         | Winter
+         = Spring | Summer | Fall | Autumn | Winter
          deriving (Show, Eq)
 
 -- | Static definition of map topology
@@ -106,6 +102,7 @@ data Order = OrderMovement OrderMovement
            | OrderBuild OrderBuild
            deriving (Eq, Show)
 
+-- | Spring term
 data OrderMovement = Hold UnitPosition
                    | Move UnitPosition ProvinceNode
                    | SupportHold UnitPosition UnitPosition
@@ -114,10 +111,12 @@ data OrderMovement = Hold UnitPosition
                    | MoveConvoy UnitPosition ProvinceNode [Province]
                    deriving (Eq, Show)
 
+-- | Summer term
 data OrderRetreat = Retreat UnitPosition ProvinceNode
                   | Disband UnitPosition
                   deriving (Eq, Show)
 
+-- | Winter term
 data OrderBuild = Build UnitPosition
                 | Remove UnitPosition
                 | Waive Power
