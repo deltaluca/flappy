@@ -13,3 +13,5 @@ data Results = ASD
 data DipBot m d h = DipBot { dipBotBrainComm :: BrainCommT d h m ()
                            , dipBotProcessResults :: Results -> h -> h
                            , dipBotInitHistory :: m h }
+
+

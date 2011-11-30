@@ -1,3 +1,11 @@
+{- |
+
+  Defines concepts of the game of diplomacy (see game rules),
+  which all components will use. To be distinguished from
+  messaging syntax (DAIDE etc..)
+
+-} 
+
 module Diplomacy.Common.Data ( Power(..)
                              , SupplyCentreOwnership(..)
                              , SupplyCentreOwnerships
@@ -21,25 +29,21 @@ module Diplomacy.Common.Data ( Power(..)
                              , OrderMovement(..)
                              ) where
 
-import Test.QuickCheck
+import Test.QuickCheck -- Unit testing
+import qualified Data.Map as Map  -- Use for all dictionary types
 
--- | Numbering fixed in ...
+-- | Misc. game entities
+
 data Power 
          = Power { powerId :: Int }
          | Neutral
          deriving (Show, Eq)
-                      
-data SupplyCentreOwnership
-         = SupplyCentre Power [Province]
-         deriving (Show, Eq)                  
-                  
+                                
 data Province 
          = Province { provinceIsSupply :: Bool, 
-                      provinceO :: Province }
+                      provinceType :: ProvinceType,
+                      provinceId :: Int }
          deriving (Show, Eq)
-
-data Province = 
-  ProvinceType { provinceId :: Int }
             
 data ProvinceType
          = Inland | Sea | Coastal | BiCoastal
@@ -54,49 +58,62 @@ data UnitType
          | Fleet
          deriving (Show, Eq)
 
+data Turn = Turn { turnPhase :: Phase
+                 , turnYear :: Int }
+            deriving (Show, Eq)
+
 data Phase 
          = Spring | Summer | Fall | Autumn | Winter
          deriving (Show, Eq)
 
--- | Static definition of map topology
+-- | Map topology definitions
 
 data MapDefinition = MapDefinition { mapDefPowers :: [Power]
-                                   , mapDefProvinces :: Provinces
-                                   , mapDefAdjacencies :: [Adjacency] }
+                                   , mapDefProvinces :: [Province]
+                                   , mapDefAdjacencies :: [Adjacency]
+                                   , mapDefSupplyInit :: [SupplyCOwnership] }
                    deriving (Show, Eq)
 
---for mapdefinition only, [Province] is list of provinces WITHOUT supply centres in them
-data Provinces = Provinces SupplyCentreOwnerships [Province]
-               deriving (Show, Eq)
+type Adjacency = Map.Map Province [UnitToProv]
+
+
+-- | Dynamic game state definitions
+
+data GameState = GameState { gameStateMap :: MapState
+                           , gameStateRound :: Int
+                           , gameStatePhase :: Phase }
+               deriving (Show)
+
+data MapState = MapState { supplyOwnerships :: SupplyCOwnership
+                         , unitPositions :: UnitPositions }
+              deriving (Show, Eq)
+
+type SupplyCOwnership = Map.Map Power [Province]
+
 
 -- | Definition of MapState, used by the MessageParser and 
 -- | AI internals
 
-type SupplyCentreOwnerships = [SupplyCentreOwnership]
+
 
 data UnitPositions = UnitPositions Turn [UnitPosition]
                    | UnitPositionsRet Turn [(UnitPosition, [ProvinceNode])]
                    deriving (Show, Eq)
 
-data MapState = MapState { supplyOwnerships :: SupplyCentreOwnerships
-                         , unitPositions :: UnitPositions }
-              deriving (Show, Eq)
-
-data Adjacency = Adjacency Province [UnitToProv]
-               deriving (Show, Eq)
-
-data Turn = Turn Phase Int
-            deriving (Show, Eq)
-
-data UnitPosition = UnitPosition Power UnitType ProvinceNode
+data UnitPosition = UnitPosition { unitPositionP :: Power
+                                 , unitPositionT :: UnitType
+                                 , unitPositionLoc :: ProvinceNode }
                   deriving (Show, Eq)
 
-data ProvinceNode = ProvNode Province | ProvCoastNode Province Coast
+data ProvinceNode = ProvNode Province 
+                  | ProvCoastNode Province Coast
                   deriving (Show, Eq)
 
 data UnitToProv = UnitToProv UnitType [ProvinceNode]
                 | CoastalFleetToProv Coast [ProvinceNode]
                 deriving (Show, Eq)
+
+-- | Definitions for Orders
 
 data Order = OrderMovement OrderMovement
            | OrderRetreat OrderRetreat
@@ -121,11 +138,11 @@ data OrderRetreat = Retreat UnitPosition ProvinceNode
 data OrderBuild = Build UnitPosition
                 | Remove UnitPosition
                 | Waive Power
-                deriving (Eq, Show)
+                deriving (Eq, Show)De
 
 
 
--- | -------------------------------------------------------------                 
+-- | -------------UNIT TEST DEFS ------------------------------------------                
 
 instance Arbitrary Power where
   arbitrary = frequency [ (1, return Neutral)
