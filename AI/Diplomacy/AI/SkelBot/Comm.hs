@@ -16,41 +16,31 @@ import Control.Monad.Reader
 import Control.Monad.Trans
 import Control.Concurrent.STM
 
-data InMessage = InMessage { inMessageFrom :: Power
-                           , inMessageTo :: [Power]
-                           , inMessageMessage :: PressMessage }
-               deriving (Show)
-
-data OutMessage = OutMessage { outMessageTo :: [Power]
-                             , outMessageMessage :: PressMessage }
-
-type InMessageQueue = TSeq InMessage
-type OutMessageQueue = TSeq OutMessage
-
                        -- (receiver, dispatcher)
-newtype CommT m a = CommT (ReaderT (InMessageQueue, OutMessageQueue) m a)
+newtype CommT i o m a = CommT (ReaderT (TSeq i, TSeq o) m a)
                   deriving (Monad, MonadTrans
-                           , MonadReader (InMessageQueue, OutMessageQueue))
+                           , MonadReader (TSeq i, TSeq o))
 
-instance (MonadIO m) => MonadIO (CommT m) where
+instance (MonadIO m) => MonadIO (CommT i o m) where
   liftIO = lift . liftIO
 
-class MonadComm m where
-  popInMessage :: m InMessage
-  pushOutMessage :: OutMessage -> m ()
+class MonadComm i o m where
+  popMsg :: m i
+  pushMsg :: o -> m ()
 
-runCommT :: (Monad m) => CommT m a -> InMessageQueue -> OutMessageQueue -> m a
+runCommT :: (Monad m) => CommT i o m a -> TSeq i -> TSeq o -> m a
 runCommT (CommT comm) rec dis = runReaderT comm (rec, dis)
-askDispatcher :: (Monad m) => CommT m InMessageQueue
+
+askDispatcher :: (Monad m) => CommT i o m (TSeq i)
 askDispatcher = liftM fst ask
 
-askReceiver :: (Monad m) => CommT m OutMessageQueue
+askReceiver :: (Monad m) => CommT i o m (TSeq o)
 askReceiver = liftM snd ask
 
-instance MonadIO m => MonadComm (CommT m) where
-  popInMessage = do
+instance MonadIO m => MonadComm (CommT m i o) where
+  popMsg = do
     dispatcher <- askDispatcher
     liftIO (atomically (readTSeq dispatcher))
-  pushOutMessage msg = do
+  pushMsg msg = do
     receiver <- askReceiver
     liftIO (atomically (writeTSeq receiver msg))

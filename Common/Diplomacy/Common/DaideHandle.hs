@@ -1,14 +1,16 @@
 {-# LANGUAGE TypeSynonymInstances, MultiParamTypeClasses, FlexibleContexts, GeneralizedNewtypeDeriving #-}
 
 module Diplomacy.Common.DaideHandle(DaideHandleT, DaideHandle,
-                                    DaideCommT, DaideComm,
+                                    DaideAskT, DaideAsk,
+                                    DaideTellT, DaideTell,
                                     DaideHandleInfo(..),
-                                    MonadDaideComm,
-                                    MonadDaideHandle,
+                                    MonadDaideAsk,
+                                    MonadDaideTell,
                                     runDaide,
-                                    askHandle,
-                                    askHandleTimed,
-                                    tellHandle,
+                                    runDaideAsk, runDaideTell,
+                                    askDaide,
+                                    askDaideTimed,
+                                    tellDaide,
                                     note, noteWith,
                                     echoHandle) where
 
@@ -30,8 +32,6 @@ import Network
 -- Daide communication holding client info
 type DaideCommT = ReaderT DaideHandleInfo
 
-type DaideComm = DaideCommT IO
-
 -- DaideHandle is a Daide communication with error handling
 newtype DaideHandleT m a = DaideHandle { runDaideHandle :: ErrorT DaideError (DaideCommT m) a }
                          deriving (Monad, MonadIO, MonadError DaideError, MonadReader DaideHandleInfo)
@@ -41,13 +41,15 @@ instance MonadTrans DaideHandleT where
 
 -- |wrapper to only allow asking
 newtype DaideAskT m a = DaideAsk { runDaideAsk :: DaideHandleT m a }
-                      deriving (MonadTrans, Monad, MonadIO, MonadError DaideError)
+                      deriving (MonadTrans, Monad, MonadIO, MonadError DaideError, MonadReader DaideHandleInfo)
 
 -- |wrapper to only allow telling
 newtype DaideTellT m a = DaideTell { runDaideTell :: DaideHandleT m a }
-                      deriving (MonadTrans, Monad, MonadIO, MonadError DaideError)
+                      deriving (MonadTrans, Monad, MonadIO, MonadError DaideError, MonadReader DaideHandleInfo)
 
 type DaideHandle = DaideHandleT IO
+type DaideAsk = DaideAskT IO
+type DaideTell = DaideTellT IO
 
 data DaideHandleInfo = Handle { socketHandle :: Handle
                               , hostName :: String
@@ -59,36 +61,45 @@ class MonadDaideTell m where
   tellDaide :: DaideMessage -> m ()
 
 class MonadDaideAsk m where
-  askDaide :: m DaideMesage
+  askDaide :: m DaideMessage
   askDaideTimed :: Int -> m DaideMessage
 
-askDaide :: MonadIO m => DaideAskT m DaideMessage
-askDaide = DaideAsk askHandle
+instance (MonadIO m) => MonadDaideTell (DaideTellT m) where
+  tellDaide = DaideTell . DaideHandle . lift . tellDaide
 
-askDaideTimed :: MonadIO m => Int -> DaideAskT m DaideMessage
-askDaideTimed = DaideAsk . askHandleTimed
+instance (MonadIO m) => MonadDaideTell (DaideCommT m) where
+  tellDaide message = do
+    hndle <- asks socketHandle
+    liftIO . L.hPut hndle =<< serialise message
 
-tellDaide :: MonadIO m => DaideMessage -> DaideTellT m ()
-tellDaide = DaideAsk . tellHandle
+instance (MonadIO m) => MonadDaideAsk (DaideAskT m) where
+  askDaide = DaideAsk $ do
+    hndle <- asks socketHandle
+    contents <- liftIO (L.hGetContents hndle)
+    return =<< deserialise contents
 
+  askDaideTimed timedelta = DaideAsk $ do
+    hndle <- asks socketHandle
+    byteString <- liftIO $ L.hGetContents hndle >>= timeout timedelta . evaluate
+    maybe (throwError TimerPopped) deserialise byteString
 
-noteWith :: MonadIO m => (String -> String -> IO ()) -> String -> DaideHandleT m ()
+noteWith :: (MonadIO m, MonadReader DaideHandleInfo m) => (String -> String -> IO ()) -> String -> m ()
 noteWith f msg = do
   name <- asks hostName
   port <- asks hostPort
   time <- liftIO getCurrentTime
   liftIO . f "Main" $ show time ++ " [" ++ name ++ " : " ++ show port ++ "] " ++ msg
 
-note :: String -> DaideHandle ()
+note :: (MonadIO m, MonadReader DaideHandleInfo m) => String -> m ()
 note = noteWith noticeM
 
 runDaide :: DaideHandle a -> DaideHandleInfo -> IO ()
-runDaide (DaideHandle daide) info = runReaderT (runErrorT daide >>= handleError) info
+runDaide daide info = runReaderT (runErrorT (runDaideHandle daide) >>= handleError) info
 
-handleError :: (MonadIO m, MonadDaideComm m) => Either DaideError a -> DaideHandleT m ()
+handleError :: (MonadIO m, MonadDaideTell m, MonadReader DaideHandleInfo m) => Either DaideError a -> m ()
 handleError = flip either (const $ return ()) $ \err -> do
   noteWith errorM $ "An error occured: " ++ (show err)
-  tellHandle (EM err)
+  tellDaide (EM err)
 
 deserialise :: MonadIO m => L.ByteString -> DaideHandleT m DaideMessage
 deserialise byteString = do
@@ -98,23 +109,6 @@ deserialise byteString = do
 
 serialise :: MonadReader DaideHandleInfo m => DaideMessage -> m L.ByteString
 serialise message = return (encode message)
-
-instance (MonadIO m) => MonadDaideTell (DaideHandleT m) where
-  tellHandle message = do
-    hndle <- asks socketHandle
-    liftIO . L.hPut hndle =<< serialise message
-
-askHandle :: MonadIO m => DaideHandleT m DaideMessage
-askHandle = do
-  hndle <- asks socketHandle
-  contents <- liftIO (L.hGetContents hndle)
-  return =<< deserialise contents
-
-askHandleTimed :: MonadIO m => Int -> DaideHandleT m DaideMessage
-askHandleTimed timedelta = do
-  hndle <- asks socketHandle
-  byteString <- liftIO $ L.hGetContents hndle >>= timeout timedelta . evaluate
-  maybe (throwError TimerPopped) deserialise byteString
 
 echoHandle :: MonadIO m => DaideHandleT m ()
 echoHandle = do
