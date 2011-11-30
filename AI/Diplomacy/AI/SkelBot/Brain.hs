@@ -13,6 +13,8 @@ module Diplomacy.AI.SkelBot.Brain ( Brain, BrainT
                                   , runBrainCommT
                                   , runGameKnowledgeT
                                   , decide
+                                  , InMessage
+                                  , OutMessage
                                   , GameKnowledgeT
                                   , MonadGameKnowledge(..)
                                   , MonadBrain(..)) where
@@ -62,7 +64,7 @@ newtype BrainT d h m a = Brain (ReaderT GameState (StateT (Maybe d) (GameKnowled
 
 type DecisionVar d = TVar (Maybe d)
 
-newtype BrainCommT d h m a = BrainComm (ReaderT (DecisionVar d) (CommT (BrainT d h m)) a)
+newtype BrainCommT d h m a = BrainComm (ReaderT (DecisionVar d) (CommT InMessage OutMessage (BrainT d h m)) a)
                            deriving (Monad)
 
 instance Decision d => MonadTrans (BrainT d h) where
@@ -99,6 +101,16 @@ instance (Monad m, Decision d) => MonadBrain d (BrainT d h m) where
   asksGameState = Brain . asks
   getsDecision f = maybe (return Nothing) (return . Just . f) =<< getDecision
   putDecision = Brain . put
+
+  -- |press message types
+data InMessage = InMessage { inMessageFrom :: Power
+                           , inMessageTo :: [Power]
+                           , inMessageMessage :: PressMessage }
+               deriving (Show)
+
+data OutMessage = OutMessage { outMessageTo :: [Power]
+                             , outMessageMessage :: PressMessage }
+
 
 liftGameKnowledge :: (Monad m, Decision d) => GameKnowledgeT h m a -> BrainT d h m a
 liftGameKnowledge = Brain . lift . lift

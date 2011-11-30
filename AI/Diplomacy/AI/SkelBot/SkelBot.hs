@@ -48,25 +48,33 @@ connectToServer server port = do
   hostName <- getHostName
   return (Handle hndle hostName port)
 
+type Master = CommT DaideMessage DaideMessage DaideHandle
+
 communicate :: (Decision d) => DipBot DaideHandle d h -> DaideHandle ()
 communicate bot = do
-  liftIO . noticeM "Main" $ "Connection established, sending initial message"
-  tellHandle (IM (fromIntegral _DAIDE_VERSION))
-  replyMessage <- askHandle
+  note "Connection established, sending initial message"
+  runDaideTell $ tellDaide (IM (fromIntegral _DAIDE_VERSION))
+  replyMessage <- runDaideAsk askDaide
   case replyMessage of
     RM -> return ()
     _ -> throwError RMNotFirst
     
   gameInfo <- initGame
 
-  -- Create messaging queues
-  dispatcherQueue <- liftIO newTSeqIO
-  receiverQueue <- liftIO newTSeqIO
+  -- Create messaging queues that interface with the Brain
+  brainIn <- liftIO (newTSeqIO :: IO (TSeq InMessage))
+  brainOut <- liftIO (newTSeqIO :: IO (TSeq OutMessage))
   
+  -- Create lower level messaging queues that interface with Master
+  masterIn <- liftIO (newTSeqIO :: IO (TSeq InMessage))
+  masterOut <- liftIO (newTSeqIO :: IO (TSeq OutMessage))  
+
   -- Create messaging threads
   hndleInfo <- ask
-  liftIO . forkIO $ runDaide (dispatcher dispatcherQueue) hndleInfo
-  liftIO . forkIO $ runDaide (receiver receiverQueue) hndleInfo
+  liftIO . forkIO $ runDaide (runDaideAsk (receiver masterIn brainIn)) hndleInfo
+  liftIO . forkIO $ runDaide (runDaideTell (dispatcher masterOut brainOut)) hndleInfo
+  
+    -- RESUME HERE (call a :: Master ())
   
   -- create TVar for getting partial move
   decVar <- liftIO $ newTVarIO Nothing
@@ -85,7 +93,7 @@ communicate bot = do
                 (runGameKnowledgeTTimed (gameInfoTimeout gameInfo) gameKnowledge) -- run the brain
                 `mplus` (MaybeT . liftIO . atomically) (readTVar decVar) -- check TVar if timed out
     messages <- (\err -> maybe err (return . diplomise) decision) $ do -- die if no move, diplomise if there is a move
-      liftIO . errorM "Main" $ "Brain timed out with no partial move"
+      lift $ noteWith errorM "Brain timed out with no partial move"
       lift $ throwError WillDieSorry
     undefined -- mapM_ tellHandle messages   -- send the messages
       -- TODO: check negative server response here
@@ -108,15 +116,15 @@ getGameState = undefined
 getMoveResults :: DaideHandle Results
 getMoveResults = undefined
 
-dispatcher :: OutMessageQueue -> DaideHandle ()
+dispatcher :: OutMessageQueue -> DaideTell ()
 dispatcher q = forever $ do
   msg <- liftIO . atomically $ readTSeq q
   undefined
 --  tellHandle (DM (PressMessage msg))
 
-receiver :: InMessageQueue -> DaideHandle ()
+receiver :: InMessageQueue -> DaideAsk ()
 receiver q = forever $ do
-  msg <- askHandle
+  msg <- askDaide
   undefined
   -- atomically (writeTSeq q msg)
 
