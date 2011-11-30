@@ -69,6 +69,7 @@ data MapDefinition = MapDefinition { mapDefPowers :: [Power]
                                    , mapDefAdjacencies :: [Adjacency] }
                    deriving (Show, Eq)
 
+--for mapdefinition only, [Province] is list of provinces WITHOUT supply centres in them
 data Provinces = Provinces SupplyCentreOwnerships [Province]
                deriving (Show, Eq)
 
