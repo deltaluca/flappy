@@ -224,6 +224,7 @@ class TU {
 
 %sco_entry %{ ScoEntry %}
 	: POWER province_list %{ { power : TU.power(%0), locs : %1 }; %}
+	| UNO   province_list %{ { power : null, locs : %1 }; %}
 ;
 
 %sco_entry_list %{ Array<ScoEntry> %}
@@ -305,7 +306,8 @@ class TU {
 ;
 
 %mdf_coast_adjacencies %{ MdfCoastAdjacencies %}
-	: unit_type mdf_province_list %{ { unit : %0, locs : %1 }; %}
+	: unit_type mdf_province_list %{ { unit : %0, coast : null, locs : %1 }; %}
+	| BRA FLT coast KET mdf_province_list %{ { unit : TU.unitType(%1), coast : %2, locs : %4 }; %}
 ;
 
 %mdf_coast_adjacencies_list %{ Array<MdfCoastAdjacencies> %}

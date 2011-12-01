@@ -31,14 +31,22 @@ class Terminal extends Sprite {
 		}
 	}
 	public function log(x:Dynamic) {
-		var split = Std.string(x).split("\n");
+		var xs = Std.string(x);
+		var split = xs.split("\n");
 		if(split.length>1) {
-			for(s in split) log(s);
+			for(s in split)
+				log(s);
+			return;
+		}
+		var cnt = Math.ceil(xs.length/160);
+		if(cnt>1) {
+			for(i in 0...cnt)
+				log(xs.substr(i*160,160));
 			return;
 		}
 		crop();
 		logcnt++;
-		logger.text = logger.text+Std.string(x)+"\n";
+		logger.text = logger.text+xs+"\n";
 	}
 
 	public function new(width:Int,height:Int) {

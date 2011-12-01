@@ -115,7 +115,7 @@ enum NegQuery {
 	negNOT(a:Arrangement);
 }
 
-typedef ScoEntry = { power : Int, locs : Array<Province> };
+typedef ScoEntry = { power : Null<Int>, locs : Array<Province> };
 typedef Turn = { phase : Phase, turn : Int };
 typedef Location = { province : Province, coast : Coast };
 typedef UnitWithLoc = { power : Int, type : UnitType, location : Location };
@@ -124,7 +124,7 @@ typedef Variant = Array<VariantOption>;
 typedef UnitWithLocAndMRT = { unitloc : UnitWithLoc, locs : Array<Location> };
 typedef MdfCentreList = { powers : Array<Int>, locs : Array<Province> }; 
 typedef MdfProvinces = { slocs : Array<MdfCentreList>, locs : Array<Province> };
-typedef MdfCoastAdjacencies = { unit : UnitType, locs : Array<Location> };
+typedef MdfCoastAdjacencies = { unit : UnitType, coast : Coast, locs : Array<Location> };
 typedef MdfProAdjacencies = { pro : Province, coasts : Array<MdfCoastAdjacencies> }; 
 typedef CompOrderResult = { note : OrderNote, result:Result, ret:Bool };
 typedef Explanation = { turn : Turn, reply : ReplyMsg };

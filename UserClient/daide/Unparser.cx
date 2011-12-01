@@ -185,7 +185,8 @@ class Unparser {
 		return [PROVINCE(x.pro)].concat(unmdf_coast_adjacencies_list(x.coasts));
 	}
 	static function unmdf_coast_adjacencies(x:MdfCoastAdjacencies):Array<Token> {
-		return [UNITTYPE(x.unit)].concat(unmdf_province_list(x.locs));
+		var ret:Array<Token> = if(x.coast==null) [UNITTYPE(x.unit)] else [BRA,UNITTYPE(x.unit),COAST(x.coast),KET];
+		return ret.concat(unmdf_province_list(x.locs));
 	}
 	static function unmdf_coast_adjacencies_list(xs:Array<MdfCoastAdjacencies>):Array<Token> {
 		var ret = [];
@@ -265,7 +266,7 @@ class Unparser {
 	}
 
 	static function unsco_entry(x:ScoEntry):Array<Token> {
-		return [POWER(x.power)].concat(unprovince_list(x.locs));
+		return [x.power==null ? UNO : POWER(x.power)].concat(unprovince_list(x.locs));
 	}
 	static function unsco_entry_list(xs:Array<ScoEntry>):Array<Token> {
 		var ret = [];

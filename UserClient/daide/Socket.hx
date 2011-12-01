@@ -110,6 +110,7 @@ class Socket {
 						log(Std.string(message));
 					}catch(e:Dynamic) {
 						log("Failed to parse message D:");
+						log("Remaining tokens: (-1 swallowed) = "+Std.string(tokens));
 						//send a fucking error message to the bloody server
 					}
 				case 3:

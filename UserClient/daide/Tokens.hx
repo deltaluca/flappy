@@ -42,7 +42,7 @@ class TokenUtils {
 	public static function decode(token:Int):Token {
 		var cat = token>>8;
 		var kind = (token&0xff);
-		return switch(cat) {
+		var ret = switch(cat) {
 			case 0x40: [tLeftParen,tRightParen][kind];
 			case 0x41: tPower(kind);
 			case 0x42: tUnitType([utArmy,utFleet][kind]);
@@ -114,6 +114,7 @@ class TokenUtils {
 					tInteger(val);
 				}
 		}
+		return ret;
 	}
 
 	public static function encode(token:Token):Array<Int> {
