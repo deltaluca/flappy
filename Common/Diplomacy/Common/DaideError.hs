@@ -19,7 +19,7 @@ data DaideError = TimerPopped
                 | ManyRMs
                 | RMFromClient
                 | InvalidToken
-                | WillDieSorry
+                | WillDieSorry String
                 deriving (Show, Typeable)
 
 instance Error DaideError
@@ -40,7 +40,7 @@ errorCode RMNotFirst    = 0x0B
 errorCode ManyRMs       = 0x0C
 errorCode RMFromClient  = 0x0D
 errorCode InvalidToken  = 0x0E
-errorCode WillDieSorry  = 0x0F
+errorCode (WillDieSorry _) = 0x0F
 
 errorFromCode :: Int -> DaideError
 errorFromCode 0x01 =   TimerPopped
@@ -57,5 +57,5 @@ errorFromCode 0x0B =    RMNotFirst
 errorFromCode 0x0C =       ManyRMs
 errorFromCode 0x0D =  RMFromClient
 errorFromCode 0x0E =  InvalidToken
-errorFromCode 0x0F =  WillDieSorry
+errorFromCode 0x0F =  WillDieSorry ""
 errorFromCode _    = throw UnknownMsg

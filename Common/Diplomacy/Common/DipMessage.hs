@@ -228,10 +228,10 @@ data DipMessage =
   | DrawGame (Maybe [Power])
 
     -- |send press (CLIENT)
-  | SendPress (Maybe Turn) [Power] PressMessage
+  | SendPress (Maybe Turn) OutMessage
 
     -- |receive press (SERVER)
-  | ReceivePress Power [Power] PressMessage
+  | ReceivePress InMessage
 
     -- |sent if press is to be sent to an eliminated power (SERVER)
   | PowerEliminated Power
@@ -766,7 +766,7 @@ pSnd = level 10 $ do
   mTurn <- pMaybe (paren pTurn)
   powers <- paren (many pPower)
   pMessage <- paren pPressMessage
-  return (SendPress mTurn powers pMessage)
+  return (SendPress mTurn (OutMessage powers pMessage))
 
 pOut :: DipRep s t => DipParser s DipMessage
 pOut = level 10 $ do
@@ -780,7 +780,7 @@ pFrm = level 10 $ do
   fromPower <- paren pPower
   toPowers <- paren (many pPower)
   msg <- paren pPressMessage
-  return (ReceivePress fromPower toPowers msg)
+  return (ReceivePress (InMessage fromPower toPowers msg))
 
 pPressMessage :: DipRep s t => DipParser s PressMessage
 pPressMessage = level 10 (choice [ pPressProposal
@@ -1120,7 +1120,7 @@ uMsg m = case m of
     . uMaybe (uMany (uParen uPower)) mPowers
     )
 
-  SendPress mTurn powers pMessage ->
+  SendPress mTurn (OutMessage powers pMessage) ->
     ( uTok (DipCmd SND)
     . uMaybe (uParen uTurn) mTurn
     . uParen (uMany uPower) powers
@@ -1132,7 +1132,7 @@ uMsg m = case m of
     . uParen uPower power
     )
 
-  ReceivePress fromPower toPowers msg ->
+  ReceivePress (InMessage fromPower toPowers msg) ->
     ( uTok (DipCmd FRM)
     . uParen uPower fromPower
     . uParen (uMany uPower) toPowers

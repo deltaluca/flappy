@@ -26,6 +26,7 @@ module Diplomacy.Common.Data ( Power(..)
                              , OrderMovement(..)
                              , GameState(..)
                              , ProvinceType(..)
+                             , OrderClass(..)
                              ) where
 
 import Test.QuickCheck -- Unit testing
@@ -118,10 +119,20 @@ data UnitToProv = UnitToProv UnitType [ProvinceNode]
 
 -- | Definitions for Orders
 
-data Order = OrderMovement { orderMove :: OrderMovement }
-           | OrderRetreat { orderRetreat :: OrderRetreat }
-           | OrderBuild { orderBuild :: OrderBuild } 
+data Order = OrderMovement OrderMovement
+           | OrderRetreat OrderRetreat
+           | OrderBuild OrderBuild
            deriving (Eq, Show)
+
+-- this is needed so that impementing the three order types is enforced on the type level but SkelBot still has a uniform interface to them
+class OrderClass o where
+  ordify :: o -> Order
+instance OrderClass OrderMovement where
+  ordify = OrderMovement
+instance OrderClass OrderRetreat where
+  ordify = OrderRetreat
+instance OrderClass OrderBuild where
+  ordify = OrderBuild
 
 -- | Spring term
 data OrderMovement = Hold UnitPosition
