@@ -55,6 +55,23 @@ class MapProvince {
 	}
 }
 
+class MapNames {
+	//map province id to name
+	public var names_str:IntHash<String>;
+	//map province name to id
+	public var names_int:Hash<Int>;
+
+	public function new(names:Array<{name:String,id:Int}>) {
+		names_str = new IntHash<String>();
+		names_int = new Hash<Int>();
+
+		for(n in names) {
+			names_str.set(n.id,n.name);
+			names_int.set(n.name,n.id);
+		}
+	}
+}
+
 class Map {
 	public var provinces:Array<MapProvince>;
 	var tree:AABBTree<MapProvince>;
@@ -63,7 +80,7 @@ class Map {
 
 	public var width:Float;
 	public var height:Float;
-
+	
 	public function new(width:Float,height:Float,provinces:Iterable<MapProvince>) {
 		this.width = width;
 		this.height = height;
@@ -113,6 +130,17 @@ class MapReader {
 				throw "unhandled transform type";
 				return null;
 		}
+	}
+
+	//take string correpsonding to map name id pairs
+	public static function names(mapnames:String):MapNames {
+		var names = mapnames.split("\n");
+		var ret = [];
+		for(n in names) {
+			var rs = StringTools.trim(n).split(" ");
+			ret.push({name:rs[0],id:Std.parseInt(rs[rs.length-1])});
+		}
+		return new MapNames(ret);
 	}
 
 	//take a string corresponding to the map file content
