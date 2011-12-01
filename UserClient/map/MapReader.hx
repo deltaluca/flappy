@@ -59,6 +59,8 @@ class Map {
 	public var provinces:Array<MapProvince>;
 	var tree:AABBTree<MapProvince>;
 
+	public var supplies:Hash<Point>;
+
 	public var width:Float;
 	public var height:Float;
 
@@ -68,7 +70,17 @@ class Map {
 
 		tree = new AABBTree<MapProvince>();
 		this.provinces = new Array<MapProvince>();
+
+		supplies = new Hash<Point>();
+
 		for(p in provinces) {
+			//check for supply centre locations!!
+			if(p.id.substr(0,3)=="SC ") {
+				var bounds = p.bounds();
+				supplies.set(p.id.substr(3), new Point(bounds.minx+bounds.width()/2,bounds.miny+bounds.height()/2));
+				continue;
+			}			
+
 			this.provinces.push(p);
 
 			var node = new AABBNode<MapProvince>(p);

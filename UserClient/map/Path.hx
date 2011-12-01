@@ -164,8 +164,10 @@ class PathUtils {
 					else if(pos && td<0) td += Math.PI*2;
 
 					//omg cba to use threshold
-					for(i in 0...6) {
-						var t = t1+td/6*i;
+					//approximate a 'good enough' value from radii
+					var cnt = Std.int(Math.PI*(rx+ry)/6/threshold);
+					for(i in 0...cnt) {
+						var t = t1+td/cnt*i;
 						var cos = Math.cos(t); var sin = Math.sin(t);
 						ret.push(new Point(pc*rx*cos - ps*ry*sin + cx,
 										   pc*ry*sin + ps*rx*cos + cy));
