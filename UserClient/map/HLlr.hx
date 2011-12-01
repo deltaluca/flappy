@@ -19,6 +19,7 @@ package map;
 		vpCubicTo(rel:Bool, x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float);
 		vpSmoothQTo(rel:Bool, x:Float,y:Float);
 		vpSmoothTo(rel:Bool, x:Float,y:Float, cx2:Float,cy2:Float);
+		vpArcTo(rel:Bool, rx:Float,ry:Float,xrot:Float,large:Bool,pos:Bool,x:Float,y:Float);
 		vpClose;
 	}
 
@@ -44,17 +45,17 @@ class HLlr {
 		if(actions!=null) return;
 		actions = new Array<Array<ActionRule>>();
 		var ret = [];
-		ret.push(new ActionRule(2,aS(32)));
-		ret.push(new ActionRule(12,aG(1)));
-		ret.push(new ActionRule(13,aG(3),true,14));
-		ret.push(new ActionRule(24,aG(6)));
+		ret.push(new ActionRule(2,aS(35)));
+		ret.push(new ActionRule(13,aG(1)));
+		ret.push(new ActionRule(14,aG(3),true,15));
+		ret.push(new ActionRule(26,aG(6)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aA));
-		ret.push(new ActionRule(2,aS(32)));
-		ret.push(new ActionRule(13,aG(2)));
-		ret.push(new ActionRule(14,aG(4)));
-		ret.push(new ActionRule(24,aG(6)));
+		ret.push(new ActionRule(2,aS(35)));
+		ret.push(new ActionRule(14,aG(2)));
+		ret.push(new ActionRule(15,aG(4)));
+		ret.push(new ActionRule(26,aG(6)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aR(1)));
@@ -68,344 +69,447 @@ class HLlr {
 		ret.push(new ActionRule(0,aR(2)));
 		ret.push(new ActionRule(2,aR(2)));
 		ret.push(new ActionRule(3,aS(10)));
-		ret.push(new ActionRule(4,aS(37)));
-		ret.push(new ActionRule(5,aS(41)));
-		ret.push(new ActionRule(6,aS(38)));
-		ret.push(new ActionRule(7,aS(42)));
-		ret.push(new ActionRule(8,aS(55)));
-		ret.push(new ActionRule(9,aS(64),true,10));
-		ret.push(new ActionRule(15,aG(5)));
-		ret.push(new ActionRule(16,aG(9)));
-		ret.push(new ActionRule(17,aG(11),true,23));
-		ret.push(new ActionRule(26,aG(18)));
-		ret.push(new ActionRule(27,aG(20)));
-		ret.push(new ActionRule(29,aG(22)));
-		ret.push(new ActionRule(30,aG(24)));
-		ret.push(new ActionRule(32,aG(26)));
-		ret.push(new ActionRule(34,aG(28)));
-		ret.push(new ActionRule(35,aG(30)));
+		ret.push(new ActionRule(4,aS(40)));
+		ret.push(new ActionRule(5,aS(44)));
+		ret.push(new ActionRule(6,aS(41)));
+		ret.push(new ActionRule(7,aS(45)));
+		ret.push(new ActionRule(8,aS(58)));
+		ret.push(new ActionRule(9,aS(67),true,10));
+		ret.push(new ActionRule(12,aS(69)));
+		ret.push(new ActionRule(16,aG(5)));
+		ret.push(new ActionRule(17,aG(9)));
+		ret.push(new ActionRule(18,aG(11),true,25));
+		ret.push(new ActionRule(28,aG(19)));
+		ret.push(new ActionRule(29,aG(21)));
+		ret.push(new ActionRule(31,aG(23)));
+		ret.push(new ActionRule(32,aG(25)));
+		ret.push(new ActionRule(34,aG(27)));
+		ret.push(new ActionRule(36,aG(29)));
+		ret.push(new ActionRule(37,aG(31)));
+		ret.push(new ActionRule(38,aG(33)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aR(3)));
 		ret.push(new ActionRule(2,aR(3)));
 		ret.push(new ActionRule(3,aS(10)));
-		ret.push(new ActionRule(4,aS(37)));
-		ret.push(new ActionRule(5,aS(41)));
-		ret.push(new ActionRule(6,aS(38)));
-		ret.push(new ActionRule(7,aS(42)));
-		ret.push(new ActionRule(8,aS(55)));
-		ret.push(new ActionRule(9,aS(64),true,10));
-		ret.push(new ActionRule(16,aG(8)));
-		ret.push(new ActionRule(17,aG(11),true,23));
-		ret.push(new ActionRule(26,aG(18)));
-		ret.push(new ActionRule(27,aG(20)));
-		ret.push(new ActionRule(29,aG(22)));
-		ret.push(new ActionRule(30,aG(24)));
-		ret.push(new ActionRule(32,aG(26)));
-		ret.push(new ActionRule(34,aG(28)));
-		ret.push(new ActionRule(35,aG(30)));
+		ret.push(new ActionRule(4,aS(40)));
+		ret.push(new ActionRule(5,aS(44)));
+		ret.push(new ActionRule(6,aS(41)));
+		ret.push(new ActionRule(7,aS(45)));
+		ret.push(new ActionRule(8,aS(58)));
+		ret.push(new ActionRule(9,aS(67),true,10));
+		ret.push(new ActionRule(12,aS(69)));
+		ret.push(new ActionRule(17,aG(8)));
+		ret.push(new ActionRule(18,aG(11),true,25));
+		ret.push(new ActionRule(28,aG(19)));
+		ret.push(new ActionRule(29,aG(21)));
+		ret.push(new ActionRule(31,aG(23)));
+		ret.push(new ActionRule(32,aG(25)));
+		ret.push(new ActionRule(34,aG(27)));
+		ret.push(new ActionRule(36,aG(29)));
+		ret.push(new ActionRule(37,aG(31)));
+		ret.push(new ActionRule(38,aG(33)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(25,aG(7)));
-		ret.push(new ActionRule(36,aG(35)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(14)));
-		ret.push(new ActionRule(2,aR(14),10));
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(33)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(5)));
-		ret.push(new ActionRule(2,aR(5),10));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(4)));
-		ret.push(new ActionRule(2,aR(4),10));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(6)));
-		ret.push(new ActionRule(2,aR(6),10));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(7)));
-		ret.push(new ActionRule(2,aR(7),10));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(8)));
-		ret.push(new ActionRule(2,aR(8),10));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(9)));
-		ret.push(new ActionRule(2,aR(9),10));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(10)));
-		ret.push(new ActionRule(2,aR(10),10));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(11)));
-		ret.push(new ActionRule(2,aR(11),10));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(12)));
-		ret.push(new ActionRule(2,aR(12),10));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(13)));
-		ret.push(new ActionRule(2,aR(13),10));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(25,aG(19)));
-		ret.push(new ActionRule(36,aG(35)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(27,aG(7)));
+		ret.push(new ActionRule(40,aG(38)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aR(15)));
 		ret.push(new ActionRule(2,aR(15),10));
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(33)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(12,aR(15)));
+		ret.push(new ActionRule(40,aG(36)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(28,aG(21)));
-		ret.push(new ActionRule(36,aG(40)));
+		ret.push(new ActionRule(0,aR(5)));
+		ret.push(new ActionRule(2,aR(5),10));
+		ret.push(new ActionRule(12,aR(5)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(4)));
+		ret.push(new ActionRule(2,aR(4),10));
+		ret.push(new ActionRule(12,aR(4)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(6)));
+		ret.push(new ActionRule(2,aR(6),10));
+		ret.push(new ActionRule(12,aR(6)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(7)));
+		ret.push(new ActionRule(2,aR(7),10));
+		ret.push(new ActionRule(12,aR(7)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(8)));
+		ret.push(new ActionRule(2,aR(8),10));
+		ret.push(new ActionRule(12,aR(8)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(9)));
+		ret.push(new ActionRule(2,aR(9),10));
+		ret.push(new ActionRule(12,aR(9)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(10)));
+		ret.push(new ActionRule(2,aR(10),10));
+		ret.push(new ActionRule(12,aR(10)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(11)));
+		ret.push(new ActionRule(2,aR(11),10));
+		ret.push(new ActionRule(12,aR(11)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(12)));
+		ret.push(new ActionRule(2,aR(12),10));
+		ret.push(new ActionRule(12,aR(12)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(13)));
+		ret.push(new ActionRule(2,aR(13),10));
+		ret.push(new ActionRule(12,aR(13)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(14)));
+		ret.push(new ActionRule(2,aR(14),10));
+		ret.push(new ActionRule(12,aR(14)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(27,aG(20)));
+		ret.push(new ActionRule(40,aG(38)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aR(16)));
 		ret.push(new ActionRule(2,aR(16),10));
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(39)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(12,aR(16)));
+		ret.push(new ActionRule(40,aG(36)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(28,aG(23)));
-		ret.push(new ActionRule(36,aG(40)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(30,aG(22)));
+		ret.push(new ActionRule(40,aG(43)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aR(17)));
 		ret.push(new ActionRule(2,aR(17),10));
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(39)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(12,aR(17)));
+		ret.push(new ActionRule(40,aG(42)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(31,aG(25)));
-		ret.push(new ActionRule(36,aG(49)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(30,aG(24)));
+		ret.push(new ActionRule(40,aG(43)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aR(18)));
 		ret.push(new ActionRule(2,aR(18),10));
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(43)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(12,aR(18)));
+		ret.push(new ActionRule(40,aG(42)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(33,aG(27)));
-		ret.push(new ActionRule(36,aG(60)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(33,aG(26)));
+		ret.push(new ActionRule(40,aG(52)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aR(19)));
 		ret.push(new ActionRule(2,aR(19),10));
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(56)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(12,aR(19)));
+		ret.push(new ActionRule(40,aG(46)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(33,aG(29)));
-		ret.push(new ActionRule(36,aG(60)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(35,aG(28)));
+		ret.push(new ActionRule(40,aG(63)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aR(20)));
 		ret.push(new ActionRule(2,aR(20),10));
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(56)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(12,aR(20)));
+		ret.push(new ActionRule(40,aG(59)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(25,aG(31)));
-		ret.push(new ActionRule(36,aG(35)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(35,aG(30)));
+		ret.push(new ActionRule(40,aG(63)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aR(21)));
 		ret.push(new ActionRule(2,aR(21),10));
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(33)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(12,aR(21)));
+		ret.push(new ActionRule(40,aG(59)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aR(31)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(34)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(23)));
-		ret.push(new ActionRule(2,aR(23),11));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(36)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(27,aG(32)));
+		ret.push(new ActionRule(40,aG(38)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(0,aR(22)));
-		ret.push(new ActionRule(2,aR(22),11));
+		ret.push(new ActionRule(2,aR(22),10));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(12,aR(22)));
+		ret.push(new ActionRule(40,aG(36)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aR(32)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(39,aG(34)));
+		ret.push(new ActionRule(40,aG(77)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aR(33)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(29)));
-		ret.push(new ActionRule(2,aR(29),11));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(28)));
-		ret.push(new ActionRule(2,aR(28),11));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aR(34)));
+		ret.push(new ActionRule(0,aR(23)));
+		ret.push(new ActionRule(2,aR(23),10));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(12,aR(23)));
+		ret.push(new ActionRule(40,aG(70)));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aR(35)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(44)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(37)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(45)));
+		ret.push(new ActionRule(0,aR(25)));
+		ret.push(new ActionRule(2,aR(25),12));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(46)));
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(39)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(47)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(48)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(27)));
-		ret.push(new ActionRule(2,aR(27),11));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(50)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(51)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(52)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(53)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(54)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(26)));
-		ret.push(new ActionRule(2,aR(26),11));
+		ret.push(new ActionRule(0,aR(24)));
+		ret.push(new ActionRule(2,aR(24),12));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aR(36)));
 		actions.push(ret);
 		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(57)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(58)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(59)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(25)));
-		ret.push(new ActionRule(2,aR(25),11));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(61)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(62)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(11,aS(66)));
-		ret.push(new ActionRule(36,aG(63)));
-		actions.push(ret);
-		var ret = [];
-		ret.push(new ActionRule(0,aR(24)));
-		ret.push(new ActionRule(2,aR(24),11));
-		actions.push(ret);
-		var ret = [];
 		ret.push(new ActionRule(11,aR(37)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(33)));
+		ret.push(new ActionRule(2,aR(33),12));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(32)));
+		ret.push(new ActionRule(2,aR(32),12));
 		actions.push(ret);
 		var ret = [];
 		ret.push(new ActionRule(11,aR(38)));
 		actions.push(ret);
 		var ret = [];
+		ret.push(new ActionRule(11,aR(39)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(47)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(48)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(49)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(50)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(51)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(29)));
+		ret.push(new ActionRule(2,aR(29),12));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(53)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(54)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(55)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(56)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(57)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(28)));
+		ret.push(new ActionRule(2,aR(28),12));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aR(40)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(60)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(61)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(62)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(27)));
+		ret.push(new ActionRule(2,aR(27),12));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(64)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(65)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(66)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(26)));
+		ret.push(new ActionRule(2,aR(26),12));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aR(41)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aR(42)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aR(43)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(71)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(72)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(73)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(74)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(75)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(76)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(31)));
+		ret.push(new ActionRule(2,aR(31),12));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(78)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(79)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(80)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(81)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(82)));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(11,aS(84)));
+		ret.push(new ActionRule(40,aG(83)));
+		actions.push(ret);
+		var ret = [];
 		ret.push(new ActionRule(0,aR(30)));
-		ret.push(new ActionRule(2,aR(30),11));
+		ret.push(new ActionRule(2,aR(30),12));
+		actions.push(ret);
+		var ret = [];
+		ret.push(new ActionRule(0,aR(34)));
+		ret.push(new ActionRule(2,aR(34),12));
 		actions.push(ret);
 
 		rules = new Array<{cb:Array<Dynamic>->Void,sym:Int,cnt:Int}>();
-		rules.push({cb:R0, sym:12, cnt:1});
-		rules.push({cb:R1, sym:12, cnt:2});
-		rules.push({cb:R2, sym:13, cnt:1});
-		rules.push({cb:R3, sym:13, cnt:2});
-		rules.push({cb:R4, sym:15, cnt:1});
-		rules.push({cb:R5, sym:15, cnt:2});
-		rules.push({cb:R6, sym:16, cnt:1});
-		rules.push({cb:R7, sym:16, cnt:1});
-		rules.push({cb:R8, sym:16, cnt:1});
-		rules.push({cb:R9, sym:16, cnt:1});
-		rules.push({cb:R10, sym:16, cnt:1});
-		rules.push({cb:R11, sym:16, cnt:1});
-		rules.push({cb:R12, sym:16, cnt:1});
-		rules.push({cb:R13, sym:16, cnt:1});
-		rules.push({cb:R14, sym:14, cnt:2});
-		rules.push({cb:R15, sym:17, cnt:2});
+		rules.push({cb:R0, sym:13, cnt:1});
+		rules.push({cb:R1, sym:13, cnt:2});
+		rules.push({cb:R2, sym:14, cnt:1});
+		rules.push({cb:R3, sym:14, cnt:2});
+		rules.push({cb:R4, sym:16, cnt:1});
+		rules.push({cb:R5, sym:16, cnt:2});
+		rules.push({cb:R6, sym:17, cnt:1});
+		rules.push({cb:R7, sym:17, cnt:1});
+		rules.push({cb:R8, sym:17, cnt:1});
+		rules.push({cb:R9, sym:17, cnt:1});
+		rules.push({cb:R10, sym:17, cnt:1});
+		rules.push({cb:R11, sym:17, cnt:1});
+		rules.push({cb:R12, sym:17, cnt:1});
+		rules.push({cb:R13, sym:17, cnt:1});
+		rules.push({cb:R14, sym:17, cnt:1});
+		rules.push({cb:R15, sym:15, cnt:2});
 		rules.push({cb:R16, sym:18, cnt:2});
 		rules.push({cb:R17, sym:19, cnt:2});
 		rules.push({cb:R18, sym:20, cnt:2});
 		rules.push({cb:R19, sym:21, cnt:2});
 		rules.push({cb:R20, sym:22, cnt:2});
 		rules.push({cb:R21, sym:23, cnt:2});
-		rules.push({cb:R22, sym:25, cnt:2});
-		rules.push({cb:R23, sym:25, cnt:3});
-		rules.push({cb:R24, sym:33, cnt:4});
-		rules.push({cb:R25, sym:33, cnt:5});
-		rules.push({cb:R26, sym:31, cnt:6});
-		rules.push({cb:R27, sym:31, cnt:7});
-		rules.push({cb:R28, sym:28, cnt:1});
-		rules.push({cb:R29, sym:28, cnt:2});
-		rules.push({cb:R30, sym:36, cnt:1});
-		rules.push({cb:R31, sym:24, cnt:1});
-		rules.push({cb:R32, sym:26, cnt:1});
-		rules.push({cb:R33, sym:27, cnt:1});
-		rules.push({cb:R34, sym:29, cnt:1});
-		rules.push({cb:R35, sym:30, cnt:1});
-		rules.push({cb:R36, sym:32, cnt:1});
-		rules.push({cb:R37, sym:34, cnt:1});
-		rules.push({cb:R38, sym:35, cnt:1});
+		rules.push({cb:R22, sym:24, cnt:2});
+		rules.push({cb:R23, sym:25, cnt:2});
+		rules.push({cb:R24, sym:27, cnt:2});
+		rules.push({cb:R25, sym:27, cnt:3});
+		rules.push({cb:R26, sym:35, cnt:4});
+		rules.push({cb:R27, sym:35, cnt:5});
+		rules.push({cb:R28, sym:33, cnt:6});
+		rules.push({cb:R29, sym:33, cnt:7});
+		rules.push({cb:R30, sym:39, cnt:7});
+		rules.push({cb:R31, sym:39, cnt:8});
+		rules.push({cb:R32, sym:30, cnt:1});
+		rules.push({cb:R33, sym:30, cnt:2});
+		rules.push({cb:R34, sym:40, cnt:1});
+		rules.push({cb:R35, sym:26, cnt:1});
+		rules.push({cb:R36, sym:28, cnt:1});
+		rules.push({cb:R37, sym:29, cnt:1});
+		rules.push({cb:R38, sym:31, cnt:1});
+		rules.push({cb:R39, sym:32, cnt:1});
+		rules.push({cb:R40, sym:34, cnt:1});
+		rules.push({cb:R41, sym:36, cnt:1});
+		rules.push({cb:R42, sym:37, cnt:1});
+		rules.push({cb:R43, sym:38, cnt:1});
 	}
 	static function getaction(cstate:Int,ind:Int) {
 		var acts = actions[cstate];
@@ -532,6 +636,10 @@ var hllr__0:PathToken = ret.pop();
 		// --> keep on stack <-- ret.pop();
 	}
 	private static inline function R14(ret:Array<Dynamic>) {
+		//default action. (do nothing in particular)
+		// --> keep on stack <-- ret.pop();
+	}
+	private static inline function R15(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -544,7 +652,7 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R15(ret:Array<Dynamic>) {
+	private static inline function R16(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -555,7 +663,7 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R16(ret:Array<Dynamic>) {
+	private static inline function R17(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<Float>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -566,7 +674,7 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R17(ret:Array<Dynamic>) {
+	private static inline function R18(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<Float>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -577,7 +685,7 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R18(ret:Array<Dynamic>) {
+	private static inline function R19(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -588,7 +696,7 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R19(ret:Array<Dynamic>) {
+	private static inline function R20(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float,cx:Float,cy:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -599,7 +707,7 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R20(ret:Array<Dynamic>) {
+	private static inline function R21(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float,cx:Float,cy:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -610,7 +718,7 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R21(ret:Array<Dynamic>) {
+	private static inline function R22(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Array<{x:Float,y:Float}>  = ret.pop();
 var hllr__0: Bool  = ret.pop();
@@ -621,14 +729,25 @@ var hllr__0: Bool  = ret.pop();
 	});
 		ret.push(retret);
 	}
-	private static inline function R22(ret:Array<Dynamic>) {
+	private static inline function R23(ret:Array<Dynamic>) {
+		//assign arguments.
+var hllr__1: Array<{rx:Float,ry:Float,xrot:Float,large:Bool,pos:Bool,x:Float,y:Float}>  = ret.pop();
+var hllr__0: Bool  = ret.pop();
+		var retret: VerbosePath  = ({
+		var ret = [];
+		for(c in hllr__1) ret.push(vpArcTo(hllr__0, c.rx,c.ry,c.xrot,c.large,c.pos,c.x,c.y));
+		ret;
+	});
+		ret.push(retret);
+	}
+	private static inline function R24(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Float  = ret.pop();
 var hllr__0: Float  = ret.pop();
 		var retret: Array<{x:Float,y:Float}>  = ({ [{x:hllr__0,y:hllr__1}]; });
 		ret.push(retret);
 	}
-	private static inline function R23(ret:Array<Dynamic>) {
+	private static inline function R25(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__2: Float  = ret.pop();
 var hllr__1: Float  = ret.pop();
@@ -636,7 +755,7 @@ var hllr__0: Array<{x:Float,y:Float}>  = ret.pop();
 		var retret: Array<{x:Float,y:Float}>  = ({ hllr__0.push({x:hllr__1,y:hllr__2}); hllr__0; });
 		ret.push(retret);
 	}
-	private static inline function R24(ret:Array<Dynamic>) {
+	private static inline function R26(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__3: Float  = ret.pop();
 var hllr__2: Float  = ret.pop();
@@ -645,7 +764,7 @@ var hllr__0: Float  = ret.pop();
 		var retret: Array<{x:Float,y:Float,cx:Float,cy:Float}>  = ({ [{cx:hllr__0,cy:hllr__1,x:hllr__2,y:hllr__3}]; });
 		ret.push(retret);
 	}
-	private static inline function R25(ret:Array<Dynamic>) {
+	private static inline function R27(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__4: Float  = ret.pop();
 var hllr__3: Float  = ret.pop();
@@ -655,7 +774,7 @@ var hllr__0: Array<{x:Float,y:Float,cx:Float,cy:Float}>  = ret.pop();
 		var retret: Array<{x:Float,y:Float,cx:Float,cy:Float}>  = ({ hllr__0.push({cx:hllr__1,cy:hllr__2,x:hllr__3,y:hllr__4}); hllr__0; });
 		ret.push(retret);
 	}
-	private static inline function R26(ret:Array<Dynamic>) {
+	private static inline function R28(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__5: Float  = ret.pop();
 var hllr__4: Float  = ret.pop();
@@ -666,7 +785,7 @@ var hllr__0: Float  = ret.pop();
 		var retret: Array<{x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float}>  = ({ [{cx1:hllr__0,cy1:hllr__1,cx2:hllr__2,cy2:hllr__3,x:hllr__4,y:hllr__5}]; });
 		ret.push(retret);
 	}
-	private static inline function R27(ret:Array<Dynamic>) {
+	private static inline function R29(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__6: Float  = ret.pop();
 var hllr__5: Float  = ret.pop();
@@ -678,71 +797,102 @@ var hllr__0: Array<{x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float}>  =
 		var retret: Array<{x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float}>  = ({ hllr__0.push({cx1:hllr__1,cy1:hllr__2,cx2:hllr__3,cy2:hllr__4,x:hllr__5,y:hllr__6}); hllr__0; });
 		ret.push(retret);
 	}
-	private static inline function R28(ret:Array<Dynamic>) {
+	private static inline function R30(ret:Array<Dynamic>) {
+		//assign arguments.
+var hllr__6: Float  = ret.pop();
+var hllr__5: Float  = ret.pop();
+var hllr__4: Float  = ret.pop();
+var hllr__3: Float  = ret.pop();
+var hllr__2: Float  = ret.pop();
+var hllr__1: Float  = ret.pop();
+var hllr__0: Float  = ret.pop();
+		var retret: Array<{rx:Float,ry:Float,xrot:Float,large:Bool,pos:Bool,x:Float,y:Float}>  = ({ [{rx:hllr__0,ry:hllr__1,xrot:hllr__2,large:hllr__3==0,pos:hllr__4==0,x:hllr__5,y:hllr__6}]; });
+		ret.push(retret);
+	}
+	private static inline function R31(ret:Array<Dynamic>) {
+		//assign arguments.
+var hllr__7: Float  = ret.pop();
+var hllr__6: Float  = ret.pop();
+var hllr__5: Float  = ret.pop();
+var hllr__4: Float  = ret.pop();
+var hllr__3: Float  = ret.pop();
+var hllr__2: Float  = ret.pop();
+var hllr__1: Float  = ret.pop();
+var hllr__0: Array<{rx:Float,ry:Float,xrot:Float,large:Bool,pos:Bool,x:Float,y:Float}>  = ret.pop();
+		var retret: Array<{rx:Float,ry:Float,xrot:Float,large:Bool,pos:Bool,x:Float,y:Float}>  = ({ hllr__0.push({rx:hllr__1,ry:hllr__2,xrot:hllr__3,large:hllr__4==0,pos:hllr__5==0,x:hllr__6,y:hllr__7}); hllr__0; });
+		ret.push(retret);
+	}
+	private static inline function R32(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0: Float  = ret.pop();
 		var retret: Array<Float>  = ({ [hllr__0]; });
 		ret.push(retret);
 	}
-	private static inline function R29(ret:Array<Dynamic>) {
+	private static inline function R33(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__1: Float  = ret.pop();
 var hllr__0: Array<Float>  = ret.pop();
 		var retret: Array<Float>  = ({ hllr__0.push(hllr__1); hllr__0; });
 		ret.push(retret);
 	}
-	private static inline function R30(ret:Array<Dynamic>) {
+	private static inline function R34(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Float  = ({ Match.match(hllr__0,ptNum(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R31(ret:Array<Dynamic>) {
+	private static inline function R35(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptMove(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R32(ret:Array<Dynamic>) {
+	private static inline function R36(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptLine(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R33(ret:Array<Dynamic>) {
+	private static inline function R37(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptHorz(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R34(ret:Array<Dynamic>) {
+	private static inline function R38(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptVert(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R35(ret:Array<Dynamic>) {
+	private static inline function R39(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptCubic(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R36(ret:Array<Dynamic>) {
+	private static inline function R40(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptSmooth(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R37(ret:Array<Dynamic>) {
+	private static inline function R41(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptQuad(x)=x); });
 		ret.push(retret);
 	}
-	private static inline function R38(ret:Array<Dynamic>) {
+	private static inline function R42(ret:Array<Dynamic>) {
 		//assign arguments.
 var hllr__0:PathToken = ret.pop();
 		var retret: Bool  = ({ Match.match(hllr__0,ptSmoothQ(x)=x); });
+		ret.push(retret);
+	}
+	private static inline function R43(ret:Array<Dynamic>) {
+		//assign arguments.
+var hllr__0:PathToken = ret.pop();
+		var retret: Bool  = ({ Match.match(hllr__0,ptArc(x)=x); });
 		ret.push(retret);
 	}
 }

@@ -18,6 +18,7 @@ enum PathCommand {
 	pLineTo(x:Float,y:Float);
 	pCurveTo(x:Float,y:Float,cx:Float,cy:Float);
 	pCubicTo(x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float);
+	pArcTo(rx:Float,ry:Float,xrot:Float,large:Bool,pos:Bool,x:Float,y:Float);
 }
 
 typedef Polygon = Array<Point>;
@@ -74,6 +75,10 @@ class PathUtils {
 					var rx2 = relx(r,cx2);
 					var ry2 = rely(r,cy2);
 					ret.push(pCubicTo(tx = relx(r,x), ty = rely(r,y), rx1, ry1, px = rx2, py = ry2));
+				case vpArcTo(r, rx,ry,xrot,large,pos,x,y):
+					var x2 = relx(r, x);
+					var y2 = rely(r, y);
+					ret.push(pArcTo(rx,ry,xrot,large,pos,tx = x2,ty = y2)); 
 				case vpClose:
 					ret.push(pLineTo(tx=sx,ty=sy));
 			}
@@ -85,6 +90,10 @@ class PathUtils {
 				return new Point(x*xform.a+y*xform.b+xform.tx,
 								 x*xform.c+y*xform.d+xform.ty);
 			}
+			function xf_scale(x:Float,y:Float):Point {
+				return new Point(x*xform.a+y*xform.b,
+								 x*xform.c+y*xform.d);
+			}
 
 			for(ret in rets) {
 				var rl = ret.length;
@@ -93,7 +102,18 @@ class PathUtils {
 						pMoveTo(x,y) = { var xy = xf(x,y); pMoveTo(xy.x,xy.y); },
 						pLineTo(x,y) = { var xy = xf(x,y); pLineTo(xy.x,xy.y); },
 						pCurveTo(x,y,cx,cy) = { var xy = xf(x,y); var cy = xf(cx,cy); pCurveTo(xy.x,xy.y,cy.x,cy.y); },
-						pCubicTo(x,y,cx1,cy1,cx2,cy2) = { var xy = xf(x,y); var cy1 = xf(cx1,cy1); var cy2 = xf(cx2,cy2); pCubicTo(xy.x,xy.y,cy1.x,cy1.y,cy2.x,cy2.y); }
+						pCubicTo(x,y,cx1,cy1,cx2,cy2) = {
+							var xy = xf(x,y);
+							var cy1 = xf(cx1,cy1);
+							var cy2 = xf(cx2,cy2);
+							pCubicTo(xy.x,xy.y,cy1.x,cy1.y,cy2.x,cy2.y);
+						},
+						pArcTo(rx,ry,xrot,large,pos,x,y) = {
+							var r2 = xf_scale(rx,ry);
+							var xy = xf(x,y);
+							var xr2 = xf_scale(Math.cos(xrot),Math.sin(xrot));
+							pArcTo(r2.x,r2.y,Math.atan2(xr2.y,xr2.x),large,pos,xy.x,xy.y);
+						}
 					);
 				}
 			}
@@ -118,6 +138,40 @@ class PathUtils {
 				//cubic curve flattens more effeciently in terms of segment counts.
 				case pCurveTo(x,y,cx,cy): cubicpolygon(ret,tx,ty, (2*cx+tx)/3,(2*cy+ty)/3, (2*cx+x)/3,(2*cy+y)/3 ,x,y, threshold); tx = x; ty = y;
 				case pCubicTo(x,y,cx1,cy1,cx2,cy2): cubicpolygon(ret,tx,ty,cx1,cy1,cx2,cy2,x,y, threshold); tx = x; ty = y;
+				case pArcTo(rx,ry,xrot,large,pos,x,y):
+					var pc = Math.cos(xrot); var ps = Math.sin(xrot);
+					var x1p = (pc*(tx - x) + ps*(ty - y))/2;
+					var y1p = (pc*(ty - y) - ps*(tx - x))/2;
+
+					var rxy = rx*rx*y1p*y1p+ ry*ry*x1p*x1p;
+					var bigsurd = Math.sqrt((rx*rx*ry*ry - rxy)/rxy); if(large==pos) bigsurd = -bigsurd;
+					var cxp =  bigsurd*rx*y1p/ry;
+					var cyp = -bigsurd*ry*x1p/rx;
+
+					var cx = pc*cxp - ps*cyp + (tx+x)/2;
+					var cy = pc*cyp + ps*cxp + (ty+y)/2;
+
+					function angle(ux:Float,uy:Float,vx:Float,vy:Float) {
+						var cross = ux*vy-uy*vx;
+						var ang = Math.acos((ux*vx+uy*vy)/Math.sqrt((ux*ux+uy*uy)*(vx*vx+vy*vy)));
+						if(cross<0) ang = -ang;
+						return ang;
+					}
+
+					var t1 = angle(1.0,0.0,(x1p-cxp)/rx,(y1p-cyp)/ry);
+					var td = angle((x1p-cxp)/rx,(y1p-cyp)/ry,(-x1p-cxp)/rx,(-y1p-cyp)/ry);
+					if(!pos && td>0) td -= Math.PI*2;
+					else if(pos && td<0) td += Math.PI*2;
+
+					//omg cba to use threshold
+					for(i in 0...6) {
+						var t = t1+td/6*i;
+						var cos = Math.cos(t); var sin = Math.sin(t);
+						ret.push(new Point(pc*rx*cos - ps*ry*sin + cx,
+										   pc*ry*sin + ps*rx*cos + cy));
+					}
+					ret.push(new Point(x,y));
+					tx = x; ty = y;
 			}
 		}
 

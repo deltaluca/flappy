@@ -1,5 +1,6 @@
 %token MOVE CLOSE LINE VERT HORZ CUBIC SMOOTH QUAD SMOOTHQ
 %token NUM
+%token ARC
 
 %{
 	import map.HLex;
@@ -19,6 +20,7 @@
 		vpCubicTo(rel:Bool, x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float);
 		vpSmoothQTo(rel:Bool, x:Float,y:Float);
 		vpSmoothTo(rel:Bool, x:Float,y:Float, cx2:Float,cy2:Float);
+		vpArcTo(rel:Bool, rx:Float,ry:Float,xrot:Float,large:Bool,pos:Bool,x:Float,y:Float);
 		vpClose;
 	}
 %} 
@@ -49,6 +51,7 @@
 	| smoothto
 	| quadto
 	| smoothqto
+	| arcto
 ;
 
 %moveto %{ VerbosePath %}
@@ -116,6 +119,14 @@
 	%}
 ;
 
+%arcto %{ VerbosePath %}
+	: arc arccoord %{
+		var ret = [];
+		for(c in %1) ret.push(vpArcTo(%0, c.rx,c.ry,c.xrot,c.large,c.pos,c.x,c.y));
+		ret;
+	%}
+;
+
 %coords %{ Array<{x:Float,y:Float}> %}
 	: num num %{ [{x:%0,y:%1}]; %}
 	| coords num num %{ %0.push({x:%1,y:%2}); %0; %}
@@ -127,6 +138,10 @@
 %coords3 %{ Array<{x:Float,y:Float,cx1:Float,cy1:Float,cx2:Float,cy2:Float}> %}
 	: num num num num num num %{ [{cx1:%0,cy1:%1,cx2:%2,cy2:%3,x:%4,y:%5}]; %}
 	| coords3 num num num num num num %{ %0.push({cx1:%1,cy1:%2,cx2:%3,cy2:%4,x:%5,y:%6}); %0; %}
+;
+%arccoord %{ Array<{rx:Float,ry:Float,xrot:Float,large:Bool,pos:Bool,x:Float,y:Float}> %}
+	: num num num num num num num  %{ [{rx:%0,ry:%1,xrot:%2,large:%3==0,pos:%4==0,x:%5,y:%6}]; %}
+	| arccoord num num num num num num num  %{ %0.push({rx:%1,ry:%2,xrot:%3,large:%4==0,pos:%5==0,x:%6,y:%7}); %0; %}
 ;
 %values %{ Array<Float> %}
 	: num %{ [%0]; %}
@@ -145,3 +160,4 @@
 %smooth %{ Bool %} : SMOOTH %{ Match.match(%0,ptSmooth(x)=x); %} ;
 %quad %{ Bool %} : QUAD %{ Match.match(%0,ptQuad(x)=x); %} ;
 %smoothq %{ Bool %} : SMOOTHQ %{ Match.match(%0,ptSmoothQ(x)=x); %} ;
+%arc %{ Bool %} : ARC %{ Match.match(%0,ptArc(x)=x); %} ;

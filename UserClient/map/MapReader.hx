@@ -114,7 +114,6 @@ class MapReader {
 				var id = (~/_/g).replace(epath.get("id"), " ").trim();
 				var xform = gettransform(epath.get("transform"));
 				var paths = PathUtils.parse(epath.get("d"), xform);
-				if(id.substr(0,2)=="SC") trace(paths);
 
 				if(dict.exists(id))
 					dict.get(id).concat(paths);

@@ -11,6 +11,7 @@ package map;
 		ptQuad(rel:Bool);
 		ptSmoothQ(rel:Bool);
 		ptNum(x:Float);
+		ptArc(rel:Bool);
 	}
 class HLex {
 	static inline var entry_state:Int = 3;
@@ -19,15 +20,15 @@ class HLex {
 		if(transitions!=null) return;
 		transitions = [];
 var cur = [];
-cur.push([48,57,16]);
+cur.push([48,57,17]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,14]);
+cur.push([48,57,15]);
 transitions.push(cur);
 var cur = [];
 cur.push([43,43,1]);
 cur.push([45,45,1]);
-cur.push([48,57,14]);
+cur.push([48,57,15]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,5]);
@@ -37,7 +38,9 @@ cur.push([44,44,5]);
 cur.push([43,43,4]);
 cur.push([45,45,4]);
 cur.push([46,46,0]);
-cur.push([48,57,15]);
+cur.push([48,57,16]);
+cur.push([65,65,14]);
+cur.push([97,97,14]);
 cur.push([67,67,10]);
 cur.push([99,99,10]);
 cur.push([76,76,8]);
@@ -57,7 +60,7 @@ cur.push([122,122,7]);
 transitions.push(cur);
 var cur = [];
 cur.push([46,46,0]);
-cur.push([48,57,15]);
+cur.push([48,57,16]);
 transitions.push(cur);
 transitions.push(null);
 transitions.push(null);
@@ -68,22 +71,23 @@ transitions.push(null);
 transitions.push(null);
 transitions.push(null);
 transitions.push(null);
+transitions.push(null);
 var cur = [];
-cur.push([48,57,14]);
+cur.push([48,57,15]);
 transitions.push(cur);
 var cur = [];
 cur.push([46,46,0]);
-cur.push([48,57,15]);
-cur.push([69,69,2]);
-cur.push([101,101,2]);
-transitions.push(cur);
-var cur = [];
 cur.push([48,57,16]);
 cur.push([69,69,2]);
 cur.push([101,101,2]);
 transitions.push(cur);
+var cur = [];
+cur.push([48,57,17]);
+cur.push([69,69,2]);
+cur.push([101,101,2]);
+transitions.push(cur);
 }
-        static var accepting = [false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true];
+        static var accepting = [false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true];
 	public static function lexify(input:String):Array<PathToken> {
 		init();
 var ret = new Array<PathToken>();
@@ -205,10 +209,12 @@ return ret;
             case 13:
 				return ({ ptSmoothQ( hxl_match =="t"); });
             case 14:
-				return ({ ptNum(Std.parseFloat( hxl_match )); });
+				return ({ ptArc( hxl_match =="a"); });
             case 15:
 				return ({ ptNum(Std.parseFloat( hxl_match )); });
             case 16:
+				return ({ ptNum(Std.parseFloat( hxl_match )); });
+            case 17:
 				return ({ ptNum(Std.parseFloat( hxl_match )); });
         }
 	}

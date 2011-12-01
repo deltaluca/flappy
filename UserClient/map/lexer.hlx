@@ -13,6 +13,7 @@ NULL -1 : ~/[\n\r \t,]/~
 		ptQuad(rel:Bool);
 		ptSmoothQ(rel:Bool);
 		ptNum(x:Float);
+		ptArc(rel:Bool);
 	}
 %}
 
@@ -24,5 +25,6 @@ NULL -1 : ~/[\n\r \t,]/~
 ~/[sS]/~ := %{ ptSmooth(%=="s"); %}
 ~/[qQ]/~ := %{ ptQuad(%=="q"); %}
 ~/[tT]/~ := %{ ptSmoothQ(%=="t"); %}
+~/[aA]/~ := %{ ptArc(%=="a"); %}
 
 ~/[\+\-]?(([0-9]+)|([0-9]*\.[0-9]+))([eE][\+\-]?[0-9]+)?/~ := %{ ptNum(Std.parseFloat(%)); %}
