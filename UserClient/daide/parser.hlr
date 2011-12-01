@@ -121,6 +121,7 @@ class TU {
 	| MAP BRA TEXT KET 							%{ mMap(TU.text(%2)); %}
 	| MDF BRA power_list KET BRA mdf_provinces KET BRA mdf_adjacencies KET %{ mMapDefinition(%2,%5,%8); %}
 	| HLO BRA POWER KET BRA INTEGER KET BRA variant KET %{ mHello(TU.power(%2),TU.integer(%5),%8); %}
+	| HLO BRA UNO KET BRA INTEGER KET BRA variant KET %{ mHello(null,TU.integer(%5),%8); %}
 	| NOW BRA turn KET unit_with_location_and_mrt_list %{ mCurrentLocation(%2,%4); %}
 	| SCO sco_entry_list 						%{ mSupplyOwnership(%1); %}
 	| THX BRA order KET BRA order_note KET 		%{ mThink(%2,%5); %}

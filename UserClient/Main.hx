@@ -12,9 +12,11 @@ import nme.display.Bitmap;
 
 import Terminal;
 import gui.Gui;
+import gui.Interface;
 
 import map.MapReader;
 import map.Path;
+import map.MapDef;
 
 class Main extends Sprite {
 	public static function main() {
@@ -32,13 +34,15 @@ class Main extends Sprite {
 		stage.scaleMode = StageScaleMode.NO_SCALE;
 		stage.align = StageAlign.TOP_LEFT;
 
-		var ggui = new Gui();
-		ggui.load(Assets.getText("Assets/europe_regions.svg"),
-			[Assets.getBitmapData("Assets/europe-big2.png"),
-			 Assets.getBitmapData("Assets/europe-big1.png"),
-			 Assets.getBitmapData("Assets/europe.png"),
-			 Assets.getBitmapData("Assets/europe-sm1.png")]
+		MapDef.register("standard",
+			function () return Assets.getText("Assets/europe_regions.svg"),
+			function () return [Assets.getBitmapData("Assets/europe-big2.png"),
+	  				   			Assets.getBitmapData("Assets/europe-big1.png"),
+								Assets.getBitmapData("Assets/europe.png"),
+								Assets.getBitmapData("Assets/europe-sm1.png")]
 		);
+
+		var ggui = new Gui();
 		addChild(ggui);
 
 		var terminal = new Terminal(stage.stageWidth,stage.stageHeight);
@@ -46,8 +50,10 @@ class Main extends Sprite {
 		terminal.visible = false;
 		stage.addEventListener(KeyboardEvent.KEY_DOWN, function (ev) {
 			if(ev.keyCode == 192) //`¬ key
-				terminal.visible = !terminal.visible; 
+				terminal.visible = terminal.logging = !terminal.visible; 
 		});
+
+		var gint = new GuiInterface(ggui,terminal);
 
 		function size() {
 			ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);

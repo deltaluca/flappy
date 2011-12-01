@@ -15,12 +15,30 @@ import daide.Language;
 import daide.Tokens;
 import daide.Unparser;
 
+import gui.Interface;
+
 using StringTools;
 
 class Terminal extends Sprite {
 	var logger:TextField;
 	var inp:TextField;
 	var backg:Sprite;
+
+	public var logging:Bool;
+	public function daide(msg:Message) {
+		try {
+			var tokens = Unparser.unparse(msg);
+			sock.write_message(sock.daide_message(tokens));
+		}catch(e:Dynamic) {
+			log(e);
+		}
+	}
+
+	var gint:GuiInterface;
+	public function bind(gint:GuiInterface) {
+		this.gint = gint;
+		if(sock!=null) sock.bind(gint.receiver);
+	}
 
 	var logcnt:Int;
 	var logsize:Int;
@@ -31,6 +49,8 @@ class Terminal extends Sprite {
 		}
 	}
 	public function log(x:Dynamic) {
+		if(!logging) return;
+
 		var xs = Std.string(x);
 		var split = xs.split("\n");
 		if(split.length>1) {
@@ -51,7 +71,8 @@ class Terminal extends Sprite {
 
 	public function new(width:Int,height:Int) {
 		super();
-
+		
+		logging = true;
 		var font = Assets.getFont("Assets/Courier.ttf");
 
 		inp = new TextField();
@@ -145,9 +166,6 @@ class Terminal extends Sprite {
 		log("cmd >> "+arg);
 		var cmdargs = arg.split(" ");
 		switch(cmdargs[0]) {
-			case "send_im":
-				if(!sock.connected) log("Error! no connection exists!");
-				else sock.send_im();
 	#if cpp
 			case "run":
 				if(cmdargs.length!=2) {
@@ -200,8 +218,9 @@ class Terminal extends Sprite {
 				if(sock.connected) cmd("disconnect");
 				cpp.Sys.exit(0);
 			case "disconnect":
-				if(!sock.connected) log("Error! no connection exists");
-				else sock.disconnect();
+				try {
+					disconnect();
+				}catch(e:Dynamic) { log(e); }
 			case "connect":
 				if(cmdargs.length!=2)
 					log(" connect hostname:port");
@@ -210,13 +229,9 @@ class Terminal extends Sprite {
 					if(hostport.length!=2)
 						log(" connect hostname:port");
 					else {
-						if(sock.connected)
-							cmd("disconnect");
-
-						try {
-							sock.connect(hostport[0],Std.parseInt(hostport[1]));
-						}catch(e:Dynamic) {
-						}
+						try {	
+							connect(hostport[0],Std.parseInt(hostport[1]));
+						}catch(e:Dynamic) { log(e); }
 					}
 				}
 			case "sys":
@@ -229,5 +244,16 @@ class Terminal extends Sprite {
 				log("Error! unknown command");
 				log("use help to list available commands");
 		}
+	}
+
+	public function disconnect() {
+		if(!sock.connected) throw "No connection exists";
+		sock.disconnect();
+	}
+	public function connect(host:String, port:Int) {
+		if(sock.connected) disconnect();
+		sock.connect(host,port);
+		sock.send_im();
+		if(gint!=null) sock.bind(gint.receiver);
 	}
 }

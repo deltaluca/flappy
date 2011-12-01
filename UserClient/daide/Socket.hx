@@ -7,9 +7,12 @@ import haxe.io.Bytes;
 import daide.Tokens;
 import daide.Language;
 
+import Terminal;
+
 typedef Sock = cpp.net.Socket;
 class Socket {
 	var sock:Sock;
+
 	public function new() {
 		sock = new Sock();
 		connected = false;
@@ -22,6 +25,12 @@ class Socket {
 
 	public var connected:Bool;
 	public var reader:cpp.vm.Thread;
+
+	var receiver:Message->Void;
+	public function bind(receiver:Message->Void) {
+		this.receiver = receiver;
+		if(reader!=null) reader.sendMessage(receiver);
+	}
 
 	public function disconnect() {
 		if(!connected) throw "derp";
@@ -65,7 +74,14 @@ class Socket {
 		var wait_rm = true;
 
 		reader = cpp.vm.Thread.create(function () {
+			var receiver:Message->Void = null;
 			while(true) {
+				//check for bind message
+				if(receiver==null) {
+					var check:Message->Void = cpp.vm.Thread.readMessage(false); //don't block
+					if(check!=null) receiver = check;
+				}
+
 				//wait for message
 				var msg:ProtoMessage;
 				try {
@@ -105,12 +121,16 @@ class Socket {
 					log("DM received from server");
 					log("let's try parsing it!");
 					var tokens = TokenUtils.deserialise(msg.data);
+					var tt = tokens.copy();
 					try {
-						var message = HLlr.parse(tokens);
+						var message = HLlr.parse(tt);
 						log(Std.string(message));
+						if(receiver!=null)
+							receiver(message);
 					}catch(e:Dynamic) {
 						log("Failed to parse message D:");
-						log("Remaining tokens: (-1 swallowed) = "+Std.string(tokens));
+						log("Valid Tokens: = "+Std.string(tokens.slice(0,tokens.length-tt.length)));
+						log("Remaining Tokens: = "+Std.string(tokens.slice(tokens.length-tt.length,tokens.length-tt.length+1).concat(tt)));
 						//send a fucking error message to the bloody server
 					}
 				case 3:
@@ -154,6 +174,8 @@ class Socket {
 			sock.close();
 			connected = false;
 		});
+
+		if(receiver!=null) reader.sendMessage(receiver);
 	}
 
 	public function error_message(code:Int) {

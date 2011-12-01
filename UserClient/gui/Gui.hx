@@ -4,6 +4,8 @@ import gui.Menu;
 import gui.Button;
 import gui.Map;
 
+import map.MapDef;
+
 import cpp.Sys;
 
 import nme.display.BitmapData;
@@ -66,6 +68,8 @@ class Gui extends GuiElem {
 	var statmenu:Menu; //status
 	var mainmenu:Menu; //main
 
+	var stageWidth:Int; var stageHeight:Int; var scaleMode:ScaleMode;
+
 	function build() {
 		addChild(mapg = new Sprite());
 		
@@ -88,8 +92,9 @@ class Gui extends GuiElem {
 		mainmenu.insert(close);
 	}
 
-	public function load(mapdata:String, graphics:Array<BitmapData>) {
-		var nmap = new Map(mapdata,graphics);
+	public function load(mapname:String) {
+		var mapdef = MapDef.lookup(mapname);
+		var nmap = new Map(mapdef.regions, mapdef.mipmap);
 		addChild(nmap);
 
 		if(map==null) {
@@ -103,9 +108,15 @@ class Gui extends GuiElem {
 		}
 		
 		map = nmap;
+
+		if(scaleMode!=null) resize(stageWidth,stageHeight,scaleMode);
 	}
 
 	public override function resize(width:Int,height:Int,scale:ScaleMode) {
+		stageWidth = width;
+		stageHeight = height;
+		scaleMode = scale;
+
 		if(map!=null)
 			map.resize(width,height,scale);
 
