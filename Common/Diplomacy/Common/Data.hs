@@ -91,11 +91,6 @@ data MapState = MapState { supplyOwnerships :: SupplyCOwnership
 type SupplyCOwnership = Map.Map Power [Province]
 
 
--- | Definition of MapState, used by the MessageParser and 
--- | AI internals
-
-
-
 data UnitPositions = UnitPositions Turn [UnitPosition]
                    | UnitPositionsRet Turn [(UnitPosition, [ProvinceNode])]
                    deriving (Show, Eq)
@@ -115,9 +110,9 @@ data UnitToProv = UnitToProv UnitType [ProvinceNode]
 
 -- | Definitions for Orders
 
-data Order = OrderMovement OrderMovement
-           | OrderRetreat OrderRetreat
-           | OrderBuild OrderBuild
+data Order = OrderMovement { orderMove :: OrderMovement }
+           | OrderRetreat { orderRetreat :: OrderRetreat }
+           | OrderBuild { orderBuild :: OrderBuild } 
            deriving (Eq, Show)
 
 -- | Spring term
