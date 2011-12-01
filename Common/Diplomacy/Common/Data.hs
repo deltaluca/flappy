@@ -84,16 +84,11 @@ data GameState = GameState { gameStateMap :: MapState
                            , gameStatePhase :: Phase }
                deriving (Show)
 
-data MapState = MapState { supplyOwnerships :: SupplyCOwnership
+data MapState = MapState { supplyOwnerships :: [SupplyCOwnership]
                          , unitPositions :: UnitPositions }
               deriving (Show, Eq)
 
 type SupplyCOwnership = Map.Map Power [Province]
-
-
--- | Definition of MapState, used by the MessageParser and 
--- | AI internals
-
 
 
 data UnitPositions = UnitPositions Turn [UnitPosition]
@@ -115,9 +110,9 @@ data UnitToProv = UnitToProv UnitType [ProvinceNode]
 
 -- | Definitions for Orders
 
-data Order = OrderMovement OrderMovement
-           | OrderRetreat OrderRetreat
-           | OrderBuild OrderBuild
+data Order = OrderMovement { orderMove :: OrderMovement }
+           | OrderRetreat { orderRetreat :: OrderRetreat }
+           | OrderBuild { orderBuild :: OrderBuild } 
            deriving (Eq, Show)
 
 -- | Spring term
