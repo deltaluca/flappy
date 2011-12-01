@@ -92,7 +92,12 @@ class Gui extends GuiElem {
 		mainmenu.insert(close);
 	}
 
+	var currentMap:String;
 	public function load(mapname:String) {
+		mapname = mapname.toLowerCase();
+		if(mapname==currentMap) return;
+
+		currentMap = mapname;
 		var mapdef = MapDef.lookup(mapname);
 		var nmap = new Map(mapdef.regions, mapdef.mipmap);
 		addChild(nmap);
@@ -110,6 +115,13 @@ class Gui extends GuiElem {
 		map = nmap;
 
 		if(scaleMode!=null) resize(stageWidth,stageHeight,scaleMode);
+	}
+
+	public function IAm(power:Null<Int>, passcode:Int) {
+		if(power==null) {
+			//observer
+		}else {
+		}
 	}
 
 	public override function resize(width:Int,height:Int,scale:ScaleMode) {

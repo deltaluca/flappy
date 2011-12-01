@@ -4,6 +4,14 @@ import daide.Language;
 import gui.Gui;
 import Terminal;
 
+/**
+
+	Provide a higher-level interface to the low level CLI for the GUI.
+	And most importantly, handling of daide messages from the socket,
+	forwarding actions to either CLI or GUI.
+
+**/
+
 class GuiInterface {
 	var ggui:Gui;
 	var terminal:Terminal;
@@ -23,18 +31,22 @@ class GuiInterface {
 	public function join(host:String, port:Int, name:String) {
 		terminal.connect(host,port);
 		daide(mName(name,"Flappy GUI 1.0a"));
-		daide(mMap(null)); //request map early
+		refresh();
 	}
 	public function observer(host:String, port:Int) {
 		terminal.connect(host,port);
 		daide(mObserver);
-		daide(mMap(null)); //request map early
+		refresh();
 	}
 	public function rejoin(host:String, port:Int, power:Int, passcode:Int) {
 		terminal.connect(host,port);
 		daide(mIAm(power,passcode));
+		refresh();
+	}
 
-		//request these as server assumes we already know them... I don't.
+	//---------------------------------------------------------------------------
+
+	public function refresh() {
 		daide(mMap(null));
 		daide(mSupplyOwnership(null));
 		daide(mCurrentLocation(null,null));
@@ -46,6 +58,7 @@ class GuiInterface {
 	public function receiver(msg:Message) {
 		switch(msg) {
 			case mHello(power,x,v):
+				ggui.IAm(power,x);
 				log("you are power "+power+" passcode: "+x);
 			case mMap(name):
 				try {

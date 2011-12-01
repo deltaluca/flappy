@@ -9,6 +9,13 @@ import daide.Language;
 
 import Terminal;
 
+/**
+
+	Provide a low-level socket connection to daide compliant server
+	And message factories for protocol messages.
+
+**/
+
 typedef Sock = cpp.net.Socket;
 class Socket {
 	var sock:Sock;

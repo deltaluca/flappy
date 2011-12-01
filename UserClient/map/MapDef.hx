@@ -6,6 +6,18 @@ import nme.Assets;
 typedef MapDefinition = { regions:String, mipmap:Array<BitmapData> };
 typedef MapDict = { regions:Void->String, mipmap:Void->Array<BitmapData>, instance:MapDefinition };
 
+/**
+
+	Hold map generator definitions, to be expanded at load/run time and queried when loading a map
+	for a game.
+
+	Definitions are factories so as to be constructed lazily with memory.
+
+	# regions : String corresponds to actual .svg file data for map.
+	# mipmap : Array<BitmapData> corresponds to an ordered (large first) set of bitmaps for rendering
+
+*/
+
 class MapDef {
 	static function instantiate(def:MapDict) {
 		def.instance = { regions: def.regions(), mipmap: def.mipmap() };
