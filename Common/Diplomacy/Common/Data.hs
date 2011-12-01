@@ -84,7 +84,7 @@ data GameState = GameState { gameStateMap :: MapState
                            , gameStatePhase :: Phase }
                deriving (Show)
 
-data MapState = MapState { supplyOwnerships :: [SupplyCOwnership]
+data MapState = MapState { supplyOwnerships :: SupplyCOwnership
                          , unitPositions :: UnitPositions }
               deriving (Show, Eq)
 
