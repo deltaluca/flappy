@@ -20,9 +20,10 @@ module Diplomacy.AI.SkelBot.Brain ( Brain, BrainT
                                   , MonadBrain(..)) where
 
 import Diplomacy.Common.Data
+import Diplomacy.Common.Press
+import Diplomacy.Common.TSeq
 import Diplomacy.AI.SkelBot.Decision
 import Diplomacy.AI.SkelBot.Comm
-import Diplomacy.AI.SkelBot.GameState
 import Diplomacy.AI.SkelBot.GameInfo
 
 import Control.Monad.Reader
@@ -140,9 +141,9 @@ runBrain = mapBrain return
 liftBrain :: (Monad m, Decision d) => BrainT d h m a -> BrainCommT d h m a
 liftBrain = BrainComm . lift . lift
 
-instance (MonadIO m, Decision d) => MonadComm (BrainCommT d h m) where
-  popInMessage = BrainComm . lift $ popInMessage
-  pushOutMessage = BrainComm . lift . pushOutMessage
+instance (MonadIO m, Decision d) => MonadComm InMessage OutMessage (BrainCommT d h m) where
+  popMsg = BrainComm . lift $ popMsg
+  pushMsg = BrainComm . lift . pushMsg
 
 instance (Monad m, Decision d) => MonadBrain d (BrainCommT d h m) where
   asksGameState = liftBrain . asksGameState
@@ -154,7 +155,7 @@ instance (Monad m, Decision d) => MonadGameKnowledge h (BrainCommT d h m) where
   getsHistory = liftBrain . getsHistory
   putHistory = liftBrain . putHistory
 
-runBrainCommT :: (Monad m, Decision d) => BrainCommT d h m a -> DecisionVar d -> InMessageQueue -> OutMessageQueue -> BrainT d h m a
+runBrainCommT :: (Monad m, Decision d) => BrainCommT d h m a -> DecisionVar d -> TSeq InMessage -> TSeq OutMessage -> BrainT d h m a
 runBrainCommT (BrainComm m) dVar inq outq = runCommT (runReaderT m dVar) inq outq
 
 decide :: (MonadIO m, Decision d) => d -> BrainCommT d h m ()

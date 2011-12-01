@@ -50,7 +50,6 @@ Library
   -- Modules exported by the library.
   Exposed-modules: Diplomacy.AI.SkelBot.Brain,
                    Diplomacy.AI.SkelBot.Decision,
-                   Diplomacy.AI.SkelBot.GameState,
                    Diplomacy.AI.SkelBot.SkelBot
   
   -- Packages needed in order to build this package.
@@ -79,7 +78,9 @@ Executable holdbot
     cmdargs,
     hslogger,
     mtl,
-    DiplomacyCommon <= 1
+    DiplomacyCommon <= 1,
+    containers,
+    transformers
 
   -- Modules not exported by this package.
   -- Other-modules:       
@@ -97,7 +98,9 @@ Executable randombot
     mtl,
     DiplomacyCommon <= 1,
     MonadRandom,
-    random
+    random,
+    containers,
+    transformers
 
   -- Modules not exported by this package.
   -- Other-modules:       

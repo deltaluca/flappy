@@ -50,6 +50,7 @@ Library
   -- Modules exported by the library.
   Exposed-modules:
     Diplomacy.Common.Data
+    Diplomacy.Common.Press
     Diplomacy.Common.DipMessage
     Diplomacy.Common.DipError
     Diplomacy.Common.DipToken

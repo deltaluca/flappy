@@ -27,17 +27,18 @@ import Diplomacy.AI.SkelBot.SkelBot
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.Decision
 import Diplomacy.AI.SkelBot.GameInfo
-import Diplomacy.AI.SkelBot.GameState
 import Diplomacy.AI.SkelBot.DipBot
 
 import Diplomacy.Common.DipMessage
 import Diplomacy.Common.Data
 
+import Data.Map hiding (map, filter)
+import Data.List
 import System.Random
-import Control.Monad.Reader
-import Control.Monad.State
-import Control.Monad.Identity
+import Control.Monad.IO.Class
 import Control.Monad.Random
+import Control.Monad.Trans
+import Control.Monad
 
 data RandomBotDecision = RandomMoveDecision [(UnitPosition,ProvinceNode)]
                      | DisbandDecision [UnitPosition]
@@ -151,10 +152,10 @@ randomInitHistory = return ()
   map someFunction unitPoss
 -}
 
-getOwnSupplies :: [SupplyCentreOwnership] -> RandomBrain [Province]
-getOwnSupplies supplies = do
+getOwnSupplies :: SupplyCOwnerships -> RandomBrain [Province]
+getOwnSupplies (SupplyCOwnerships supplies) = do
   myPower <- getPower
-  return . head $ [provinces | (SupplyCentre power provinces) <- supplies, myPower == power]
+  return . head $ [provinces | (power, provinces) <- toList supplies, myPower == power]
 
 -- |randomProcessUnits will handle the different seasons during the year and produce the right decision accordingly
 randomProcessUnits :: UnitPositions -> [Province] -> MapDefinition -> RandomBrain RandomBotDecision
@@ -212,18 +213,18 @@ findProvinceToMoveTo mapDef (UnitPosition power unitType provinceNode) = do
 --                and that way can just find adjacencies for our provinces and 
 --                and choose one to move in randomly 
 
-getValidAdjacencies :: UnitType -> ProvinceNode -> [Adjacency] -> [ProvinceNode]
+getValidAdjacencies :: UnitType -> ProvinceNode -> Adjacencies -> [ProvinceNode]
 --not on a coast, so either inland or on sea
-getValidAdjacencies unitType (ProvNode province) adjacencies = 
-  getProvinceNodesForUnitType (getOurAdjacency adjacencies province) unitType
+getValidAdjacencies unitType (ProvNode province) (Adjacencies adjacencies) = 
+  getProvinceNodesForUnitType (getOurAdjacency (toList adjacencies) province) unitType
 
 --on a coast, so it's a fleet and therefore can move to either sea or land
-getValidAdjacencies _ (ProvCoastNode province coast) adjacencies = 
-  getProvinceNodesForCoastalFleet (getOurAdjacency adjacencies province) coast
+getValidAdjacencies _ (ProvCoastNode province coast) (Adjacencies adjacencies) = 
+  getProvinceNodesForCoastalFleet (getOurAdjacency (toList adjacencies) province) coast
 
 --------------------------For units not on coasts-------------------------
-getProvinceNodesForUnitType :: Adjacency -> UnitType -> [ProvinceNode]
-getProvinceNodesForUnitType (Adjacency _ unitToProvs) unitType = 
+getProvinceNodesForUnitType :: (Province, [UnitToProv]) -> UnitType -> [ProvinceNode]
+getProvinceNodesForUnitType (_, unitToProvs) unitType = 
   getProvinceNodesFromUnitToProvList unitToProvs unitType
 
 getProvinceNodesFromUnitToProvList :: [UnitToProv] -> UnitType -> [ProvinceNode]
@@ -237,8 +238,8 @@ getProvinceNodesFromUnitToProv ourUnitType (UnitToProv unitType _)  =
 
 
 -----------------------For units (fleets) on coasts-----------------------
-getProvinceNodesForCoastalFleet :: Adjacency -> Coast -> [ProvinceNode]
-getProvinceNodesForCoastalFleet(Adjacency _ unitToProvs) coast = 
+getProvinceNodesForCoastalFleet :: (Province, [UnitToProv]) -> Coast -> [ProvinceNode]
+getProvinceNodesForCoastalFleet(_, unitToProvs) coast = 
   getProvinceNodesFromUnitToProvListCoastal unitToProvs coast
 
 getProvinceNodesFromUnitToProvListCoastal :: [UnitToProv] -> Coast -> [ProvinceNode]
@@ -255,9 +256,9 @@ extractProvinceNodes :: UnitToProv -> [ProvinceNode]
 extractProvinceNodes (UnitToProv _ provinceNodes) = provinceNodes
 extractProvinceNodes (CoastalFleetToProv _ provinceNodes) = provinceNodes
 
-getOurAdjacency :: [Adjacency] -> Province -> Adjacency
+getOurAdjacency :: [(Province, UnitToProv)] -> Province -> (Province, [UnitToProv])
 getOurAdjacency adjacencies ourProvince = 
-  head $ [(Adjacency province unitToProv) | (Adjacency province unitToProv) <- adjacencies, province == ourProvince]
+  head $ [(province, unitToProv) | (province, unitToProv) <- adjacencies, province == ourProvince]
 
 --------------------------------------------------------------------------------
 
@@ -290,7 +291,7 @@ removeOrBuild units ownSupplyCentres mapDef
                          myPower <- getPower
                          let provincesDef = mapDefProvinces mapDef
                          let homeCentres = getHomeSupplyCentres provincesDef myPower
-                         let homeCentresOwned = intersect ownSupplyCentre homeCentre
+                         let homeCentresOwned = intersect ownSupplyCentres homeCentres
                          return $ BuildDecision $ getCentresToBuildAt units homeCentresOwned
   where 
     difference = (length units) - (length supplyCentres)  

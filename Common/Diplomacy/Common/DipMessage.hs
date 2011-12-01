@@ -1,14 +1,12 @@
 {-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, FunctionalDependencies, GeneralizedNewtypeDeriving #-}
 module Diplomacy.Common.DipMessage ( DipMessage(..)
-                                   , PressMessage (..)
-                                   , PressProposal (..)
-                                   , PressReply (..)
                                    , parseDipMessage
                                    , uParseDipMessage
                                    , idParse -- for testing
                                    , stringyDip) where
 
 import Diplomacy.Common.Data as Dat
+import Diplomacy.Common.Press
 import Diplomacy.Common.DipToken
 import Diplomacy.Common.DipError
 
@@ -256,27 +254,6 @@ data Missing =
 
 data PlayerStat = PlayerStat Power String String Int (Maybe Int)
                 deriving (Eq, Show)
-
-data PressMessage = PressProposal PressProposal
-                  | PressReply PressReply
-                  | PressInfo PressProposal
-                  | PressCapable [DipToken]
-                  deriving (Eq, Show)
-
-data PressReply = PressAccept PressMessage
-                | PressReject PressMessage
-                | PressRefuse PressMessage
-                | PressHuh PressMessage
-                | PressCancel PressMessage
-                deriving (Eq, Show)
-
-data PressProposal = ArrangeDraw
-                   | ArrangeSolo Power
-                   | ArrangeAlliance [Power] [Power]
-                   | ArrangePeace [Power]
-                   | ArrangeNot PressProposal
-                   | ArrangeUndo PressProposal
-                   deriving (Eq, Show)
 
 data Result = Result (Maybe ResultNormal) (Maybe ResultRetreat)
             deriving (Eq, Show)

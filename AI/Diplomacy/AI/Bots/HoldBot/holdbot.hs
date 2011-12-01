@@ -4,13 +4,12 @@ import Diplomacy.AI.SkelBot.SkelBot
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.Decision
 import Diplomacy.AI.SkelBot.GameInfo
-import Diplomacy.AI.SkelBot.GameState
 import Diplomacy.AI.SkelBot.DipBot
 import Diplomacy.Common.DipMessage
 import Diplomacy.Common.Data
-import Control.Monad.Reader
-import Control.Monad.State
-import Control.Monad.Identity
+
+import Data.Map as Map hiding (map, filter)
+import Control.Monad.IO.Class
 
 data HoldBotDecision = HoldDecision [UnitPosition]
                      | DisbandDecision [UnitPosition]
@@ -101,10 +100,10 @@ holdInitHistory = return ()
   map someFunction unitPoss
 -}
 
-getOwnSupplies :: [SupplyCentreOwnership] -> HoldBrain [Province]
-getOwnSupplies supplies = do
+getOwnSupplies :: SupplyCOwnerships -> HoldBrain [Province]
+getOwnSupplies (SupplyCOwnerships supplies) = do
   myPower <- getPower
-  return . head $ [provinces | (SupplyCentre power provinces) <- supplies, myPower == power]
+  return . head $ [provinces | (power, provinces) <- toList supplies, myPower == power]
 
 holdUnits :: UnitPositions -> [Province] -> HoldBrain HoldBotDecision
 holdUnits (UnitPositions (Turn Spring _) units) _ = do

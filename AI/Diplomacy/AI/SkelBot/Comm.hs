@@ -1,12 +1,9 @@
-{-# LANGUAGE TypeSynonymInstances, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeSynonymInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleInstances, FunctionalDependencies #-}
 module Diplomacy.AI.SkelBot.Comm( CommT, runCommT
                                 , MonadComm
-                                , popInMessage
-                                , pushOutMessage
-                                , InMessage(..)
-                                , OutMessage(..)
-                                , InMessageQueue
-                                , OutMessageQueue) where
+                                , popMsg
+                                , pushMsg
+                                ) where
 
 import Diplomacy.Common.DipMessage
 import Diplomacy.Common.Data
@@ -24,7 +21,7 @@ newtype CommT i o m a = CommT (ReaderT (TSeq i, TSeq o) m a)
 instance (MonadIO m) => MonadIO (CommT i o m) where
   liftIO = lift . liftIO
 
-class MonadComm i o m where
+class MonadComm i o m | m -> i, m -> o where
   popMsg :: m i
   pushMsg :: o -> m ()
 
@@ -37,7 +34,7 @@ askDispatcher = liftM fst ask
 askReceiver :: (Monad m) => CommT i o m (TSeq o)
 askReceiver = liftM snd ask
 
-instance MonadIO m => MonadComm (CommT m i o) where
+instance MonadIO m => MonadComm i o (CommT i o m) where
   popMsg = do
     dispatcher <- askDispatcher
     liftIO (atomically (readTSeq dispatcher))

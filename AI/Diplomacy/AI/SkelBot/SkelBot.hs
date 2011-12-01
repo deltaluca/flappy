@@ -12,7 +12,6 @@ import Diplomacy.Common.TSeq
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.Comm
 import Diplomacy.AI.SkelBot.Decision
-import Diplomacy.AI.SkelBot.GameState
 import Diplomacy.AI.SkelBot.GameInfo
 import Diplomacy.AI.SkelBot.DipBot
 
@@ -66,8 +65,8 @@ communicate bot = do
   brainOut <- liftIO (newTSeqIO :: IO (TSeq OutMessage))
   
   -- Create lower level messaging queues that interface with Master
-  masterIn <- liftIO (newTSeqIO :: IO (TSeq InMessage))
-  masterOut <- liftIO (newTSeqIO :: IO (TSeq OutMessage))  
+  masterIn <- liftIO (newTSeqIO :: IO (TSeq DaideMessage))
+  masterOut <- liftIO (newTSeqIO :: IO (TSeq DaideMessage))  
 
   -- Create messaging threads
   hndleInfo <- ask
@@ -88,7 +87,7 @@ communicate bot = do
   (\loop -> runGameKnowledgeT loop gameInfo initHist) . forever $ do
     gameState <- lift getGameState
     let gameKnowledge = liftM snd . flip runBrainT gameState 
-                        $ runBrainCommT (dipBotBrainComm bot) decVar receiverQueue dispatcherQueue
+                        $ runBrainCommT (dipBotBrainComm bot) decVar brainIn brainOut
     decision <- runMaybeT $
                 (runGameKnowledgeTTimed (gameInfoTimeout gameInfo) gameKnowledge) -- run the brain
                 `mplus` (MaybeT . liftIO . atomically) (readTVar decVar) -- check TVar if timed out
@@ -116,14 +115,14 @@ getGameState = undefined
 getMoveResults :: DaideHandle Results
 getMoveResults = undefined
 
-dispatcher :: OutMessageQueue -> DaideTell ()
-dispatcher q = forever $ do
-  msg <- liftIO . atomically $ readTSeq q
+dispatcher :: TSeq DaideMessage -> TSeq OutMessage -> DaideTell ()
+dispatcher masterOut brainOut = forever $ do
+  msg <- liftIO . atomically $ readTSeq masterOut
   undefined
 --  tellHandle (DM (PressMessage msg))
 
-receiver :: InMessageQueue -> DaideAsk ()
-receiver q = forever $ do
+receiver :: TSeq DaideMessage -> TSeq InMessage -> DaideAsk ()
+receiver masterIn brainIn = forever $ do
   msg <- askDaide
   undefined
   -- atomically (writeTSeq q msg)
