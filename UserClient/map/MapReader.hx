@@ -93,6 +93,10 @@ class MapReader {
 			case "translate":
 				var xy = lr[1].substr(0,lr[1].length-1).split(",");
 				return new Matrix(1,0,0,1,Std.parseFloat(xy[0]), Std.parseFloat(xy[1]));
+			case "matrix":
+				var xy = lr[1].substr(0,lr[1].length-1).split(",");
+				var rs = []; for(x in xy) rs.push(Std.parseFloat(x));
+				return new Matrix(rs[0],rs[1],rs[2],rs[3],rs[4],rs[5]);	
 			default:
 				throw "unhandled transform type";
 				return null;
@@ -102,9 +106,10 @@ class MapReader {
 	//take a string corresponding to the map file content
 	public static function parse(mapdata:String):Map {
 		var dict = new Hash<MapProvince>();
-
 		var x = Xml.parse(mapdata).firstElement();
-		for(g in x.elementsNamed("g")) {
+
+		function parseg(g:Xml) {
+			for(g2 in g.elementsNamed("g")) parseg(g2);
 			for(epath in g.elementsNamed("path")) {
 				var id = (~/_/g).replace(epath.get("id"), " ").trim();
 				var xform = gettransform(epath.get("transform"));
@@ -118,6 +123,7 @@ class MapReader {
 				}
 			}
 		}
+		parseg(x);
 
 		var w = Std.parseFloat(x.get("width"));
 		var h = Std.parseFloat(x.get("height"));

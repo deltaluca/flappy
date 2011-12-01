@@ -66,7 +66,7 @@ class GuiInterface {
 					log("map accepted");
 					daide(mAccept(mMap(name)));
 				}catch(e:Dynamic) {
-					log("map rejected");
+					log("map rejected: why = "+Std.string(e));
 					daide(mReject(mMap(name)));
 				}
 			case mCurrentLocation(turn,unitlocs):
