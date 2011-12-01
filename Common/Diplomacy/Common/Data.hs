@@ -7,11 +7,8 @@
 -} 
 
 module Diplomacy.Common.Data ( Power(..)
-                             , SupplyCentreOwnership(..)
-                             , SupplyCentreOwnerships
+                             , SupplyCOwnerships(..)
                              , Province(..)
-                             , Provinces(..)
-                             , ProvinceInter(..)
                              , Coast(..)
                              , UnitType(..)
                              , Phase(..)
@@ -22,11 +19,13 @@ module Diplomacy.Common.Data ( Power(..)
                              , UnitToProv(..)
                              , ProvinceNode(..)
                              , Turn(..)
-                             , Adjacency(..)
+                             , Adjacencies(..)
                              , Order(..)
                              , OrderRetreat(..)
                              , OrderBuild(..)
                              , OrderMovement(..)
+                             , GameState(..)
+                             , ProvinceType(..)
                              ) where
 
 import Test.QuickCheck -- Unit testing
@@ -39,12 +38,20 @@ data Power
          | Neutral
          deriving (Show, Eq)
                                 
+instance Ord Power where
+  Neutral < _ = True
+  _ < Neutral = False
+  (Power p1) < (Power p2) = p1 < p2
+
 data Province 
          = Province { provinceIsSupply :: Bool, 
                       provinceType :: ProvinceType,
                       provinceId :: Int }
          deriving (Show, Eq)
-            
+
+instance Ord Province where
+  p1 > p2 = provinceId p1 > provinceId p2
+
 data ProvinceType
          = Inland | Sea | Coastal | BiCoastal
          deriving (Show, Eq)
@@ -70,12 +77,12 @@ data Phase
 
 data MapDefinition = MapDefinition { mapDefPowers :: [Power]
                                    , mapDefProvinces :: [Province]
-                                   , mapDefAdjacencies :: [Adjacency]
-                                   , mapDefSupplyInit :: [SupplyCOwnership] }
+                                   , mapDefAdjacencies :: Adjacencies
+                                   , mapDefSupplyInit :: SupplyCOwnerships }
                    deriving (Show, Eq)
 
-type Adjacency = Map.Map Province [UnitToProv]
-
+newtype Adjacencies = Adjacencies (Map.Map Province [UnitToProv])
+                    deriving (Show, Eq)
 
 -- | Dynamic game state definitions
 
@@ -84,11 +91,12 @@ data GameState = GameState { gameStateMap :: MapState
                            , gameStatePhase :: Phase }
                deriving (Show)
 
-data MapState = MapState { supplyOwnerships :: SupplyCOwnership
+data MapState = MapState { supplyOwnerships :: SupplyCOwnerships
                          , unitPositions :: UnitPositions }
               deriving (Show, Eq)
 
-type SupplyCOwnership = Map.Map Power [Province]
+newtype SupplyCOwnerships = SupplyCOwnerships (Map.Map Power [Province])
+                          deriving (Show, Eq)
 
 
 data UnitPositions = UnitPositions Turn [UnitPosition]
@@ -133,7 +141,7 @@ data OrderRetreat = Retreat UnitPosition ProvinceNode
 data OrderBuild = Build UnitPosition
                 | Remove UnitPosition
                 | Waive Power
-                deriving (Eq, Show)De
+                deriving (Eq, Show)
 
 
 
@@ -148,40 +156,36 @@ instance Arbitrary Power where
 instance Arbitrary MapDefinition where
   arbitrary = do
     p1 <- listOf1 arbitrary
-    p2 <- arbitrary
-    a <- listOf1 arbitrary
-    return $ MapDefinition p1 p2 a
+    p2 <- listOf1 arbitrary
+    a <- arbitrary
+    s <- arbitrary
+    return $ MapDefinition p1 p2 a s
 
-instance Arbitrary Provinces where
+instance Arbitrary SupplyCOwnerships where
   arbitrary = do
-    s <- listOf1 arbitrary
-    p <- listOf1 arbitrary
-    return $ Provinces s p
-
-instance Arbitrary SupplyCentreOwnership where
-  arbitrary = do
-    p <- arbitrary
-    ps <- listOf1 arbitrary
-    return $ SupplyCentre p ps
+    scos <- listOf1 $ do
+           p <- arbitrary
+           ps <- listOf1 arbitrary
+           return (p, ps)
+    return . SupplyCOwnerships . Map.fromList $ scos
 
 instance Arbitrary Province where
   arbitrary = do
     b <- arbitrary
-    p <- arbitrary
-    return $ Province b p
+    t <- oneof [ return Inland
+               , return Sea
+               , return Coastal
+               , return BiCoastal ]
+    i <- arbitrary
+    return $ Province b t i
 
-instance Arbitrary ProvinceInter where
-  arbitrary = oneof [ return . Inland =<< arbitrary
-                    , return . Sea =<< arbitrary
-                    , return . Coastal =<< arbitrary
-                    , return . BiCoastal =<< arbitrary
-                    ]
-
-instance Arbitrary Adjacency where
+instance Arbitrary Adjacencies where
   arbitrary = do
-    p <- arbitrary
-    up <- listOf1 arbitrary
-    return $ Adjacency p up
+    adj <- listOf1 $ do
+      p <- arbitrary
+      up <- listOf1 arbitrary
+      return (p, up)
+    return . Adjacencies . Map.fromList $ adj
 
 instance Arbitrary UnitToProv where
   arbitrary = frequency [ (2, do
