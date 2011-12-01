@@ -14,6 +14,7 @@ import Control.Monad.Identity
 
 data HoldBotDecision = HoldDecision [UnitPosition]
                      | DisbandDecision [UnitPosition]
+                     | RemoveDecision [UnitPosition]
                      | WaiveDecision Power
 
 type HoldBotHistory = ()
@@ -21,6 +22,7 @@ type HoldBotHistory = ()
 instance Decision HoldBotDecision where
   diplomise (HoldDecision units) = [SubmitOrder Nothing (map holdOrderForUnit units)]
   diplomise (DisbandDecision units) = [SubmitOrder Nothing (map disbandOrderForUnit units)]
+  diplomise (RemoveDecision units) = [SubmitOrder Nothing (map removeOrderForUnit units)]
   diplomise (WaiveDecision power) = [SubmitOrder Nothing [OrderBuild (Waive power)]]
 
 
@@ -28,9 +30,13 @@ instance Decision HoldBotDecision where
 holdOrderForUnit :: UnitPosition -> Order
 holdOrderForUnit unit = OrderMovement (Hold unit)
 
---produces an order to disband the unit
+--produces an order to disband the unit during summer/autumn phase
 disbandOrderForUnit :: UnitPosition -> Order
 disbandOrderForUnit unit = OrderRetreat (Disband unit)
+
+--produces an order to disband the unit during winter phase 
+removeOrderForUnit :: UnitPosition -> Order
+removeOrderForUnit unit = OrderBuild (Remove unit)
 
 getPower :: HoldBrain Power
 getPower = asksGameInfo gameInfoPower
@@ -123,7 +129,7 @@ holdUnits (UnitPositionsRet (Turn Autumn _) unitsAndRets) _ =
 -- similar to above
 
 holdUnits (UnitPositions (Turn Winter _) units) ownSupplies =
-  disbandOrWaive units ownSupplies
+  removeOrWaive units ownSupplies
 {- need to disband if we have too many units or waive builds if we have the 
    opportunity to build i.e. we have more supply centres than units and units have         
    controlled the province for at least 2 turns 
@@ -135,11 +141,11 @@ retreatUnits unitsAndRetreats = do
   myPower <- getPower
   return $ DisbandDecision $ filter (isMyPower myPower) units
 
-disbandOrWaive :: [UnitPosition] ->  [Province] -> HoldBrain HoldBotDecision
-disbandOrWaive units supplyCentres 
+removeOrWaive :: [UnitPosition] ->  [Province] -> HoldBrain HoldBotDecision
+removeOrWaive units supplyCentres 
   | difference > 0 = do
                         myPower <- getPower    
-                        return $ DisbandDecision $ filter (isMyPower myPower) (take difference units)
+                        return $ RemoveDecision $ filter (isMyPower myPower) (take difference units)
   | otherwise      = do
                         myPower <- getPower
                         return $ WaiveDecision myPower

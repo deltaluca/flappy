@@ -1,4 +1,4 @@
-{-
+{- |
 -------------------------- RANDOMBOT ------------------------------
 
   RandomBot is built on HoldBot, all the retreat and disband 
@@ -41,6 +41,8 @@ import Control.Monad.Random
 
 data RandomBotDecision = RandomMoveDecision [(UnitPosition,ProvinceNode)]
                      | DisbandDecision [UnitPosition]
+                     | RemoveDecision [UnitPosition]
+                     | BuildDecision [UnitPosition] 
                      | WaiveDecision Power
 
 type RandomBotHistory = ()
@@ -48,20 +50,27 @@ type RandomBotHistory = ()
 instance Decision RandomBotDecision where
   diplomise (RandomMoveDecision units) = [SubmitOrder Nothing (map randomOrderForUnit units)]
   diplomise (DisbandDecision units) = [SubmitOrder Nothing (map disbandOrderForUnit units)]
+  diplomise (RemoveDecision units) = [SubmitOrder Nothing (map removeOrderForUnit units)]
   diplomise (WaiveDecision power) = [SubmitOrder Nothing [OrderBuild (Waive power)]]
 
 
---produces a random order for each unit
+-- |randomOrderForUnit produces a random order for each unit
 randomOrderForUnit :: (UnitPosition,ProvinceNode) -> Order
 randomOrderForUnit (unit,provinceNode) = OrderMovement (Move unit provinceNode)
 
---produces an order to disband the unit
+-- |disbandOrderForUnit produces an order to disband the unit
 disbandOrderForUnit :: UnitPosition -> Order
 disbandOrderForUnit unit = OrderRetreat (Disband unit)
 
+--produces an order to disband the unit during winter phase 
+removeOrderForUnit :: UnitPosition -> Order
+removeOrderForUnit unit = OrderBuild (Remove unit)
+
+-- |getPower gets what power we are playing as
 getPower :: RandomBrain Power
 getPower = asksGameInfo gameInfoPower
 
+-- |getMapDef gets the map definition (layout of the map)
 getMapDef :: RandomBrain MapDefinition  
 getMapDef = asksGameInfo gameInfoMapDef --returns the mapDefinition
 
@@ -108,15 +117,16 @@ randomBrainComm = do
   stdGen <- liftIO getStdGen
   liftBrain (runBrain (liftM fst (runRandT randomBrain stdGen)))
 
+-- |randomBrain is the brain that gets run
 randomBrain :: RandomBrain ()
 randomBrain = do
   curMapState <- asksGameState gameStateMap --returns our mapState
   mapDef <- getMapDef --get map definition
   let unitPoss = unitPositions curMapState
   let supplyOwns = supplyOwnerships curMapState
-  ownSupplies <- getOwnSupplies supplyOwns --need to define getOwnSupplies here
+  ownSupplies <- getOwnSupplies supplyOwns --gets the supply centres we currently own
   myDecision <- randomProcessUnits unitPoss ownSupplies mapDef
-  putDecision $ Just myDecision
+  putDecision $ Just myDecision --puts the decision back into the brain
 
 --decide . RandomUnits unitPoss =<< ownSupplies
   
@@ -146,32 +156,33 @@ getOwnSupplies supplies = do
   myPower <- getPower
   return . head $ [provinces | (SupplyCentre power provinces) <- supplies, myPower == power]
 
--- [province] here is the provinces where we own supply centres
+-- |randomProcessUnits will handle the different seasons during the year and produce the right decision accordingly
 randomProcessUnits :: UnitPositions -> [Province] -> MapDefinition -> RandomBrain RandomBotDecision
+-- ^[province] here is the provinces where we own supply centres+
 randomProcessUnits (UnitPositions (Turn Spring _) units) _ mapDef = do
   myPower <- getPower    
   getRandomMove (filter (isMyPower myPower) units) mapDef
--- returns as RandomDecision
 
 randomProcessUnits (UnitPositions (Turn Fall _) units) _ mapDef = do
   myPower <- getPower    
   getRandomMove (filter (isMyPower myPower) units) mapDef
--- returns as RandomMoveDecision
 
 randomProcessUnits (UnitPositionsRet (Turn Summer _) unitsAndRets) _ _ =
   retreatUnits unitsAndRets
--- need to retreat our units that need retreating
--- unitsAndRets is a list of units that need to be retreating and
--- each unit will have a corresponding list of provinces it can retreat to
--- in our Randombot case we just disband.
+{- |when dislodged, we need to retreat our units that need retreating
+   unitsAndRets is a list of units that need to be retreating and
+   each unit will have a corresponding list of provinces it can retreat to
+   in our randombot case we just disband.
+-}
 
 randomProcessUnits (UnitPositionsRet (Turn Autumn _) unitsAndRets) _ _ =
   retreatUnits unitsAndRets
 -- similar to above
 
-randomProcessUnits (UnitPositions (Turn Winter _) units) ownSupplies _ =
-  disbandOrBuild units ownSupplies
-{- need to disband if we have too many units or build units if we have the 
+randomProcessUnits (UnitPositions (Turn Winter _) units) ownSupplies mapDef = do
+  myPower <- getPower
+  removeOrBuild (filter (isMyPower myPower) units) ownSupplies mapDef
+{- |need to disband if we have too many units or build units if we have the 
    opportunity to build i.e. we have more supply centres than units and units have         
    controlled the province for at least 2 turns 
 -}
@@ -180,14 +191,10 @@ randomProcessUnits (UnitPositions (Turn Winter _) units) ownSupplies _ =
 
 -----------GET A RANDOM MOVE FOR A CURRENT UNITPOSITION-------------
 
-
+-- |getRandomMove will get random moves for every unit (moving to adjacent provinces)
 getRandomMove :: [UnitPosition] -> MapDefinition -> RandomBrain RandomBotDecision
---get a list of (province,[available provinces to move to])
---get list of (unitType, provinces) (i.e. provinces where units are in, not where supply centres are)
---one question: SupplyCentreOwnership has Province, not ProvinceNode. Why?
-          --or rather: why have ProvinceNode in the first place?
-getRandomMove units mapDef = return . RandomMoveDecision =<< mapM (findProvinceToMoveTo mapDef) units  
 
+getRandomMove units mapDef = return . RandomMoveDecision =<< mapM (findProvinceToMoveTo mapDef) units  
 
 findProvinceToMoveTo :: MapDefinition -> UnitPosition -> RandomBrain (UnitPosition, ProvinceNode)
 findProvinceToMoveTo mapDef (UnitPosition power unitType provinceNode) = do
@@ -243,6 +250,7 @@ getProvinceNodesFromUnitToProvCoastal ourCoast (CoastalFleetToProv coast _)  =
   coast == ourCoast
 --------------------------------------------------------------------------
 
+
 extractProvinceNodes :: UnitToProv -> [ProvinceNode]
 extractProvinceNodes (UnitToProv _ provinceNodes) = provinceNodes
 extractProvinceNodes (CoastalFleetToProv _ provinceNodes) = provinceNodes
@@ -266,23 +274,53 @@ retreatUnits unitsAndRetreats = do
 
 -------DISBAND OR BUILD--------
 
-disbandOrBuild :: [UnitPosition] ->  [Province] -> RandomBrain RandomBotDecision
-disbandOrBuild units supplyCentres 
-  | difference > 0 = do
-                        myPower <- getPower    
-                        return $ DisbandDecision $ filter (isMyPower myPower) (take difference units)
-  | otherwise      = do
-                        myPower <- getPower
-                        return $ WaiveDecision myPower
-  where
-    difference = (length units) - (length supplyCentres)  
-     {- here we need to waive a build on a unit on a province in our home territory 
-        which we are still in control of and doesn't have a unit on it currently -}
-    -- waive builds on all units? Technically waiving a build means not submitting any sort of build order whatsoever
+-- TO DO: NEED TO WORK OUT HOW TO BUILD SUPPLY CENTRES, I.e. CHECK OUR LIST OF PROVINCES 
+--        THAT WE HAVE SUPPLY CENTRES IN AND CHECK IF ANY OF THOSE PROVINCES ARE IN OUR
+--        HOME COUNTRY. 
+--        THEN CHECK IF WE HAVE UNITS IN THOSE HOME PROVINCES AND IF NOT, WE CAN SUBMIT
+--        A BUILD ORDER TO BUILD A NEW UNIT ON THAT PROVINCE
 
---checks if this UnitPosition is ours (if it contains our power number)
+removeOrBuild :: [UnitPosition] ->  [Province] -> MapDefinition -> RandomBrain RandomBotDecision
+removeOrBuild units ownSupplyCentres mapDef
+  | difference > 0  = return $ DisbandDecision (take difference units)
+  | difference == 0 = do
+                         myPower <- getPower
+                         return $ WaiveDecision myPower
+  | otherwise       = do --check if we can build
+                         myPower <- getPower
+                         let provincesDef = mapDefProvinces mapDef
+                         let homeCentres = getHomeSupplyCentres provincesDef myPower
+                         let homeCentresOwned = intersect ownSupplyCentre homeCentre
+                         return $ BuildDecision $ getCentresToBuildAt units homeCentresOwned
+  where 
+    difference = (length units) - (length supplyCentres)  
+     {- if we have less units than supply centres and we have vacant supply centres in our home country, then we can build on these home supply centres -}
+ 
+
+-- | getHomeSupplyCentre returns a list of provinces that are defined to be in our home country (so that we can build units in them)
+getHomeSupplyCentres :: Provinces -> Power -> [Province]
+getHomeSupplyCentres (Provinces supplycentres _) power = 
+  findOurSupplyCentre supplycentres power
+
+findOurSupplyCentre :: [SupplyCentreOwnership] -> Power -> [Province]
+findOurSupplyCentre supplyCentres power = head $ filter (isMyPowerSupplyCentre power) supplyCentres
+
+-- |getCentresToBuildAt returns a list of provinces in our home country that we can build in, i.e. home controlled provinces which have no units in them currently
+getCentresToBuildAt :: [UnitPosition] -> [Province] -> [Province]
+getCentresToBuildAt units homeProvincesControlled = 
+  map extractProvinceFromNode [provinceNode | (UnitPosition _ _ provinceNode) <- units]
+  
+extractProvinceFromNode :: ProvinceNode -> Province
+extractProvinceFromNode (ProvNode province) = province
+extractProvinceFromNode (ProvCoastNode province _) = province
+
+-- | isMyPower checks if this UnitPosition is ours (if it contains our power number)
 isMyPower :: Power -> UnitPosition -> Bool
 isMyPower myPower (UnitPosition power _ _) = power == myPower 
+
+-- | 
+isMyPowerSupplyCentre :: Power -> SupplyCentreOwnerShip -> Bool
+isMyPowerSupplyCentre myPower (SupplyCentre power provinceList) = myPower == power
 
 
 

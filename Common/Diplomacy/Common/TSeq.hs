@@ -19,7 +19,7 @@ newTSeq :: STM (TSeq a)
 newTSeq = return . TSeq =<< newTVar empty
 
 newTSeqIO :: IO (TSeq a)
-newTSeqIO = atomically newTSeq
+newTSeqIO = newTVarIO empty
 
 liftSeq :: (Seq a -> b) -> (TSeq a -> STM b)
 liftSeq f (TSeq tSequ) = do
