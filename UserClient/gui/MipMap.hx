@@ -31,6 +31,8 @@ class MipMap extends Sprite {
 
 			if(width == mip.width) {
 				addChild(mip);
+				this.width = width;
+				this.height = height;
 				return;
 			}
 			if(width > mip.width) {
@@ -45,9 +47,6 @@ class MipMap extends Sprite {
 			if(width<mip.width) mip = mips[mips.length-1];
 			addChild(mip);
 		}else {
-/*			bitmapData = up.clone();
-			var d = new Bitmap(down,PixelSnapping.AUTO,true);
-			bitmapData.draw(d, new Matrix(up.width/down.width,0,0,up.height/down.height), new ColorTransform(1,1,1,1 - (width-down.width)/(up.width-down.width))); */
 			addChild(up);
 			addChild(down);
 			down.alpha = 1-(width-down.width)/(up.width-down.width);

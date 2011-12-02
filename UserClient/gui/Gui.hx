@@ -99,7 +99,7 @@ class Gui extends GuiElem {
 
 		currentMap = mapname;
 		var mapdef = MapDef.lookup(mapname);
-		var nmap = new Map(mapdef.regions, mapdef.mipmap);
+		var nmap = new Map(mapdef);
 		addChild(nmap);
 
 		if(map==null) {

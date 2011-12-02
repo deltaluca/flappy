@@ -36,6 +36,7 @@ class Main extends Sprite {
 
 		MapDef.register("standard",
 			function () return Assets.getText("Assets/europe_regions.svg"),
+			function () return Assets.getText("Assets/europe_names.dat"),
 			function () return [Assets.getBitmapData("Assets/europe-big2.png"),
 	  				   			Assets.getBitmapData("Assets/europe-big1.png"),
 								Assets.getBitmapData("Assets/europe.png"),

@@ -15,15 +15,19 @@ import gui.Gui;
 import gui.MipMap;
 
 import map.MapReader;
+import map.MapDef;
+
+import scx.Match;
 
 class Map extends GuiElem {
 	//mapdata corresponding to the input .svg file for clickable regions and other metadata.
 	//graphics being ordered large to small for building mipmap.
-	public function new(mapdata:String, graphics:Array<BitmapData>) {
+	public function new(mapdef:MapDefinition) {
 		super();
 
-		this.mapdata = MapReader.parse(mapdata);
-		map = new MipMap(graphics);
+		this.mapdata = MapReader.parse(mapdef.regions);
+		map = new MipMap(mapdef.mipmap);
+		this.mapnames = MapReader.names(mapdef.names);
 
 		build();
 		viewport = null;
@@ -32,7 +36,10 @@ class Map extends GuiElem {
 	//--------------------------------------------------------------------------------------------
 
 	//mipmap of map graphics + mapdata for pointer selection and highlighting etc.
-	var map:MipMap; var mapdata:map.Map;
+	var map:MipMap; var mapdata:map.Map; var mapnames:MapNames;
+
+	//supply centres
+	var supplies:Hash<MipMap>;
 
 	//highlighting of current region.
 	var highlight:Sprite;
@@ -102,10 +109,7 @@ class Map extends GuiElem {
 	var selected:MapProvince;
 
 	function setprovince() {
-		var mapp = new Point();
-		mapp.x = (stage.mouseX/stageWidth *viewport.width  + viewport.x)*mapdata.width;
-		mapp.y = (stage.mouseY/stageHeight*viewport.height + viewport.y)*mapdata.height;
-
+		var mapp = screenToMap(stage.mouseX, stage.mouseY);
 		var province = mapdata.province(mapp);
 		var g = highlight.graphics;
 
@@ -134,6 +138,18 @@ class Map extends GuiElem {
 		highlight = new Sprite();	
 		addChild(highlight);
 		highlight.filters= [new BlurFilter(4,4,1)];
+
+		//
+		supplies = new Hash<MipMap>();
+		for(key in mapdata.supplies.keys()) {
+			var mp = new MipMap([
+				Assets.getBitmapData("Assets/supply_centre-big1.png"),
+				Assets.getBitmapData("Assets/supply_centre.png"),
+				Assets.getBitmapData("Assets/supply_centre-sm1.png")
+			]);
+			supplies.set(key, mp);
+			addChild(mp);
+		}
 		
 		//highlight has this invisible box defined to match map dimensions
 		//so that highlighted region drawn inside can be scaled and displayed correctly
@@ -151,6 +167,24 @@ class Map extends GuiElem {
 
 	//--------------------------------------------------------------------------------------------
 
+	//take point in mapdata coordinates
+	//return point corresponding to screen coordinate
+	public function mapToScreen(x:Float,y:Float) {
+		return new Point(
+			(x/mapdata.width  - viewport.x)/viewport.width  * stageWidth,
+			(y/mapdata.height - viewport.y)/viewport.height * stageHeight
+		);
+	}
+
+	//take point in screen coordinates
+	//return point corresponding to mapdata coordinates
+	public function screenToMap(x:Float,y:Float) {
+		return new Point(
+			(x/stageWidth  * viewport.width  + viewport.x)*mapdata.width,
+			(y/stageHeight * viewport.height + viewport.y)*mapdata.height
+		);
+	}
+
 	public function display() {
 		map.x = -viewport.x*map.width;
 		map.y = -viewport.y*map.height;
@@ -159,6 +193,17 @@ class Map extends GuiElem {
 		highlight.y = map.y;
 		highlight.width = map.width;
 		highlight.height = map.height;
+
+		for(key in supplies.keys()) {
+			var mp = supplies.get(key);
+			var pos = mapdata.supplies.get(key);
+			var npos = mapToScreen(pos.x,pos.y);
+
+			var rad = Std.int((10 + zoom) * (Match.match(stageScale, sSmall=1.0, sDefault=1.5, sLarge=2.0)));
+			mp.resize(rad,rad);
+			mp.x = npos.x - (mp.width /2);
+			mp.y = npos.y - (mp.height/2);
+		}
 	}
 
 	public function clamp_viewport() {

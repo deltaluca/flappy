@@ -4,6 +4,8 @@ import haxe.io.Bytes;
 import haxe.io.BytesInput;
 import haxe.io.BytesOutput;
 
+import scx.Match;
+
 class TokenUtils {
 	public static function serialise(tokens:Array<Token>):Bytes {
 		var out = new BytesOutput();
@@ -115,6 +117,13 @@ class TokenUtils {
 				}
 		}
 		return ret;
+	}
+
+	public static function provinceOf(id:Int) {
+		return Match.match(decode(id), tProvince(x) = x);
+	}
+	public static function provinceId(p:Province) {
+		return encode(tProvince(p))[0];
 	}
 
 	public static function encode(token:Token):Array<Int> {
