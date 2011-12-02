@@ -58,8 +58,7 @@ class GuiInterface {
 	public function receiver(msg:Message) {
 		switch(msg) {
 			case mHello(power,x,v):
-				ggui.IAm(power,x);
-				log("you are power "+power+" passcode: "+x);
+				ggui.inform_iam(power,x);
 			case mMap(name):
 				try {
 					ggui.load(name);
@@ -70,7 +69,7 @@ class GuiInterface {
 					daide(mReject(mMap(name)));
 				}
 			case mCurrentLocation(turn,unitlocs):
-				log("should display this to ggui");
+				ggui.inform_locations(turn,unitlocs);
 			case mSupplyOwnership(scos):
 				ggui.map.inform_supplyOwnerships(scos);
 			default:

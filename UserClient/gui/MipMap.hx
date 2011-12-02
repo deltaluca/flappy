@@ -11,6 +11,13 @@ class MipMap extends Sprite {
 	public var mips:Array<Bitmap>;
 	public var ratio:Float;
 
+	public function clone() {
+		var inp = new Array<BitmapData>();
+		for(mip in mips) inp.push(mip.bitmapData.clone()); //have to clone to avoid NME bug (OGLTexture destructor)
+		var ret = new MipMap(inp);
+		return ret;
+	}
+
 	//maps[i] > maps[i+1]
 	public function new(mips:Array<BitmapData>) {
 		super();

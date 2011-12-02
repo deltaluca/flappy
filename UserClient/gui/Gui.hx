@@ -5,6 +5,7 @@ import gui.Button;
 import gui.Map;
 
 import map.MapDef;
+import daide.Language;
 
 import cpp.Sys;
 
@@ -117,7 +118,11 @@ class Gui extends GuiElem {
 		if(scaleMode!=null) resize(stageWidth,stageHeight,scaleMode);
 	}
 
-	public function IAm(power:Null<Int>, passcode:Int) {
+	public function inform_locations(turn:Turn, locs:Array<UnitWithLocAndMRT>) {
+		map.inform_locations(locs);
+	}
+
+	public function inform_iam(power:Null<Int>, passcode:Int) {
 		if(power==null) {
 			//observer
 		}else {

@@ -63,6 +63,9 @@ class Map extends GuiElem {
 
 		build();
 		viewport = null;
+
+		icon_army = [];
+		icon_fleet = [];
 	}
 
 	//--------------------------------------------------------------------------------------------
@@ -78,6 +81,67 @@ class Map extends GuiElem {
 				sc.filters = [cmf];
 			}
 		}
+
+		display();
+	}
+
+	var icon_army :Array<MipMap>;
+	var icon_fleet:Array<MipMap>;
+	function genunit(type:UnitType) {
+		switch(type) {
+			case utArmy:
+				if(icon_army.length==0) return new MipMap([
+					Assets.getBitmapData("Assets/army-big1.png"),
+					Assets.getBitmapData("Assets/army.png"),
+					Assets.getBitmapData("Assets/army-sm1.png")
+				]);
+				else return icon_army.pop();
+			case utFleet:
+				if(icon_fleet.length==0) return new MipMap([
+					Assets.getBitmapData("Assets/fleet-big1.png"),
+					Assets.getBitmapData("Assets/fleet.png"),
+					Assets.getBitmapData("Assets/fleet-sm1.png")
+				]);
+				else return icon_fleet.pop();
+		}
+	}
+
+	var unitlocs:Array<{power:Int, pos:Point, type:UnitType, mip:MipMap}>;
+	public function inform_locations(locs:Array<UnitWithLocAndMRT>) {
+		for(x in unitlocs) {
+			removeChild(x.mip);
+			switch(x.type) {
+				case utArmy:  icon_army.push(x.mip);
+				case utFleet: icon_fleet.push(x.mip);
+			}
+		}
+		unitlocs = [];
+
+		for(x in locs) {
+			var power = x.unitloc.power;
+			var type = x.unitloc.type;
+			var location = x.unitloc.location;
+
+			var id = TokenUtils.provinceId(location.province);
+			var name = mapnames.nameOf(id);
+			if(location.coast!=null) {
+				name += " "+Match.match(location.coast,
+					cNorth = "NC", cNorthEast = "NEC",
+					cSouth = "SC", cSouthWest = "SWC",
+					cEast  = "EC", cSouthEast = "SEC",
+					cWest  = "WC", cNorthWest = "NWC"
+				);
+			}
+
+			var pos = mapdata.locations.get(name);
+			var mip = genunit(type);
+			mip.filters = [MapConfig.powerFilter(power)];			
+
+			addChild(mip);
+			unitlocs.push({power:power, pos:pos, mip:mip, type:type});
+		}
+
+		display();
 	}
 
 	//--------------------------------------------------------------------------------------------
@@ -199,6 +263,8 @@ class Map extends GuiElem {
 			addChild(mp);
 			mp.filters = [cmf];
 		}
+
+		unitlocs = [];
 		
 		//highlight has this invisible box defined to match map dimensions
 		//so that highlighted region drawn inside can be scaled and displayed correctly
@@ -243,15 +309,26 @@ class Map extends GuiElem {
 		highlight.width = map.width;
 		highlight.height = map.height;
 
+		var rad = Std.int(10*Math.sqrt(zoom_scale()) * (Match.match(stageScale, sSmall=1.0, sDefault=1.5, sLarge=2.0)));
+
 		for(key in supplies.keys()) {
 			var mp = supplies.get(key);
 			var pos = mapdata.supplies.get(key);
 			var npos = mapToScreen(pos.x,pos.y);
 
-			var rad = Std.int(10*Math.sqrt(zoom_scale()) * (Match.match(stageScale, sSmall=1.0, sDefault=1.5, sLarge=2.0)));
 			mp.resize(rad,rad);
 			mp.x = npos.x - (mp.width /2);
 			mp.y = npos.y - (mp.height/2);
+		}
+
+		rad *= 2;
+
+		for(x in unitlocs) {
+			var pos = mapToScreen(x.pos.x,x.pos.y);
+			var mp = x.mip;
+			mp.resize(rad,Std.int(rad*mp.ratio));
+			mp.x = pos.x - (mp.width /2);
+			mp.y = pos.y - (mp.height/2);
 		}
 	}
 
