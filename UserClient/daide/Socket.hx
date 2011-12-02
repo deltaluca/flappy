@@ -23,6 +23,7 @@ class Socket {
 	public function new() {
 		sock = new Sock();
 		connected = false;
+		delay = -1;
 	}
 
 	public var logger:String->Void;
@@ -32,6 +33,8 @@ class Socket {
 
 	public var connected:Bool;
 	public var reader:cpp.vm.Thread;
+
+	public var delay:Float;
 
 	var receiver:Message->Void;
 	public function bind(receiver:Message->Void) {
@@ -83,6 +86,11 @@ class Socket {
 		reader = cpp.vm.Thread.create(function () {
 			var receiver:Message->Void = null;
 			while(true) {
+				if(delay>0) {
+					var t = cpp.Sys.cpuTime();
+					while(cpp.Sys.cpuTime() < t+delay) {}
+				}
+
 				//check for bind message
 				if(receiver==null) {
 					var check:Message->Void = cpp.vm.Thread.readMessage(false); //don't block

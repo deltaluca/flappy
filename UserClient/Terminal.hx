@@ -72,6 +72,8 @@ class Terminal extends Sprite {
 	public function new(width:Int,height:Int) {
 		super();
 		
+		socketdelay = -1.0;
+		
 		logging = true;
 		var font = Assets.getFont("Assets/Courier.ttf");
 
@@ -152,11 +154,14 @@ class Terminal extends Sprite {
 		{name:"daide",help:"submit daide message"},
 		{name:"test",help:"test daide message"},
 	#if cpp	{name:"run",help:"run file - run file consisting of terminal commands"}, #end
-		{name:"send_im",help:"send im message to server"}
+		{name:"send_im",help:"send im message to server"},
+		{name:"delay",help:"set delay on socket (seconds)"}
 	];
 
 	public var histcnt:Int;
 	public var history:Array<String>;
+
+	public var socketdelay:Float;
 
 	public function cmd(arg:String) {
 		if(arg.length==0) return;
@@ -166,6 +171,13 @@ class Terminal extends Sprite {
 		log("cmd >> "+arg);
 		var cmdargs = arg.split(" ");
 		switch(cmdargs[0]) {
+			case "delay":
+				if(cmdargs.length!=2) log("delay time");
+				else {
+					var snd = Std.parseFloat(StringTools.trim(cmdargs[1]));
+					socketdelay = snd;
+					if(sock!=null) sock.delay = socketdelay;
+				}
 	#if cpp
 			case "run":
 				if(cmdargs.length!=2) {
@@ -254,6 +266,7 @@ class Terminal extends Sprite {
 		if(sock.connected) disconnect();
 		sock.connect(host,port);
 		sock.send_im();
+		sock.delay = socketdelay;
 		if(gint!=null) sock.bind(gint.receiver);
 	}
 }

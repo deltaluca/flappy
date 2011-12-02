@@ -52,16 +52,16 @@ class ColorMatrix {
 
 	//matrix to transform RED 0xff0000 into given RGB value
 	static public function fromred(rgb:Int) {
-		var col = hsl(rgb);
-		var ret = hsl_shift(col.H,col.S,col.V*2);
-		trace([col.H,col.S,col.V*2, ret.elts]);
+		var col = hsl(rgb); 
+		var ret = hsl_shift(-col.H,col.S,col.V*2);
 		return ret;
 	}
 
 	public function filter() return new ColorMatrixFilter(
-		elts[0],elts[1],elts[2],elts[3],
-		elts[4],elts[5],elts[6],elts[7],
-		elts[8],elts[9],elts[10],elts[11]
+		[elts[0],elts[1],elts[2],0,elts[3],
+		elts[4],elts[5],elts[6],0,elts[7],
+		elts[8],elts[9],elts[10],0,elts[11],
+		0,0,0,1]
 	)
 	
 }

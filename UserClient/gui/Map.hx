@@ -27,15 +27,15 @@ import scx.Match;
 class MapConfig {
 	//power colours, offset by 1 so that powers[0] = UNO colour
 	public static var powers:Array<Int> = [
-		0xcfbd9e, // <-- UNO
+		0xbfbdbe, // <-- UNO
 
 		0xa9283f, // <-- power 0
 		0x4552b6, // onwards
-		0x409be7,
+		0x40abf7,
 		0x483f1b,
 		0x5f9061,
-		0x7173bc,
-		0xdf8d32
+		0xb1a3bc,
+		0xdfad32
 	];
 
 	static var power_filters:Array<ColorMatrixFilter>;
