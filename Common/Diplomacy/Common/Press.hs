@@ -2,10 +2,21 @@
 module Diplomacy.Common.Press ( PressMessage (..)
                               , PressProposal (..)
                               , PressReply (..)
+                              , InMessage(..)
+                              , OutMessage(..)
                               ) where
 
 import Diplomacy.Common.Data
 import Diplomacy.Common.DipToken
+
+data InMessage = InMessage { inMessageFrom :: Power
+                           , inMessageTo :: [Power]
+                           , inMessageMessage :: PressMessage }
+               deriving (Eq, Show)
+                        
+data OutMessage = OutMessage { outMessageTo :: [Power]
+                             , outMessageMessage :: PressMessage }
+                deriving (Eq, Show)
 
 data PressMessage = PressProposal PressProposal
                   | PressReply PressReply

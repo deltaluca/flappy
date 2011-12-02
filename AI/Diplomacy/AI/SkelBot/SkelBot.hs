@@ -7,11 +7,11 @@ import Diplomacy.Common.DaideMessage
 import Diplomacy.Common.DaideError
 import Diplomacy.Common.DipMessage
 import Diplomacy.Common.Data
+import Diplomacy.Common.Press
 import Diplomacy.Common.TSeq
 
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.Comm
-import Diplomacy.AI.SkelBot.Decision
 import Diplomacy.AI.SkelBot.GameInfo
 import Diplomacy.AI.SkelBot.DipBot
 
@@ -30,7 +30,10 @@ import System.Posix
 import Network
 import Network.BSD
 
-skelBot :: (Decision d) => DipBot DaideHandle d h -> IO ()
+  -- Master thread's monad
+type Master = ReaderT (TSeq InMessage, TSeq OutMessage) (CommT DaideMessage DaideMessage DaideHandle)
+
+skelBot :: DipBot Master h -> IO ()
 skelBot bot = do
   updateGlobalLogger "Main" (setLevel NOTICE)
   opts <- getCmdlineOpts
@@ -47,9 +50,7 @@ connectToServer server port = do
   hostName <- getHostName
   return (Handle hndle hostName port)
 
-type Master = CommT DaideMessage DaideMessage DaideHandle
-
-communicate :: (Decision d) => DipBot DaideHandle d h -> DaideHandle ()
+communicate :: DipBot Master h -> DaideHandle ()
 communicate bot = do
   note "Connection established, sending initial message"
   runDaideTell $ tellDaide (IM (fromIntegral _DAIDE_VERSION))
@@ -57,26 +58,29 @@ communicate bot = do
   case replyMessage of
     RM -> return ()
     _ -> throwError RMNotFirst
-    
-  gameInfo <- initGame
 
   -- Create messaging queues that interface with the Brain
   brainIn <- liftIO (newTSeqIO :: IO (TSeq InMessage))
   brainOut <- liftIO (newTSeqIO :: IO (TSeq OutMessage))
-  
+
   -- Create lower level messaging queues that interface with Master
   masterIn <- liftIO (newTSeqIO :: IO (TSeq DaideMessage))
-  masterOut <- liftIO (newTSeqIO :: IO (TSeq DaideMessage))  
+  masterOut <- liftIO (newTSeqIO :: IO (TSeq DaideMessage))
 
   -- Create messaging threads
   hndleInfo <- ask
   liftIO . forkIO $ runDaide (runDaideAsk (receiver masterIn brainIn)) hndleInfo
   liftIO . forkIO $ runDaide (runDaideTell (dispatcher masterOut brainOut)) hndleInfo
-  
-    -- RESUME HERE (call a :: Master ())
-  
-  -- create TVar for getting partial move
-  decVar <- liftIO $ newTVarIO Nothing
+
+  runCommT (runReaderT (master bot) (brainIn, brainOut)) masterIn masterOut
+
+master :: DipBot Master h -> Master ()
+master bot = do
+  gameInfo <- initGame
+  -- create TVars for getting partial move
+  ordMoveVar <- liftIO $ newTVarIO Nothing
+  ordRetreatVar <- liftIO $ newTVarIO Nothing
+  ordBuildVar <- liftIO $ newTVarIO Nothing
 
   -- initialise history
   initHist <- dipBotInitHistory bot
@@ -85,20 +89,36 @@ communicate bot = do
 
   -- Run the main game loop
   (\loop -> runGameKnowledgeT loop gameInfo initHist) . forever $ do
-    gameState <- lift getGameState
-    let gameKnowledge = liftM snd . flip runBrainT gameState 
-                        $ runBrainCommT (dipBotBrainComm bot) decVar brainIn brainOut
-    decision <- runMaybeT $
-                (runGameKnowledgeTTimed (gameInfoTimeout gameInfo) gameKnowledge) -- run the brain
-                `mplus` (MaybeT . liftIO . atomically) (readTVar decVar) -- check TVar if timed out
-    messages <- (\err -> maybe err (return . diplomise) decision) $ do -- die if no move, diplomise if there is a move
-      lift $ noteWith errorM "Brain timed out with no partial move"
-      lift $ throwError WillDieSorry
-    undefined -- mapM_ tellHandle messages   -- send the messages
-      -- TODO: check negative server response here
-    results <- lift getMoveResults       -- get move results
-    modifyHistory (dipBotProcessResults bot results)
+    moveOrder <- execBrain (dipBotBrainMovement bot) ordMoveVar
+    execBrain (dipBotBrainRetreat bot) ordRetreatVar
+    execBrain (dipBotBrainBuild bot) ordBuildVar
   return ()
+
+execBrain :: (OrderClass o) =>
+             BrainCommT o h Master () -> TVar (Maybe o) ->
+             GameKnowledgeT h Master Order
+execBrain botBrain ordVar = do
+  (brainIn, brainOut) <- lift ask
+  gameState <- lift getGameState
+  let gameKnowledge = liftM snd . flip runBrainT gameState
+                      $ runBrainCommT botBrain ordVar brainIn brainOut
+  morder <- runMaybeT $ do
+    -- run the brain
+    let earlyFinish = runGameKnowledgeTTimed
+                      undefined {-(gameInfoTimeout gameInfo)-} gameKnowledge
+    -- check TVar if timed out
+    let timeoutFinish = MaybeT . liftIO . atomically $ readTVar ordVar
+    earlyFinish `mplus` timeoutFinish
+  -- die if no move, ordify if there is a move
+  orderMsg <- (\err -> maybe err (return . ordify) morder) $ do
+    lift . lift . lift $ throwError (WillDieSorry "Brain timed out with no partial move")
+  -- clear ordVar
+  liftIO . atomically $ writeTVar ordVar Nothing
+  return orderMsg
+          -- undefined -- mapM_ tellHandle messages   -- send the messages
+          -- -- TODO: check negative server response here
+          -- results <- lift getMoveResults       -- get move results
+          -- modifyHistory (dipBotProcessResults bot results)
 
 runGameKnowledgeTTimed :: MonadIO m => Int -> GameKnowledgeT h m (Maybe a) -> MaybeT (GameKnowledgeT h m) a
 runGameKnowledgeTTimed timedelta gameKnowledge = do
@@ -106,24 +126,34 @@ runGameKnowledgeTTimed timedelta gameKnowledge = do
   m <- liftIO $ timeout timedelta gameIO
   maybe mzero (MaybeT . return) m
 
-initGame :: DaideHandle GameInfo
+initGame :: Master GameInfo
 initGame = undefined
 
-getGameState :: DaideHandle GameState
+getGameState :: Master GameState
 getGameState = undefined
 
-getMoveResults :: DaideHandle Results
+getMoveResults :: Master Results
 getMoveResults = undefined
 
 dispatcher :: TSeq DaideMessage -> TSeq OutMessage -> DaideTell ()
 dispatcher masterOut brainOut = forever $ do
-  msg <- liftIO . atomically $ readTSeq masterOut
-  undefined
---  tellHandle (DM (PressMessage msg))
+  msg <- liftIO . atomically $
+         (return . Left =<< readTSeq masterOut)
+         `orElse`
+         (return . Right =<< readTSeq brainOut)
+  tellDaide . either id (DM . SendPress Nothing) $ msg
 
 receiver :: TSeq DaideMessage -> TSeq InMessage -> DaideAsk ()
 receiver masterIn brainIn = forever $ do
   msg <- askDaide
+  case msg of
+    (IM _) -> throwError IMFromServer
+    RM -> throwError ManyRMs
+    FM -> undefined
+    (DM dm) -> undefined -- communicate with brain
+    (EM _) -> undefined
+    _ -> undefined
+    
   undefined
   -- atomically (writeTSeq q msg)
 
@@ -142,9 +172,9 @@ data CLOpts = CLOptions
               } deriving (Data, Typeable, Show)
 
 
-getCmdlineOpts = do  
+getCmdlineOpts = do
   progName <- getProgName
-  cmdArgs $ CLOptions 
+  cmdArgs $ CLOptions
        { clOptsPort = 16713         &= argPos 1 &= typ "PORT"
        , clOptsServer = "localhost" &= argPos 0 &= typ "ADDRESS"
        }
