@@ -1,5 +1,5 @@
 all:
-	haxelib run nme update client.nmml linux -64
+	haxelib run nme update client.nmml linux -64 
 	haxelib run nme build client.nmml linux -64
 
 unparser: daide/Unparser.cx

@@ -62,7 +62,7 @@ class Gui extends GuiElem {
 	}
 
 	//mapg is placed on display list by default so that initial map load can swap it's place.
-	var map:Map; var mapg:Sprite;
+	public var map:Map; var mapg:Sprite;
 
 	var negmenu :Menu; //negotiations
 	var statmenu:Menu; //status

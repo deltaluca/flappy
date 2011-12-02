@@ -57,9 +57,12 @@ class MapProvince {
 
 class MapNames {
 	//map province id to name
-	public var names_str:IntHash<String>;
+	var names_str:IntHash<String>;
 	//map province name to id
-	public var names_int:Hash<Int>;
+	var names_int:Hash<Int>;
+
+	public function nameOf(id:Int) return names_str.get(id)
+	public function idOf(name:String) return names_int.get(name)
 
 	public function new(names:Array<{name:String,id:Int}>) {
 		names_str = new IntHash<String>();
@@ -137,8 +140,11 @@ class MapReader {
 		var names = mapnames.split("\n");
 		var ret = [];
 		for(n in names) {
-			var rs = StringTools.trim(n).split(" ");
-			ret.push({name:rs[0],id:Std.parseInt(rs[rs.length-1])});
+			var n2 = (~/[\t\r\n]/g).replace(StringTools.trim(n)," ");
+			var rs = n2.split(" ");
+			if(rs.length<2) continue;
+
+			ret.push({name:(~/_/g).replace(rs[0]," "),id:Std.parseInt(StringTools.trim(rs[rs.length-1]))});
 		}
 		return new MapNames(ret);
 	}

@@ -72,7 +72,7 @@ class GuiInterface {
 			case mCurrentLocation(turn,unitlocs):
 				log("should display this to ggui");
 			case mSupplyOwnership(scos):
-				log("should inform ggui of this");
+				ggui.map.inform_supplyOwnerships(scos);
 			default:
 				log("need to do anything for ggui with this?");
 		}

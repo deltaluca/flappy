@@ -9,15 +9,45 @@ import nme.geom.Rectangle;
 import nme.geom.Point;
 
 import nme.filters.BlurFilter;
+import nme.filters.ColorMatrixFilter;
 import nme.events.MouseEvent;
 
 import gui.Gui;
 import gui.MipMap;
+import gui.ColorMatrix;
 
 import map.MapReader;
 import map.MapDef;
 
+import daide.Language;
+import daide.Tokens;
+
 import scx.Match;
+
+class MapConfig {
+	//power colours, offset by 1 so that powers[0] = UNO colour
+	public static var powers:Array<Int> = [
+		0xcfbd9e, // <-- UNO
+
+		0xa9283f, // <-- power 0
+		0x4552b6, // onwards
+		0x409be7,
+		0x483f1b,
+		0x5f9061,
+		0x7173bc,
+		0xdf8d32
+	];
+
+	static var power_filters:Array<ColorMatrixFilter>;
+	public static function powerFilter(power:Null<Int>) {
+		return if(power==null) power_filters[0] else power_filters[power+1];
+	}
+
+	public static function init() {
+		power_filters = new Array<ColorMatrixFilter>();
+		for(p in powers) power_filters.push(ColorMatrix.fromred(p).filter());
+	}
+}
 
 class Map extends GuiElem {
 	//mapdata corresponding to the input .svg file for clickable regions and other metadata.
@@ -29,8 +59,25 @@ class Map extends GuiElem {
 		map = new MipMap(mapdef.mipmap);
 		this.mapnames = MapReader.names(mapdef.names);
 
+		MapConfig.init();
+
 		build();
 		viewport = null;
+	}
+
+	//--------------------------------------------------------------------------------------------
+
+	public function inform_supplyOwnerships(scos:Array<ScoEntry>) {
+		for(sco in scos) {
+			var power = sco.power;
+			var cmf = MapConfig.powerFilter(power);
+			for(loc in sco.locs) {
+				var id = TokenUtils.provinceId(loc);
+				var name = mapnames.nameOf(id);
+				var sc:MipMap = supplies.get(name);
+				sc.filters = [cmf];
+			}
+		}
 	}
 
 	//--------------------------------------------------------------------------------------------
@@ -137,9 +184,10 @@ class Map extends GuiElem {
 
 		highlight = new Sprite();	
 		addChild(highlight);
-		highlight.filters= [new BlurFilter(4,4,1)];
+//		highlight.filters= [new BlurFilter(4,4,1)];
 
 		//
+		var cmf = ColorMatrix.fromred(0xffffff).filter();
 		supplies = new Hash<MipMap>();
 		for(key in mapdata.supplies.keys()) {
 			var mp = new MipMap([
@@ -149,6 +197,7 @@ class Map extends GuiElem {
 			]);
 			supplies.set(key, mp);
 			addChild(mp);
+			mp.filters = [cmf];
 		}
 		
 		//highlight has this invisible box defined to match map dimensions
@@ -199,7 +248,7 @@ class Map extends GuiElem {
 			var pos = mapdata.supplies.get(key);
 			var npos = mapToScreen(pos.x,pos.y);
 
-			var rad = Std.int((10 + zoom) * (Match.match(stageScale, sSmall=1.0, sDefault=1.5, sLarge=2.0)));
+			var rad = Std.int(10*Math.sqrt(zoom_scale()) * (Match.match(stageScale, sSmall=1.0, sDefault=1.5, sLarge=2.0)));
 			mp.resize(rad,rad);
 			mp.x = npos.x - (mp.width /2);
 			mp.y = npos.y - (mp.height/2);
@@ -218,6 +267,8 @@ class Map extends GuiElem {
 		resize(stageWidth,stageHeight,stageScale);
 	}
 
+	function zoom_scale() return Math.pow(1.2,zoom)
+
 	//--------------------------------------------------------------------------------------------
 
 	public override function resize(width:Int,height:Int,scale:ScaleMode) {
@@ -228,8 +279,7 @@ class Map extends GuiElem {
 			stageScale = scale;
 	
 			var ratio = map.ratio;
-	
-			var zoomv = Math.pow(1.2,zoom);
+			var zoomv = zoom_scale();
 	
 			var width_h  = ratio*width*zoomv;
 			if(width_h > height*zoomv) {
