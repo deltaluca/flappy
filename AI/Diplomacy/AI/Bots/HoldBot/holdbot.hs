@@ -8,35 +8,21 @@ import Diplomacy.Common.DipMessage
 import Diplomacy.Common.Data
 
 import Data.Map as Map hiding (map, filter)
-import Control.Monad.IO.Class
-
-data HoldBotDecision = HoldDecision [UnitPosition]
-                     | DisbandDecision [UnitPosition]
-                     | RemoveDecision [UnitPosition]
-                     | WaiveDecision Power
-
-type HoldBotHistory = ()
-
-instance Decision HoldBotDecision where
-  diplomise (HoldDecision units) = [SubmitOrder Nothing (map holdOrderForUnit units)]
-  diplomise (DisbandDecision units) = [SubmitOrder Nothing (map disbandOrderForUnit units)]
-  diplomise (RemoveDecision units) = [SubmitOrder Nothing (map removeOrderForUnit units)]
-  diplomise (WaiveDecision power) = [SubmitOrder Nothing [OrderBuild (Waive power)]]
-
+import Control.Monad.Trans
 
 --produces an order to hold the unit
-holdOrderForUnit :: UnitPosition -> Order
-holdOrderForUnit unit = OrderMovement (Hold unit)
+holdOrderForUnit :: UnitPosition -> OrderMovement
+holdOrderForUnit unit = (Hold unit)
 
 --produces an order to disband the unit during summer/autumn phase
-disbandOrderForUnit :: UnitPosition -> Order
-disbandOrderForUnit unit = OrderRetreat (Disband unit)
+disbandOrderForUnit :: UnitPosition -> OrderRetreat
+disbandOrderForUnit unit = (Disband unit)
 
 --produces an order to disband the unit during winter phase 
-removeOrderForUnit :: UnitPosition -> Order
-removeOrderForUnit unit = OrderBuild (Remove unit)
+removeOrderForUnit :: UnitPosition -> OrderBuild
+removeOrderForUnit unit = (Remove unit)
 
-getPower :: HoldBrain Power
+getPower :: (OrderClass o) => HoldBrain o Power
 getPower = asksGameInfo gameInfoPower
 {-
 do
@@ -54,27 +40,51 @@ do
 
   f >>= (\a -> g a >>= (\b -> h b >>= \c -> return c)) -}
 
-type HoldBrainCommT m = BrainCommT HoldBotDecision () m
-type HoldBrain = Brain HoldBotDecision ()
+type HoldBrainMoveCommT m = BrainCommT OrderMovement () m
+type HoldBrain o = Brain o ()
+type HoldBrainMove = Brain OrderMovement ()
+type HoldBrainRetreat = Brain OrderRetreat ()
+type HoldBrainBuild = Brain OrderBuild ()
+
 
 main = skelBot holdBot
 
-holdBot :: (MonadIO m) => DipBot m HoldBotDecision HoldBotHistory
-holdBot = DipBot { dipBotBrainComm = holdBrainComm
+holdBot :: (MonadIO m) => DipBot m ()
+holdBot = DipBot { dipBotName = "FlappyHoldBot"
+                 , dipBotVersion = 0.1
+                 , dipBotBrainMovement = holdBrainMovement
+                 , dipBotBrainRetreat = holdBrainRetreat
+                 , dipBotBrainBuild = holdBrainBuild
                  , dipBotProcessResults = holdProcessResults
                  , dipBotInitHistory = holdInitHistory }
 
 
-holdBrainComm :: (MonadIO m) => HoldBrainCommT m ()
-holdBrainComm = liftBrain (runBrain holdBrain)
+holdBrainMovement :: (MonadIO m) => HoldBrainMoveCommT m ()
+holdBrainMovement = liftBrain (runBrain holdBrainMove)
 
-holdBrain :: HoldBrain ()
-holdBrain = do
+holdBrainMove :: HoldBrainMove ()
+holdBrainMove = do
+  curMapState <- asksGameState gameStateMap
+  let unitPoss = unitPositions curMapState
+  units <- holdUnitsMove unitPoss
+  putOrders $ Just (map holdOrderForUnit units)
+
+holdBrainRetreat :: HoldBrainRetreat ()
+holdBrainRetreat = do
+  curMapState <- asksGameState gameStateMap
+  let unitPoss = unitPositions curMapState
+  units <- holdUnitsRetreat unitPoss
+  putOrders $ Just (map disbandOrderForUnit units)
+  
+holdBrainBuild :: HoldBrainBuild ()
+holdBrainBuild = do
   curMapState <- asksGameState gameStateMap
   let unitPoss = unitPositions curMapState
   ownSupplies <- getOwnSupplies $ supplyOwnerships curMapState --need to define getOwnSupplies here
-  myDecision <- holdUnits unitPoss ownSupplies
-  putDecision $ Just myDecision
+  e <- holdUnitsBuild unitPoss ownSupplies
+  putOrders $ Just (either
+                      (\units -> map removeOrderForUnit units)
+                      (\power -> [Waive power]) e)
 
 --decide . holdUnits unitPoss =<< ownSupplies
   
@@ -83,10 +93,10 @@ holdBrain = do
   let h = holdUnits unitposs supplies)-}
     
 
-holdProcessResults :: Results -> HoldBotHistory -> HoldBotHistory
+holdProcessResults :: Results -> () -> ()
 holdProcessResults = undefined
 
-holdInitHistory :: (MonadIO m) => m HoldBotHistory
+holdInitHistory :: (MonadIO m) => m ()
 holdInitHistory = return ()
 
   {-forever $ do
@@ -99,54 +109,61 @@ holdInitHistory = return ()
   map someFunction unitPoss
 -}
 
-getOwnSupplies :: SupplyCOwnerships -> HoldBrain [Province]
+getOwnSupplies :: (OrderClass o) => SupplyCOwnerships -> HoldBrain o [Province]
 getOwnSupplies (SupplyCOwnerships supplies) = do
   myPower <- getPower
   return . head $ [provinces | (power, provinces) <- toList supplies, myPower == power]
 
-holdUnits :: UnitPositions -> [Province] -> HoldBrain HoldBotDecision
-holdUnits (UnitPositions (Turn Spring _) units) _ = do
+holdUnitsMove :: UnitPositions -> HoldBrainMove [UnitPosition]
+holdUnitsMove (UnitPositions (Turn Spring _) units) = do
   myPower <- getPower    
-  return $ HoldDecision $ filter (isMyPower myPower) units
+  return $ filter (isMyPower myPower) units
 -- tell all units to hold
 
-holdUnits (UnitPositions (Turn Fall _) units) _	 = do
+holdUnitsMove (UnitPositions (Turn Fall _) units)	 = do
   myPower <- getPower    
-  return $ HoldDecision $ filter (isMyPower myPower) units
+  return $ filter (isMyPower myPower) units
 -- tell all units to hold
 
-holdUnits (UnitPositionsRet (Turn Summer _) unitsAndRets) _ =
+holdUnitsMove _ = error "Wrong phase(MOVE)"
+
+holdUnitsRetreat :: UnitPositions -> HoldBrainRetreat [UnitPosition]
+holdUnitsRetreat (UnitPositionsRet (Turn Summer _) unitsAndRets) =
   retreatUnits unitsAndRets
 -- need to retreat our units that need retreating
 -- unitsAndRets is a list of units that need to be retreating and
 -- each unit will have a corresponding list of provinces it can retreat to
 -- in our holdbot case we just disband.
 
-holdUnits (UnitPositionsRet (Turn Autumn _) unitsAndRets) _ =
+holdUnitsRetreat (UnitPositionsRet (Turn Autumn _) unitsAndRets) =
   retreatUnits unitsAndRets
 -- similar to above
 
-holdUnits (UnitPositions (Turn Winter _) units) ownSupplies =
+holdUnitsRetreat _ = error "Wrong phase(RETREAT)"
+
+holdUnitsBuild :: UnitPositions -> [Province] -> HoldBrainBuild (Either [UnitPosition] Power)
+holdUnitsBuild (UnitPositions (Turn Winter _) units) ownSupplies =
   removeOrWaive units ownSupplies
 {- need to disband if we have too many units or waive builds if we have the 
    opportunity to build i.e. we have more supply centres than units and units have         
    controlled the province for at least 2 turns 
 -}
+holdUnitsBuild _ _ = error "Wrong phase(BUILD)"
 
-retreatUnits :: [(UnitPosition, [ProvinceNode])] -> HoldBrain HoldBotDecision
+retreatUnits :: [(UnitPosition, [ProvinceNode])] -> HoldBrainRetreat [UnitPosition]
 retreatUnits unitsAndRetreats = do 
   let units = [unit| (unit, _) <- unitsAndRetreats]
   myPower <- getPower
-  return $ DisbandDecision $ filter (isMyPower myPower) units
+  return $ filter (isMyPower myPower) units
 
-removeOrWaive :: [UnitPosition] ->  [Province] -> HoldBrain HoldBotDecision
+removeOrWaive :: [UnitPosition] ->  [Province] -> HoldBrainBuild (Either [UnitPosition] Power)
 removeOrWaive units supplyCentres 
   | difference > 0 = do
                         myPower <- getPower    
-                        return $ RemoveDecision $ filter (isMyPower myPower) (take difference units)
+                        return $ Left $ filter (isMyPower myPower) (take difference units)
   | otherwise      = do
                         myPower <- getPower
-                        return $ WaiveDecision myPower
+                        return $ Right myPower
   where
     difference = (length units) - (length supplyCentres)  
      {- here we need to waive a build on a unit on a province in our home territory 

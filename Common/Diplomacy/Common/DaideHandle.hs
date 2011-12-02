@@ -48,6 +48,7 @@ newtype DaideHandleT m a = DaideHandle
 instance (Monad m) => MonadError DaideError (DaideHandleT m) where
   throwError = DaideHandle . lift . lift . throwError
   catchError = undefined
+--  catchError f d = DaideHandle (catchError (runDaideHandle d) (lift . lift $ d))
 
 instance MonadTrans DaideHandleT where
   lift = DaideHandle . lift . lift . lift . lift

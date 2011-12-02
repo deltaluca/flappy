@@ -50,6 +50,9 @@ Library
   -- Modules exported by the library.
   Exposed-modules: Diplomacy.AI.SkelBot.Brain,
                    Diplomacy.AI.SkelBot.SkelBot
+                   Diplomacy.AI.SkelBot.DipBot
+                   Diplomacy.AI.SkelBot.Comm
+                   Diplomacy.AI.SkelBot.GameInfo
   
   -- Packages needed in order to build this package.
   Build-depends:       
@@ -87,22 +90,22 @@ Executable holdbot
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
   -- Build-tools:         
   
-Executable randombot
-  Main-is:           Diplomacy/AI/Bots/RandomBot/randombot.hs
-  -- Packages needed in order to build this package.
-  Build-depends:       
-    base >= 4,
-    cmdargs,
-    hslogger,
-    mtl,
-    DiplomacyCommon <= 1,
-    MonadRandom,
-    random,
-    containers,
-    transformers
+-- Executable randombot
+--   Main-is:           Diplomacy/AI/Bots/RandomBot/randombot.hs
+--   -- Packages needed in order to build this package.
+--   Build-depends:       
+--     base >= 4,
+--     cmdargs,
+--     hslogger,
+--     mtl,
+--     DiplomacyCommon <= 1,
+--     MonadRandom,
+--     random,
+--     containers,
+--     transformers
 
-  -- Modules not exported by this package.
-  -- Other-modules:       
+--   -- Modules not exported by this package.
+--   -- Other-modules:       
   
-  -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
-  -- Build-tools:     
+--   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
+--   -- Build-tools:     
