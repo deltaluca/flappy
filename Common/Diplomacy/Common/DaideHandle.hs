@@ -36,12 +36,13 @@ import Network
 -- Daide communication holding client info
 type DaideCommT = ReaderT DaideHandleInfo
 
--- for easier typing
-type DaideUnder m = ContT () (ErrorT DaideError (DaideCommT m))
+-- Daidecomm with error handling
+type DaideCommErrorT m = ErrorT DaideError (DaideCommT m)
 
--- DaideHandle is a Daide communication with error handling and shutting down
+-- DaideHandle is a Daide communication with error handling and exiting
 newtype DaideHandleT m a = DaideHandle
-                           { runDaideHandle :: ReaderT (DaideUnder m ()) (DaideUnder m) a }
+                           { runDaideHandle :: ReaderT (ContT () (DaideCommErrorT m) ()) -- shutting down computation
+                                               (ContT () (DaideCommErrorT m)) a }
                          deriving (Monad, MonadIO)
 
 instance (Monad m) => MonadError DaideError (DaideHandleT m) where
@@ -113,16 +114,17 @@ noteWith f msg = do
 note :: (MonadIO m, MonadReader DaideHandleInfo m) => String -> m ()
 note = noteWith noticeM
 
-withShutdown :: (Monad m) => (ContT () m b -> ContT () m ()) -> m ()
-withShutdown f = flip runContT id . callCC $ \sd -> f (sd (return ()))  >> return (return ())
+withExit :: (Monad m) => (ContT r m b -> ContT r m ()) -> ContT r m ()
+withExit f = callCC $ \sd -> f (sd ())
 
 runDaideT :: (MonadIO m) => DaideHandleT m () -> DaideHandleInfo -> m ()
 runDaideT daide info =
   runReaderT readr info
     where
-      err = withShutdown (\shutDown ->
-                           flip runReaderT shutDown
-                           (runDaideHandle daide))
+      con = withExit (\exit ->
+                       flip runReaderT exit
+                       (runDaideHandle daide))
+      err = runContT con return
       readr = runErrorT err >>= handleError
 
 shutdownDaide :: (MonadIO m) => DaideHandleT m ()

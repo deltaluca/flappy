@@ -2,7 +2,6 @@ module Main where
 
 import Diplomacy.AI.SkelBot.SkelBot
 import Diplomacy.AI.SkelBot.Brain
-import Diplomacy.AI.SkelBot.Decision
 import Diplomacy.AI.SkelBot.GameInfo
 import Diplomacy.AI.SkelBot.DipBot
 import Diplomacy.Common.DipMessage

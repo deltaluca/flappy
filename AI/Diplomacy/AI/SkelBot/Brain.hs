@@ -7,12 +7,13 @@
 module Diplomacy.AI.SkelBot.Brain ( Brain, BrainT
                                   , BrainCommT
                                   , mapBrainT
+                                  , mapBrain
                                   , runBrainT
                                   , runBrain
                                   , liftBrain
                                   , runBrainCommT
                                   , runGameKnowledgeT
-                                  , decide
+                                  , flushOrders
                                   , GameKnowledgeT
                                   , MonadGameKnowledge(..)
                                   , MonadBrain(..)) where
@@ -57,10 +58,10 @@ instance (Monad m) => MonadGameKnowledge h (GameKnowledgeT h m) where
   putHistory = GameKnowledge . put
 
   -- |h = history type, o = order type
-newtype BrainT o h m a = Brain (ReaderT GameState (StateT (Maybe o) (GameKnowledgeT h m)) a)
-                       deriving (Monad, MonadReader GameState, MonadState (Maybe o))
+newtype BrainT o h m a = Brain (ReaderT GameState (StateT (Maybe [o]) (GameKnowledgeT h m)) a)
+                       deriving (Monad, MonadReader GameState, MonadState (Maybe [o]))
 
-type OrderVar o = TVar (Maybe o)
+type OrderVar o = TVar (Maybe [o])
 
 newtype BrainCommT o h m a = BrainComm (ReaderT (OrderVar o) (CommT InMessage OutMessage (BrainT o h m)) a)
                            deriving (Monad)
@@ -87,39 +88,44 @@ instance (Monad m, OrderClass o) => MonadGameKnowledge h (BrainT o h m) where
   
 class (Monad m, OrderClass o) => MonadBrain o m | m -> o where
   asksGameState :: (GameState -> a) -> m a
-  getsOrder :: (o -> a) -> m (Maybe a)
+  getsOrders :: ([o] -> a) -> m (Maybe a)
   askGameState :: m GameState
-  getOrder :: m (Maybe o)
-  putOrder :: Maybe o -> m ()
+  getOrders :: m (Maybe [o])
+  putOrders :: Maybe [o] -> m ()
+  appendOrder :: o -> m ()
 
   askGameState = asksGameState id
-  getOrder = getsOrder id
+  getOrders = getsOrders id
+  appendOrder o = putOrders . Just . maybe [o] (o :) =<< getOrders
 
 instance (Monad m, OrderClass o) => MonadBrain o (BrainT o h m) where
   asksGameState = Brain . asks
-  getsOrder f = maybe (return Nothing) (return . Just . f) =<< getOrder
-  putOrder = Brain . put
+  getsOrders f = maybe (return Nothing) (return . Just . f) =<< getOrders
+  putOrders = Brain . put
 
 liftGameKnowledge :: (Monad m, OrderClass o) => GameKnowledgeT h m a -> BrainT o h m a
 liftGameKnowledge = Brain . lift . lift
 
-runBrainT :: (OrderClass o) => BrainT o h m a -> GameState -> GameKnowledgeT h m (a, Maybe o)
+runBrainT :: (OrderClass o) => BrainT o h m a -> GameState -> GameKnowledgeT h m (a, Maybe [o])
 runBrainT (Brain brain) mapState = runStateT (runReaderT brain mapState) Nothing
 
 mapBrainT :: (Monad m, Monad n, OrderClass o) =>
-             (m ((a, Maybe o), h) -> n ((b, Maybe o), h)) -> BrainT o h m a -> BrainT o h n b
+             (m ((a, Maybe [o]), h) -> n ((b, Maybe [o]), h)) ->
+             BrainT o h m a -> BrainT o h n b
 mapBrainT f mbrain = do
   a <- askGameState
   b <- askGameInfo
   c <- getHistory
-  ((ret, order), c2) <- lift . f $ runGameKnowledgeT (runBrainT mbrain a) b c
+  ((ret, orders), c2) <- lift . f $ runGameKnowledgeT (runBrainT mbrain a) b c
   putHistory c2
-  putOrder order
+  putOrders orders
   return ret
 
 type Brain o h = BrainT o h Identity
 
-mapBrain :: (Monad m, OrderClass o) => (((a, Maybe o), h) -> m ((b, Maybe o), h)) -> Brain o h a -> BrainT o h m b
+mapBrain :: (Monad m, OrderClass o) =>
+            (((a, Maybe [o]), h) -> m ((b, Maybe [o]), h)) ->
+            Brain o h a -> BrainT o h m b
 mapBrain f = mapBrainT (f . runIdentity)
 
 runBrain :: (Monad m, OrderClass o) => Brain o h a -> BrainT o h m a
@@ -134,19 +140,20 @@ instance (MonadIO m, OrderClass o) => MonadComm InMessage OutMessage (BrainCommT
 
 instance (Monad m, OrderClass o) => MonadBrain o (BrainCommT o h m) where
   asksGameState = liftBrain . asksGameState
-  getsOrder = liftBrain . getsOrder
-  putOrder = liftBrain . putOrder
+  getsOrders = liftBrain . getsOrders
+  putOrders = liftBrain . putOrders
 
 instance (Monad m, OrderClass o) => MonadGameKnowledge h (BrainCommT o h m) where
   asksGameInfo = liftBrain . asksGameInfo
   getsHistory = liftBrain . getsHistory
   putHistory = liftBrain . putHistory
 
-runBrainCommT :: (Monad m, OrderClass o) => BrainCommT o h m a -> OrderVar o -> TSeq InMessage -> TSeq OutMessage -> BrainT o h m a
+runBrainCommT :: (Monad m, OrderClass o) => BrainCommT o h m a -> OrderVar o ->
+                 TSeq InMessage -> TSeq OutMessage -> BrainT o h m a
 runBrainCommT (BrainComm m) dVar inq outq = runCommT (runReaderT m dVar) inq outq
 
-decide :: (MonadIO m, OrderClass o) => o -> BrainCommT o h m ()
-decide decision = do
+flushOrders :: (MonadIO m, OrderClass o) => [o] -> BrainCommT o h m ()
+flushOrders orders = do
   tVar <- BrainComm ask
   liftIO . atomically $ do 
-    writeTVar tVar (Just decision)
+    writeTVar tVar (Just orders)

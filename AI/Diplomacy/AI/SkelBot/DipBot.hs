@@ -11,9 +11,7 @@ import Control.Monad.State
 data Results = ASD
 
 data DipBot m h = DipBot { dipBotBrainMovement :: BrainCommT OrderMovement h m ()
-                         , dipBotBrainRetreat :: BrainCommT OrderRetreat h m ()
-                         , dipBotBrainBuild :: BrainCommT OrderBuild h m ()
+                         , dipBotBrainRetreat :: Brain OrderRetreat h ()
+                         , dipBotBrainBuild :: Brain OrderBuild h ()
                          , dipBotProcessResults :: Results -> h -> h
                          , dipBotInitHistory :: m h }
-
-
