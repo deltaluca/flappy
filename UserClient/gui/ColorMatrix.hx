@@ -2,8 +2,6 @@ package gui;
 
 import nme.filters.ColorMatrixFilter;
 
-typedef HSL = {H:Float,S:Float,L:Float};
-
 class ColorMatrix {
 
 	var elts:Array<Float>;
@@ -15,51 +13,14 @@ class ColorMatrix {
 			elts = xs;
 	}
 
-	function mult(x:ColorMatrix) {
-		var ret:Array<Float> = [];
-		for(i in 0...3) {
-			for(j in 0...4) {
-				var v = 0.0;
-				for(k in 0...3)
-					v += elts[i*4+k]*x.elts[k*4+j];
-				if(j==4)
-					v += elts[i*4+4];
-				ret.push(v);
-			}
-		}
-		elts = ret;
-	}
+	static public function hsl_shift(H:Float,S:Float,V:Float) {
+	    var VSU = V*S*Math.cos(H);
+	    var VSW = V*S*Math.sin(H);
 
-	static public function brightness(p:Float) {
 		return new ColorMatrix([
-			1,0,0, p,
-			0,1,0, p,
-			0,0,1, p
-		]);
-	}
-
-	static public function saturation(p:Float) {
-		var x = 1 + (p>0 ? 3*p : p);
-		var lumr = 0.3086*(1-x);
-		var lumg = 0.6094*(1-x);
-		var lumb = 0.0820*(1-x);
-		return new ColorMatrix([
-			lumr + x, lumg, lumb, 0,
-			lumr, lumg + x, lumb, 0,
-			lumr, lumg, lumb + x, 0
-		]);
-	}
-
-	static public function hue(p:Float) {
-		var cos = Math.cos(p);
-		var sin = Math.sin(p);
-		var lumr = 0.213;
-		var lumg = 0.715;
-		var lumb = 0.072;
-		return new ColorMatrix([
-			lumr+cos*(1-lumr)+sin*(-lumr), lumg+cos*( -lumg)+sin*(-lumg), lumb+cos*( -lumb)+sin*(1-lumb),0,
-			lumr+cos*( -lumr)+sin*(0.143), lumg+cos*(1-lumg)+sin*(0.140), lumb+cos*( -lumb)+sin*(-0.283),0,
-			lumr+cos*( -lumr)+sin*(lumr-1),lumg+cos*( -lumg)+sin*( lumg), lumb+cos*(1-lumb)+sin*(  lumb),0
+    		(.299*V+.701*VSU+.168*VSW),(.587*V-.587*VSU+.330*VSW),(.114*V-.114*VSU-.497*VSW),0,
+    		(.299*V-.299*VSU-.328*VSW),(.587*V+.413*VSU+.035*VSW),(.114*V-.114*VSU+.292*VSW),0,
+	   		(.299*V-.3*VSU+1.25*VSW),(.587*V-.588*VSU-1.05*VSW),(.114*V+.886*VSU-.203*VSW),0
 		]);
 	}
 
@@ -74,28 +35,26 @@ class ColorMatrix {
 
 		var H = 0.0;
 		var S = 0.0;
-		var L = (max+min)/2;
+		var V = (max+min)/2;
 		if(max!=min) {
-			if(L<0.5) S = (max-min)/(max+min);
-			else      S = (max-min)/(2-max-min);
-
-			if(r==max) H = (g-b)/(max-min);
-			else if(g==max) H = 2 + (b-r)/(max-min);
-			else H = 4+(r-g)/(max-min);
-
-			H *= Math.PI/3;
+			S = if(V<0.5) (max-min)/(max+min) else (max-min)/(2-max-min);
+			if(S!=0) {
+				if(r==max) H = (g-b)/(max-min);
+				else if(g==max) H = 2 + (b-r)/(max-min);
+				else H = 4+(r-g)/(max-min);
+	
+				H *= Math.PI/3;
+			}
 		}
 
-		return {H:H,S:S,L:L};
+		return {H:H,S:S,V:V};
 	}
 
 	//matrix to transform RED 0xff0000 into given RGB value
 	static public function fromred(rgb:Int) {
 		var col = hsl(rgb);
-		var ret = brightness(col.L-0.5);
-		ret.mult(saturation(col.S-1));
-		ret.mult(hue(col.H));
-
+		var ret = hsl_shift(col.H,col.S,col.V*2);
+		trace([col.H,col.S,col.V*2, ret.elts]);
 		return ret;
 	}
 
