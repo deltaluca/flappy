@@ -45,16 +45,20 @@ class Main extends Sprite {
 
 		var ggui = new Gui();
 		addChild(ggui);
+		
+		var cli = new Cli();
 
-		var terminal = new Terminal(stage.stageWidth,stage.stageHeight);
-		addChild(terminal);
+		var terminal = new Terminal();
+		addChild(terminal.display);
 		terminal.visible = false;
+		terminal.bind(cli);
+
 		stage.addEventListener(KeyboardEvent.KEY_DOWN, function (ev) {
 			if(ev.keyCode == 192) //`¬ key
-				terminal.visible = terminal.logging = !terminal.visible; 
+				terminal.visible = !terminal.visible; 
 		});
 
-		var gint = new GuiInterface(ggui,terminal);
+		var gint = new GuiInterface(ggui,cli);
 
 		function size() {
 			ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);

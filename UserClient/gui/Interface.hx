@@ -2,7 +2,7 @@ package gui;
 
 import daide.Language;
 import gui.Gui;
-import Terminal;
+import Cli;
 
 /**
 
@@ -14,32 +14,32 @@ import Terminal;
 
 class GuiInterface {
 	var ggui:Gui;
-	var terminal:Terminal;
-	public function log(x:Dynamic) terminal.log(x)
-	public function daide(x:Message) terminal.daide(x)
-	public function daidestr(x:String) terminal.cmd("daide "+x)
+	var cli:Cli;
+	public function log(x:Dynamic) cli.log(x)
+	public function daide(x:Message) cli.daide(x)
+	public function daidestr(x:String) cli.cmd("daide "+x)
 	
-	public function new(ggui:Gui, term:Terminal) {
+	public function new(ggui:Gui, cli:Cli) {
 		this.ggui = ggui;
-		terminal = term;
-		terminal.bind(this);
+		this.cli = cli;
+		cli.bind(this);
 		//ggui.bind(this);
 	}
 
 	//---------------------------------------------------------------------------
 
 	public function join(host:String, port:Int, name:String) {
-		terminal.connect(host,port);
+		cli.connect(host,port);
 		daide(mName(name,"Flappy GUI 1.0a"));
 		refresh();
 	}
 	public function observer(host:String, port:Int) {
-		terminal.connect(host,port);
+		cli.connect(host,port);
 		daide(mObserver);
 		refresh();
 	}
 	public function rejoin(host:String, port:Int, power:Int, passcode:Int) {
-		terminal.connect(host,port);
+		cli.connect(host,port);
 		daide(mIAm(power,passcode));
 		refresh();
 	}

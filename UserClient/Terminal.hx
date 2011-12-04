@@ -7,6 +7,7 @@ import nme.text.TextFormat;
 import nme.text.TextFieldType;
 import nme.Assets;
 import nme.events.KeyboardEvent;
+import nme.events.Event;
 
 import daide.Socket;
 import daide.HLex;
@@ -18,7 +19,162 @@ import daide.Unparser;
 import gui.Interface;
 
 using StringTools;
+import Mut;
 
+import haxe.Timer;
+
+class Log {
+	public var text:String;
+	public var lines:Int;
+	
+	public function new() {
+		text = "";
+		lines = 0;
+	}
+}
+
+class Terminal {
+	public var display:Sprite;
+
+	var logger:TextField;
+	var inp   :TextField;
+	//background for darkening of background when terminal is displayed
+	var backg :Sprite;
+
+	//----------------------------------------------------------------
+	//logger value locked as used from many threads
+	var mlog:Mut<Log>;
+
+	var maxlines:Int;
+	var maxwidth:Int;
+
+	function crop() {
+	mlog.without(function(x:Log) {
+		while(x.lines>=maxlines) {
+			x.text = x.text.substr(x.text.indexOf("\n")+1);
+			x.lines--;
+		}
+	});
+	}
+
+	function log(value:Dynamic) {
+	mlog.without(function(x:Log) {
+		if(value==null) { x.text = ""; x.lines = 0; return; }
+
+		var xs = Std.string(value);
+		function log(xs:String) {
+			var split = xs.split("\n");
+			if(split.length>1) {
+				for(s in split) log(s);
+				return;
+			}
+			var cnt = Math.ceil(xs.length/maxwidth);
+			if(cnt>1) {
+				for(i in 0...cnt) log(xs.substr(i*maxwidth,maxwidth));
+				return;
+			}
+			x.text += xs+"\n";
+			x.lines++;
+		}
+		log(xs);
+		crop();
+	});
+	}
+
+	//----------------------------------------------------------------
+	
+	public var visible(default, setvisible):Bool;
+	function setvisible(visible:Bool) {
+		display.visible = visible;
+		if(this.visible==visible) return visible;
+		this.visible = visible;
+
+		if(visible) logger.addEventListener   (Event.ENTER_FRAME, update);
+		else        logger.removeEventListener(Event.ENTER_FRAME, update);
+		return visible;
+	}
+	function update(_) {
+		mlog.without(function (x:Log) {
+			logger.text = x.text;
+		});
+	}
+
+	//----------------------------------------------------------------
+
+	var cli:Cli;
+	public function bind(cli:Cli) {
+		this.cli = cli;
+		cli.logger = log;
+	}
+
+	public function new() {
+		display = new Sprite();
+		var font = Assets.getFont("Assets/Courier.ttf");
+	
+		mlog = new Mut<Log>(new Log());
+		maxlines = maxwidth = 1;
+	
+		inp = new TextField();
+		inp.type = TextFieldType.INPUT;
+		inp.defaultTextFormat = new TextFormat(font.fontName,10,0);
+		inp.backgroundColor = 0xaeaeae;
+		inp.background = true;
+		inp.height = 16;
+		display.addChild(inp);
+
+		backg = new Sprite();
+		backg.graphics.beginFill(0,0.75);
+		backg.graphics.drawRect(0,0,100,100);
+		display.addChild(backg);
+
+		logger = new TextField();
+		logger.multiline = true;
+		logger.defaultTextFormat = new TextFormat(font.fontName,10,0xffffff);
+		display.addChild(logger);
+
+		var history = new Array<String>();
+		var histcnt = 0;
+		inp.addEventListener(KeyboardEvent.KEY_DOWN, function(ev) {
+			if(ev.keyCode == Keyboard.ENTER) {
+				if(histcnt!=0) history[history.length-histcnt] = inp.text;
+				if((~/[ \t]+/g).replace(inp.text,"").length>0) {
+					history.push(inp.text);
+					histcnt = 0;
+					cli.cmd(inp.text);
+					inp.text = "";
+				}
+			}else if(ev.keyCode == Keyboard.UP) {
+				if(histcnt!=0) history[history.length-histcnt] = inp.text;
+				if(histcnt<history.length)
+					inp.text = history[history.length-(++histcnt)];
+			}else if(ev.keyCode == Keyboard.DOWN) {
+				if(histcnt!=0) history[history.length-histcnt] = inp.text;
+				if(histcnt>0)
+					inp.text = history[history.length-(--histcnt)];
+			}else if(ev.keyCode == Keyboard.TAB) {
+				inp.text = cli.completion(inp.text);
+			}
+		});	
+	}
+
+	//----------------------------------------------------------------
+
+	public function resize(width:Int,height:Int) {
+		logger.width = inp.width = width;
+		logger.height = height - inp.height;
+		inp.y = logger.height;
+
+		maxlines = Std.int(logger.height/10.02);
+		maxwidth = Std.int(logger.width/6);
+		mlog.without(function (x:Log) {
+			x.lines--; crop(); x.lines++;
+		});
+
+		backg.width = logger.width;
+		backg.height = logger.height;
+	}
+}
+/*
 class Terminal extends Sprite {
 	var logger:TextField;
 	var inp:TextField;
@@ -269,4 +425,4 @@ class Terminal extends Sprite {
 		sock.delay = socketdelay;
 		if(gint!=null) sock.bind(gint.receiver);
 	}
-}
+}*/
