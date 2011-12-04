@@ -1,0 +1,82 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage}
+\usepackage{cite}
+\usepackage{datetime}
+\usepackage{geometry}
+\geometry{verbose,lmargin=3cm,rmargin=3cm}
+
+\title{Automated negotiation in the game of diplomacy - Report 3: Software Validation}
+\author{Matthias Hueser, Andras Slemmer, Luca Deltodesco, Luke Tomlin, Cliff Sun}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Project synopsis}
+The Game of Diplomacy is a multiplayer game that removes the element of 'luck' in gameplay and replaces it with negotiation between players. 
+\subsection{Aims of the project}
+The over-arching goal of this project is to create an AI that is capable of negotiating with other players, whether they be human or AI, through a predefined language. This is a challenge that involves utilising many different facets of AI (learning, tactics, rationalising) and a deep understanding of the game itself.
+
+As an aside to this AI creation, we are also developing an open-source framework from which other users can build their own AIs, as well as creating a server that is capable of hosting Diplomacy games between multiple users. These are written purely in the functional programming language Haskell.
+
+By developing the frameworks and server in an open-source fashion, we are helping to develop the Diplomacy community as a whole - for instance, enabling users who are not on a Windows-based machine to play the game online or across a network. Additionally, by providing a framework for new AI creation, users are liberated from the chore of having to work at a low level and are able to simply work on the AI itself. Some users may also find the functional programming methodology more rewarding than an Obect-Oriented or Imperative approach.
+\subsection{Metrics and Progress}
+There are multiple ways in which we can measure the progress of our AI. Our initial milestone was to create the AI framework and the server, and then proceed to iterate a build of an AI, progressively increasing its abilities and making it better. Discussed below is how we can quantise a 'better' AI.
+\subsubsection{Framework and Server progress}
+It is difficult to iteratively build a server - the lowest level of operation is still quite high. There are many aspects of the Daide language to be implemented (it was quite a large language), as well as many functions related to a game of Diplomacy. Before the server can be classed as 'working', it has to adhere to a strict specification, all of which has to be supported. Fortunately some aspects of it are different from others - for instance, the connection and messaging portions can be tested seperately from the game management areas. The same goes for an AI framework - without a functional AI to plug into the framework (which doesn't exist yet) it is a challenge to know exactly if it will work as intended. Once a working version has been created, however, it is quite simple to see it improve, as new (additional) features are added and bugs ironed out.
+
+AI creation also began at the same time as the AI framework creation. This means that as new features are added to the framework, old features may no longer be supported or their implementation is changed, resulting in changes being required to the AI. However this was also beneficial in the opposite direction - as the AI gained functions and became more complicated, it became evident that additional features were required in the framework, which we then add. 
+
+\subsubsection{AI progress}
+An initial set of milestones is already present on the Daide wiki. It describes an iteratively improved bot, that gains functionality and depth on each iteration. As described in an earlier report, the first bot (HoldBot) is simply an AI that works, but does nothing. After this, RandomBot is created, which gains the ability to analyse what moves are available to it, and then randomly perform one of them. As you can see, whereas HoldBot simply is 'functional', but essentially blind, RandomBot is capable of evaluating a decision (albeit possibly a bad one). After this, negotation aspects are added, further increasing the abilities of the bot itself. 
+
+Within each of these milestones, we can weigh a bot's ability using its only application - playing the game of diplomacy. For this, we need to come up with a set of metrics with which we can evaluate a players performance in a game. Some key indicators include:
+
+\begin{itemize}
+\item The number of supply depots owned at the end of the game.
+\item If the player actually wins the game
+\item Units lost throughout the game
+\item Provinces conceded throughout the game
+\end{itemize}
+
+These are not all of the same value, of course. Winning a game is possibly the most important aspect of a game of diplomacy - if the AI somehow manages to negotiate each of the players in such an extraordinary fashion as to persuade them to surrender, it is obviously playing extremely well! 
+
+With regards to supply depots, the winning player will own half of them (eighteen), with the second-most successful player owning the second highest amount, and so on and so forth. A player with no supply-depots is very close to becoming a losing player.
+
+Units lost is a difficult metric to quantise - whilst it may immediately seem that losing many units is a bad thing, these could be due to tactical masteries involving trapping and deluding many foes. Objectively, it is probably advisable to refrain from losing units where possible.
+
+Similarly, conceding provinces, unless done in a planned fashion, is a general indicator that a player is not performing well.
+
+These are about all of the indicators that exist in a game of deplomacy - because of the conceptual simplicity of a game (in that it involves taking supply depots and provinces, using equally matched units). By combining these indicators in a weighted fashion (possibly with some needed calibration), we should be able to compute a good score of how well an particular AI is playing.
+
+As a corollary of this, a higher-scoring AI should generally beat a lower scoring one.
+
+\subsubsection{Where we are currently}
+Unfortunately we suffered some setbacks in the beginning with planning and evaluation of how long it would actually take us to complete the server and framework - these miscalculations have been addressed and we are now progressing with the AI creation concurrently with the server/framework improvements. 
+
+\section{Software Validation}
+ 
+
+\subsection{Testing}
+\subsubsection{Quickcheck}
+\subsubsection{Unit tests}
+\subsubsection{Acceptance tests}
+
+\subsection{General Validation}
+
+
+\section{Managerial Documentation}
+\subsection{Collaboration tools}
+\subsection{Management/Organisational policies}
+\subsection{Knowledge transfer within the group}
+\subsection{Group meetings}
+\subsection{Group activity}
+\subsection{Log-Book}
+
+
+\begin{itemize}
+\item 
+\end{itemize}
+
+\end{document}
+$2^{91}$
