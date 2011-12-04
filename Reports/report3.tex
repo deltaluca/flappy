@@ -52,31 +52,53 @@ These are about all of the indicators that exist in a game of deplomacy - becaus
 As a corollary of this, a higher-scoring AI should generally beat a lower scoring one.
 
 \subsubsection{Where we are currently}
-Unfortunately we suffered some setbacks in the beginning with planning and evaluation of how long it would actually take us to complete the server and framework - these miscalculations have been addressed and we are now progressing with the AI creation concurrently with the server/framework improvements. 
+Unfortunately we suffered some setbacks in the beginning with planning and evaluation of how long it would actually take us to complete the server and framework - these miscalculations have now been addressed and we are progressing with the AI creation, concurrently with the server/framework improvements. 
+
+The HoldBot and RandomBot have been written (to the current specification of the AI framework), and improved versions are in progress. Research has already been done on implementations of these improvements, so all things considered it shouldn't be particularly hard to get them up and running. Progress can now also be checked against ready-made bots from the Daide server using the metrics mentioned above.
 
 \section{Software Validation}
- 
-
 \subsection{Testing}
 \subsubsection{Quickcheck}
 \subsubsection{Unit tests}
 \subsubsection{Acceptance tests}
-
 \subsection{General Validation}
+A very practical and simple method for us to test out AI is to see if it is capable of playing with a working Daide server. Our AI framework adheres to the same language specification as Daide, so in theory should be able to play with other AIs on the server. Similarly, other AIs should be able to play on our AI server, amongst themselves and against our own AI. Of course, a 'working' AI does not necessarily mean a fully functioning one - as long as it is capable of sending the correct messages, the server will not complain. 
+
+As discussed above, we can also test how well our AI is working by pitting it against other AIs. This is related to progress checks, except with a twist - we can put the AI in specific situations, where it should take a particular action, and observe its decisions. This should be easier based upon our planned implementation of move decision (in that we create a tree of facts and decisions based on these facts, with weightings. The root node (the final decision) is based upon the combination of all the decisions in the branches below), in that we can individually pick apart a decision made my the AI to see exactly why it decided to take that action.
+
+\subsubsection{UI design testing}
+There are only limited interactions with the interface on a human client. As long as the player is capable of submitting any possible move on the board (whether or not that be a valid move) and is capable of communicating with the other players, the game is classified as functioning (of course some simple window/game functions are also present, such as starting or closing a game). Then any additional features merely serve to make the user interaction easier or more pleasant.
+
+Automated testing is also a possibility, however. //BLAHBLAH STUFF HERE//
+
+\subsubsection{Other tools}
+Coding was performed in Emacs/Vim/Gedit or other similar simple text editors. No IDE was used, or code checking programs, such as lint.
+
+\subsubsection{Code inspection}
+As the AI framework was built from the ground-up, everyone in the group who wished to write or assist in writing the AI was required to know how to use the AI framework. As there is (currently) no documentation, this involved reading the written code and understanding how it worked. As such, at least two other people read a majority of the code that is written on the framework. With respect to the code of the AI, as we are at different levels of coding ability (in Haskell in particular), it has been beneficial to write the AI in pairs, so that ideas and implementations can be discussed. This is similar in many ways to Pair Programming.
+
+\subsubsection{Stress testing}
 
 
 \section{Managerial Documentation}
 \subsection{Collaboration tools}
+Collaboration has mainly been centered around GitHub, and the features present there. Resources include issue flagging, progress and milestone setting, comments and of course, code hosting. In addition to this, we have made regular use of email to schedule meetings, and discuss group progress outside of actually meeting up.
+
 \subsection{Management/Organisational policies}
+Code change and validation properties have been quite loose within the group - this is mainly due to the disparity of knowledge when it comes to how to code parts of the project. On the whole, drastic code changes have been handled either as a group or by someone with a lot more knowledge than others on the subject, and any other code changes operated on a 'trust-based' policy. Obviously, the addition of version control removes some of the risks associated with this; if someone manages to somehow delete large portions of the code, it is a simple task to restore it to a previous version.
+
 \subsection{Knowledge transfer within the group}
+As previously mentioned, there is a significant amount of knowledge variation within members of the group. Some of us are skilled with Haskell coding, whilst some of us are merely acquanted with it. Similarly, GUI design, AI design, general coding skills and other things are all varied. We have remedied this somewhat by working in pairs or more, allowing the parts of the knowledge to diffuse (in a manner similar to osmosis) between group members as problems are encountered and solved. Additionally, papers and other learning tools have been shared (via GitHub and Gmail) to aid the code writing process. Where learning-by-application and reading have failed, group members have also been keen to help each other, spending time drawing diagrams and explaining concepts.
+
 \subsection{Group meetings}
+//BIG TABLE GOES HERE//
+
 \subsection{Group activity}
+Due to the variation of knowledge within the group, activity has been varied and focused in different areas. 
+
+//ELABORATION//
+
 \subsection{Log-Book}
-
-
-\begin{itemize}
-\item 
-\end{itemize}
+//NON-EXISTENT LOGBOOK//
 
 \end{document}
-$2^{91}$
