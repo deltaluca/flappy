@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleInstances #-}
 
 module Diplomacy.Common.DaideMessage where
 
@@ -6,6 +6,7 @@ import Diplomacy.Common.DaideError
 import Diplomacy.Common.DipMessage
 import Diplomacy.Common.DipToken
 
+import Debug.Trace
 import Data.Binary
 import Control.Exception as E
 import Control.Monad
@@ -16,7 +17,6 @@ data DaideMessage = IM {imVersion :: Int}
                   | FM
                   | DM DipMessage
                   | EM DaideError
-                  | Tokens [DipToken] -- for debugging
                   deriving (Show)
 
 
@@ -33,7 +33,9 @@ instance Binary DaideMessage where
   put (EM err) = putMessage 4 2 $ do
     (put :: Word16 -> Put) . fromIntegral . errorCode $ err
   put FM = putMessage 3 0 $ return ()
-  put _ = undefined
+  put (DM dm) = do
+    let toks = uParseDipMessage dm
+    trace (show toks) $ putMessage 2 (fromIntegral (length toks * 2)) (mapM_ put toks)
   get = do
     typ <- get :: Get Word8
     get :: Get Word8           -- padding
@@ -65,11 +67,9 @@ daideMessage 2 size = do
   case eMessage of
     Left err -> throw err
     Right msg -> return (DM msg)
-
 daideMessage 3 _ = return FM
 daideMessage 4 size = do
   when (size < 2) (E.throw MsgTooShort)
   errCode <- get :: Get Word16
   return . EM . errorFromCode . fromIntegral $ errCode
 daideMessage _ _ = E.throw UnknownMsg
-

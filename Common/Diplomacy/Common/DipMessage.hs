@@ -470,7 +470,7 @@ pStartPing = return StartPing
 
 pVariant :: DipRep s t => DipParser s (Int, [VariantOption])
 pVariant = do
-  options <- many pVariantOpt
+  options <- many (paren pVariantOpt)
   let (lvls, others) = splitWith (\v -> case v of {Level _ -> True ; _ -> False}) options
   case lvls of
     (Level lvl) : _ -> return (lvl, others)
