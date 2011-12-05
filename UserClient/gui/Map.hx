@@ -70,6 +70,54 @@ class Map extends GuiElem {
 
 	//--------------------------------------------------------------------------------------------
 
+	public function inform_defn(powers:Array<Int>, provinces:MdfProvinces, adjs:Array<MdfProAdjacencies>) {
+		var spr = new Sprite();
+		addChild(spr);
+		var g = spr.graphics;
+		g.lineStyle(2,0,1);
+	
+		for(adj in adjs) {
+			var pro = adj.pro;
+			var adjs = adj.coasts; //adjs.unit, adjs.coast, adjs.locs Array<Location> { province, coast }	
+
+			for(adj in adjs) {
+				switch(adj.unit) {
+				case utArmy:
+					var proloc = location_point({province:pro, coast:null});
+					proloc = mapToScreen(proloc.x,proloc.y);
+					
+					g.lineStyle(2,0,1);
+					g.drawCircle(proloc.x,proloc.y,3);
+					for(loc in adj.locs) {
+						g.moveTo(proloc.x,proloc.y);
+						var pl = location_point(loc);
+						pl = mapToScreen(pl.x,pl.y);
+						var cx = (proloc.x+pl.x)/2 - (pl.y-proloc.y)*0.25;
+						var cy = (proloc.y+pl.y)/2 + (pl.x-proloc.x)*0.25;
+						g.curveTo(cx,cy,pl.x,pl.y);
+					}
+				case utFleet:
+					var proloc = location_point({province:pro, coast:adj.coast});
+					proloc = mapToScreen(proloc.x,proloc.y);
+					
+					g.lineStyle(2,0xff,1);
+					g.drawCircle(proloc.x,proloc.y,3);
+					for(loc in adj.locs) {
+						g.moveTo(proloc.x,proloc.y);
+						var pl = location_point(loc);
+						pl = mapToScreen(pl.x,pl.y);
+						var cx = (proloc.x+pl.x)/2 - (pl.y-proloc.y)*0.25;
+						var cy = (proloc.y+pl.y)/2 + (pl.x-proloc.x)*0.25;
+						g.curveTo(cx,cy,pl.x,pl.y);
+					}
+				default:
+				}
+			}
+		}	
+	}
+
+	//--------------------------------------------------------------------------------------------
+
 	public function inform_supplyOwnerships(scos:Array<ScoEntry>) {
 		for(sco in scos) {
 			var power = sco.power;
@@ -106,6 +154,21 @@ class Map extends GuiElem {
 		}
 	}
 
+	public function location_point(location:Location) {
+		var id = TokenUtils.provinceId(location.province);
+		var name = mapnames.nameOf(id);
+		if(location.coast!=null) {
+			name += " "+Match.match(location.coast,
+				cNorth = "NC", cNorthEast = "NEC",
+				cSouth = "SC", cSouthWest = "SWC",
+				cEast  = "EC", cSouthEast = "SEC",
+				cWest  = "WC", cNorthWest = "NWC"
+			);
+		}
+
+		return mapdata.locations.get(name);
+	}
+
 	var unitlocs:Array<{power:Int, pos:Point, type:UnitType, mip:MipMap}>;
 	public function inform_locations(locs:Array<UnitWithLocAndMRT>) {
 		for(x in unitlocs) {
@@ -118,27 +181,14 @@ class Map extends GuiElem {
 		unitlocs = [];
 
 		for(x in locs) {
-			var power = x.unitloc.power;
-			var type = x.unitloc.type;
-			var location = x.unitloc.location;
+			var u = x.unitloc;
 
-			var id = TokenUtils.provinceId(location.province);
-			var name = mapnames.nameOf(id);
-			if(location.coast!=null) {
-				name += " "+Match.match(location.coast,
-					cNorth = "NC", cNorthEast = "NEC",
-					cSouth = "SC", cSouthWest = "SWC",
-					cEast  = "EC", cSouthEast = "SEC",
-					cWest  = "WC", cNorthWest = "NWC"
-				);
-			}
-
-			var pos = mapdata.locations.get(name);
-			var mip = genunit(type);
-			mip.filters = [MapConfig.powerFilter(power)];			
+			var pos = location_point(u.location);
+			var mip = genunit(u.type);
+			mip.filters = [MapConfig.powerFilter(u.power)];
 
 			addChild(mip);
-			unitlocs.push({power:power, pos:pos, mip:mip, type:type});
+			unitlocs.push({power:u.power, pos:pos, mip:mip, type:u.type});
 		}
 
 		display();

@@ -81,6 +81,8 @@ class GuiInterface {
 			switch(msg.msg) {
 				case mHello(power,x,v):
 					ggui.inform_iam(power,x);
+				case mMapDefinition(powers,provinces,adj):
+					ggui.map.inform_defn(powers,provinces,adj);
 				case mMap(name):
 					try {
 						ggui.load(name);
