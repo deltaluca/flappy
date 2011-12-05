@@ -73,15 +73,15 @@ class GuiInterface {
 	}
 
 	function main() {
-		var cont = true;
-		while(cont) {
-		queue.without(function (xs:Array<Message>) {
-			var msg = xs.shift();
-			if(xs.length==0) {
-				cont = false;
-				timer.stop();
-			}
-	
+		var msg:Message = null;
+		while((msg = 
+			queue.with(function (xs)
+				return if(xs.length==0) {
+					timer.stop();
+					null;
+				} else xs.shift()
+			)) != null)
+		{
 			switch(msg) {
 				case mHello(power,x,v):
 					ggui.inform_iam(power,x);
@@ -101,7 +101,6 @@ class GuiInterface {
 				default:
 					log("need to do anything for ggui with this?");
 			}
-		});
 		}	
 	}
 

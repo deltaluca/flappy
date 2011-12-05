@@ -12,10 +12,11 @@ class Mut<T> {
 		this.mut = new Mutex();
 	}
 
-	public inline function with(action:T->T) {
+	public inline function with<S>(action:T->S) {
 		mut.acquire();
-		value = action(value);
+		var ret = action(value);
 		mut.release();
+		return ret;
 	}
 	public inline function without(action:T->Void)  {
 		mut.acquire();

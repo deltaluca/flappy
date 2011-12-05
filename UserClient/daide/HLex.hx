@@ -21,212 +21,218 @@ class HLex {
 		if(transitions!=null) return;
 		transitions = [];
 var cur = [];
-cur.push([67,67,351]);
+cur.push([67,67,353]);
 transitions.push(cur);
 var cur = [];
-cur.push([79,79,350]);
+cur.push([79,79,352]);
+transitions.push(cur);
+var cur = [];
+cur.push([79,79,351]);
+transitions.push(cur);
+var cur = [];
+cur.push([89,89,350]);
 transitions.push(cur);
 var cur = [];
 cur.push([79,79,349]);
 transitions.push(cur);
 var cur = [];
+cur.push([84,84,347]);
 cur.push([89,89,348]);
 transitions.push(cur);
 var cur = [];
-cur.push([79,79,347]);
+cur.push([83,83,346]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,345]);
-cur.push([89,89,346]);
+cur.push([89,89,345]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,344]);
-transitions.push(cur);
-var cur = [];
-cur.push([89,89,343]);
+cur.push([89,89,341]);
 transitions.push(cur);
 var cur = [];
 cur.push([89,89,339]);
 transitions.push(cur);
 var cur = [];
-cur.push([89,89,337]);
+cur.push([66,66,337]);
 transitions.push(cur);
 var cur = [];
-cur.push([66,66,335]);
+cur.push([69,69,336]);
 transitions.push(cur);
 var cur = [];
-cur.push([69,69,334]);
+cur.push([67,67,334]);
 transitions.push(cur);
 var cur = [];
-cur.push([67,67,332]);
+cur.push([83,83,333]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,331]);
+cur.push([70,70,332]);
 transitions.push(cur);
 var cur = [];
-cur.push([70,70,330]);
+cur.push([75,75,331]);
 transitions.push(cur);
 var cur = [];
-cur.push([75,75,329]);
+cur.push([87,87,330]);
 transitions.push(cur);
 var cur = [];
-cur.push([87,87,328]);
+cur.push([82,82,329]);
 transitions.push(cur);
 var cur = [];
-cur.push([82,82,327]);
+cur.push([84,84,328]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,326]);
+cur.push([68,68,327]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,325]);
+cur.push([80,80,326]);
 transitions.push(cur);
 var cur = [];
-cur.push([80,80,324]);
+cur.push([83,83,325]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,323]);
+cur.push([90,90,324]);
 transitions.push(cur);
 var cur = [];
-cur.push([90,90,322]);
+cur.push([88,88,323]);
 transitions.push(cur);
 var cur = [];
-cur.push([88,88,321]);
+cur.push([68,68,322]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,320]);
+cur.push([89,89,321]);
 transitions.push(cur);
 var cur = [];
-cur.push([89,89,319]);
+cur.push([79,79,319]);
+cur.push([84,84,354]);
 transitions.push(cur);
 var cur = [];
-cur.push([79,79,317]);
-cur.push([84,84,352]);
+cur.push([76,76,317]);
 transitions.push(cur);
 var cur = [];
-cur.push([76,76,315]);
+cur.push([65,65,316]);
 transitions.push(cur);
 var cur = [];
-cur.push([65,65,314]);
+cur.push([66,66,314]);
+cur.push([82,82,315]);
 transitions.push(cur);
 var cur = [];
-cur.push([66,66,312]);
-cur.push([82,82,313]);
+cur.push([84,84,312]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,310]);
+cur.push([76,76,311]);
+transitions.push(cur);
+var cur = [];
+cur.push([82,82,310]);
 transitions.push(cur);
 var cur = [];
 cur.push([76,76,309]);
 transitions.push(cur);
 var cur = [];
-cur.push([82,82,308]);
+cur.push([65,65,308]);
 transitions.push(cur);
 var cur = [];
-cur.push([76,76,307]);
+cur.push([82,82,307]);
 transitions.push(cur);
 var cur = [];
-cur.push([65,65,306]);
+cur.push([77,77,306]);
 transitions.push(cur);
 var cur = [];
-cur.push([82,82,305]);
+cur.push([83,83,305]);
 transitions.push(cur);
 var cur = [];
-cur.push([77,77,304]);
+cur.push([69,69,304]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,303]);
+cur.push([75,75,343]);
+cur.push([78,78,344]);
+cur.push([88,88,303]);
 transitions.push(cur);
 var cur = [];
 cur.push([69,69,302]);
 transitions.push(cur);
 var cur = [];
-cur.push([75,75,341]);
-cur.push([78,78,342]);
-cur.push([88,88,301]);
+cur.push([68,68,300]);
 transitions.push(cur);
 var cur = [];
-cur.push([69,69,300]);
+cur.push([79,79,299]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,298]);
+cur.push([78,78,296]);
+cur.push([80,80,338]);
 transitions.push(cur);
 var cur = [];
-cur.push([79,79,297]);
+cur.push([84,84,295]);
 transitions.push(cur);
 var cur = [];
-cur.push([78,78,294]);
-cur.push([80,80,336]);
+cur.push([68,68,294]);
+cur.push([82,82,335]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,293]);
+cur.push([70,70,293]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,292]);
-cur.push([82,82,333]);
+cur.push([83,83,292]);
 transitions.push(cur);
 var cur = [];
-cur.push([70,70,291]);
+cur.push([84,84,290]);
+cur.push([87,87,291]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,290]);
+cur.push([83,83,288]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,288]);
-cur.push([87,87,289]);
+cur.push([70,70,287]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,286]);
+cur.push([80,80,286]);
 transitions.push(cur);
 var cur = [];
-cur.push([70,70,285]);
+cur.push([68,68,285]);
 transitions.push(cur);
 var cur = [];
-cur.push([80,80,284]);
+cur.push([77,77,284]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,283]);
+cur.push([72,72,283]);
 transitions.push(cur);
 var cur = [];
-cur.push([77,77,282]);
+cur.push([70,70,280]);
 transitions.push(cur);
 var cur = [];
-cur.push([72,72,281]);
+cur.push([77,77,279]);
 transitions.push(cur);
 var cur = [];
-cur.push([70,70,278]);
+cur.push([87,87,278]);
 transitions.push(cur);
 var cur = [];
-cur.push([77,77,277]);
+cur.push([68,68,277]);
+cur.push([76,76,355]);
 transitions.push(cur);
 var cur = [];
-cur.push([87,87,276]);
+cur.push([78,78,276]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,275]);
-cur.push([76,76,353]);
+cur.push([84,84,275]);
 transitions.push(cur);
 var cur = [];
-cur.push([78,78,274]);
+cur.push([82,82,272]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,273]);
+cur.push([67,67,271]);
 transitions.push(cur);
 var cur = [];
-cur.push([82,82,270]);
+cur.push([83,83,270]);
 transitions.push(cur);
 var cur = [];
 cur.push([67,67,269]);
 transitions.push(cur);
 var cur = [];
+cur.push([68,68,340]);
+cur.push([79,79,298]);
 cur.push([83,83,268]);
 transitions.push(cur);
 var cur = [];
 cur.push([67,67,267]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,338]);
-cur.push([79,79,296]);
 cur.push([83,83,266]);
 transitions.push(cur);
 var cur = [];
@@ -236,174 +242,168 @@ var cur = [];
 cur.push([83,83,264]);
 transitions.push(cur);
 var cur = [];
-cur.push([67,67,263]);
+cur.push([84,84,259]);
 transitions.push(cur);
 var cur = [];
-cur.push([83,83,262]);
-transitions.push(cur);
-var cur = [];
-cur.push([84,84,257]);
+cur.push([67,67,258]);
 transitions.push(cur);
 var cur = [];
 cur.push([67,67,256]);
 transitions.push(cur);
 var cur = [];
-cur.push([67,67,254]);
+cur.push([85,85,255]);
 transitions.push(cur);
 var cur = [];
+cur.push([82,82,254]);
+transitions.push(cur);
+var cur = [];
+cur.push([65,65,249]);
+cur.push([67,67,250]);
+cur.push([70,70,251]);
+cur.push([79,79,262]);
+cur.push([80,80,252]);
 cur.push([85,85,253]);
 transitions.push(cur);
 var cur = [];
-cur.push([82,82,252]);
+cur.push([78,78,247]);
+cur.push([83,83,248]);
 transitions.push(cur);
 var cur = [];
-cur.push([65,65,247]);
-cur.push([67,67,248]);
-cur.push([70,70,249]);
-cur.push([79,79,260]);
-cur.push([80,80,250]);
-cur.push([85,85,251]);
+cur.push([66,66,245]);
+cur.push([69,69,289]);
+cur.push([82,82,246]);
 transitions.push(cur);
 var cur = [];
-cur.push([78,78,245]);
-cur.push([83,83,246]);
+cur.push([82,82,356]);
+cur.push([83,83,244]);
 transitions.push(cur);
 var cur = [];
-cur.push([66,66,243]);
-cur.push([69,69,287]);
-cur.push([82,82,244]);
+cur.push([67,67,243]);
+cur.push([84,84,282]);
 transitions.push(cur);
 var cur = [];
-cur.push([82,82,354]);
-cur.push([83,83,242]);
+cur.push([76,76,274]);
+cur.push([82,82,242]);
 transitions.push(cur);
 var cur = [];
 cur.push([67,67,241]);
-cur.push([84,84,280]);
 transitions.push(cur);
 var cur = [];
-cur.push([76,76,272]);
-cur.push([82,82,240]);
+cur.push([84,84,240]);
 transitions.push(cur);
 var cur = [];
-cur.push([67,67,239]);
+cur.push([82,82,239]);
 transitions.push(cur);
 var cur = [];
-cur.push([84,84,238]);
+cur.push([86,86,238]);
 transitions.push(cur);
 var cur = [];
-cur.push([82,82,237]);
+cur.push([69,69,237]);
 transitions.push(cur);
 var cur = [];
-cur.push([86,86,236]);
+cur.push([74,74,297]);
+cur.push([77,77,236]);
+cur.push([84,84,263]);
 transitions.push(cur);
 var cur = [];
-cur.push([69,69,235]);
+cur.push([68,68,235]);
 transitions.push(cur);
 var cur = [];
-cur.push([74,74,295]);
-cur.push([77,77,234]);
-cur.push([84,84,261]);
+cur.push([76,76,318]);
+cur.push([79,79,234]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,233]);
+cur.push([66,66,233]);
+cur.push([68,68,320]);
+cur.push([82,82,260]);
 transitions.push(cur);
 var cur = [];
-cur.push([76,76,316]);
-cur.push([79,79,232]);
+cur.push([65,65,232]);
 transitions.push(cur);
 var cur = [];
-cur.push([66,66,231]);
-cur.push([68,68,318]);
-cur.push([82,82,258]);
+cur.push([66,66,301]);
+cur.push([67,67,257]);
+cur.push([71,71,342]);
+cur.push([77,77,273]);
+cur.push([80,80,231]);
 transitions.push(cur);
 var cur = [];
-cur.push([65,65,230]);
+cur.push([76,76,313]);
+cur.push([79,79,230]);
 transitions.push(cur);
 var cur = [];
-cur.push([66,66,299]);
-cur.push([67,67,255]);
-cur.push([71,71,340]);
-cur.push([77,77,271]);
-cur.push([80,80,229]);
+cur.push([68,68,229]);
+cur.push([79,79,281]);
 transitions.push(cur);
 var cur = [];
-cur.push([76,76,311]);
-cur.push([79,79,228]);
+cur.push([89,89,228]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,227]);
-cur.push([79,79,279]);
+cur.push([79,79,227]);
 transitions.push(cur);
 var cur = [];
-cur.push([89,89,226]);
+cur.push([68,68,261]);
+cur.push([84,84,226]);
 transitions.push(cur);
 var cur = [];
-cur.push([79,79,225]);
+cur.push([89,89,225]);
 transitions.push(cur);
 var cur = [];
-cur.push([68,68,259]);
-cur.push([84,84,224]);
+cur.push([49,57,222]);
+cur.push([48,48,224]);
 transitions.push(cur);
 var cur = [];
-cur.push([89,89,223]);
+cur.push([48,57,223]);
+cur.push([65,70,223]);
+cur.push([97,102,223]);
 transitions.push(cur);
 var cur = [];
-cur.push([49,57,220]);
-cur.push([48,48,222]);
+cur.push([101,101,221]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,221]);
-cur.push([65,70,221]);
-cur.push([97,102,221]);
+cur.push([49,57,218]);
+cur.push([48,48,220]);
 transitions.push(cur);
 var cur = [];
-cur.push([101,101,219]);
+cur.push([48,57,219]);
+cur.push([65,70,219]);
+cur.push([97,102,219]);
 transitions.push(cur);
 var cur = [];
-cur.push([49,57,216]);
-cur.push([48,48,218]);
+cur.push([101,101,217]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,217]);
-cur.push([65,70,217]);
-cur.push([97,102,217]);
+cur.push([49,57,214]);
+cur.push([48,48,216]);
 transitions.push(cur);
 var cur = [];
-cur.push([101,101,215]);
+cur.push([48,57,215]);
+cur.push([65,70,215]);
+cur.push([97,102,215]);
 transitions.push(cur);
 var cur = [];
-cur.push([49,57,212]);
-cur.push([48,48,214]);
+cur.push([101,101,213]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,213]);
-cur.push([65,70,213]);
-cur.push([97,102,213]);
+cur.push([49,57,210]);
+cur.push([48,48,212]);
 transitions.push(cur);
 var cur = [];
-cur.push([101,101,211]);
+cur.push([48,57,211]);
+cur.push([65,70,211]);
+cur.push([97,102,211]);
 transitions.push(cur);
 var cur = [];
-cur.push([49,57,208]);
-cur.push([48,48,210]);
+cur.push([101,101,209]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,209]);
-cur.push([65,70,209]);
-cur.push([97,102,209]);
+cur.push([49,57,202]);
+cur.push([48,48,204]);
 transitions.push(cur);
 var cur = [];
-cur.push([101,101,207]);
-transitions.push(cur);
-var cur = [];
-cur.push([49,57,200]);
-cur.push([48,48,202]);
-transitions.push(cur);
-var cur = [];
-cur.push([48,57,201]);
-cur.push([65,70,201]);
-cur.push([97,102,201]);
+cur.push([48,57,203]);
+cur.push([65,70,203]);
+cur.push([97,102,203]);
 transitions.push(cur);
 var cur = [];
 cur.push([1,9,115]);
@@ -421,7 +421,7 @@ cur.push([11,12,114]);
 cur.push([14,38,114]);
 cur.push([40,91,114]);
 cur.push([93,128,114]);
-cur.push([39,39,203]);
+cur.push([39,39,205]);
 cur.push([92,92,113]);
 transitions.push(cur);
 var cur = [];
@@ -430,7 +430,7 @@ cur.push([11,12,115]);
 cur.push([14,33,115]);
 cur.push([35,91,115]);
 cur.push([93,128,115]);
-cur.push([34,34,203]);
+cur.push([34,34,205]);
 cur.push([92,92,112]);
 transitions.push(cur);
 var cur = [];
@@ -462,9 +462,9 @@ var cur = [];
 cur.push([9,10,121]);
 cur.push([13,13,121]);
 cur.push([32,32,121]);
-cur.push([40,40,206]);
-cur.push([43,43,206]);
-cur.push([47,93,206]);
+cur.push([40,40,208]);
+cur.push([43,43,208]);
+cur.push([47,93,208]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,122]);
@@ -472,8 +472,8 @@ cur.push([13,13,122]);
 cur.push([32,32,122]);
 cur.push([43,43,98]);
 cur.push([45,45,98]);
-cur.push([49,57,220]);
-cur.push([48,48,222]);
+cur.push([49,57,222]);
+cur.push([48,48,224]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,123]);
@@ -481,8 +481,8 @@ cur.push([13,13,123]);
 cur.push([32,32,123]);
 cur.push([43,43,101]);
 cur.push([45,45,101]);
-cur.push([49,57,216]);
-cur.push([48,48,218]);
+cur.push([49,57,218]);
+cur.push([48,48,220]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,124]);
@@ -490,8 +490,8 @@ cur.push([13,13,124]);
 cur.push([32,32,124]);
 cur.push([43,43,104]);
 cur.push([45,45,104]);
-cur.push([49,57,212]);
-cur.push([48,48,214]);
+cur.push([49,57,214]);
+cur.push([48,48,216]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,125]);
@@ -499,8 +499,8 @@ cur.push([13,13,125]);
 cur.push([32,32,125]);
 cur.push([43,43,107]);
 cur.push([45,45,107]);
-cur.push([49,57,208]);
-cur.push([48,48,210]);
+cur.push([49,57,210]);
+cur.push([48,48,212]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,126]);
@@ -536,12 +536,12 @@ cur.push([13,13,199]);
 cur.push([32,32,199]);
 cur.push([34,34,115]);
 cur.push([39,39,114]);
-cur.push([40,40,204]);
-cur.push([41,41,205]);
+cur.push([40,40,206]);
+cur.push([41,41,207]);
 cur.push([43,43,110]);
 cur.push([45,45,110]);
-cur.push([48,48,202]);
-cur.push([49,57,200]);
+cur.push([48,48,201]);
+cur.push([49,57,202]);
 cur.push([65,65,143]);
 cur.push([66,66,140]);
 cur.push([67,67,139]);
@@ -852,45 +852,54 @@ cur.push([119,119,166]);
 transitions.push(cur);
 transitions.push(null);
 var cur = [];
-cur.push([48,57,200]);
+cur.push([49,57,202]);
+cur.push([48,48,200]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,201]);
-cur.push([65,70,201]);
-cur.push([97,102,201]);
+cur.push([49,57,202]);
+cur.push([48,48,200]);
+cur.push([120,120,111]);
 transitions.push(cur);
 var cur = [];
-cur.push([48,57,200]);
+cur.push([48,57,202]);
+transitions.push(cur);
+var cur = [];
+cur.push([48,57,203]);
+cur.push([65,70,203]);
+cur.push([97,102,203]);
+transitions.push(cur);
+var cur = [];
+cur.push([48,57,202]);
 cur.push([120,120,111]);
 transitions.push(cur);
 transitions.push(null);
 transitions.push(null);
 transitions.push(null);
 var cur = [];
-cur.push([40,40,206]);
-cur.push([43,43,206]);
-cur.push([47,93,206]);
+cur.push([40,40,208]);
+cur.push([43,43,208]);
+cur.push([47,93,208]);
 transitions.push(cur);
 transitions.push(null);
 var cur = [];
 cur.push([9,10,126]);
 cur.push([13,13,126]);
 cur.push([32,32,126]);
-cur.push([48,57,208]);
+cur.push([48,57,210]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,126]);
 cur.push([13,13,126]);
 cur.push([32,32,126]);
-cur.push([48,57,209]);
-cur.push([65,70,209]);
-cur.push([97,102,209]);
+cur.push([48,57,211]);
+cur.push([65,70,211]);
+cur.push([97,102,211]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,126]);
 cur.push([13,13,126]);
 cur.push([32,32,126]);
-cur.push([48,57,208]);
+cur.push([48,57,210]);
 cur.push([120,120,108]);
 transitions.push(cur);
 transitions.push(null);
@@ -898,21 +907,21 @@ var cur = [];
 cur.push([9,10,127]);
 cur.push([13,13,127]);
 cur.push([32,32,127]);
-cur.push([48,57,212]);
+cur.push([48,57,214]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,127]);
 cur.push([13,13,127]);
 cur.push([32,32,127]);
-cur.push([48,57,213]);
-cur.push([65,70,213]);
-cur.push([97,102,213]);
+cur.push([48,57,215]);
+cur.push([65,70,215]);
+cur.push([97,102,215]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,127]);
 cur.push([13,13,127]);
 cur.push([32,32,127]);
-cur.push([48,57,212]);
+cur.push([48,57,214]);
 cur.push([120,120,105]);
 transitions.push(cur);
 transitions.push(null);
@@ -920,21 +929,21 @@ var cur = [];
 cur.push([9,10,128]);
 cur.push([13,13,128]);
 cur.push([32,32,128]);
-cur.push([48,57,216]);
+cur.push([48,57,218]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,128]);
 cur.push([13,13,128]);
 cur.push([32,32,128]);
-cur.push([48,57,217]);
-cur.push([65,70,217]);
-cur.push([97,102,217]);
+cur.push([48,57,219]);
+cur.push([65,70,219]);
+cur.push([97,102,219]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,128]);
 cur.push([13,13,128]);
 cur.push([32,32,128]);
-cur.push([48,57,216]);
+cur.push([48,57,218]);
 cur.push([120,120,102]);
 transitions.push(cur);
 transitions.push(null);
@@ -942,21 +951,21 @@ var cur = [];
 cur.push([9,10,129]);
 cur.push([13,13,129]);
 cur.push([32,32,129]);
-cur.push([48,57,220]);
+cur.push([48,57,222]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,129]);
 cur.push([13,13,129]);
 cur.push([32,32,129]);
-cur.push([48,57,221]);
-cur.push([65,70,221]);
-cur.push([97,102,221]);
+cur.push([48,57,223]);
+cur.push([65,70,223]);
+cur.push([97,102,223]);
 transitions.push(cur);
 var cur = [];
 cur.push([9,10,129]);
 cur.push([13,13,129]);
 cur.push([32,32,129]);
-cur.push([48,57,220]);
+cur.push([48,57,222]);
 cur.push([120,120,99]);
 transitions.push(cur);
 transitions.push(null);
@@ -1092,7 +1101,7 @@ transitions.push(null);
 transitions.push(null);
 transitions.push(null);
 }
-        static var accepting = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false].concat([false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]).concat([false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]).concat([false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true]).concat([true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true]).concat([true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true]);
+        static var accepting = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false].concat([false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]).concat([false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]).concat([false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true]).concat([true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true]).concat([true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true]);
 	public static function lexify(input:String):Array<Token> {
 		init();
 var ret = new Array<Token>();
@@ -1198,31 +1207,25 @@ return ({ HLexLog.log("Error: Unknown char sequence '"+ hxl_match +"'"); null; }
 		switch(id) {
 			default: return null;
             case 200:
-				return ({ tInteger(Std.parseInt( hxl_match )); });
+				return ({ tZero; });
             case 201:
-				return ({ tInteger(Std.parseInt( hxl_match )); });
+				return ({ tZero; });
             case 202:
-				return ({ tInteger(Std.parseInt( hxl_match )); });
+				return ({ tNonZero(Std.parseInt( hxl_match )); });
             case 203:
-				return ({ tText( hxl_match .substr(1, hxl_match .length-2)); });
+				return ({ tNonZero(Std.parseInt( hxl_match )); });
             case 204:
-				return ({ tLeftParen;  });
+				return ({ tNonZero(Std.parseInt( hxl_match )); });
             case 205:
-				return ({ tRightParen; });
+				return ({ tText( hxl_match .substr(1, hxl_match .length-2)); });
             case 206:
+				return ({ tLeftParen;  });
+            case 207:
+				return ({ tRightParen; });
+            case 208:
 				return ({
 	var xs = ((~/[\n\r \t]+/).replace( hxl_match ," ")).split(" ");
 	tPower(Std.parseInt(xs[1]));
-});
-            case 207:
-				return ({
-	var pro = HLexLog.province( hxl_match );
-	tProvince(proInland(pro.val,pro.sc));
-});
-            case 208:
-				return ({
-	var pro = HLexLog.province( hxl_match );
-	tProvince(proInland(pro.val,pro.sc));
 });
             case 209:
 				return ({
@@ -1237,12 +1240,12 @@ return ({ HLexLog.log("Error: Unknown char sequence '"+ hxl_match +"'"); null; }
             case 211:
 				return ({
 	var pro = HLexLog.province( hxl_match );
-	tProvince(proSea(pro.val,pro.sc));
+	tProvince(proInland(pro.val,pro.sc));
 });
             case 212:
 				return ({
 	var pro = HLexLog.province( hxl_match );
-	tProvince(proSea(pro.val,pro.sc));
+	tProvince(proInland(pro.val,pro.sc));
 });
             case 213:
 				return ({
@@ -1257,12 +1260,12 @@ return ({ HLexLog.log("Error: Unknown char sequence '"+ hxl_match +"'"); null; }
             case 215:
 				return ({
 	var pro = HLexLog.province( hxl_match );
-	tProvince(proCoastal(pro.val,pro.sc));
+	tProvince(proSea(pro.val,pro.sc));
 });
             case 216:
 				return ({
 	var pro = HLexLog.province( hxl_match );
-	tProvince(proCoastal(pro.val,pro.sc));
+	tProvince(proSea(pro.val,pro.sc));
 });
             case 217:
 				return ({
@@ -1277,12 +1280,12 @@ return ({ HLexLog.log("Error: Unknown char sequence '"+ hxl_match +"'"); null; }
             case 219:
 				return ({
 	var pro = HLexLog.province( hxl_match );
-	tProvince(proBiCoastal(pro.val,pro.sc));
+	tProvince(proCoastal(pro.val,pro.sc));
 });
             case 220:
 				return ({
 	var pro = HLexLog.province( hxl_match );
-	tProvince(proBiCoastal(pro.val,pro.sc));
+	tProvince(proCoastal(pro.val,pro.sc));
 });
             case 221:
 				return ({
@@ -1295,268 +1298,278 @@ return ({ HLexLog.log("Error: Unknown char sequence '"+ hxl_match +"'"); null; }
 	tProvince(proBiCoastal(pro.val,pro.sc));
 });
             case 223:
-				return ({ tUnitType(utArmy);  });
+				return ({
+	var pro = HLexLog.province( hxl_match );
+	tProvince(proBiCoastal(pro.val,pro.sc));
+});
             case 224:
-				return ({ tUnitType(utFleet); });
+				return ({
+	var pro = HLexLog.province( hxl_match );
+	tProvince(proBiCoastal(pro.val,pro.sc));
+});
             case 225:
-				return ({ tOrder(oMoveByConvoy); });
+				return ({ tUnitType(utArmy);  });
             case 226:
-				return ({ tOrder(oConvoy); });
+				return ({ tUnitType(utFleet); });
             case 227:
-				return ({ tOrder(oHold); });
+				return ({ tOrder(oMoveByConvoy); });
             case 228:
-				return ({ tOrder(oMove); });
+				return ({ tOrder(oConvoy); });
             case 229:
-				return ({ tOrder(oSupport); });
+				return ({ tOrder(oHold); });
             case 230:
-				return ({ tOrder(oVia); });
+				return ({ tOrder(oMove); });
             case 231:
-				return ({ tOrder(oDisband); });
+				return ({ tOrder(oSupport); });
             case 232:
-				return ({ tOrder(oRetreat); });
+				return ({ tOrder(oVia); });
             case 233:
-				return ({ tOrder(oBuild); });
+				return ({ tOrder(oDisband); });
             case 234:
-				return ({ tOrder(oRemove); });
+				return ({ tOrder(oRetreat); });
             case 235:
-				return ({ tOrder(oWaive); });
+				return ({ tOrder(oBuild); });
             case 236:
-				return ({ tOrderNote(onOkay); });
+				return ({ tOrder(oRemove); });
             case 237:
-				return ({ tOrderNote(onBPR); });
+				return ({ tOrder(oWaive); });
             case 238:
-				return ({ tOrderNote(onNoCoastSpecified); });
+				return ({ tOrderNote(onOkay); });
             case 239:
-				return ({ tOrderNote(onNotEmptySupply); });
+				return ({ tOrderNote(onBPR); });
             case 240:
-				return ({ tOrderNote(onNotAdjacent); });
+				return ({ tOrderNote(onNoCoastSpecified); });
             case 241:
-				return ({ tOrderNote(onNotHomeSupply); });
+				return ({ tOrderNote(onNotEmptySupply); });
             case 242:
-				return ({ tOrderNote(onNotAtSea); });
+				return ({ tOrderNote(onNotAdjacent); });
             case 243:
-				return ({ tOrderNote(onNoMoreBuilds); });
+				return ({ tOrderNote(onNotHomeSupply); });
             case 244:
-				return ({ tOrderNote(onNoMoreRemovals); });
+				return ({ tOrderNote(onNotAtSea); });
             case 245:
-				return ({ tOrderNote(onNoRetreatNeeded); });
+				return ({ tOrderNote(onNoMoreBuilds); });
             case 246:
-				return ({ tOrderNote(onNotRightSeason); });
+				return ({ tOrderNote(onNoMoreRemovals); });
             case 247:
-				return ({ tOrderNote(onNoSuchArmy); });
+				return ({ tOrderNote(onNoRetreatNeeded); });
             case 248:
-				return ({ tOrderNote(onNotSupply); });
+				return ({ tOrderNote(onNotRightSeason); });
             case 249:
-				return ({ tOrderNote(onNoSuchFleet); });
+				return ({ tOrderNote(onNoSuchArmy); });
             case 250:
-				return ({ tOrderNote(onNoSuchProvince); });
+				return ({ tOrderNote(onNotSupply); });
             case 251:
-				return ({ tOrderNote(onNoSuchUnit); });
+				return ({ tOrderNote(onNoSuchFleet); });
             case 252:
-				return ({ tOrderNote(onNotValidRetreat); });
+				return ({ tOrderNote(onNoSuchProvince); });
             case 253:
-				return ({ tOrderNote(onNotYourUnit); });
+				return ({ tOrderNote(onNoSuchUnit); });
             case 254:
-				return ({ tOrderNote(onNotYourSupply); });
+				return ({ tOrderNote(onNotValidRetreat); });
             case 255:
-				return ({ tResult(rSuccess); });
+				return ({ tOrderNote(onNotYourUnit); });
             case 256:
-				return ({ tResult(rMoveBounced); });
+				return ({ tOrderNote(onNotYourSupply); });
             case 257:
-				return ({ tResult(rSupportCut); });
+				return ({ tResult(rSuccess); });
             case 258:
-				return ({ tResult(rConvoyDisrupted); });
+				return ({ tResult(rMoveBounced); });
             case 259:
-				return ({ tResult(rFLD); });
+				return ({ tResult(rSupportCut); });
             case 260:
-				return ({ tResult(rNoSuchOrder); });
+				return ({ tResult(rConvoyDisrupted); });
             case 261:
-				return ({ tResult(rDislodged); });
+				return ({ tResult(rFLD); });
             case 262:
-				return ({ tCoast(cNorth); });
+				return ({ tResult(rNoSuchOrder); });
             case 263:
-				return ({ tCoast(cNorthEast); });
+				return ({ tResult(rDislodged); });
             case 264:
-				return ({ tCoast(cEast); });
+				return ({ tCoast(cNorth); });
             case 265:
-				return ({ tCoast(cSouthEast); });
+				return ({ tCoast(cNorthEast); });
             case 266:
-				return ({ tCoast(cSouth); });
+				return ({ tCoast(cEast); });
             case 267:
-				return ({ tCoast(cSouthWest); });
+				return ({ tCoast(cSouthEast); });
             case 268:
-				return ({ tCoast(cWest); });
+				return ({ tCoast(cSouth); });
             case 269:
-				return ({ tCoast(cNorthWest); });
+				return ({ tCoast(cSouthWest); });
             case 270:
-				return ({ tPhase(pSpring); });
+				return ({ tCoast(cWest); });
             case 271:
-				return ({ tPhase(pSummer); });
+				return ({ tCoast(cNorthWest); });
             case 272:
-				return ({ tPhase(pFall); });
+				return ({ tPhase(pSpring); });
             case 273:
-				return ({ tPhase(pAutumn); });
+				return ({ tPhase(pSummer); });
             case 274:
-				return ({ tPhase(pWinter); });
+				return ({ tPhase(pFall); });
             case 275:
-				return ({ tCommand(coPowerInCivilDisorder); });
+				return ({ tPhase(pAutumn); });
             case 276:
-				return ({ tCommand(coDraw); });
+				return ({ tPhase(pWinter); });
             case 277:
-				return ({ tCommand(coMessageFrom); });
+				return ({ tCommand(coPowerInCivilDisorder); });
             case 278:
-				return ({ tCommand(coGoFlag); });
+				return ({ tCommand(coDraw); });
             case 279:
-				return ({ tCommand(coHello); });
+				return ({ tCommand(coMessageFrom); });
             case 280:
-				return ({ tCommand(coHistory); });
+				return ({ tCommand(coGoFlag); });
             case 281:
-				return ({ tCommand(coHuh); });
+				return ({ tCommand(coHello); });
             case 282:
-				return ({ tCommand(coIAm); });
+				return ({ tCommand(coHistory); });
             case 283:
-				return ({ tCommand(coLoadGame); });
+				return ({ tCommand(coHuh); });
             case 284:
-				return ({ tCommand(coMap); });
+				return ({ tCommand(coIAm); });
             case 285:
-				return ({ tCommand(coMapDefinition); });
+				return ({ tCommand(coLoadGame); });
             case 286:
-				return ({ tCommand(coMissingOrders); });
+				return ({ tCommand(coMap); });
             case 287:
-				return ({ tCommand(coName); });
+				return ({ tCommand(coMapDefinition); });
             case 288:
-				return ({ tCommand(coNOT); });
+				return ({ tCommand(coMissingOrders); });
             case 289:
-				return ({ tCommand(coCurrentPosition); });
+				return ({ tCommand(coName); });
             case 290:
-				return ({ tCommand(coObserver); });
+				return ({ tCommand(coNOT); });
             case 291:
-				return ({ tCommand(coTurnOff); });
+				return ({ tCommand(coCurrentPosition); });
             case 292:
-				return ({ tCommand(coOrderResult); });
+				return ({ tCommand(coObserver); });
             case 293:
-				return ({ tCommand(coPowerEliminated); });
+				return ({ tCommand(coTurnOff); });
             case 294:
-				return ({ tCommand(coParenthesisError); });
+				return ({ tCommand(coOrderResult); });
             case 295:
-				return ({ tCommand(coReject); });
+				return ({ tCommand(coPowerEliminated); });
             case 296:
-				return ({ tCommand(coSupplyOwnership); });
+				return ({ tCommand(coParenthesisError); });
             case 297:
-				return ({ tCommand(coSolo); });
+				return ({ tCommand(coReject); });
             case 298:
-				return ({ tCommand(coSendMessage); });
+				return ({ tCommand(coSupplyOwnership); });
             case 299:
-				return ({ tCommand(coSubmitOrder); });
+				return ({ tCommand(coSolo); });
             case 300:
-				return ({ tCommand(coSaveGame); });
+				return ({ tCommand(coSendMessage); });
             case 301:
-				return ({ tCommand(coThink); });
+				return ({ tCommand(coSubmitOrder); });
             case 302:
-				return ({ tCommand(coTimeToDeadline); });
+				return ({ tCommand(coSaveGame); });
             case 303:
-				return ({ tCommand(coAccept); });
+				return ({ tCommand(coThink); });
             case 304:
-				return ({ tCommand(coAdmin); });
+				return ({ tCommand(coTimeToDeadline); });
             case 305:
-				return ({ tCommand(coSMR); });
+				return ({ tCommand(coAccept); });
             case 306:
-				return ({ tParameter(paAnyOrder); });
+				return ({ tCommand(coAdmin); });
             case 307:
-				return ({ tParameter(paBuildTimeLimit); });
+				return ({ tCommand(coSMR); });
             case 308:
-				return ({ tParameter(paLocationError); });
+				return ({ tParameter(paAnyOrder); });
             case 309:
-				return ({ tParameter(paLevel); });
+				return ({ tParameter(paBuildTimeLimit); });
             case 310:
-				return ({ tParameter(paMustRetreat); });
+				return ({ tParameter(paLocationError); });
             case 311:
-				return ({ tParameter(paMoveTimeLimit); });
+				return ({ tParameter(paLevel); });
             case 312:
-				return ({ tParameter(paNoPressDuringBuild); });
+				return ({ tParameter(paMustRetreat); });
             case 313:
-				return ({ tParameter(paNoPressDuringRetreat); });
+				return ({ tParameter(paMoveTimeLimit); });
             case 314:
-				return ({ tParameter(paPartialDrawsAllowed); });
+				return ({ tParameter(paNoPressDuringBuild); });
             case 315:
-				return ({ tParameter(paPressTimeLimit); });
+				return ({ tParameter(paNoPressDuringRetreat); });
             case 316:
-				return ({ tParameter(paRetreatTimeLimit); });
+				return ({ tParameter(paPartialDrawsAllowed); });
             case 317:
-				return ({ tParameter(paUnowned); });
+				return ({ tParameter(paPressTimeLimit); });
             case 318:
-				return ({ tParameter(paDeadlineDisconnect); });
+				return ({ tParameter(paRetreatTimeLimit); });
             case 319:
-				return ({ tPress(prAlly); });
+				return ({ tParameter(paUnowned); });
             case 320:
-				return ({ tPress(prAND); });
+				return ({ tParameter(paDeadlineDisconnect); });
             case 321:
-				return ({ tPress(prNoneOfYourBusiness); });
+				return ({ tPress(prAlly); });
             case 322:
-				return ({ tPress(prDemiliterisedZone); });
+				return ({ tPress(prAND); });
             case 323:
-				return ({ tPress(prELSE); });
+				return ({ tPress(prNoneOfYourBusiness); });
             case 324:
-				return ({ tPress(prExplain); });
+				return ({ tPress(prDemiliterisedZone); });
             case 325:
-				return ({ tPress(prRequestForward); });
+				return ({ tPress(prELSE); });
             case 326:
-				return ({ tPress(prFact); });
+				return ({ tPress(prExplain); });
             case 327:
-				return ({ tPress(prForTurn); });
+				return ({ tPress(prRequestForward); });
             case 328:
-				return ({ tPress(prHowToAttack); });
+				return ({ tPress(prFact); });
             case 329:
-				return ({ tPress(prIDontKnow); });
+				return ({ tPress(prForTurn); });
             case 330:
-				return ({ tPress(prIF); });
+				return ({ tPress(prHowToAttack); });
             case 331:
-				return ({ tPress(prInsist); });
+				return ({ tPress(prIDontKnow); });
             case 332:
-				return ({ tPress(prOccupy); });
+				return ({ tPress(prIF); });
             case 333:
-				return ({ tPress(prOR); });
+				return ({ tPress(prInsist); });
             case 334:
-				return ({ tPress(prPeace); });
+				return ({ tPress(prOccupy); });
             case 335:
-				return ({ tPress(prPosition); });
+				return ({ tPress(prOR); });
             case 336:
-				return ({ tPress(prPropose); });
+				return ({ tPress(prPeace); });
             case 337:
-				return ({ tPress(prQuery); });
+				return ({ tPress(prPosition); });
             case 338:
-				return ({ tPress(prSupplyDistro); });
+				return ({ tPress(prPropose); });
             case 339:
-				return ({ tPress(prSorry); });
+				return ({ tPress(prQuery); });
             case 340:
-				return ({ tPress(prSuggest); });
+				return ({ tPress(prSupplyDistro); });
             case 341:
-				return ({ tPress(prThink); });
+				return ({ tPress(prSorry); });
             case 342:
-				return ({ tPress(prThen); });
+				return ({ tPress(prSuggest); });
             case 343:
-				return ({ tPress(prTry); });
+				return ({ tPress(prThink); });
             case 344:
-				return ({ tPress(prVersus); });
+				return ({ tPress(prThen); });
             case 345:
-				return ({ tPress(prWhat); });
+				return ({ tPress(prTry); });
             case 346:
-				return ({ tPress(prWhy); });
+				return ({ tPress(prVersus); });
             case 347:
-				return ({ tPress(prDo); });
+				return ({ tPress(prWhat); });
             case 348:
-				return ({ tPress(prOwes); });
+				return ({ tPress(prWhy); });
             case 349:
-				return ({ tPress(prTellMe); });
+				return ({ tPress(prDo); });
             case 350:
-				return ({ tPress(prChoose); });
+				return ({ tPress(prOwes); });
             case 351:
-				return ({ tPress(prBCC); });
+				return ({ tPress(prTellMe); });
             case 352:
-				return ({ tPress(prUNT); });
+				return ({ tPress(prChoose); });
             case 353:
-				return ({ tPress(prCCL); });
+				return ({ tPress(prBCC); });
             case 354:
+				return ({ tPress(prUNT); });
+            case 355:
+				return ({ tPress(prCCL); });
+            case 356:
 				return ({ tPress(prNAR); });
         }
 	}

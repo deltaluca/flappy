@@ -113,7 +113,7 @@ class TokenUtils {
 					var val = token;
 					//sign extend
 					if((val&0x2000)!=0) val |= 0xffffc000;
-					tInteger(val);
+					if(val==0) tZero else tNonZero(val);
 				}
 		}
 		return ret;
@@ -128,7 +128,9 @@ class TokenUtils {
 
 	public static function encode(token:Token):Array<Int> {
 		return switch(token) {
-			case tInteger(val):
+			case tZero:
+				[0];
+			case tNonZero(val):
 				if(val<-8192 || val>8191) throw "Error: Integer OUB";
 				[val&0x3FFF];
 			case tLeftParen:  [0x4000];
@@ -310,7 +312,7 @@ class TokenUtils {
 //-----------------------------------------------------
 
 enum Token {
-	tInteger(value:Int);
+	tNonZero(value:Int);
 
 	/* BRA */ tLeftParen;
 	/* KET */ tRightParen;
@@ -327,6 +329,8 @@ enum Token {
 	tPress(press:Press);
 	tText(text:String);
 	tProvince(province:Province);
+
+	tZero;
 }
 
 //-----------------------------------------------------

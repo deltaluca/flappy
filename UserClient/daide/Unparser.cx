@@ -4,7 +4,7 @@ import scx.Match;
 import daide.Language;
 import daide.Tokens;
 
-$(mixin INTEGER(x) tInteger(x));
+$(mixin INTEGER(x) (if(x==0) tZero else tNonZero(x)));
 $(mixin BRA() tLeftParen);
 $(mixin KET() tRightParen);
 $(mixin POWER(x) tPower(x));
@@ -154,12 +154,21 @@ class Unparser {
 			mTurnOff = [OFF],
 			mPowerDisorder(x) = [CCD,BRA,POWER(x),KET],
 			mNOT(x) = [NOT,BRA].concat(unparse(x)).concat([KET]),
-			mSolo(x) = [SLO,BRA,INTEGER(x),KET],
+			mSolo(x) = [SLO,BRA,POWER(x),KET],
 			mPowerEliminated(x) = [OUT,BRA,POWER(x),KET],
 			mFrom(x,y,z,w1,w2) = {
 				var pre = [FRM,BRA,POWER(x),INTEGER(y),KET,BRA].concat(unpower_list(z)).concat([KET,BRA]);
 				pre = pre.concat(if(w1==null) unpress_message(w1) else unreply(w2));
 				pre.concat([KET]);
+			},
+			mSummary(turn,sums) = {
+				var pre = [SMR,BRA].concat(unturn(turn)).concat([KET]);
+				for(sum in sums) {
+					pre = pre.concat([BRA,POWER(sum.power),BRA,TEXT(sum.name),KET,BRA,TEXT(sum.version),KET,INTEGER(sum.centres)]);
+					if(sum.centres==0) pre.push(INTEGER(sum.year));
+					pre.push(KET);
+				}
+				pre;
 			}
 		);
 		return [];

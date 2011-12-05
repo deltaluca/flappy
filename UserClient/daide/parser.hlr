@@ -1,6 +1,6 @@
 //all tokens, must match the nested ordering of
 //tokens in daide.Tokens
-%token INTEGER
+%token NONZERO
 %token BRA
 %token KET
 %token POWER
@@ -15,6 +15,7 @@
 %token ALY AND BWX DMZ ELS EXP FWD FCT FOR HOW IDK IFF INS OCC ORR PCE POB PRP QRY SCD SRY SUG THK THN TRY VSS WHT WHY XDO XOY YDO CHO BCC UNT CCL NAR
 %token TEXT
 %token INLAND SEA COASTAL BICOASTAL
+%token ZERO
 
 %{
 
@@ -27,8 +28,8 @@ class TU {
 	static public function text(t:Token) {
 		return switch(t) { case tText(x): x; default: null; };
 	}
-	static public function integer(t:Token) {
-		return switch(t) { case tInteger(x): x; default: -1; };
+	static public function nonzero(t:Token) {
+		return switch(t) { case tNonZero(x): x; default: -1; };
 	}
 	static public function power(t:Token) {
 		return switch(t) { case tPower(x): x; default: -1; };
@@ -66,6 +67,7 @@ class TU {
 			offsets.push(offsets[offsets.length-1] + Type.getEnumConstructs(Parameter).length);
 			offsets.push(offsets[offsets.length-1] + Type.getEnumConstructs(Press).length);
 			offsets.push(offsets[offsets.length-1] + 1);
+			offsets.push(offsets[offsets.length-1] + Type.getEnumConstructs(Province).length);
 		}
 
 		var off = offsets[Type.enumIndex(t)];
@@ -80,6 +82,11 @@ class TU {
 
 %entry message
 
+%integer %{ Int %}
+	: ZERO %{ 0; %}
+	| NONZERO %{ TU.nonzero(%0); %}
+;
+
 %message %{ Message %}
 	: client_server_message
 	| server_client_message
@@ -88,7 +95,7 @@ class TU {
 %client_server_message %{ Message %}
 	: NME BRA TEXT KET BRA TEXT KET 			%{ mName(TU.text(%2),TU.text(%5)); %}
 	| OBS 										%{ mObserver; %}
-	| IAM BRA POWER KET BRA INTEGER KET			%{ mIAm(TU.power(%2),TU.integer(%5)); %}
+	| IAM BRA POWER KET BRA integer KET			%{ mIAm(TU.power(%2),(%5)); %}
 	| MAP 										%{ mMap(null); %}
 	| MDF 										%{ mMapDefinition(null,null,null); %}
 	| YES BRA acknowledgable_command KET 		%{ mAccept(%2); %}
@@ -96,7 +103,7 @@ class TU {
 	| NOW 										%{ mCurrentLocation(null,null); %}
 	| SCO 										%{ mSupplyOwnership(null); %}
 	| HST BRA turn KET 							%{ mHistory(%2); %}
-	| TME BRA INTEGER KET 						%{ mTimeToDeadline(TU.integer(%2)); %}
+	| TME BRA integer KET 						%{ mTimeToDeadline((%2)); %}
 	| TME 										%{ mTimeToDeadline(null); %}
 	| ADM BRA TEXT KET BRA TEXT KET 			%{ mAdmin(TU.text(%2),TU.text(%5)); %}
 	| PRN BRA bad_bracketed_sequence KET 		%{ mBadBrackets(%2); %}
@@ -120,29 +127,46 @@ class TU {
 	| REJ BRA rejectable_client_command KET 	%{ mReject(%2); %}
 	| MAP BRA TEXT KET 							%{ mMap(TU.text(%2)); %}
 	| MDF BRA power_list KET BRA mdf_provinces KET BRA mdf_adjacencies KET %{ mMapDefinition(%2,%5,%8); %}
-	| HLO BRA POWER KET BRA INTEGER KET BRA variant KET %{ mHello(TU.power(%2),TU.integer(%5),%8); %}
-	| HLO BRA UNO KET BRA INTEGER KET BRA variant KET %{ mHello(null,TU.integer(%5),%8); %}
+	| HLO BRA POWER KET BRA integer KET BRA variant KET %{ mHello(TU.power(%2),(%5),%8); %}
+	| HLO BRA UNO KET BRA integer KET BRA variant KET %{ mHello(null,(%5),%8); %}
 	| NOW BRA turn KET unit_with_location_and_mrt_list %{ mCurrentLocation(%2,%4); %}
 	| SCO sco_entry_list 						%{ mSupplyOwnership(%1); %}
 	| THX BRA order KET BRA order_note KET 		%{ mThink(%2,%5); %}
 	| MIS unit_with_location_and_mrt_list 		%{ mMissingOrders(null,%1); %}
-	| MIS BRA INTEGER KET 						%{ mMissingOrders(TU.integer(%2),null); %}
+	| MIS BRA integer KET 						%{ mMissingOrders((%2),null); %}
 	| ORD BRA turn KET BRA order KET BRA compound_order_result KET %{ mOrderResult(%2,%5,%8); %}
 	| SVE BRA TEXT KET 							%{ mSaveGame(TU.text(%2)); %}
 	| LOD BRA TEXT KET 							%{ mLoadGame(TU.text(%2)); %}
 	| OFF 										%{ mTurnOff; %}
-	| TME BRA INTEGER KET 						%{ mTimeToDeadline(TU.integer(%2)); %}
+	| TME BRA integer KET 						%{ mTimeToDeadline((%2)); %}
 	| PRN BRA bad_bracketed_sequence KET 		%{ mBadBrackets(%2); %}
 	| HUH BRA any_token_sequence KET 			%{ mHuh(%2); %}
 	| CCD BRA POWER KET 						%{ mPowerDisorder(TU.power(%2)); %}
 	| NOT BRA negated_server_message KET 		%{ mNOT(%2); %}
 	| ADM BRA TEXT KET BRA TEXT KET 			%{ mAdmin(TU.text(%2),TU.text(%5));  %}
-	| SLO BRA INTEGER KET 						%{ mSolo(TU.integer(%2));  %}
+	| SLO BRA POWER KET 						%{ mSolo(TU.power(%2));  %}
 	| DRW 										%{ mDraw(null); %}
 	| OUT BRA POWER KET 						%{ mPowerEliminated(TU.power(%2)); %}
 	| DRW BRA POWER power_list KET 				%{ %3.unshift(TU.power(%2)); mDraw(%3); %}
-	| FRM BRA POWER INTEGER KET BRA power_list KET BRA press_message KET %{ mFrom(TU.power(%2),TU.integer(%3),%6,%9,null); %}
-	| FRM BRA POWER INTEGER KET BRA power_list KET BRA reply KET         %{ mFrom(TU.power(%2),TU.integer(%3),%6,null,%9); %}
+	| FRM BRA POWER integer KET BRA power_list KET BRA press_message KET %{ mFrom(TU.power(%2),(%3),%6,%9,null); %}
+	| FRM BRA POWER integer KET BRA power_list KET BRA reply KET         %{ mFrom(TU.power(%2),(%3),%6,null,%9); %}
+	| summary
+;
+
+%summary %{ Message %}
+	: SMR BRA turn KET powersummaries %{ mSummary(%2,%4); %}
+;
+%powersummary %{ Summary %}
+	: BRA POWER BRA TEXT KET BRA TEXT KET ZERO integer KET %{
+		{ power : TU.power(%1), name : TU.text(%3), version : TU.text(%6), centres : 0, year : %9 };
+	%}
+	| BRA POWER BRA TEXT KET BRA TEXT KET NONZERO KET %{
+		{ power : TU.power(%1), name : TU.text(%3), version : TU.text(%6), centres : TU.nonzero(%8), year : -1 };
+	%}
+;
+%powersummaries %{ Array<Summary> %}
+	: powersummary %{ [%0]; %}
+	| powersummaries powersummary %{ %0.push(%1); %0; %}
 ;
 
 %acknowledgable_command %{ Message %}
@@ -157,10 +181,10 @@ class TU {
 
 %client_request %{ Message %}
 	: NME BRA TEXT KET BRA TEXT KET 	%{ mName(TU.text(%2),TU.text(%5)); %}
-	| IAM BRA POWER KET BRA INTEGER KET 	%{ mIAm(TU.power(%2),TU.integer(%5)); %}
+	| IAM BRA POWER KET BRA integer KET 	%{ mIAm(TU.power(%2),(%5)); %}
 	| NOT BRA GOF KET 						%{ mNOT(mGoFlag); %}
 	| GOF 									%{ mGoFlag; %}
-	| TME BRA INTEGER KET 					%{ mTimeToDeadline(TU.integer(%2)); %}
+	| TME BRA integer KET 					%{ mTimeToDeadline((%2)); %}
 	| DRW 									%{ mDraw(null); %}
 	| NOT BRA negated_client_request KET 	%{ mNOT(%2); %}
 	| DRW BRA POWER power_list KET 			%{ %3.unshift(TU.power(%2)); mDraw(%3); %}
@@ -168,13 +192,13 @@ class TU {
 ;
 
 %negated_client_request %{ Message %}
-	: TME BRA INTEGER KET 				%{ mTimeToDeadline(TU.integer(%2)); %}
+	: TME BRA integer KET 				%{ mTimeToDeadline((%2)); %}
 	| DRW 								%{ mDraw(null); %}
 	| DRW BRA POWER power_list KET 		%{ %3.unshift(TU.power(%2)); mDraw(%3); %}
 ;
 
 %negated_server_message %{ Message %}
-	: TME BRA INTEGER KET 		%{ mTimeToDeadline(TU.integer(%2)); %}
+	: TME BRA integer KET 		%{ mTimeToDeadline((%2)); %}
 	| CCD BRA POWER KET 		%{ mPowerDisorder(TU.power(%2)); %}
 ;
 
@@ -196,7 +220,7 @@ class TU {
 	| any_token_sequence BRA any_token_sequence KET %{ %0.push(%1); %0 = %0.concat(%2); %0.push(%3); %0; %}
 ;
 
-%any_no_bracket %{ Token %} : CHO | INTEGER | POWER | AMY | FLT | CTO | CVY | HLD | MTO | SUP | VIA | DSB | RTO | BLD | REM | WVE | MBV | BPR | CST | ESC | FAR | HSC | NAS | NMB | NMR | NRN | NRS | NSA | NSC | NSF | NSP | NSU | NVR | NYU | YSC | SUC | BNC | CUT | DSR | FLD | NSO | RET | NCS | NEC | ECS | SEC | SCS | SWC | WCS | NWC | SPR | SUM | FAL | AUT | WIN | CCD | DRW | FRM | GOF | HLO | HST | HUH | IAM | LOD | MAP | MDF | MIS | NME | NOT | NOW | OBS | OFF | ORD | OUT | PRN | REJ | SCO | SLO | SND | SUB | SVE | THX | TME | YES | ADM | AOA | BTL | ERR | LVL | MRT | MTL | NPB | NPR | PDA | PTL | RTL | UNO | DSD | ALY | AND | BWX | DMZ | ELS | EXP | FWD | FCT | FOR | HOW | IDK | IFF | INS | OCC | ORR | PCE | POB | PRP | QRY | SCD | SRY | SUG | THK | THN | TRY | VSS | WHT | WHY | XDO | XOY | YDO | CHO | BCC | UNT | TEXT | INLAND | SEA | COASTAL | BICOASTAL ;
+%any_no_bracket %{ Token %} : CHO | integer | POWER | AMY | FLT | CTO | CVY | HLD | MTO | SUP | VIA | DSB | RTO | BLD | REM | WVE | MBV | BPR | CST | ESC | FAR | HSC | NAS | NMB | NMR | NRN | NRS | NSA | NSC | NSF | NSP | NSU | NVR | NYU | YSC | SUC | BNC | CUT | DSR | FLD | NSO | RET | NCS | NEC | ECS | SEC | SCS | SWC | WCS | NWC | SPR | SUM | FAL | AUT | WIN | CCD | DRW | FRM | GOF | HLO | HST | HUH | IAM | LOD | MAP | MDF | MIS | NME | NOT | NOW | OBS | OFF | ORD | OUT | PRN | REJ | SCO | SLO | SND | SUB | SVE | THX | TME | YES | ADM | AOA | BTL | ERR | LVL | MRT | MTL | NPB | NPR | PDA | PTL | RTL | UNO | DSD | ALY | AND | BWX | DMZ | ELS | EXP | FWD | FCT | FOR | HOW | IDK | IFF | INS | OCC | ORR | PCE | POB | PRP | QRY | SCD | SRY | SUG | THK | THN | TRY | VSS | WHT | WHY | XDO | XOY | YDO | CHO | BCC | UNT | TEXT | INLAND | SEA | COASTAL | BICOASTAL ;
 
 %any %{ Token %} : any_no_bracket | BRA | KET ;
 
@@ -234,7 +258,7 @@ class TU {
 ;
 
 %turn %{ Turn %}
-	: phase INTEGER %{ { phase : %0, turn : TU.integer(%1) }; %} 
+	: phase integer %{ { phase : %0, turn : (%1) }; %} 
 ;
 
 %phase %{ Phase %}
@@ -348,7 +372,7 @@ class TU {
 	| DRW %{ mDraw(null); %}
 	| DRW BRA POWER power_list KET %{ %3.unshift(TU.power(%2)); mDraw(%3); %}
 	| TME %{ mTimeToDeadline(null); %}
-	| TME BRA INTEGER KET %{ mTimeToDeadline(TU.integer(%2)); %}
+	| TME BRA integer KET %{ mTimeToDeadline((%2)); %}
 ;
 
 %province_and_coast %{ Location %}
@@ -386,14 +410,14 @@ class TU {
 ;
 
 %variant_option %{ VariantOption %}
-	: LVL INTEGER %{ { par : TU.parameter(%0), val : TU.integer(%1) }; %}
-	| MTL INTEGER %{ { par : TU.parameter(%0), val : TU.integer(%1) }; %}
-	| RTL INTEGER %{ { par : TU.parameter(%0), val : TU.integer(%1) }; %}
-	| BTL INTEGER %{ { par : TU.parameter(%0), val : TU.integer(%1) }; %}
+	: LVL integer %{ { par : TU.parameter(%0), val : (%1) }; %}
+	| MTL integer %{ { par : TU.parameter(%0), val : (%1) }; %}
+	| RTL integer %{ { par : TU.parameter(%0), val : (%1) }; %}
+	| BTL integer %{ { par : TU.parameter(%0), val : (%1) }; %}
 	| AOA         %{ { par : TU.parameter(%0), val : null           }; %}
 	| DSD         %{ { par : TU.parameter(%0), val : null           }; %}
 	| PDA         %{ { par : TU.parameter(%0), val : null           }; %}
-	| PTL INTEGER %{ { par : TU.parameter(%0), val : TU.integer(%1) }; %}
+	| PTL integer %{ { par : TU.parameter(%0), val : (%1) }; %}
 	| NPR         %{ { par : TU.parameter(%0), val : null           }; %}
 	| NPB         %{ { par : TU.parameter(%0), val : null           }; %}
 ;
@@ -434,7 +458,7 @@ class TU {
 	| OCC unit_with_location_list						%{ arOCC(%1); %}
 	| AND arrangement_list								%{ arAND(%1); %}
 	| ORR arrangement_list								%{ arOR(%1); %}
-	| CHO BRA INTEGER INTEGER KET arrangement_list		%{ arCHO(TU.integer(%2),TU.integer(%3),%5); %}
+	| CHO BRA integer integer KET arrangement_list		%{ arCHO((%2),(%3),%5); %}
 	| FOR BRA turn KET BRA future_offer KET				%{ arFOR(%2,null,%5); %}
 	| FOR BRA period KET BRA future_offer KET			%{ arFOR(null,%2,%5); %}
 	| XOY BRA POWER KET BRA POWER KET					%{ arXOY(TU.power(%2),TU.power(%5)); %}
@@ -466,8 +490,8 @@ class TU {
 	| EXP BRA turn KET BRA reply KET	%{ pmEXP(%2,%5); %}
 	| IFF BRA arrangement KET THN BRA press_message KET	%{ pmIFF(%2,%6,null); %}
 	| IFF BRA arrangement KET THN BRA press_message KET ELS BRA press_message KET %{ pmIFF(%2,%6,%10); %}
-	| FRM BRA POWER INTEGER KET BRA power_list KET BRA press_message KET	%{ pmFRM(TU.power(%2),TU.integer(%3),%6,%9,null); %}
-	| FRM BRA POWER INTEGER KET BRA power_list KET BRA reply KET %{ pmFRM(TU.power(%2), TU.integer(%3), %6, null, %9); %}
+	| FRM BRA POWER integer KET BRA power_list KET BRA press_message KET	%{ pmFRM(TU.power(%2),(%3),%6,%9,null); %}
+	| FRM BRA POWER integer KET BRA power_list KET BRA reply KET %{ pmFRM(TU.power(%2), (%3), %6, null, %9); %}
 	| TEXT %{ pmText(TU.text(%0)); %}
 ;
 

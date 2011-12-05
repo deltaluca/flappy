@@ -34,7 +34,10 @@ enum Message {
 	mPowerEliminated(power:Int);
 	mSend(t:Turn,powers:Array<Int>,press:PressMsg,reply:ReplyMsg);
 	mFrom(x:Int,y:Int,powers:Array<Int>,press:PressMsg,reply:ReplyMsg);
+	mSummary(turn:Turn, summaries:Array<Summary>);
 }
+
+typedef Summary = { power:Int, name:String, version:String, centres:Int, year:Int };
 
 enum MsgOrder {
 	moHold(unit:UnitWithLoc);
