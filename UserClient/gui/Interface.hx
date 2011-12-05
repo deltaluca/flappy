@@ -26,7 +26,8 @@ class GuiInterface {
 		cli.bind(this);
 		//ggui.bind(this);
 
-		queue = new Mut<Array<Message>>([]);
+		queue = new Mut<Array<{msg:Message,stamp:Float}>>([]);
+		lasttime = -1;
 		(new haxe.Timer(30)).run = main;
 	}
 
@@ -60,18 +61,24 @@ class GuiInterface {
 	//---------------------------------------------------------------------------
 
 	//queued messages from socket for processing
-	var queue:Mut<Array<Message>>;
+	//includes receive time for delayed processing
+	var queue:Mut<Array<{msg:Message, stamp:Float}>>;
+	var lasttime:Float;
 
 	public function receiver(msg:Message) {
-	queue.with(function (xs:Array<Message>) {
-		xs.push(msg);
+	queue.with(function (xs) {
+		if(lasttime==-1) lasttime = cpp.Sys.cpuTime();
+		lasttime += cli.socketdelay;
+
+		if(lasttime<cpp.Sys.cpuTime()) lasttime = cpp.Sys.cpuTime();
+		xs.push({msg:msg, stamp:lasttime});
 	});
 	}
 
 	function main() {
-		var msg:Message = null;
-		while((msg = queue.with(function (xs) return if(xs.length==0) null else xs.shift())) != null) {
-			switch(msg) {
+		while(queue.with(function (xs) return if(xs.length==0) Math.POSITIVE_INFINITY else xs[0].stamp) < cpp.Sys.cpuTime()) {
+			var msg = queue.with(function (xs) return xs.shift());
+			switch(msg.msg) {
 				case mHello(power,x,v):
 					ggui.inform_iam(power,x);
 				case mMap(name):
@@ -88,7 +95,7 @@ class GuiInterface {
 				case mSupplyOwnership(scos):
 					ggui.map.inform_supplyOwnerships(scos);
 				default:
-					log("need to do anything for ggui with this?");
+					log("need to do anything for ggui with this? "+Std.string(msg));
 			}
 		}	
 	}

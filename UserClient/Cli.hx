@@ -22,7 +22,7 @@ import Mut;
 
 class Cli {
 	var sock:Socket;
-	var socketdelay:Float;
+	public var socketdelay:Float;
 
 	public var logger:Dynamic->Void;
 	public inline function log(x:Dynamic) {
@@ -59,7 +59,6 @@ class Cli {
 		if(sock.connected) sock.disconnect();
 		sock.connect(host,port);
 		sock.send_im();
-		sock.delay = socketdelay;
 		if(gint!=null) sock.bind(gint.receiver);
 	}
 
@@ -111,7 +110,6 @@ class Cli {
 			else {
 				var snd = Std.parseFloat(cmdargs[1]);
 				socketdelay = snd;
-				if(sock!=null) sock.delay = socketdelay;
 			}
 		case "run":
 			if(cmdargs.length!=2) log("run file");
