@@ -27,6 +27,7 @@ class GuiInterface {
 		//ggui.bind(this);
 
 		queue = new Mut<Array<Message>>([]);
+		(new haxe.Timer(30)).run = main;
 	}
 
 	//---------------------------------------------------------------------------
@@ -60,28 +61,16 @@ class GuiInterface {
 
 	//queued messages from socket for processing
 	var queue:Mut<Array<Message>>;
-	var timer:Timer;
 
 	public function receiver(msg:Message) {
-	queue.without(function (xs:Array<Message>) {
+	queue.with(function (xs:Array<Message>) {
 		xs.push(msg);
-		if(xs.length==1) {
-			timer = new Timer(0);
-			timer.run = main;
-		}
 	});
 	}
 
 	function main() {
 		var msg:Message = null;
-		while((msg = 
-			queue.with(function (xs)
-				return if(xs.length==0) {
-					timer.stop();
-					null;
-				} else xs.shift()
-			)) != null)
-		{
+		while((msg = queue.with(function (xs) return if(xs.length==0) null else xs.shift())) != null) {
 			switch(msg) {
 				case mHello(power,x,v):
 					ggui.inform_iam(power,x);

@@ -49,7 +49,7 @@ class Terminal {
 	var maxwidth:Int;
 
 	function crop() {
-	mlog.without(function(x:Log) {
+	mlog.with(function(x:Log) {
 		while(x.lines>=maxlines) {
 			x.text = x.text.substr(x.text.indexOf("\n")+1);
 			x.lines--;
@@ -58,7 +58,7 @@ class Terminal {
 	}
 
 	function log(value:Dynamic) {
-	mlog.without(function(x:Log) {
+	mlog.with(function(x:Log) {
 		if(value==null) { x.text = ""; x.lines = 0; return; }
 
 		var xs = Std.string(value);
@@ -94,9 +94,10 @@ class Terminal {
 		return visible;
 	}
 	function update(_) {
-		mlog.without(function (x:Log) {
-			logger.text = x.text;
-		});
+	mlog.with(function (x:Log) {
+		logger.text = x.text;
+		return null;
+	});
 	}
 
 	//----------------------------------------------------------------
@@ -166,7 +167,7 @@ class Terminal {
 
 		maxlines = Std.int(logger.height/10.02);
 		maxwidth = Std.int(logger.width/6);
-		mlog.without(function (x:Log) {
+		mlog.with(function (x:Log) {
 			x.lines--; crop(); x.lines++;
 		});
 
