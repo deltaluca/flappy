@@ -32,7 +32,7 @@ class Cli {
 	public function new() {
 		socketdelay = -1.0;
 		sock = new Socket();
-		sock.logger = logger;
+		sock.logger = log;
 	}
 
 	var gint:GuiInterface;

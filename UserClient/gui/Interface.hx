@@ -3,6 +3,7 @@ package gui;
 import daide.Language;
 import gui.Gui;
 import Cli;
+import haxe.Timer;
 
 /**
 
@@ -24,6 +25,8 @@ class GuiInterface {
 		this.cli = cli;
 		cli.bind(this);
 		//ggui.bind(this);
+
+		queue = new Mut<Array<Message>>([]);
 	}
 
 	//---------------------------------------------------------------------------
@@ -55,26 +58,51 @@ class GuiInterface {
 	//---------------------------------------------------------------------------
 	//---------------------------------------------------------------------------
 
+	//queued messages from socket for processing
+	var queue:Mut<Array<Message>>;
+	var timer:Timer;
+
 	public function receiver(msg:Message) {
-		switch(msg) {
-			case mHello(power,x,v):
-				ggui.inform_iam(power,x);
-			case mMap(name):
-				try {
-					ggui.load(name);
-					log("map accepted");
-					daide(mAccept(mMap(name)));
-				}catch(e:Dynamic) {
-					log("map rejected: why = "+Std.string(e));
-					daide(mReject(mMap(name)));
-				}
-			case mCurrentLocation(turn,unitlocs):
-				ggui.inform_locations(turn,unitlocs);
-			case mSupplyOwnership(scos):
-				ggui.map.inform_supplyOwnerships(scos);
-			default:
-				log("need to do anything for ggui with this?");
+	queue.without(function (xs:Array<Message>) {
+		xs.push(msg);
+		if(xs.length==1) {
+			timer = new Timer(0);
+			timer.run = main;
 		}
+	});
+	}
+
+	function main() {
+		var cont = true;
+		while(cont) {
+		queue.without(function (xs:Array<Message>) {
+			var msg = xs.shift();
+			if(xs.length==0) {
+				cont = false;
+				timer.stop();
+			}
+	
+			switch(msg) {
+				case mHello(power,x,v):
+					ggui.inform_iam(power,x);
+				case mMap(name):
+					try {
+						ggui.load(name);
+						log("map accepted");
+						daide(mAccept(mMap(name)));
+					}catch(e:Dynamic) {
+						log("map rejected: why = "+Std.string(e));
+						daide(mReject(mMap(name)));
+					}
+				case mCurrentLocation(turn,unitlocs):
+					ggui.inform_locations(turn,unitlocs);
+				case mSupplyOwnership(scos):
+					ggui.map.inform_supplyOwnerships(scos);
+				default:
+					log("need to do anything for ggui with this?");
+			}
+		});
+		}	
 	}
 
 }
