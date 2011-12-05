@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable, MultiParamTypeClasses, FunctionalDependencies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleInstances, DeriveDataTypeable, MultiParamTypeClasses, FunctionalDependencies #-}
 
 module Diplomacy.AI.SkelBot.SkelBot (skelBot, Master(..)) where
 
@@ -32,21 +32,22 @@ import Network
 import Network.BSD
 
   -- Master thread's monad
-newtype Master a = Master { unMaster :: (ReaderT (TSeq InMessage, TSeq OutMessage)
-                                         (CommT DaideMessage DaideMessage DaideHandle) a)}
-                 deriving (Monad, MonadReader (TSeq InMessage, TSeq OutMessage))
+newtype MasterT m a = Master { unMaster :: (ReaderT (TSeq InMessage, TSeq OutMessage)
+                                            (CommT DaideMessage DaideMessage m) a)}
+                    deriving (Monad, MonadIO, MonadReader (TSeq InMessage, TSeq OutMessage))
 
-instance MonadIO Master where
-  liftIO = Master . lift . lift . liftIO
+type Master = MasterT DaideHandle
+ 
+instance MonadTrans MasterT where
+  lift = Master . lift . lift
 
-instance MonadComm DaideMessage DaideMessage Master where
+instance (MonadIO m) => MonadComm DaideMessage DaideMessage (MasterT m) where
   pushMsg = Master . lift . pushMsg
   popMsg = Master . lift $ popMsg
 
-instance MonadError DaideError Master where
-  throwError = Master . lift . lift . throwError
-  catchError = error "asd"
-
+instance DaideErrorClass (MasterT DaideHandle) where
+  throwEM = Master . lift . lift . throwEM
+  
 skelBot :: DipBot Master h -> IO ()
 skelBot bot = do
   updateGlobalLogger "Main" (setLevel NOTICE)
@@ -71,7 +72,7 @@ communicate bot = do
   replyMessage <- runDaideAsk askDaide
   case replyMessage of
     RM -> return ()
-    _ -> throwError RMNotFirst
+    _ -> throwEM RMNotFirst
 
   -- Create messaging queues that interface with the Brain
   brainIn <- liftIO (newTSeqIO :: IO (TSeq InMessage))
@@ -93,13 +94,55 @@ communicate bot = do
     masterIn masterOut
   return ()
 
+expectWith :: (DipMessage -> Master ()) -> DipMessage -> Master ()
+expectWith f msg = do
+  rmsg <- popDip
+  if msg == rmsg then return () else f rmsg
+
+expect :: DipMessage -> Master ()
+expect = expectWith (\msg -> dieUnexpected msg)
+
+die = throwEM . WillDieSorry
+dieUnexpected = die . ("Unexpected message: " ++) . show
+
+popDip :: Master DipMessage
+popDip = do
+  msg <- popMsg
+  case msg of
+    IM _ -> throwEM IMFromServer
+    RM -> throwEM ManyRMs
+    FM -> die "Final message received"
+    EM err -> die (show err)
+    DM dm -> return dm
+
+pushDip :: DipMessage -> Master ()
+pushDip = pushMsg . DM
+
 master :: DipBot Master h -> Master ()
 master bot = do
-  pushMsg . DM $ Name (dipBotName bot) (show $ dipBotVersion bot)
-  liftIO $ print "SADSADSD"
-  forever $ do
-    msg <- popMsg
-    liftIO $ print msg
+  
+  let nameMsg = Name (dipBotName bot) (show $ dipBotVersion bot)
+  pushDip nameMsg
+  expect (Accept nameMsg)
+  
+  mapName <- popDip
+  case mapName of
+    n@(MapName _) -> return n
+    m -> dieUnexpected m
+  
+  pushDip MapDefReq
+  mapDef <- popDip
+  mapDefinition <- case mapDef of
+    MapDef def -> return def
+    m -> dieUnexpected m
+
+  pushDip (Accept mapName)
+
+  start <- popDip 
+  (power, startCode) <- case start of
+    Start pow pass _ _ -> return (pow, pass)
+    m -> dieUnexpected m
+  
   gameInfo <- initGame
   -- create TVars for getting partial move
   ordVar <- liftIO $ newTVarIO Nothing
@@ -126,7 +169,7 @@ execPureBrain brain timeout gameState = do
   morders <- runMaybeT . runGameKnowledgeTTimed timeout . liftM snd
              $ runBrainT (mapBrain return brain) gameState
   orders <- (\err -> maybe err (return . map ordify) morders) $ do
-    lift $ throwError (WillDieSorry "Pure brain timed out")
+    lift $ throwEM (WillDieSorry "Pure brain timed out")
   return orders
 
 execBrain :: (OrderClass o) => BrainCommT o h Master () -> Int -> GameState -> 
@@ -143,14 +186,10 @@ execBrain botBrain timeout gameState ordVar = do
     earlyFinish `mplus` timeoutFinish
   -- die if no move, ordify if there is a move
   orders <- (\err -> maybe err (return . map ordify) morders) $ do
-    lift $ throwError (WillDieSorry "Brain timed out with no partial move")
+    lift $ throwEM (WillDieSorry "Brain timed out with no partial move")
   -- clear ordVar
   liftIO . atomically $ writeTVar ordVar Nothing
   return orders
-          -- undefined -- mapM_ tellHandle messages   -- send the messages
-          -- -- TODO: check negative server response here
-          -- results <- lift getMoveResults       -- get move results
-          -- modifyHistory (dipBotProcessResults bot results)
 
 runGameKnowledgeTTimed :: MonadIO m => Int -> GameKnowledgeT h m (Maybe a) -> MaybeT (GameKnowledgeT h m) a
 runGameKnowledgeTTimed timedelta gameKnowledge = do
@@ -159,13 +198,13 @@ runGameKnowledgeTTimed timedelta gameKnowledge = do
   maybe mzero (MaybeT . return) m
 
 initGame :: Master GameInfo
-initGame = undefined
+initGame = error "come on"
 
 getGameState :: Master GameState
-getGameState = return undefined
+getGameState = return (error "come on")
 
 getMoveResults :: Master Results
-getMoveResults = undefined
+getMoveResults = error "come on"
 
 dispatcher :: TSeq DaideMessage -> TSeq OutMessage -> DaideTell ()
 dispatcher masterOut brainOut = forever $ do
@@ -173,21 +212,18 @@ dispatcher masterOut brainOut = forever $ do
          (return . Left =<< readTSeq masterOut)
          `orElse`
          (return . Right =<< readTSeq brainOut)
+  note $ "Dispatching message" ++ show msg
   tellDaide . either id (DM . SendPress Nothing) $ msg
+  note "message dispatched"
 
 receiver :: TSeq DaideMessage -> TSeq InMessage -> DaideAsk ()
 receiver masterIn brainIn = forever $ do
   msg <- askDaide
   case msg of
-    (IM _) -> throwError IMFromServer
-    RM -> throwError ManyRMs
-    FM -> error "Final message received"
     m@(DM dm) -> case dm of
       (ReceivePress p) -> liftIO . atomically $ writeTSeq brainIn p
       _ -> liftIO . atomically $ writeTSeq masterIn m
-    (EM err) -> error (show err)
-    a -> error (show a)
-  -- atomically (writeTSeq q msg)
+    other -> liftIO . atomically $ writeTSeq masterIn other
 
 -- command line options
 data CLOpts = CLOptions

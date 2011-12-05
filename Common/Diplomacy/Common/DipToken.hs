@@ -29,8 +29,8 @@ data DipToken = DipInt Int
 
 instance Binary DipToken where
   put (DipInt int) = put . (.&. 0x3FFF) $ (fromIntegral int :: Word16)
-  put (Bra) = put (0x40 :: Word8)
-  put (Ket) = put (0x40 :: Word8)
+  put (Bra) = put (0x40 :: Word8) >> put (0x00 :: Word8)
+  put (Ket) = put (0x40 :: Word8) >> put (0x01 :: Word8)
   put (DipPow (Pow p)) = put (0x41 :: Word8) >> put (fromIntegral p :: Word8)
   put (DipUnitType Army) = put (0x42 :: Word8) >> put (0x00 :: Word8)
   put (DipUnitType Fleet) = put (0x42 :: Word8) >> put (0x01 :: Word8)
@@ -243,7 +243,7 @@ decodeToken typ val
   | typ .&. 0xC0 == 0 = if typ .&. 0x20 == 0        -- if positive
                         then return . DipInt $ (fromIntegral typ :: Int) `shift` 8 + fromIntegral val
                         else return . DipInt . (-1 -) . (fromIntegral :: Word16 -> Int) . (0x1FFF .&.) . complement $ (fromIntegral (typ .&. 0x1F) :: Word16) `shift` 8 + fromIntegral val
-  | otherwise = throw InvalidToken
+  | otherwise = throw (InvalidToken typ val)
 
 decodeOrderTok 0x20 = CTO
 decodeOrderTok 0x21 = CVY
@@ -256,7 +256,7 @@ decodeOrderTok 0x41 = RTO
 decodeOrderTok 0x80 = BLD
 decodeOrderTok 0x81 = REM
 decodeOrderTok 0x82 = WVE
-decodeOrderTok _ = throw InvalidToken
+decodeOrderTok v = throw (InvalidToken 0 v)
 
 decodeOrderNoteTok 0x00 = MBV
 decodeOrderNoteTok 0x01 = BPR
@@ -278,7 +278,7 @@ decodeOrderNoteTok 0x10 = NSU
 decodeOrderNoteTok 0x11 = NVR
 decodeOrderNoteTok 0x12 = NYU
 decodeOrderNoteTok 0x13 = YSC
-decodeOrderNoteTok _ = throw InvalidToken
+decodeOrderNoteTok v = throw (InvalidToken 0 v)
 
 
 decodeResult 0x00 = SUC
@@ -288,14 +288,14 @@ decodeResult 0x03 = DSR
 decodeResult 0x04 = FLD
 decodeResult 0x05 = NSO
 decodeResult 0x06 = RET
-decodeResult _ = throw InvalidToken
+decodeResult v = throw (InvalidToken 0 v)
 
 decodePhase 0x00 = Spring
 decodePhase 0x01 = Summer
 decodePhase 0x02 = Fall
 decodePhase 0x03 = Autumn
 decodePhase 0x04 = Winter
-decodePhase _ = throw InvalidToken
+decodePhase v = throw (InvalidToken 0 v)
 
 
 decodeCmd 0x00 = CCD
@@ -329,7 +329,7 @@ decodeCmd 0x1B = TME
 decodeCmd 0x1C = YES
 decodeCmd 0x1D = ADM
 decodeCmd 0x1E = SMR
-decodeCmd _ = throw InvalidToken
+decodeCmd v = throw (InvalidToken 0 v)
 
 
 decodeParam 0x00 = AOA
@@ -345,7 +345,7 @@ decodeParam 0x09 = PTL
 decodeParam 0x0A = RTL
 decodeParam 0x0B = UNO
 decodeParam 0x0D = DSD
-decodeParam _ = throw InvalidToken
+decodeParam v = throw (InvalidToken 0 v)
 
 
 decodePress 0x00 = ALY
@@ -387,7 +387,7 @@ decodePress 0x23 = BCC
 decodePress 0x24 = UNT
 decodePress 0x25 = CCL
 decodePress 0x26 = NAR
-decodePress _ = throw InvalidToken
+decodePress v = throw (InvalidToken 0 v)
 
 putOrderTok CTO = put (0x20 :: Word8)
 putOrderTok CVY = put (0x21 :: Word8)

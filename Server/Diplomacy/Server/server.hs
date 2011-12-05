@@ -36,7 +36,7 @@ listenForClients serverPort = do
     noticeM "Main" $ "Client " ++ hostName ++
       ":" ++ show port ++ " connecting..."
     hSetBuffering hndle NoBuffering
-    forkIO $ runDaide handleClient (Handle hndle hostName port) 
+    forkIO $ runDaideT handleClient (Handle hndle hostName port) 
 
 -- map
 data DiplomacyMap = Map

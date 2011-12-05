@@ -94,7 +94,7 @@ holdBrainBuild = do
     
 
 holdProcessResults :: Results -> () -> ()
-holdProcessResults = undefined
+holdProcessResults = error "holdProcessResults not implemented"
 
 holdInitHistory :: (MonadIO m) => m ()
 holdInitHistory = return ()
