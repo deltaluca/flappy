@@ -42,7 +42,7 @@ class Terminal {
 	var backg :Sprite;
 
 	//----------------------------------------------------------------
-	//logger value locked as used from many threads
+	//logger value locked as used from more than one thread
 	var mlog:Mut<Log>;
 
 	var maxlines:Int;
