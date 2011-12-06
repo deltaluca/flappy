@@ -70,50 +70,45 @@ class Map extends GuiElem {
 
 	//--------------------------------------------------------------------------------------------
 
+	public function arrow(x:Location, y:Location) {
+		var xloc = location_point(x);
+		var yloc = location_point(y);
+
+		var g = highlight.graphics;
+		g.lineStyle(2,0,1);
+
+		g.beginFill(0,1);
+		g.drawCircle(xloc.x,xloc.y,3);
+		g.endFill();
+
+		g.moveTo(xloc.x,xloc.y);
+		var cx = (xloc.x+yloc.x)/2 - (yloc.y-xloc.y)*0.25;
+		var cy = (xloc.y+yloc.y)/2 + (yloc.x-xloc.x)*0.25;
+		g.curveTo(cx,cy,yloc.x,yloc.y);
+	}
+
 	public function inform_defn(powers:Array<Int>, provinces:MdfProvinces, adjs:Array<MdfProAdjacencies>) {
-		var spr = new Sprite();
+/*		var spr = new Sprite();
 		addChild(spr);
 		var g = spr.graphics;
 		g.lineStyle(2,0,1);
 	
 		for(adj in adjs) {
 			var pro = adj.pro;
-			var adjs = adj.coasts; //adjs.unit, adjs.coast, adjs.locs Array<Location> { province, coast }	
+			var adjs = adj.coasts;
 
 			for(adj in adjs) {
 				switch(adj.unit) {
 				case utArmy:
-					var proloc = location_point({province:pro, coast:null});
-					proloc = mapToScreen(proloc.x,proloc.y);
-					
-					g.lineStyle(2,0,1);
-					g.drawCircle(proloc.x,proloc.y,3);
-					for(loc in adj.locs) {
-						g.moveTo(proloc.x,proloc.y);
-						var pl = location_point(loc);
-						pl = mapToScreen(pl.x,pl.y);
-						var cx = (proloc.x+pl.x)/2 - (pl.y-proloc.y)*0.25;
-						var cy = (proloc.y+pl.y)/2 + (pl.x-proloc.x)*0.25;
-						g.curveTo(cx,cy,pl.x,pl.y);
-					}
+					for(loc in adj.locs)
+						arrow({province:pro, coast:null}, loc);
 				case utFleet:
-					var proloc = location_point({province:pro, coast:adj.coast});
-					proloc = mapToScreen(proloc.x,proloc.y);
-					
-					g.lineStyle(2,0xff,1);
-					g.drawCircle(proloc.x,proloc.y,3);
-					for(loc in adj.locs) {
-						g.moveTo(proloc.x,proloc.y);
-						var pl = location_point(loc);
-						pl = mapToScreen(pl.x,pl.y);
-						var cx = (proloc.x+pl.x)/2 - (pl.y-proloc.y)*0.25;
-						var cy = (proloc.y+pl.y)/2 + (pl.x-proloc.x)*0.25;
-						g.curveTo(cx,cy,pl.x,pl.y);
-					}
+					for(loc in adj.locs)
+						arrow({province:pro, coast:adj.coast}, loc);
 				default:
 				}
 			}
-		}	
+		}	*/
 	}
 
 	//--------------------------------------------------------------------------------------------
@@ -298,7 +293,6 @@ class Map extends GuiElem {
 
 		highlight = new Sprite();	
 		addChild(highlight);
-//		highlight.filters= [new BlurFilter(4,4,1)];
 
 		//
 		var cmf = ColorMatrix.fromred(0xffffff).filter();

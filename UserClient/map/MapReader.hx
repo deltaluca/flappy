@@ -79,7 +79,9 @@ class Map {
 	public var provinces:Array<MapProvince>;
 	var tree:AABBTree<MapProvince>;
 
+	//map supply centre to graphical location
 	public var supplies:Hash<Point>;
+	//map MDF locations to graphical location
 	public var locations:Hash<Point>;
 
 	public var width:Float;

@@ -13,6 +13,7 @@ import nme.display.Bitmap;
 import Terminal;
 import gui.Gui;
 import gui.Interface;
+import gui.Panel;
 
 import map.MapReader;
 import map.Path;
@@ -45,7 +46,7 @@ class Main extends Sprite {
 
 		var ggui = new Gui();
 		addChild(ggui);
-		
+
 		var cli = new Cli();
 
 		var terminal = new Terminal();
