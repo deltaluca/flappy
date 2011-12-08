@@ -49,6 +49,11 @@ class MapConfig {
 	}
 }
 
+enum ArrowType {
+	aNormal;
+	aSupport;
+}
+
 class Map extends GuiElem {
 	//mapdata corresponding to the input .svg file for clickable regions and other metadata.
 	//graphics being ordered large to small for building mipmap.
@@ -70,21 +75,48 @@ class Map extends GuiElem {
 
 	//--------------------------------------------------------------------------------------------
 
-	public function arrow(x:Location, y:Location) {
+	public function arrow(x:Location, y:Location, type:ArrowType, success:Bool) {
 		var xloc = location_point(x);
 		var yloc = location_point(y);
 
-		var g = highlight.graphics;
-		g.lineStyle(2,0,1);
+		var arrow_height:Float;
+		var col = Match.match(pair(type,success),
+			pair(aNormal, true ) = {
+				arrow_height = 6;
+				0;
+			},
+			pair(aNormal, false) = {
+				arrow_height = 3;
+				0xff0000;
+			},
+			_ = {
+				arrow_height = 2;
+				0x808080;
+			}
+		);
+		var arrow_width = arrow_height*0.75;
 
-		g.beginFill(0,1);
-		g.drawCircle(xloc.x,xloc.y,3);
-		g.endFill();
+		var g = arrows.graphics;
+		g.lineStyle(2,col,1);
 
 		g.moveTo(xloc.x,xloc.y);
 		var cx = (xloc.x+yloc.x)/2 - (yloc.y-xloc.y)*0.25;
 		var cy = (xloc.y+yloc.y)/2 + (yloc.x-xloc.x)*0.25;
 		g.curveTo(cx,cy,yloc.x,yloc.y);
+
+		var dcx = yloc.x-cx;
+		var dcy = yloc.y-cy;
+		var dcl = 1/Math.sqrt(dcx*dcx+dcy*dcy);
+		dcx *= dcl; dcy *= dcl;
+
+		g.beginFill(col,1);
+		g.moveTo(yloc.x,yloc.y);
+		g.lineTo(yloc.x - dcx*arrow_height + dcy*arrow_width,
+				 yloc.y - dcy*arrow_height - dcx*arrow_width);
+		g.lineTo(yloc.x - dcx*arrow_height - dcy*arrow_width,
+				 yloc.y - dcy*arrow_height + dcx*arrow_width);
+		g.lineTo(yloc.x,yloc.y);
+		g.endFill();
 	}
 
 	public function inform_defn(powers:Array<Int>, provinces:MdfProvinces, adjs:Array<MdfProAdjacencies>) {
@@ -113,7 +145,31 @@ class Map extends GuiElem {
 
 	//--------------------------------------------------------------------------------------------
 
+	/*
+
+		discern when turn ends based on information supplied.
+
+		When an order result is received, we begin rendering the arrows displaying unit movement and results
+		When a supply ownership/location message is received, we assume that no more order results are to be given
+		And arrows are cleared with units moved to the new location.
+
+		To this effect, when supply/locations are informed, arrows are simply cleared which fits the above rules.
+	
+	*/
+
+	//--------------------------------------------------------------------------------------------
+
+	public function inform_result(order:MsgOrder, result:CompOrderResult) {
+		switch(order) {
+			case moMove(unitloc, loc):
+				arrow(unitloc.location, loc, aNormal, Match.match(result.result, rSuccess=true, _=false));
+			default: //don't care (yet)
+		}
+	}
+
 	public function inform_supplyOwnerships(scos:Array<ScoEntry>) {
+		arrows.graphics.clear();
+
 		for(sco in scos) {
 			var power = sco.power;
 			var cmf = MapConfig.powerFilter(power);
@@ -166,6 +222,8 @@ class Map extends GuiElem {
 
 	var unitlocs:Array<{power:Int, pos:Point, type:UnitType, mip:MipMap}>;
 	public function inform_locations(locs:Array<UnitWithLocAndMRT>) {
+		arrows.graphics.clear();
+
 		for(x in unitlocs) {
 			removeChild(x.mip);
 			switch(x.type) {
@@ -199,6 +257,8 @@ class Map extends GuiElem {
 
 	//highlighting of current region.
 	var highlight:Sprite;
+	//arrow rendering
+	var arrows:Sprite;
 
 	//viewport corresponding to the application display in unit map coordinates.
 	// viewport.xy, viewport.xy + viewport.wh in [0,1]
@@ -293,6 +353,8 @@ class Map extends GuiElem {
 
 		highlight = new Sprite();	
 		addChild(highlight);
+		arrows = new Sprite();
+		addChild(arrows);
 
 		//
 		var cmf = ColorMatrix.fromred(0xffffff).filter();
@@ -316,6 +378,11 @@ class Map extends GuiElem {
 		invbox.graphics.lineStyle(1,0,0);
 		invbox.graphics.drawRect(0,0,this.mapdata.width,this.mapdata.height);
 		highlight.addChild(invbox);
+		//so does arrows
+		invbox = new Sprite();
+		invbox.graphics.lineStyle(1,0,0);
+		invbox.graphics.drawRect(0,0,this.mapdata.width,this.mapdata.height);
+		arrows.addChild(invbox);
 
 		///event handlers
 		addEventListener(MouseEvent.MOUSE_DOWN, mdown);
@@ -348,10 +415,10 @@ class Map extends GuiElem {
 		map.x = -viewport.x*map.width;
 		map.y = -viewport.y*map.height;
 
-		highlight.x = map.x;
-		highlight.y = map.y;
-		highlight.width = map.width;
-		highlight.height = map.height;
+		highlight.x = arrows.x = map.x;
+		highlight.y = arrows.y = map.y;
+		highlight.width  = arrows.width  = map.width;
+		highlight.height = arrows.height = map.height;
 
 		var rad = Std.int(10*Math.sqrt(zoom_scale()) * (Match.match(stageScale, sSmall=1.0, sDefault=1.5, sLarge=2.0)));
 

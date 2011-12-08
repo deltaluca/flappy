@@ -96,6 +96,8 @@ class GuiInterface {
 					ggui.inform_locations(turn,unitlocs);
 				case mSupplyOwnership(scos):
 					ggui.map.inform_supplyOwnerships(scos);
+				case mOrderResult(_,order,result):
+					ggui.map.inform_result(order,result);
 				default:
 					log("need to do anything for ggui with this? "+Std.string(msg));
 			}
