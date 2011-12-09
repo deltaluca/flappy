@@ -88,8 +88,7 @@ newtype Adjacencies = Adjacencies (Map.Map Province [UnitToProv])
 -- | Dynamic game state definitions
 
 data GameState = GameState { gameStateMap :: MapState
-                           , gameStateRound :: Int
-                           , gameStatePhase :: Phase }
+                           , gameStateTurn :: Turn }
                deriving (Show)
 
 data MapState = MapState { supplyOwnerships :: SupplyCOwnerships
