@@ -50,8 +50,10 @@ class MapConfig {
 }
 
 enum ArrowType {
+	aHold;
 	aNormal;
 	aSupport;
+	aConvoy;
 }
 
 class Map extends GuiElem {
@@ -75,23 +77,39 @@ class Map extends GuiElem {
 
 	//--------------------------------------------------------------------------------------------
 
-	public function arrow(x:Location, y:Location, type:ArrowType, success:Bool) {
+	public function arrow(x:Location, y:Location, type:ArrowType, s1:Bool, s2:Bool=false) {
 		var xloc = location_point(x);
 		var yloc = location_point(y);
 
 		var arrow_height:Float;
-		var col = Match.match(pair(type,success),
+		var col = Match.match(pair(type,s1),
 			pair(aNormal, true ) = {
 				arrow_height = 6;
 				0;
 			},
-			pair(aNormal, false) = {
+			pair(aNormal, false) = { //move bounced
 				arrow_height = 3;
 				0xff0000;
 			},
+			pair(aSupport, true ) = {
+				arrow_height = 3;
+				0x30f030;
+			},
+			pair(aSupport, false ) = { //support cut
+				arrow_height = 2;
+				0x10a010;
+			},
+			pair(aHold, true) = {
+				arrow_height = 3;
+				0x4040ff;
+			},
+			pair(aHold, false) = {
+				arrow_height = 3;
+				0;
+			},
 			_ = {
 				arrow_height = 2;
-				0x808080;
+				0xffffff;
 			}
 		);
 		var arrow_width = arrow_height*0.75;
@@ -104,19 +122,25 @@ class Map extends GuiElem {
 		var cy = (xloc.y+yloc.y)/2 + (yloc.x-xloc.x)*0.25;
 		g.curveTo(cx,cy,yloc.x,yloc.y);
 
-		var dcx = yloc.x-cx;
-		var dcy = yloc.y-cy;
-		var dcl = 1/Math.sqrt(dcx*dcx+dcy*dcy);
-		dcx *= dcl; dcy *= dcl;
-
-		g.beginFill(col,1);
-		g.moveTo(yloc.x,yloc.y);
-		g.lineTo(yloc.x - dcx*arrow_height + dcy*arrow_width,
-				 yloc.y - dcy*arrow_height - dcx*arrow_width);
-		g.lineTo(yloc.x - dcx*arrow_height - dcy*arrow_width,
-				 yloc.y - dcy*arrow_height + dcx*arrow_width);
-		g.lineTo(yloc.x,yloc.y);
-		g.endFill();
+		if(!s2) {
+			var dcx = yloc.x-cx;
+			var dcy = yloc.y-cy;
+			var dcl = 1/Math.sqrt(dcx*dcx+dcy*dcy);
+			dcx *= dcl; dcy *= dcl;
+	
+			g.beginFill(col,1);
+			g.moveTo(yloc.x,yloc.y);
+			g.lineTo(yloc.x - dcx*arrow_height + dcy*arrow_width,
+					 yloc.y - dcy*arrow_height - dcx*arrow_width);
+			g.lineTo(yloc.x - dcx*arrow_height - dcy*arrow_width,
+					 yloc.y - dcy*arrow_height + dcx*arrow_width);
+			g.lineTo(yloc.x,yloc.y);
+			g.endFill();
+		}else {
+			g.beginFill(((col&0x7f7f7f)<<1)|(col&0x808080), 1);
+			g.drawCircle(yloc.x,yloc.y,arrow_height);
+			g.endFill();
+		}
 	}
 
 	public function inform_defn(powers:Array<Int>, provinces:MdfProvinces, adjs:Array<MdfProAdjacencies>) {
@@ -161,8 +185,17 @@ class Map extends GuiElem {
 
 	public function inform_result(order:MsgOrder, result:CompOrderResult) {
 		switch(order) {
+			case moHold(unitloc):
+				arrow(unitloc.location, unitloc.location, aHold, Match.match(result.result, rSuccess=true, _=false), true);
 			case moMove(unitloc, loc):
 				arrow(unitloc.location, loc, aNormal, Match.match(result.result, rSuccess=true, _=false));
+			case moSupport(unitloc, supportloc, move):
+				var success = Match.match(result.result, rSupportCut=false,_=true);
+				if(move==null) { //support a hold
+					arrow(unitloc.location, supportloc.location, aSupport, success, true); 
+				}else { //support a move
+					arrow(unitloc.location, { province:move, coast:null /*!!!*/ }, aSupport, success);
+				}	
 			default: //don't care (yet)
 		}
 	}

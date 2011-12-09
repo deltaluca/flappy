@@ -13,7 +13,7 @@ import nme.display.Bitmap;
 import Terminal;
 import gui.Gui;
 import gui.Interface;
-import gui.Panel;
+//import gui.Panel;
 
 import map.MapReader;
 import map.Path;

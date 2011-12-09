@@ -68,7 +68,10 @@ class GuiInterface {
 	public function receiver(msg:Message) {
 	queue.with(function (xs) {
 		if(lasttime==-1) lasttime = cpp.Sys.cpuTime();
-		lasttime += cli.socketdelay;
+
+		//dont' delay order results
+		if(switch(msg) { case mOrderResult(_,_,_): false; default: true; })
+			lasttime += cli.socketdelay;
 
 		if(lasttime<cpp.Sys.cpuTime()) lasttime = cpp.Sys.cpuTime();
 		xs.push({msg:msg, stamp:lasttime});
