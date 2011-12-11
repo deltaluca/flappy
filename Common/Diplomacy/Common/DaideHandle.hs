@@ -25,7 +25,7 @@ import System.IO
 import System.Timeout
 import System.Log.Logger
 import Data.ByteString.Lazy as L
-import Data.Binary
+import Data.Serialize
 import Data.Time.Clock
 import Control.DeepSeq
 import Control.Monad.Error
@@ -35,26 +35,29 @@ import Control.Monad.Cont
 import Control.Exception as E
 import Network
 
+import qualified Control.Monad.State as State
+
 -- Daide communication holding client info
-type DaideCommT = ReaderT DaideHandleInfo
+type DaideCommT m = State.StateT L.ByteString (ReaderT DaideHandleInfo m)
 
 -- DaideHandle is a Daide communication with error handling and exiting
 newtype DaideHandleT m a = DaideHandle
                            { runDaideHandle :: ErrorT (Maybe DaideError) (DaideCommT m) a }
-                         deriving ( Monad, MonadIO, MonadReader DaideHandleInfo, MonadError (Maybe DaideError))
+                         deriving ( Monad, MonadIO, MonadReader DaideHandleInfo,
+                                    MonadError (Maybe DaideError), State.MonadState L.ByteString)
 
 instance MonadTrans DaideHandleT where
-  lift = DaideHandle . lift . lift
+  lift = DaideHandle . lift . lift . lift
 
 -- |wrapper to only allow asking
 newtype DaideAskT m a = DaideAsk { runDaideAsk :: DaideHandleT m a }
                       deriving ( MonadTrans, Monad, MonadIO, MonadError (Maybe DaideError)
-                               , MonadReader DaideHandleInfo)
+                               , MonadReader DaideHandleInfo, State.MonadState L.ByteString)
 
 -- |wrapper to only allow telling
 newtype DaideTellT m a = DaideTell { runDaideTell :: DaideHandleT m a }
                       deriving ( MonadTrans, Monad, MonadIO, MonadError (Maybe DaideError)
-                               , MonadReader DaideHandleInfo)
+                               , MonadReader DaideHandleInfo, State.MonadState L.ByteString)
 
 type DaideHandle = DaideHandleT IO
 type DaideAsk = DaideAskT IO
@@ -83,14 +86,14 @@ instance (MonadIO m) => MonadDaideTell (DaideCommT m) where
 
 instance (MonadIO m) => MonadDaideAsk (DaideAskT m) where
   askDaide = DaideAsk $ do
-    hndle <- asks socketHandle
-    contents <- liftIO (L.hGetContents hndle)
+    contents <- State.get
     return =<< deserialise contents
 
   askDaideTimed timedelta = DaideAsk $ do
-    hndle <- asks socketHandle
-    byteString <- liftIO $ L.hGetContents hndle >>= timeout timedelta . evaluate
-    maybe (throwEM TimerPopped) deserialise byteString
+    byteString <- State.get
+    ret <- deserialise byteString
+    mret <- liftIO . timeout timedelta . evaluate $ ret
+    maybe (throwEM TimerPopped) return mret
 
 instance (MonadIO m) => DaideErrorClass (DaideHandleT m) where
   throwEM = throwError . Just
@@ -114,8 +117,13 @@ note :: (MonadIO m, MonadReader DaideHandleInfo m) => String -> m ()
 note = noteWith noticeM
 
 runDaideT :: (MonadIO m) => DaideHandleT m () -> DaideHandleInfo -> m ()
-runDaideT daide info =
-  runReaderT (runErrorT (runDaideHandle daide) >>= handleError) info
+runDaideT daide info = do
+  contents <- liftIO $ L.hGetContents (socketHandle info)
+  _ <- runReaderT (State.runStateT (runErrorT (runDaideHandle daide)
+                                    >>= handleError
+                                   ) contents
+                  ) info
+  return ()
 
 shutdownDaide :: (MonadIO m) => DaideHandleT m a
 shutdownDaide = throwError Nothing
@@ -134,11 +142,13 @@ handleError = flip either (const $ return ()) . maybe (return ()) $  -- if Nothi
 
 deserialise :: (MonadIO m) => L.ByteString -> DaideHandleT m DaideMessage
 deserialise byteString = do
-  msg <- liftIO . try . return . force . decode $ byteString
-  either throwError return msg
+  e <- liftIO . try . evaluate . runGetLazyState get $ byteString
+  (ret, rest) <- either throwError (either (throwEM . WillDieSorry) return) e
+  State.put rest
+  return ret
 
 serialise :: (MonadReader DaideHandleInfo m) => DaideMessage -> m L.ByteString
-serialise message = return (encode message)
+serialise message = return (encodeLazy message)
 
 echoHandle :: (MonadIO m) => DaideHandleT m ()
 echoHandle = do

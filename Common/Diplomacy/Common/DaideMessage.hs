@@ -7,7 +7,8 @@ import Diplomacy.Common.DipMessage
 import Diplomacy.Common.DipToken
 
 --import Debug.Trace
-import Data.Binary
+import Data.Serialize
+import Data.Word
 import Control.Exception as E
 import Control.Monad
 import Control.Monad.Error
@@ -27,7 +28,7 @@ _DAIDE_MAGIC_NUM_LE = 0x10DA :: Word16
 _DAIDE_VERSION = 1 :: Word16
 _DAIDE_PRESS_LEVEL = 0
 
-instance Binary DaideMessage where
+instance Serialize DaideMessage where
   put (IM version) = putMessage 0 4 $ do
     put (fromIntegral version :: Word16)
     put _DAIDE_MAGIC_NUM

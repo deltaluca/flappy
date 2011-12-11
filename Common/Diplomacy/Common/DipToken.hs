@@ -5,10 +5,11 @@ import Diplomacy.Common.DaideError
 import Diplomacy.Common.Data as Dat
 
 import Control.DeepSeq
-import Data.Binary
+import Data.Serialize
 import Control.Exception
 import Data.Bits
 import Data.Char
+import Data.Word
 import qualified Data.Map as Map
 
 data DipToken = DipInt Int
@@ -30,7 +31,7 @@ data DipToken = DipInt Int
 
 instance NFData DipToken
 
-instance Binary DipToken where
+instance Serialize DipToken where
   put (DipInt int) = put . (.&. 0x3FFF) $ (fromIntegral int :: Word16)
   put (Bra) = put (0x40 :: Word8) >> put (0x00 :: Word8)
   put (Ket) = put (0x40 :: Word8) >> put (0x01 :: Word8)

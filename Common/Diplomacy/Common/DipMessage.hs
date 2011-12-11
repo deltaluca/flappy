@@ -44,11 +44,17 @@ tokenPrim a b c = dipCatchError $ Parsec.tokenPrim a b c
 spaces :: DipParserString ()
 spaces = dipCatchError Parsec.spaces
 
+eof :: DipParserString ()
+eof = dipCatchError Parsec.eof
+
 integer :: DipParserString Int
 integer = pStr >>= return . read
 
 many :: DipRep s t => DipParser s a -> DipParser s [a]
 many = dipCatchError . Parsec.many . unDipParser
+
+getInput :: DipRep s t => DipParser s s
+getInput = dipCatchError Parsec.getInput
 
 letter = dipCatchError Parsec.letter
 
@@ -87,6 +93,7 @@ class Parsec.Stream s DipParserInfo t => DipRep s t | t -> s where
   paren :: DipParser s a -> DipParser s a
   errPos :: DipParser s Int
   createError :: DipParseError -> s -> DipError
+  eoi :: DipParser s ()
 
   -- defaults
   pStr = many pChr
@@ -101,6 +108,7 @@ instance DipRep [DipToken] DipToken where
   createError (WrongParen pos) toks =
     Paren $ DipCmd PRN : listify (uParen (insertAt pos) (DipParam ERR) . (appendListify toks))
   createError (SyntaxError pos) toks = Paren $ DipCmd PRN : listify (uParen (insertAt pos) (DipParam ERR) . (appendListify toks))
+  eoi = getInput >>= (\s -> if s /= [] then parserFail "End of input expected" else return ())
 
 instance DipRep BS.ByteString Char where
   tok f = try $ do
@@ -125,6 +133,7 @@ instance DipRep BS.ByteString Char where
   errPos = return 0
   createError (WrongParen _) _ = Paren []
   createError (SyntaxError _) _ = Syntax []
+  eoi = eof
 
   -- DESC (SENDING PARTY)
 data DipMessage =
@@ -287,11 +296,12 @@ parseDipMessage :: (DipRep s t, Show s) => Monad m => Int -> s -> ErrorT DipErro
 parseDipMessage = parseDip pMsg
 
 parseDip :: (Monad m, DipRep s t, Show s) => DipParser s a -> Int -> s -> ErrorT DipError m a
-parseDip parsr lvl stream =   uncurry (handleParseErrors stream)
-                            . flip runReader lvl
-                            . flip runStateT Nothing
-                            . Parsec.runParserT (unDipParser parsr) () "DAIDE Message Parser"
-                            $ stream
+parseDip pars lvl stream = let parsr = pars >>= (\r -> eoi >> return r) in
+  uncurry (handleParseErrors stream)
+  . flip runReader lvl
+  . flip runStateT Nothing
+  . Parsec.runParserT (unDipParser parsr) () "DAIDE Message Parser"
+  $ stream
 
 handleParseErrors :: (Monad m, DipRep s t, Show s) => s -> Either Parsec.ParseError a -> (Maybe DipParseError) -> ErrorT DipError m a
 handleParseErrors s (Left a) (Just _{-err-}) = error (show a ++ '\n' : show s) -- throwError (createError err stream)

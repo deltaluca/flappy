@@ -166,7 +166,7 @@ master bot = do
     CurrentPosition sc -> return sc
     m -> dieUnexpected m
 
-  pushDip CurrentUnitPositionReq
+  --pushDip CurrentUnitPositionReq
   now <- popDip
   unitPoss <- case now of
     CurrentUnitPosition up -> return up
@@ -210,7 +210,7 @@ gameLoop bot timeout = do
   forever $ do
     (GameState _ turn) <- lift get
     let ebrain = brainMap Map.! turnPhase turn
-    moveOrders <- return {-. sort-} =<< ebrain
+    moveOrders <- return . sort =<< ebrain
     lift . lift $ do
       pushDip $ SubmitOrder (Just turn) moveOrders
       respOrders <- unfoldM $ do
@@ -219,14 +219,15 @@ gameLoop bot timeout = do
           AckOrder order ordNote -> do
             _ <- popDip
             return (Just (order, ordNote))
-          _ -> return Nothing
+          _ -> do
+            return Nothing
       let sortedRespOrders = sortBy (\(o1, _) (o2, _) -> compare o1 o2) respOrders
       when (length moveOrders /= length sortedRespOrders) $
         die "Acknowledging messages missing"
 
       zipWithM_ (\o1 (o2, oNote) -> do
                     when (o1 /= o2) $
-                      die "Acknowledging messages out of order"
+                      die "Acknowledging messages don't match orders"
                     when (oNote /= MovementOK) . die $
                       "Server returned \"" ++ show oNote ++
                       "\" for order \"" ++ show o1 ++ "\""
@@ -238,8 +239,6 @@ gameLoop bot timeout = do
         _ -> return ()
 
       lift . note $ show mMissing
-
-      undefined
 
       sco <- popDip
       scos <- case sco of

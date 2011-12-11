@@ -8,7 +8,7 @@ import Control.Monad.Error
 import Control.Exception
 import Control.DeepSeq
 import Data.Typeable
-import Data.Binary
+import Data.Word
 
 data DaideError = TimerPopped
                 | IMNotFirst
