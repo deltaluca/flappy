@@ -6,11 +6,12 @@ import Diplomacy.Common.DaideError
 import Diplomacy.Common.DipMessage
 import Diplomacy.Common.DipToken
 
-import Debug.Trace
+--import Debug.Trace
 import Data.Binary
 import Control.Exception as E
 import Control.Monad
 import Control.Monad.Error
+import Control.DeepSeq
 
 data DaideMessage = IM {imVersion :: Int}
                   | RM
@@ -19,6 +20,7 @@ data DaideMessage = IM {imVersion :: Int}
                   | EM DaideError
                   deriving (Show)
 
+instance NFData DaideMessage
 
 _DAIDE_MAGIC_NUM    = 0xDA10 :: Word16
 _DAIDE_MAGIC_NUM_LE = 0x10DA :: Word16
@@ -35,7 +37,7 @@ instance Binary DaideMessage where
   put FM = putMessage 3 0 $ return ()
   put (DM dm) = do
     let toks = uParseDipMessage dm
-    trace (show toks) $ putMessage 2 (fromIntegral (length toks * 2)) (mapM_ put toks)
+    putMessage 2 (fromIntegral (length toks * 2)) (mapM_ put toks)
   get = do
     typ <- get :: Get Word8
     get :: Get Word8           -- padding

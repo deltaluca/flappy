@@ -6,6 +6,7 @@ module Diplomacy.Common.DaideHandle(DaideHandleT, DaideHandle,
                                     DaideHandleInfo(..),
                                     MonadDaideAsk,
                                     MonadDaideTell,
+                                    DaideErrorClass,
                                     runDaideT,
                                     runDaideAsk, runDaideTell,
                                     askDaide,
@@ -26,6 +27,7 @@ import System.Log.Logger
 import Data.ByteString.Lazy as L
 import Data.Binary
 import Data.Time.Clock
+import Control.DeepSeq
 import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.Trans
@@ -101,10 +103,12 @@ instance (MonadIO m) => DaideErrorClass (DaideAskT m) where
 
 noteWith :: (MonadIO m, MonadReader DaideHandleInfo m) => (String -> String -> IO ()) -> String -> m ()
 noteWith f msg = do
+  -- we have to "force" (because of lazy strings) AND evaluate (because of lazy usage)
+  toPrint <- liftIO . evaluate . force $ msg
   name <- asks hostName
   port <- asks hostPort
   time <- liftIO getCurrentTime
-  liftIO . f "Main" $ show time ++ " [" ++ name ++ " : " ++ show port ++ "] " ++ msg
+  liftIO . f "Main" $  show time ++ " [" ++ name ++ " : " ++ show port ++ "] " ++ toPrint
 
 note :: (MonadIO m, MonadReader DaideHandleInfo m) => String -> m ()
 note = noteWith noticeM
@@ -113,13 +117,13 @@ runDaideT :: (MonadIO m) => DaideHandleT m () -> DaideHandleInfo -> m ()
 runDaideT daide info =
   runReaderT (runErrorT (runDaideHandle daide) >>= handleError) info
 
-shutdownDaide :: (MonadIO m) => DaideHandleT m ()
+shutdownDaide :: (MonadIO m) => DaideHandleT m a
 shutdownDaide = throwError Nothing
 
-shutdownDaideAsk :: (MonadIO m) => DaideAskT m ()
+shutdownDaideAsk :: (MonadIO m) => DaideAskT m a
 shutdownDaideAsk = DaideAsk shutdownDaide
 
-shutdownDaideTell :: (MonadIO m) => DaideTellT m ()
+shutdownDaideTell :: (MonadIO m) => DaideTellT m a
 shutdownDaideTell = DaideTell shutdownDaide
 
 handleError :: (MonadIO m, MonadDaideTell m, MonadReader DaideHandleInfo m) => Either (Maybe DaideError) a -> m ()
@@ -130,9 +134,8 @@ handleError = flip either (const $ return ()) . maybe (return ()) $  -- if Nothi
 
 deserialise :: (MonadIO m) => L.ByteString -> DaideHandleT m DaideMessage
 deserialise byteString = do
-  msg <- return (decode byteString)
-  ret <- liftIO . try . evaluate $ msg
-  either throwError return ret
+  msg <- liftIO . try . return . force . decode $ byteString
+  either throwError return msg
 
 serialise :: (MonadReader DaideHandleInfo m) => DaideMessage -> m L.ByteString
 serialise message = return (encode message)

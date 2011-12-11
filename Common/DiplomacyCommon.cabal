@@ -71,7 +71,8 @@ Library
     parsec >= 3.0,
     stm,
     QuickCheck >= 2.0,
-    time
+    time,
+    deepseq
   
   -- Modules not exported by this package.
   -- Other-modules:       

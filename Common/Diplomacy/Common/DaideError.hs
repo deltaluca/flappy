@@ -6,6 +6,7 @@ module Diplomacy.Common.DaideError( DaideError(..)
 
 import Control.Monad.Error
 import Control.Exception
+import Control.DeepSeq
 import Data.Typeable
 import Data.Binary
 
@@ -28,6 +29,7 @@ data DaideError = TimerPopped
 
 instance Error DaideError
 instance Exception DaideError
+instance NFData DaideError
 
          -- needed in DaideHandle
 instance Error (Maybe DaideError)

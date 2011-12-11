@@ -3,7 +3,7 @@ module Diplomacy.Common.TSeq(liftSeq, TSeq,
                              readTSeq,
                              newTSeq,
                              newTSeqIO,
-                             peakTSeq,
+                             peekTSeq,
                              toSeq,
                              fromSeq,
                              resetTSeq,
@@ -37,8 +37,8 @@ readTSeq (TSeq tVar) = do
   writeTVar tVar rest
   return a
 
-peakTSeq :: TSeq a -> STM a
-peakTSeq (TSeq tVar) = do
+peekTSeq :: TSeq a -> STM a
+peekTSeq (TSeq tVar) = do
   sequ <- readTVar tVar
   (a :< _) <- if Seq.null sequ then retry else return (viewl sequ)
   return a

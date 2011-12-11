@@ -15,11 +15,13 @@ import Diplomacy.AI.SkelBot.Comm
 import Diplomacy.AI.SkelBot.GameInfo
 import Diplomacy.AI.SkelBot.DipBot
 
+import Data.List
 import Control.Monad
 import Control.Monad.Maybe
 import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.State
+import Control.Monad.Loops
 import Control.Concurrent.STM
 import Control.Concurrent
 import System.Timeout
@@ -27,9 +29,11 @@ import System.Log.Logger
 import System.Console.CmdArgs
 import System.Environment
 import System.IO
-import System.Posix
+--import System.Posix
 import Network
 import Network.BSD
+
+import qualified Data.Map as Map
 
   -- Master thread's monad
 newtype MasterT m a = Master { unMaster :: (ReaderT (TSeq InMessage, TSeq OutMessage)
@@ -37,17 +41,18 @@ newtype MasterT m a = Master { unMaster :: (ReaderT (TSeq InMessage, TSeq OutMes
                     deriving (Monad, MonadIO, MonadReader (TSeq InMessage, TSeq OutMessage))
 
 type Master = MasterT DaideHandle
- 
+
 instance MonadTrans MasterT where
   lift = Master . lift . lift
 
 instance (MonadIO m) => MonadComm DaideMessage DaideMessage (MasterT m) where
   pushMsg = Master . lift . pushMsg
   popMsg = Master . lift $ popMsg
+  peekMsg = Master . lift $ peekMsg
 
 instance DaideErrorClass (MasterT DaideHandle) where
   throwEM = Master . lift . lift . throwEM
-  
+
 skelBot :: DipBot Master h -> IO ()
 skelBot bot = do
   updateGlobalLogger "Main" (setLevel NOTICE)
@@ -86,7 +91,7 @@ communicate bot = do
   hndleInfo <- ask
   liftIO . forkIO $ runDaideT (runDaideAsk (receiver masterIn brainIn)) hndleInfo
   liftIO . forkIO $ runDaideT (runDaideTell (dispatcher masterOut brainOut)) hndleInfo
-  
+
   note "Starting master"
   -- run master
   runCommT (runReaderT (unMaster (master bot))
@@ -105,13 +110,23 @@ expect = expectWith (\msg -> dieUnexpected msg)
 die = throwEM . WillDieSorry
 dieUnexpected = die . ("Unexpected message: " ++) . show
 
+peekDip :: Master DipMessage
+peekDip = do
+  msg <- peekMsg
+  case msg of
+    IM _ -> throwEM IMFromServer
+    RM -> throwEM ManyRMs
+    FM -> lift shutdownDaide
+    EM err -> die (show err)
+    DM dm -> return dm
+
 popDip :: Master DipMessage
 popDip = do
   msg <- popMsg
   case msg of
     IM _ -> throwEM IMFromServer
     RM -> throwEM ManyRMs
-    FM -> die "Final message received"
+    FM -> lift shutdownDaide
     EM err -> die (show err)
     DM dm -> return dm
 
@@ -120,16 +135,16 @@ pushDip = pushMsg . DM
 
 master :: DipBot Master h -> Master ()
 master bot = do
-  
+
   let nameMsg = Name (dipBotName bot) (show $ dipBotVersion bot)
   pushDip nameMsg
   expect (Accept nameMsg)
-  
+
   mapName <- popDip
   case mapName of
     n@(MapName _) -> return n
     m -> dieUnexpected m
-  
+
   pushDip MapDefReq
   mapDef <- popDip
   mapDefinition <- case mapDef of
@@ -138,45 +153,125 @@ master bot = do
 
   pushDip (Accept mapName)
 
-  start <- popDip 
+  -- initialise history
+  initHist <- dipBotInitHistory bot -- pass in mapDef?
+
+  start <- popDip
   (power, startCode) <- case start of
     Start pow pass _ _ -> return (pow, pass)
     m -> dieUnexpected m
-  
-  gameInfo <- initGame
-  -- create TVars for getting partial move
-  ordVar <- liftIO $ newTVarIO Nothing
 
-  gameState <- getGameState
+  sco <- popDip
+  scos <- case sco of
+    CurrentPosition sc -> return sc
+    m -> dieUnexpected m
 
+  pushDip CurrentUnitPositionReq
+  now <- popDip
+  unitPoss <- case now of
+    CurrentUnitPosition up -> return up
+    m -> do
+      dieUnexpected m
 
-  -- initialise history
-  initHist <- dipBotInitHistory bot
+  turn <- case unitPoss of
+    UnitPositions t _ -> return t
+    m -> dieUnexpected (CurrentUnitPosition m)
+
+  let gameInfo = GameInfo { gameInfoMapDef = mapDefinition
+                          , gameInfoTimeout = 60 * 10 ^ 6
+                          , gameInfoPower = power }
+
+  let initState = GameState { gameStateMap = MapState { supplyOwnerships = scos
+                                                      , unitPositions = unitPoss }
+                            , gameStateTurn = turn }
 
   let mapDef = gameInfoMapDef gameInfo
   let timeout = gameInfoTimeout gameInfo
-  
+
+  lift . note $ "Starting main game loop"
   -- Run the main game loop
-  (\loop -> runGameKnowledgeT loop gameInfo initHist) . forever $ do
-    moveOrders <- execBrain (dipBotBrainMovement bot) timeout gameState ordVar
-    execPureBrain (dipBotBrainRetreat bot) timeout gameState
-    execPureBrain (dipBotBrainBuild bot) timeout gameState
+  _ <- runStateT (runGameKnowledgeT (gameLoop bot timeout)
+                  gameInfo initHist
+                 )
+       initState
   return ()
 
+gameLoop :: DipBot Master h -> Int -> GameKnowledgeT h (StateT GameState Master) ()
+gameLoop bot timeout = do
+  -- create TVar for getting partial move
+  ordVar <- liftIO $ newTVarIO Nothing
+  let brainMap = Map.fromList
+              [ (Spring, execBrain (dipBotBrainMovement bot) timeout ordVar)
+              , (Summer, execPureBrain (dipBotBrainRetreat bot) timeout)
+              , (Fall,   execBrain (dipBotBrainMovement bot) timeout ordVar)
+              , (Autumn, execPureBrain (dipBotBrainRetreat bot) timeout)
+              , (Winter, execPureBrain (dipBotBrainBuild bot) timeout) ]
+
+  forever $ do
+    (GameState _ turn) <- lift get
+    let ebrain = brainMap Map.! turnPhase turn
+    moveOrders <- return {-. sort-} =<< ebrain
+    lift . lift $ do
+      pushDip $ SubmitOrder (Just turn) moveOrders
+      respOrders <- unfoldM $ do
+        resp <- peekDip
+        case resp of
+          AckOrder order ordNote -> do
+            _ <- popDip
+            return (Just (order, ordNote))
+          _ -> return Nothing
+      let sortedRespOrders = sortBy (\(o1, _) (o2, _) -> compare o1 o2) respOrders
+      when (length moveOrders /= length sortedRespOrders) $
+        die "Acknowledging messages missing"
+
+      zipWithM_ (\o1 (o2, oNote) -> do
+                    when (o1 /= o2) $
+                      die "Acknowledging messages out of order"
+                    when (oNote /= MovementOK) . die $
+                      "Server returned \"" ++ show oNote ++
+                      "\" for order \"" ++ show o1 ++ "\""
+                ) moveOrders sortedRespOrders
+
+      mMissing <- peekDip
+      case mMissing of
+        (Missing _) -> die "Missing orders, can't handle for now"
+        _ -> return ()
+
+      lift . note $ show mMissing
+
+      undefined
+
+      sco <- popDip
+      scos <- case sco of
+        CurrentPosition sc -> return sc
+        m -> dieUnexpected m
+
+      now <- popDip
+      unitPoss <- case now of
+        CurrentUnitPosition up -> return up
+        m -> dieUnexpected m
+        
+      undefined
+    -- change state
+
+
 execPureBrain :: (OrderClass o) => Brain o h () -> Int ->
-                 GameState -> GameKnowledgeT h Master [Order]
-execPureBrain brain timeout gameState = do
+                 GameKnowledgeT h (StateT GameState Master) [Order]
+execPureBrain brain timeout = do
+  gameState <- lift get
   morders <- runMaybeT . runGameKnowledgeTTimed timeout . liftM snd
              $ runBrainT (mapBrain return brain) gameState
   orders <- (\err -> maybe err (return . map ordify) morders) $ do
-    lift $ throwEM (WillDieSorry "Pure brain timed out")
+    lift . lift $ throwEM (WillDieSorry "Pure brain timed out")
   return orders
 
-execBrain :: (OrderClass o) => BrainCommT o h Master () -> Int -> GameState -> 
-             TVar (Maybe [o]) -> GameKnowledgeT h Master [Order]
-execBrain botBrain timeout gameState ordVar = do
+execBrain :: (OrderClass o) => BrainCommT o h Master () -> Int ->
+             TVar (Maybe [o]) -> GameKnowledgeT h (StateT GameState Master) [Order]
+execBrain botBrain timeout ordVar = do
+  gameState <- lift get
   (brainIn, brainOut) <- lift ask
   let gameKnowledge = liftM snd . flip runBrainT gameState
+                      . mapBrainT lift
                       $ runBrainCommT botBrain ordVar brainIn brainOut
   morders <- runMaybeT $ do
     -- run the brain
@@ -186,7 +281,7 @@ execBrain botBrain timeout gameState ordVar = do
     earlyFinish `mplus` timeoutFinish
   -- die if no move, ordify if there is a move
   orders <- (\err -> maybe err (return . map ordify) morders) $ do
-    lift $ throwEM (WillDieSorry "Brain timed out with no partial move")
+    lift . lift $ throwEM (WillDieSorry "Brain timed out with no partial move")
   -- clear ordVar
   liftIO . atomically $ writeTVar ordVar Nothing
   return orders
@@ -197,12 +292,6 @@ runGameKnowledgeTTimed timedelta gameKnowledge = do
   m <- liftIO $ timeout timedelta gameIO
   maybe mzero (MaybeT . return) m
 
-initGame :: Master GameInfo
-initGame = error "come on"
-
-getGameState :: Master GameState
-getGameState = return (error "come on")
-
 getMoveResults :: Master Results
 getMoveResults = error "come on"
 
@@ -212,13 +301,13 @@ dispatcher masterOut brainOut = forever $ do
          (return . Left =<< readTSeq masterOut)
          `orElse`
          (return . Right =<< readTSeq brainOut)
-  note $ "Dispatching message" ++ show msg
+  note ("(DISPATCHING) " ++ show msg)
   tellDaide . either id (DM . SendPress Nothing) $ msg
-  note "message dispatched"
 
 receiver :: TSeq DaideMessage -> TSeq InMessage -> DaideAsk ()
 receiver masterIn brainIn = forever $ do
   msg <- askDaide
+  note $ ("(RECEIVING) " ++ show msg)
   case msg of
     m@(DM dm) -> case dm of
       (ReceivePress p) -> liftIO . atomically $ writeTSeq brainIn p

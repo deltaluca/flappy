@@ -12,6 +12,7 @@ import Diplomacy.Common.DipError
 
 import Data.Maybe
 import Data.List
+import Control.DeepSeq
 import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.State
@@ -241,6 +242,8 @@ data DipMessage =
 
   deriving (Eq, Show)
 
+instance NFData DipMessage
+
 data Missing =
   -- |missing movement orders (SERVER)
     MissingMovement [UnitPosition]
@@ -268,26 +271,6 @@ data ResultNormal = Success
 data ResultRetreat = ResultRetreat
                    deriving (Eq, Show)
 
-data OrderNote = MovementOK
-               | NotAdjacent
-               | NoSuchProvince
-               | NoSuchUnit
-               | NotAtSea
-               | NoSuchFleet
-               | NoSuchArmy
-               | NotYourUnit
-               | NoRetreatNeeded
-               | InvalidRetreatSpace
-               | NotYourSC
-               | NotEmptySC
-               | NotHomeSC
-               | NotASC
-               | InvalidBuildLocation
-               | NoMoreBuildAllowed
-               | NoMoreRemovalAllowed
-               | NotCurrentSeason
-               deriving (Eq, Show)
-
 data VariantOption = Level Int
                    | TimeMovement Int
                    | TimeRetreat Int
@@ -300,19 +283,19 @@ data VariantOption = Level Int
                    | PressTimeTillDeadline Int -- (10)
                    deriving (Eq, Show)
 
-parseDipMessage :: DipRep s t => Monad m => Int -> s -> ErrorT DipError m DipMessage
+parseDipMessage :: (DipRep s t, Show s) => Monad m => Int -> s -> ErrorT DipError m DipMessage
 parseDipMessage = parseDip pMsg
 
-parseDip :: (Monad m, DipRep s t) => DipParser s a -> Int -> s -> ErrorT DipError m a
+parseDip :: (Monad m, DipRep s t, Show s) => DipParser s a -> Int -> s -> ErrorT DipError m a
 parseDip parsr lvl stream =   uncurry (handleParseErrors stream)
                             . flip runReader lvl
                             . flip runStateT Nothing
                             . Parsec.runParserT (unDipParser parsr) () "DAIDE Message Parser"
                             $ stream
 
-handleParseErrors :: (Monad m, DipRep s t) => s -> Either Parsec.ParseError a -> (Maybe DipParseError) -> ErrorT DipError m a
-handleParseErrors _{-stream-} (Left a) (Just _{-err-}) = error (show a) -- throwError (createError err stream)
-handleParseErrors _ (Left p) Nothing = error (show p) -- throwError . ParseError . show $ p
+handleParseErrors :: (Monad m, DipRep s t, Show s) => s -> Either Parsec.ParseError a -> (Maybe DipParseError) -> ErrorT DipError m a
+handleParseErrors s (Left a) (Just _{-err-}) = error (show a ++ '\n' : show s) -- throwError (createError err stream)
+handleParseErrors s (Left p) Nothing = error (show p ++ '\n' : show s) -- throwError . ParseError . show $ p
 handleParseErrors _ (Right a) _ = return a
 
 infixr 4 <<
@@ -393,9 +376,9 @@ pMdf = tok1 (DipCmd MDF) >> choice [pMapDef, pMapDefReq]
 pMapDef :: DipRep s t => DipParser s DipMessage
 pMapDef = do
   powers <- paren (many pPower)
-  (scos, provs) <- paren pProvinces
+  (scos, provinces) <- paren pProvinces
   adjacencies <- paren (many (paren pAdjacency))
-  return . MapDef $ MapDefinition powers provs (Adjacencies $ Map.fromList adjacencies) scos
+  return . MapDef $ MapDefinition powers provinces (Adjacencies $ (foldl (\m (k, v) -> Map.insert k v m) Map.empty) adjacencies) scos
 
 pMapDefReq :: DipRep s t => DipParser s DipMessage
 pMapDefReq = return MapDefReq
@@ -449,7 +432,7 @@ pSupplyCOs = do
     pow <- pPower
     centres <- many pProvince
     return (pow, centres)
-  return . SupplyCOwnerships . Map.fromList $ scos
+  return . SupplyCOwnerships . (foldl (\m (k, v) -> Map.insert k v m) Map.empty) $ scos
 
 pProvince :: DipRep s t => DipParser s Province
 pProvince = tok (\t -> case t of {(DipProv p) -> Just p ; _ -> Nothing})
@@ -954,7 +937,7 @@ uInt :: UnDipParser Int
 uInt = uTok . DipInt
 
 uMsg :: UnDipParser DipMessage
-uMsg m = case m of
+uMsg ms = case ms of
   Accept msg -> ( uTok (DipCmd YES)
                 . uParen uMsg msg
                 )
@@ -1033,7 +1016,7 @@ uMsg m = case m of
 
   SubmitOrder mturn orders ->
     ( uTok (DipCmd SUB)
-    . uMaybe uTurn mturn
+    . uMaybe (uParen uTurn) mturn
     . uMany (uParen uOrder) orders
     )
 

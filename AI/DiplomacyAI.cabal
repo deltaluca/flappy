@@ -64,7 +64,8 @@ Library
     unix,
     cmdargs,
     hslogger,
-    MaybeT
+    MaybeT,
+    monad-loops
     
   -- Modules not exported by this package.
   -- Other-modules:       

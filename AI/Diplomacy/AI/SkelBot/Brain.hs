@@ -136,6 +136,7 @@ liftBrain = BrainComm . lift . lift
 
 instance (MonadIO m, OrderClass o) => MonadComm InMessage OutMessage (BrainCommT o h m) where
   popMsg = BrainComm . lift $ popMsg
+  peekMsg = BrainComm . lift $ peekMsg
   pushMsg = BrainComm . lift . pushMsg
 
 instance (Monad m, OrderClass o) => MonadBrain o (BrainCommT o h m) where

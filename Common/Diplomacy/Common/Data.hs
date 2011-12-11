@@ -21,6 +21,7 @@ module Diplomacy.Common.Data ( Power(..)
                              , Turn(..)
                              , Adjacencies(..)
                              , Order(..)
+                             , OrderNote(..)
                              , OrderRetreat(..)
                              , OrderBuild(..)
                              , OrderMovement(..)
@@ -37,34 +38,42 @@ import qualified Data.Map as Map  -- Use for all dictionary types
 data Power 
          = Power { powerId :: Int }
          | Neutral
-         deriving (Show, Eq)
+         deriving (Show)
                                 
 instance Ord Power where
-  Neutral < _ = True
-  _ < Neutral = False
-  (Power p1) < (Power p2) = p1 < p2
+  _ <= Neutral = False
+  Neutral <= _ = True
+  (Power p1) <= (Power p2) = p1 <= p2
+
+instance Eq Power where
+  Neutral == Neutral = True
+  (Power p1) == (Power p2) = p1 == p2
+  _ == _ = False
 
 data Province 
          = Province { provinceIsSupply :: Bool, 
                       provinceType :: ProvinceType,
                       provinceId :: Int }
-         deriving (Show, Eq)
+         deriving (Show)
+
+instance Eq Province where
+  p1 == p2 = provinceId p1 == provinceId p2
 
 instance Ord Province where
-  p1 > p2 = provinceId p1 > provinceId p2
+  p1 <= p2 = provinceId p1 <= provinceId p2
 
 data ProvinceType
          = Inland | Sea | Coastal | BiCoastal
-         deriving (Show, Eq)
+         deriving (Eq, Ord, Show)
                   
 data Coast 
          = Coast { coastId :: Int }
-         deriving (Show, Eq)
+         deriving (Eq, Ord, Show)
 
 data UnitType 
          = Army
          | Fleet
-         deriving (Show, Eq)
+         deriving (Eq, Ord, Show)
 
 data Turn = Turn { turnPhase :: Phase
                  , turnYear :: Int }
@@ -72,7 +81,7 @@ data Turn = Turn { turnPhase :: Phase
 
 data Phase 
          = Spring | Summer | Fall | Autumn | Winter
-         deriving (Show, Eq)
+         deriving (Show, Ord, Eq)
 
 -- | Map topology definitions
 
@@ -106,11 +115,11 @@ data UnitPositions = UnitPositions Turn [UnitPosition]
 data UnitPosition = UnitPosition { unitPositionP :: Power
                                  , unitPositionT :: UnitType
                                  , unitPositionLoc :: ProvinceNode }
-                  deriving (Show, Eq)
+                  deriving (Eq, Ord, Show)
 
 data ProvinceNode = ProvNode Province 
                   | ProvCoastNode Province Coast
-                  deriving (Show, Eq)
+                  deriving (Eq, Ord, Show)
 
 data UnitToProv = UnitToProv UnitType [ProvinceNode]
                 | CoastalFleetToProv Coast [ProvinceNode]
@@ -121,7 +130,27 @@ data UnitToProv = UnitToProv UnitType [ProvinceNode]
 data Order = OrderMovement OrderMovement
            | OrderRetreat OrderRetreat
            | OrderBuild OrderBuild
-           deriving (Eq, Show)
+           deriving (Eq, Ord, Show)
+
+data OrderNote = MovementOK
+               | NotAdjacent
+               | NoSuchProvince
+               | NoSuchUnit
+               | NotAtSea
+               | NoSuchFleet
+               | NoSuchArmy
+               | NotYourUnit
+               | NoRetreatNeeded
+               | InvalidRetreatSpace
+               | NotYourSC
+               | NotEmptySC
+               | NotHomeSC
+               | NotASC
+               | InvalidBuildLocation
+               | NoMoreBuildAllowed
+               | NoMoreRemovalAllowed
+               | NotCurrentSeason
+               deriving (Eq, Show)
 
 -- this is needed so that impementing the three order types is enforced on the type level but SkelBot still has a uniform interface to them
 class OrderClass o where
@@ -140,18 +169,18 @@ data OrderMovement = Hold UnitPosition
                    | SupportMove UnitPosition UnitPosition Province
                    | Convoy UnitPosition UnitPosition ProvinceNode
                    | MoveConvoy UnitPosition ProvinceNode [Province]
-                   deriving (Eq, Show)
+                   deriving (Eq, Ord, Show)
 
 -- | Summer term
 data OrderRetreat = Retreat UnitPosition ProvinceNode
                   | Disband UnitPosition
-                  deriving (Eq, Show)
+                  deriving (Eq, Ord, Show)
 
 -- | Winter term
 data OrderBuild = Build UnitPosition
                 | Remove UnitPosition
                 | Waive Power
-                deriving (Eq, Show)
+                deriving (Eq, Ord, Show)
 
 
 

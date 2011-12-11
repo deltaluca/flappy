@@ -4,6 +4,7 @@ module Diplomacy.Common.DipToken where
 import Diplomacy.Common.DaideError
 import Diplomacy.Common.Data as Dat
 
+import Control.DeepSeq
 import Data.Binary
 import Control.Exception
 import Data.Bits
@@ -26,6 +27,8 @@ data DipToken = DipInt Int
               | Character Char
               | DipProv Province
               deriving (Show, Eq)
+
+instance NFData DipToken
 
 instance Binary DipToken where
   put (DipInt int) = put . (.&. 0x3FFF) $ (fromIntegral int :: Word16)
