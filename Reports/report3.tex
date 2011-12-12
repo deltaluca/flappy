@@ -278,7 +278,6 @@ StrategyBot.
 \subsection{Server testing}
 
 \begin{itemize}
-
 \item A very practical and simple method for us to test the server is to let
       RandomBots join a game and issue arbitrary move commands. We estimate that
       we get good coverage using this method since a random bot is expected to
@@ -316,30 +315,44 @@ StrategyBot.
       being packages hierarchically in test suite, modules and collections.
       As QuickCheck tests they live in a module sub-
       ordinate to the functions tested. 
+\end{itemize}
 
- 
- apable of playing on a working Daide server. Our AI framework adheres to the
-same language specification as Daide, so in theory should be able to play with
-other AIs on the server. Similarly, other AIs should be able to play on our AI
-server, amongst themselves and against our own AI. Of course, a 'working' AI 
-does not necessarily mean a fully functioning one - as long as it is capable of
-sending the correct messages, the server will not complain. This is quite a 
-heavy-handed approach to testing, however, as it may not always catch the niche
-cases.
+\subsection{AI client testing} 
+
+\begin{itemize}
+
+\item A very simple test is to determine whether an AI client does not
+      impede the progress of the game. This can simply be tested by letting 
+      the client on either the functional Haskell or the existing DAIDE
+      server (Windows). The script running the test will intercept any 
+      error messages issued to the client and deem the test to be failed
+      if any syntax errors (no valid DAIDE message) or semantic errors
+      (moves that do not make sense with respect to the current game-state)
+      were flagged.
+
+\item Anything that goes beyond liveness and absence of errors cannot be 
+      tested trivially. Instead of testing we let bots play in Round-Robin
+      tournaments, collect game statistics and assign each bot a playing
+      strength metric. The exact way and the ingredients of the formula
+      were outlined in the section on 'AI metrics'. Ultimately playing
+      strength equates to faring robustly against a large collection of 
+      existing bots.
+
+\item Some white-box testing was done to determine how the AI arrives at 
+      a decision and check if its reasoning is sound. We designed the different 
+      parts of our AI with testability in mind, often using very tiny
+      functions. As an example consider an interface that measures the 
+      utility of a game state to a certain player. It can be tested by 
+      simply comparing the result with our pen-and-paper calculations. 
+      Some of these tests were coded up as HUnit test suites. 
+
+\end{itemize}
+
 
 \end{itemize}
 \\
-As discussed above, we can also test how well our AI is working by pitting it
-against other AIs. This is related to progress checks, except with a twist - we
-can put the AI in specific situations, where it should take a particular action,
-and observe its decisions. This should be easier based upon our planned 
-implementation of move decision (in that we create a tree of facts and decisions
-based on these facts, with weightings. The root node (the final decision) is 
-based upon the combination of all the decisions in the branches below), in that
-we can individually pick apart a decision made my the AI to see exactly why it
-decided to take that action.
 
-\subsubsection{User interface testing}
+\subsection{GUI client testing}
 There are only limited interactions with the interface on a human client. As 
 long as the player is capable of submitting any possible move on the board
 (whether or not that be a valid move) and is capable of communicating with the
