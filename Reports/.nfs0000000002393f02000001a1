@@ -41,8 +41,7 @@ server.
 High-level requirements were discussed in the initial phase of the project 
 (weeks 1/2) with our project supervisor -- Iain Philipps -- who was our customer
 in Software Engineering terms. The terms of the collaboration were such that 
-only certain high-level goals were defined and decisions about which AI techniques
-to use were left with the team-members.
+only certain high-level goals were defined and project metrics were defined: 
 
 \begin{itemize}
 
@@ -66,11 +65,11 @@ to use were left with the team-members.
       unsatisfactory. Our framework helps to shift the focus to interesting
       new techniques from academia which can be coded up and layered on top
       of primitives. Actually this framework is used for the 2nd objective above
-      to quickly generate a series of bots with increasing functionality.
-      (Abstract client pattern) This also works as a proof-of-concept for the
-      framework mentioned before. At the users convenience extensions are
-      written in the high-level language Haskell which is more expressive and
-      natural to practitioners in the field of Artificial Intelligence / Game Theory.  
+      to quickly generate a series of bots with increasing functionality. 
+      This also works as a proof-of-concept for the framework mentioned before. 
+      At the users convenience extensions are written in the high-level language
+      Haskell which is more expressive and natural to practitioners in the
+      field of Artificial Intelligence / Game Theory.  
 \item Finally to test our server and provide a visually pleasing user interface
       we will deliver a DAIDE-conforming GUI client for the Game of Diplomacy. 
       Rather than forcing the player to use a particular device all back-end
@@ -108,31 +107,6 @@ these tasks without worrying about how they are implemented. Turning this
 into a reality required defining a layered design in Weeks 3-5 which all
 future work respected.
 \\ 
-
-\subsection{Planning / task estimation}
-All planning took place in the weekly group meetings (for the structure
-of a meeting see example at the bottom of document ). A general rule for
-new user-stories was that they relate to the global objectives defined
-in the contract with our supervisor (see above). This avoided falling ill
-with 'featuritis' at any point in the project. 
-\\
-In the AI realm a new user story was typically introduced
-by a team member. Generally we shied away from implementing exotic
-algorithms that are not clearly understood by all team members, adopting
-the ``Kiss principle''. Also there should be a balance between different
-paradigms in the AI design, which enables us to make meaningful 
-experiments for the final report. For instance it is not seen as fruitful
-to performance-tune beyond the point where much value is generated on the
-whole. Rather the focus should be on negotation. Associated with each
-user story we started a quick poker game to estimate the required
-time-resources for completing the feature. Obviously members with more
-experience in a domain were given more weight in the decision process.
-We usually arrived at a decision about a future iteration unanimously.
-\\ 
-For the server the process was less creative and controlled by the
-need to conform to the DAIDE protocol. Conversely planning was 
-easier because the process of creating a parser is understood by 
-all team members.
 
 \subsection{Progress metrics}
 There are multiple ways in which we can measure the progress of our AI. 
@@ -219,12 +193,12 @@ early.
 Whereas the velocity-scheme served as a tool to measure our progress internally
 we communicated our progress to the supervisor in terms of coarse-grained 
 milestones. This had the advantage that we did not overload our customer with
-technical details that only we as developers care about. Also they co-incided with
+technical details only we as developers care about. Also they co-incided with
 the frequency of meetings with our supervisor. 
 \\
-The milestones agreed upon were to create the AI framework and the server, and then
-proceed to iterate a build of an AI, progressively increasing its abilities and
-making it better. 
+The milestones agreed upon were to create the AI framework and the
+server, and then proceed to iterate a build of an AI, progressively increasing
+its abilities and making it better. 
 
 \subsection{Description of iterations per subsystem}
 
@@ -327,7 +301,7 @@ StrategyBot.
       check certain properties that we know to be true in general. An example
       would be: A supply centre can only be conquered if an army of the
       player was sent there. We decided against a parallel module hierarchy for
-      the tests but instead defined submodules of the form 'X\_quickcheck'. 
+      the tests but instead defined submodules of the form 'X_quickcheck'. 
       This allowed us to use the tests as documentation when writing the
       functions and avoided synchronization issues. This also facilitates 
       testing of functions that are not exported from a module. 
@@ -410,7 +384,8 @@ Gedit or other similar simple text editors. We have not used an IDE but several
 Emacs modes and extensions (directory browsing) helped us to keep track of the
 overall structure of the codebase. Our strategy to achieve good coding style
 was readability was two-fold: Rather than making up our own coding standard
-we have adopted the programming guidelines from ``http://www.haskell.org/haskellwiki/Programming.guidelines''. Secondly
+we have adopted the programming guidelines from ``http://www.haskell.org/haskellwiki/Programming_guidelines''
+and ``http://hackage.haskell.org/trac/ghc/wiki/WorkingConventions''. Secondly
 each team member was required to run each (compiling) commit through 'HLint'
 and the 'Haskell Style Scanner' and resolve issues if necessary. 
 
@@ -437,17 +412,15 @@ objective defined at the outset of the project.
 \subsection{Code inspection / Refactoring}
 Each function of the code is ideally represented in three different ways: as 
 executable code, unit test and exported ``Haddock'' comments. For some trivial
-cases one of the latter might be missing. This approach has simplified code
+cases on of the latter might be missing. This approach has simplified code
 inspection and walkthroughs tremendously. In a typical 'design-check' session
-which is conducted roughly fort-nightly a team-member will check a 
+which we have conducted roughly fort-nightly a team-member will check a 
 particular code in detail. This involves clarifying comments, naming of 
-functions and checking overall soundness of design. Often major
+functions and checking overall soundness of design. Often even major
 refactorings were suggested as it was discovered that pieces of code were
 conceptually similar and hence could be extracted into a common module. Not
 only were we challenging our tendency to 'repeat ourselves' in the code
-but also could spread knowledge about the code-base in the entire team. By the
-regularity of refactoring / design effort we wanted to avoid that the code-base
-grows out-of-shape and acquires ``technical debt''.
+but also could spread knowledge about the code-base in the entire team.
 
 \subsection{Acceptance tests}
 Acceptance testing has not yet been finalized. In a recent meeting 
@@ -495,85 +468,6 @@ time we would probably use a more sophisticated tool for resource management,
 enabling us to categorize research papers, coding standards, progress 
 reports in a better way.
 
-\subsection{Terms of collaboration}
-
-\subsubsection{Working hours / patterns}
-As suggested in the spec each group member spent the rough equivalent
-of one working day per week on the project. We assured there is a
-good mix of work to be done by each member, so that nobody will become
-bored or disinterested by tedious work. Of course some long coding sessions
-were needed to fix bugs and integrate components. We tried to work against
-such problems though by having regular meetings where the design and
-any bugs are discussed. 
-
-\subsubsection{Group meeting conditions}
-Each group meeting was held in the conference room opposite the labs. We
-ensured that each member was free for the day afterwards to cater for the
-fact that meetings sometimes had to overrun the expected time. Whiteboards
-were used to discuss the design with UML / package diagrams.
-
-\subsubsection{Record of group meetings}
-
-\begin{center}
-
-\scalebox{0.8}{
-
-    \begin{tabular}{ | l | l | l | l | p{12cm} |}
-    \hline
-
-    Meeting Type       & Date          &  Duration &  Iteration  & Summary of Meeting \\ \hline
-
-    Supervisor         & 12/10/2011    & 1 hr      &     1       & Initial meeting with supervisor, discussing the scope of the project and confirming technologies that we were going to use. \\ \hline
-    Team               & 14/10/2011    & 2 hr      &     1       & Iteration 1 first meeting and first meeting with group, discussing division of work and background reading. In addition we finalised our decision on what technologies to use and started to test compatibilities between them (Haskell and Haxe). Also aim is to learn these new technologies from other members/resources on the internet. \\ \hline
-    Team               & 21/10/2011    & 2 hr      &     1       & Mid-Iteration Meeting to see how the server and the client were coming along. Server was to adopt the Daide protocol which provides a framework for writing a Diplomacy AI Bot and support for allowing other Daide AI Bot's to play on the server.  \\ \hline
-    Team               & 28/10/2011    & 1 hr      &     1       & End-of-Iteration 1 meeting. Client and Server can send messages to each other  \\ \hline
-    Team               & 28/10/2011    & 1 hr      &     2       & Beginning-of-Iteration 2 meeting. Goals for end of iteration are to adding parsing for client and server side to parse press level 0 daide messages (basic diplomacy game mechanics). Also try and get the order resolution done (game state changes). \\ \hline
-    Supervisor         & 4/11/2011     & 1 hr      &     2       & Second meeting with supervisor, discussing any problems we had and how we planned to continue with building the server and the AI. In addition discussed how we would go about implementing negotation into the game.  \\ \hline
-    Team               & 4/11/2011     & 1 hr      &     2       & Mid-Iteration Meeting for Iteration 2 to discuss problems, mainly that parsing on the server is taking longer than expected due to amount of coursework and interviews group members have had \\ \hline
-    Team               & 11/11/2011    & 1 hr      &     2       & End-of-Iteration 2 meeting. Goals not met this week due to the high amounts of other work that group members have (see previous). Parsing still not complete and order resolution not implemented still. \\ \hline
-    Team               & 11/11/2011    & 1 hr      &     3       & Beginning-of-Iteration 3 meeting. Aims for this iteration adjusted to account for targets that were missed in previous iteration. Parsing to be completed create a framework which handles communication for AI bots, and provides a base layer for AI bots. Initially create a basic AI bot that just holds (holdbot). GUI is to be improved with a game map defined by clickable areas. \\ \hline
-    Supervisor         & 18/11/2011    & 1 hr      &     3       & Third meeting with supervisor, discussing the development of the AI and whether targets for the project can be met.  \\ \hline
-    Team               & 18/11/2011    & 1 hr      &     3       & Mid-Iteration Meeting for Iteration 3. Bot framework and Holdbot (skelbot) under development. Map for GUI also making good progress. \\ \hline
-    Team               & 25/11/2011    & 1 hr      &     3       & End-of-Iteration 3 meeting. Skelbot (and its related components) and Holdbot completed. However can't play on server as the order resolution still not implemented. \\ \hline
-    Team               & 25/11/2011    & 1 hr      &     4       & Beginning-of-Iteration 4 meeting. Aim to create RandomBot which searches game state for all available moves and chooses a random move. Data definitions are to be  \\ \hline
-    Supervisor         & 02/12/2011    & 1 hr      &     4       & Discussing plans for working over winter holidays to reach targets and discussing details of 3rd and final reports. \\ \hline
-    Team               & 02/12/2011    & 1 hr      &     4       & Mid-Iteration Meeting for Iteration 4. Randombot \\ \hline
-    Supervisor         & 09/12/2011    & 1 hr      &     4       & Demo of GUI working on windows Daide servers. \\ \hline
-    Team               & 09/12/2011    & 1 hr      &     4       & End-of-Iteration 4 meeting \\ \hline
-    
-    \end{tabular}
-}
-
-\end{center}
-
-\subsubsection{Group activity}
-Due to the variation of knowledge within the group, activity has been varied
-and focused in different areas. 
-
-//ELABORATION//
-
-\subsubsection{Log-Book}
-Our log-book records progress for the current iteration and any problems / 
-dependencies that need to be resolved. As we have one meeting per week, in a 
-two-week iteration we would have 3 meetings, with the first meeting being the 
-same meeting as the final meeting of the previous iteration and the 3rd of these
-meetings the end-of-iteration meeting for the current iteration and the first 
-meeting for the next iteration. The other meeting is a mid-week iteration 
-meeting which is used to spot problems early with work possibly being 
-distributed so that the goals of iteration can be achieved as best as possible. 
-\\
-At the beginning of each iteration, we plan out the work distribution that needs
-to be done. If more than one person is doing implementation/writing code then we
-need to spot any dependencies that we may have between these members (code 
-overlapping, compatibility and overall dependancies). We make sure these 
-dependencies are handled by making sure at each meeting whether these members
-of the group have sat down and made sure that they're parts would work together
-properly. This generally means that we often make use of pair-programming. Our 
-logbook structure looks like something as follows:
-\\ 
-\includegraphics[width=100mm]{logbooktemplate.png}
-
-
 \subsection{Version control}
 The distributed source code control system Git was used for all deliverables -
 that is unit tests / documentation, tutorials and presentations. We have made
@@ -612,5 +506,46 @@ in detail. The focal points of these discussions have usually been the weekly
 group meetings. Logbook allowed us to document what we have learned and avoid
 introducing bad design / bugs more than once.
 
+\subsection{Group meetings}
+\begin{center}
+    \begin{tabular}{ | l | l | l | p{8cm} |}
+    \hline
+    Meeting Type       & Date          & Duration   & Summary of Meeting \\ \hline
+
+    Supervisor         & 12/10/2011    & 1 hr       & Initial meeting with supervisor, discussing the scope of the project and confirming technologies that we were going to use. \\ \hline
+    Team               & 14/10/2011    & 2 hr       & First meeting with group, discussing division of work and background reading. In addition we finalised our decision on what technologies to use and started to test compatibilities between them (Haskell and Haxe) \\ \hline
+    Team               & 21/10/2011    & 2 hr       & Progress meeting to see how the server and the client were coming along. Server was to adopt the Daide protocol which provides a framework for writing a Diplomacy AI Bot and support for allowing other Daide AI Bot's to play on the server.  \\ \hline
+    Team               & 28/10/2011    & 2 hr       & More progress on the server, adding ability to parsing low level daide messages and high level diplomacy messages. Client at this point is able to send commands to the server via a command line interface.  \\ \hline
+    Supervisor               & 4/11/2011     & 1 hr       & Second meeting with supervisor, discussing any problems we had and how we planned to continue with building the server and the AI. In addition discussed how we would go about implementing negotation into the game.  \\ \hline
+
+    \end{tabular}
+\end{center}
+
+\subsection{Group activity}
+Due to the variation of knowledge within the group, activity has been varied
+and focused in different areas. 
+
+//ELABORATION//
+
+\subsection{Log-Book}
+Our log-book records progress for the current iteration and any problems / 
+dependencies that need to be resolved. As we have one meeting per week, in a 
+two-week iteration we would have 3 meetings, with the first meeting being the 
+same meeting as the final meeting of the previous iteration and the 3rd of these
+meetings the end-of-iteration meeting for the current iteration and the first 
+meeting for the next iteration. The other meeting is a mid-week iteration 
+meeting which is used to spot problems early with work possibly being 
+distributed so that the goals of iteration can be achieved as best as possible. 
+\\
+At the beginning of each iteration, we plan out the work distribution that needs
+to be done. If more than one person is doing implementation/writing code then we
+need to spot any dependencies that we may have between these members (code 
+overlapping, compatibility and overall dependancies). We make sure these 
+dependencies are handled by making sure at each meeting whether these members
+of the group have sat down and made sure that they're parts would work together
+properly. This generally means that we often make use of pair-programming. Our 
+logbook structure looks like something as follows:
+\\ 
+\includegraphics[width=100mm]{logbooktemplate.png}
 
 \end{document}
