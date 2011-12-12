@@ -24,22 +24,22 @@ strategies negotiation is integral to the game-experience. There is a thriving
 internet-based community around the Game of Diplomacy and many AI players, so
 called bots, have been created in the past. Most of the existing AI players are
 quite effective decision-makers in general but few of them support negotiation
-or reasoning about the relationship of the powers in the game. Our projects aim
+or reasoning about the relationship of the powers in the game. Our project aims
 to create a framework for Diplomacy, including a GUI client, a game server and a
-collection of bots. Crucially one the bots or the highest evolution of our series
-of bots should be able to analyze and act upon messages of human / AI players.
-Then experiments are run to determine whether there is a reward associated with
-negotation capabilities. This will require careful study and implementation of
-automated negotiation techniques from other domains. Hence the project gives us
-ample opportunity to be creative and test different approaches using the
-DAIDE-conforming game framework produced for the project. DAIDE is a standard
-client-server protocol which serves as a 'common language' for different Diplomacy
-bot implementations, enabling them to play a game together on a conforming
-server.
+collection of bots. Crucially the highest evolution of our series
+of bots should be able to analyze and act upon messages of human / AI players and
+issue messages to other players. Finally experiments are conducted to determine whether
+there is a reward associated with negotation capabilities. This will require
+careful study and implementation of automated negotiation techniques from other 
+domains in AI/Game Theory. Thus the project gives us ample opportunity to be
+creative and test different approaches using the DAIDE-conforming game framework
+also produced for the project. DAIDE is a standard client-server protocol which
+serves as a 'common language' for different Diplomacy bot implementations, 
+enabling them to play a game together on a conforming server.
 
 \subsection{Requirements engineering / management}
 High-level requirements were discussed in the initial phase of the project 
-(weeks 1/2) with our project supervisor -- Iain Philipps -- who was our customer
+(weeks 1/2) with our project supervisor -- Iain Philipps -- who is our customer
 in Software Engineering terms. The terms of the collaboration were such that 
 only certain high-level goals were defined and decisions about which AI techniques
 to use were left with the team-members.
@@ -56,9 +56,10 @@ to use were left with the team-members.
       protocol to compete against existing bots on the DAIDE windows server.
 \item To facilitate experimentation an open-source framework conforming to the
       existing DAIDE protocol should be created. This framework comprises a 
-      server which hosts games for automated and human clients and a tool. The
-      imperative behind this is to feed-back into the Diplomacy community as 
-      a whole, providing a multi-platform server for the first time. 
+      server which hosts games for automated and human clients and a tool to
+      gather game statistics. The imperative behind this is to feed-back
+      into the Diplomacy community as a whole, providing a multi-platform
+      server (Windows DAIDE server exists) for the first time. 
 \item In addition a framework for simple generation of Diplomacy bots is 
       envisioned: Right now a player needs to re-invent the wheel by 
       implementing well-established game-tree search techniques or certain
@@ -68,27 +69,27 @@ to use were left with the team-members.
       of primitives. Actually this framework is used for the 2nd objective above
       to quickly generate a series of bots with increasing functionality.
       (Abstract client pattern) This also works as a proof-of-concept for the
-      framework mentioned before. At the users convenience extensions are
-      written in the high-level language Haskell which is more expressive and
-      natural to practitioners in the field of Artificial Intelligence / Game Theory.  
+      server framework. At the users convenience extensions are
+      written in the high-level language Haskell which is more expressive than C++ 
+      and natural to practitioners in the field of Artificial Intelligence / Game Theory.  
 \item Finally to test our server and provide a visually pleasing user interface
       we will deliver a DAIDE-conforming GUI client for the Game of Diplomacy. 
-      Rather than forcing the player to use a particular device all back-end
+      Rather than forcing the player to use a particular device all back-ends
       of the HaXe platform are supported, including HTML5/JS, Flash and C++. 
 
 \end{itemize}
 
 In the above listing the requirements are decreasing in importance. Some of
-the above aims look indivisible in nature but we have still managed to
+the above look indivisible in nature but we have still managed to
 extract user-stories to support time-boxed iterations. Requirements management
-in Weeks 3-11 was two-fold. Each team-member kept in mind the overall contract
+in Weeks 3-11 was two-fold: Each team-member kept in mind the overall contract
 with our supervisor (see above) which defines the direction of the project. 
-Having said that the primary focus at any time was on the User-Stories which
-also structured the discussions during the meetings.
+Based on this User-Stories were defined which guide the primary development
+focus during the iterations.
 
 \subsection{Change / Risk management}
 We recognized that change is inevitable in such an ambitious and multi-faceted
-project: Therefore we took great care in defining our contracts carefully to
+project. Therefore we took great care in defining our contracts carefully to
 split up work. Actually this was helped substantially by the existence of the
 DAIDE protocol. Through its rigorous specification it forced everybody to 
 program to an existing interface and there was little scope for confusion as
@@ -99,7 +100,7 @@ separately and as a result there are little dependencies between team members.
 If communication between two components fails it is matter of determining
 which are not properly realizing the DAIDE protocol. A welcome side-effect
 is that we avoid endless debugging sessions to make two parts of the project
-work together.
+work together. They just need to be tested against a DAIDE reference.
 \\
 Using the 'AI generation' framework explained above implicitly makes coding 
 of AI techniques incremental. For instance if a well-tested game-tree search
@@ -645,7 +646,7 @@ within members of the group. Some of us are skilled with Haskell coding, whilst
 some of us are merely acquainted with it. Similarly, GUI design, AI design,
 general coding skills and practices all varied. We have remedied this 
 somewhat by working in pairs or more, allowing the parts of the knowledge to 
-diffuse (in a manner similar to osmosis HAHAHA made my day :)) ) between group
+diffuse (in a manner similar to osmosis :) ) between group
 members as problems are encountered and solved. Additionally, papers and other
 learning tools have been shared (via GitHub and Gmail) to aid the code writing
 process. Where  learning-by-application and reading have failed, group members have also been
