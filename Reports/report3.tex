@@ -378,7 +378,7 @@ StrategyBot.
 
 \end{itemize}
 
-\subsubsection{Static code checking / tools}
+\subsection{Static code checking / tools}
 All deliverables, including code and documentation was produced using Emacs /
 Gedit or other similar simple text editors. We have not used an IDE but several
 Emacs modes and extensions (directory browsing) helped us to keep track of the
@@ -387,66 +387,124 @@ was readability was two-fold: Rather than making up our own coding standard
 we have adopted the programming guidelines from ``http://www.haskell.org/haskellwiki/Programming_guidelines''
 and ``http://hackage.haskell.org/trac/ghc/wiki/WorkingConventions''. Secondly
 each team member was required to run each (compiling) commit through 'HLint'
-and the 'Haskell Style Scanner' and resolve issues if necessary. For  
+and the 'Haskell Style Scanner' and resolve issues if necessary. 
 
-\subsubsection{Code inspection / Refactoring}
-As the AI framework was built from the ground-up, everyone in the group who
-wished to write or assist in writing the AI was required to know how to use the
-AI framework. As there is (currently) no documentation, this involved reading
-the written code and understanding how it worked. As such, at least two other 
-people read a majority of the code that is written on the framework. With 
-respect to the code of the AI, as we are at different levels of coding ability 
-(in Haskell in particular), it has been beneficial to write the AI in pairs, so
-that ideas and implementations can be discussed. This is similar in many ways to
-Pair programming, a technique by the 'Extreme Programming paradigm'.
+\subsection{Code documentation}
 
-\subsubsection{Acceptance tests}
+We treated documentation as a deliverable only second in priority to working
+code. The coding standards defined at the beginning of the project detailed 
+the style of documentation and good practices to avoid running-out-of-sync
+issues.
 
+\subsubsection{Developer documention}
 
-\subsubsection{Stress testing}
-The different aspects of our project should be stress tested in different ways.
-Our server for instance can be stress tested by increasing its load, for 
-instance by sending it many messages at one time, whether they be from actual
-players or observers, or constructing large and elaborate orders to see if the
-order-resolution is capable of being completed in acceptable time. Likewise, our
-AI can be tested with messages as well, to see if it is capable of handling many
-simultaneous diplomacy messages. If it was discovered that an enemy player 
-became less able to compute the next move if it was burdened with messages, a 
-valid tactic might be to simply spam it with many diplomacy requests! It would
-be difficult to stress test the AI framework itself - its only requirement is to
-support the various functions for the AI, so the stress testing is most likely
-rolled in with the AI testing. 
+Developer documentation consisted of JavaDoc-style comments for each data type,
+typeclass (interface) and function documentation. The particular tool used
+is ``Haddock'' which allows generation of API reference pages (HTML).
+
+\subsubsection{User documention}
+Besides documenting exported API through ``Haddock'' (primarily the AI framework
+for creating Diplomacy Bots) we agreed that tutorials need to be written to 
+explain typical use-cases of the library. Only then can we hope that our
+library is re-used by other members of the Diplomacy community which was an
+objective defined at the outset of the project. 
+
+\subsection{Code inspection / Refactoring}
+Each function of the code is ideally represented in three different ways: as 
+executable code, unit test and exported ``Haddock'' comments. For some trivial
+cases on of the latter might be missing. This approach has simplified code
+inspection and walkthroughs tremendously. In a typical 'design-check' session
+which we have conducted roughly fort-nightly a team-member will check a 
+particular code in detail. This involves clarifying comments, naming of 
+functions and checking overall soundness of design. Often even major
+refactorings were suggested as it was discovered that pieces of code were
+conceptually similar and hence could be extracted into a common module. Not
+only were we challenging our tendency to 'repeat ourselves' in the code
+but also could spread knowledge about the code-base in the entire team.
+
+\subsection{Acceptance tests}
+Acceptance testing has not yet been finalized. In a recent meeting 
+with our supervisor we conducted a short walkthrough of the GUI to gather
+feedback. The functionally we have implemented was received well, with some
+minor changes suggested. Final integration / system testing will be done 
+during the holidays and the first week of the Spring term. We aim to keep
+our supervisor involved by sending regular screenshots of the GUI and 
+results from the Bot-tournaments.
+
+\subsection{Stress testing}
+
+\subsubsection{Server loading}
+
+Our server can be stressed by increasing its load, flooding it with malformed
+messages in spirit of Denial-of-Service attacks. The overall aim is 
+to find a threshold load under which our server just crashes. Another test is
+to connect multiple AI clients that issue conforming DAIDE messages at a rapid
+pace. The question then is whether the server still advances the game state
+correctly. If this is not the case we would need to check the server code for
+possible race conditions explicitly. Initial measurements indicate sufficient
+robustness. 
+
+\subsubsection{AI / GUI client loading}
+
+In a similar fashion GUI and AI client can be run against servers issuing 
+malicious messages at a rapid pace. We allow arbitrary behaviour in this
+case, but the client should still discover the problem and disconnect 
+safely. Similarly we have to defend against an adversary who addresses spam
+to force our player to time-out during move generation.   
 
 \section{Managerial Documentation}
 
 \subsection{Collaboration tools}
-Collaboration has mainly been centered around GitHub, and the features present
-there. Resources include issue flagging, progress and milestone setting, comments 
-and of course, code hosting. In addition to this, we have made regular use of 
-email to schedule meetings, and discuss group progress outside of actually 
-meeting up.
+We discovered that the best tool was actually gathering in front of a
+white-board (we did not yet have IdeaPaint TM), sticking some user story
+cards and talking through the overall design. Simplified UML diagrams and
+examples were used to elaborate design alternatives at our disposal. Anything
+that was of permanent value to the team was usually recorded in a logbook
+(see example of a LogBook page below). For this purpose we assigned a member
+to take minutes of each meeting and create a digest that would be put into
+the issue-tracking system of GitHub. Other resources of GitHub, such as
+progress, issue flagging and milestone setting were used sporadically. Next 
+time we would probably use a more sophisticated tool for resource management,
+enabling us to categorize research papers, coding standards, progress 
+reports in a better way.
 
-\subsection{Management/Organisational policies}
-Code change and validation properties have been quite loose within the group - 
-this is mainly due to the disparity of knowledge when it comes to how to code 
-parts of the project. On the whole, drastic code changes have been handled 
-either as a group or by someone with a lot more knowledge than others on the 
-subject, and any other code changes operated on a 'trust-based' policy. 
-Obviously, the addition of version control removes some of the risks associated
-with this; if someone manages to somehow delete large portions of the code, it
-is a simple task to restore it to a previous version.
+\subsection{Version control}
+The distributed source code control system Git was used for all deliverables -
+that is unit tests / documentation, tutorials and presentations. We have made
+it strict policy to avoid both conflicting / non-compiling commits. The former
+required good coordination between team members about which files should be
+edited in what time-window. Any file that is machine-generated should be
+ignored by the file tracker to avoid confusion and wasted memory space in
+the repository. For simplicity we avoided working on different development
+branches. 
+
+\subsection{Management / Organisational policies}
+We tried to keep it lean here: There is a culture of trust within the group which
+can be justified because we have been rigorous about commit / coding rules at the
+outset. Sub-optimal design decisions were usually caught in the ``design-check'' sessions 
+explained above. For some parts of the codebase exotic techniques like Software
+Transactional Memory were used. This proved problematic because team members
+usually did not have the time to learn these new concepts, making code review
+difficult. In such cases 'research papers' presenting the necessary techniques
+were usually sent to each team member involved in the code inspection. We had
+to take a pragmatic approach here -- after all team members sometimes have very
+different backgrounds in programming paradigms / coding techniques. It is a necessary
+side-effect of division of labour that not everybody is an expert in everything.
 
 \subsection{Knowledge transfer within the group}
 As previously mentioned, there is a significant amount of knowledge variation
 within members of the group. Some of us are skilled with Haskell coding, whilst
 some of us are merely acquainted with it. Similarly, GUI design, AI design,
-general coding skills and other things are all varied. We have remedied this 
+general coding skills and practices all varied. We have remedied this 
 somewhat by working in pairs or more, allowing the parts of the knowledge to 
-diffuse (in a manner similar to osmosis) between group members as problems are
-encountered and solved. Additionally, papers and other learning tools have been
-shared (via GitHub and Gmail) to aid the code writing process. Where 
-learning-by-application and reading have failed, group members have also been
-keen to help each other, spending time drawing diagrams and explaining concepts.
+diffuse (in a manner similar to osmosis HAHAHA made my day :)) ) between group
+members as problems are encountered and solved. Additionally, papers and other
+learning tools have been shared (via GitHub and Gmail) to aid the code writing
+process. Where  learning-by-application and reading have failed, group members have also been
+keen to help each other, spending time drawing UML diagrams and explaining concepts
+in detail. The focal points of these discussions have usually been the weekly 
+group meetings. Logbook allowed us to document what we have learned and avoid
+introducing bad design / bugs more than once.
 
 \subsection{Group meetings}
 \begin{center}
