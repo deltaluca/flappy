@@ -404,6 +404,17 @@ StrategyBot.
 
 \end{itemize}
 
+\subsection{Examples of bugs discovered during testing}
+\begin{itemize}
+\item Grave errors when parsing certain DAIDE messages. This had to do with
+      the ambiguity of the DAIDE grammar and a work-around needed to be found
+      (discovered through QuickCheck testing)
+\item Inconsistences on the server-side. This proved a pain to rectify and 
+      to avoid such problems in the future we decided to come up with a 
+      robust scheme for concurrency in the server code. (discovered through
+      sporadic server stress testing)
+\end{itemize}
+
 \subsection{Static code checking / tools}
 All deliverables, including code and documentation was produced using Emacs /
 Gedit or other similar simple text editors. We have not used an IDE but several
@@ -432,7 +443,9 @@ Besides documenting exported API through ``Haddock'' (primarily the AI framework
 for creating Diplomacy Bots) we agreed that tutorials need to be written to 
 explain typical use-cases of the library. Only then can we hope that our
 library is re-used by other members of the Diplomacy community which was an
-objective defined at the outset of the project. 
+objective defined at the outset of the project. Team members agreed that once
+we go public with our project (BSD open-source licensed) we also need to have
+a Sourceforge website. 
 
 \subsection{Code inspection / Refactoring}
 Each function of the code is ideally represented in three different ways: as 
@@ -512,6 +525,44 @@ ensured that each member was free for the day afterwards to cater for the
 fact that meetings sometimes had to overrun the expected time. Whiteboards
 were used to discuss the design with UML / package diagrams.
 
+\subsubsection{Group meeting structure}
+Besides discussing user-stories and mini-milestones for the next
+iteration group meetings were used to do the following things
+
+\begin{itemize}
+\item Assessing risks early: For instance we dedicated one half-session to 
+      come up with a technique to cope with race conditions occuring on shared
+      data structures in the server. Two team members had alternative solutions
+      to this solution with the group finally agreeing with using Software
+      Transactional Memory, which is natively supported in the Haskell GHC
+      extensions. Another technical risk was using the DAIDE system, which is 
+      legacy in nature (ambiguities in the grammar of DAIDE messages etc..). The
+      team had to discuss how to proceed in these cases.
+\item Defining testing strategies: As shown in the testing section we have used
+      different techniques in some are more appropriate in certain cases. Usually
+      the team member working on the code made a suggestion and argued their case.
+      We reckoned that everybody had a stake in the decision because the code was 
+      usually tested / reviewed by a person different from the coder. Issues of
+      code coverage and general confidence into the code / testing suite were 
+      also raised here. The overall aim was to make out weak spots that need
+      urgent clean-up and improvement.
+\item At the beginning of each iteration, we plan out the work distribution that needs
+      to be done. If more than one person is writing code we need to raise awareness 
+      of dependencies that we may have between these members. These could take the
+      form of overlapping code or module dependencies. Before any coding starts
+      the respective members need to agree on a common strategy to avoid code duplication
+      and factoring common parts out.
+\item Each second meeting we try to do some ``meta-learning'' - that is what went wrong
+      and how can we improve our process in the following week. For instance it was 
+      discovered early that different knowledge bases about Haskell / monads could
+      prove an obstacle to collaboration. Hence we agreed on putting relevant research
+      papers on GitHub to educate all team members in these central concepts. These
+      discussion usually provide the basis for what appears in the reports on 
+      ``Software Engineering''.
+
+\end{itemize}
+
+
 \subsubsection{Record of group meetings}
 
 \begin{center}
@@ -546,30 +597,12 @@ were used to discuss the design with UML / package diagrams.
 
 \end{center}
 
-\subsubsection{Group activity}
-Due to the variation of knowledge within the group, activity has been varied
-and focused in different areas. 
-
-//ELABORATION//
-
 \subsubsection{Log-Book}
-Our log-book records progress for the current iteration and any problems / 
-dependencies that need to be resolved. As we have one meeting per week, in a 
-two-week iteration we would have 3 meetings, with the first meeting being the 
-same meeting as the final meeting of the previous iteration and the 3rd of these
-meetings the end-of-iteration meeting for the current iteration and the first 
-meeting for the next iteration. The other meeting is a mid-week iteration 
-meeting which is used to spot problems early with work possibly being 
-distributed so that the goals of iteration can be achieved as best as possible. 
-\\
-At the beginning of each iteration, we plan out the work distribution that needs
-to be done. If more than one person is doing implementation/writing code then we
-need to spot any dependencies that we may have between these members (code 
-overlapping, compatibility and overall dependancies). We make sure these 
-dependencies are handled by making sure at each meeting whether these members
-of the group have sat down and made sure that they're parts would work together
-properly. This generally means that we often make use of pair-programming. Our 
-logbook structure looks like something as follows:
+Our log-book records details progress for the current iteration and any problems / 
+dependencies that need to be resolved. It is primarily standard text but can
+contain UML / package diagram visualizing central ideas of our design.
+
+Our logbook structure looks like something as follows:
 \\ 
 \includegraphics[width=100mm]{logbooktemplate.png}
 
@@ -582,7 +615,16 @@ required good coordination between team members about which files should be
 edited in what time-window. Any file that is machine-generated should be
 ignored by the file tracker to avoid confusion and wasted memory space in
 the repository. For simplicity we avoided working on different development
-branches. 
+branches. All code was backup-ed in the project directory of DoC at regular
+intervals. 
+
+\subsection{Automated build}
+The CABAL package management system was used as recommendend by most
+Haskell coding standards. The different parts of the project (Server, Client,
+AI) were packaged separately to avoid annoying compile dependencies and
+allow team members to work separately on different components. In our judgement
+a suitable CI server does not exist for Haskell and using one would have been 
+overkill.
 
 \subsection{Management / Organisational policies}
 We tried to keep it lean here: There is a culture of trust within the group which
@@ -610,7 +652,13 @@ process. Where  learning-by-application and reading have failed, group members h
 keen to help each other, spending time drawing UML diagrams and explaining concepts
 in detail. The focal points of these discussions have usually been the weekly 
 group meetings. Logbook allowed us to document what we have learned and avoid
-introducing bad design / bugs more than once.
+introducing bad design / bugs more than once. 
+\\ 
+Last but not least we decided to have a ``glossary'' section in the log-book 
+where we explain give names to the most important concepts of our design. For instance
+we have defined the AI framework in terms of metaphors from the Neuroscience
+domain (Brain etc..). For this to be effective and improve communication every 
+team member needed to be aware of the terms.
 
 
 \end{document}
