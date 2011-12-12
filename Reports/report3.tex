@@ -3,6 +3,7 @@
 \usepackage{cite}
 \usepackage{datetime}
 \usepackage{geometry}
+\usepackage{graphicx}
 \geometry{verbose,lmargin=3cm,rmargin=3cm}
 
 \title{Automated negotiation in the game of diplomacy - Report 3: Software Validation}
@@ -104,7 +105,7 @@ As previously mentioned, there is a significant amount of knowledge variation wi
     Team               & 14/10/2011    & 2 hr       & First meeting with group, discussing division of work and background reading. In addition we finalised our decision on what technologies to use and started to test compatibilities between them (Haskell and Haxe) \\ \hline
     Team               & 21/10/2011    & 2 hr       & Progress meeting to see how the server and the client were coming along. Server was to adopt the Daide protocol which provides a framework for writing a Diplomacy AI Bot and support for allowing other Daide AI Bot's to play on the server.  \\ \hline
     Team               & 28/10/2011    & 2 hr       & More progress on the server, adding ability to parsing low level daide messages and high level diplomacy messages. Client at this point is able to send commands to the server via a command line interface.  \\ \hline
-    Team               & 4/11/2011     & 1 hr       & Second meeting with supervisor, discussing any problems we had and how we planned to continue with building the server and the AI. In addition discussed how we would go about implementing negotation into the game.  \\ \hline
+    Supervisor               & 4/11/2011     & 1 hr       & Second meeting with supervisor, discussing any problems we had and how we planned to continue with building the server and the AI. In addition discussed how we would go about implementing negotation into the game.  \\ \hline
 
     \end{tabular}
 \end{center}
@@ -115,6 +116,11 @@ Due to the variation of knowledge within the group, activity has been varied and
 //ELABORATION//
 
 \subsection{Log-Book}
-//NON-EXISTENT LOGBOOK//
+Our log-book records progress for the current iteration and any problems/depedancies that need to be resolved. As we have one meeting per week, in a two-week iteration we would have 3 meetings, with the first meeting being the same meeting as the final meeting of the previous iteration and the 3rd of these meetings the end-of-iteration meeting for the current iteration and the first meeting for the next iteration. The other meeting is a mid-week iteration meeting which is used to spot problems early with work possibly being distributed so that the goals of iteration can be achieved as best as possible. 
+\\
+At the beginning of each iteration, we plan out the work distribution that needs to be done. If more than one person is doing implementation/writing code then we need to spot any dependancies that we may have between these members (code overlapping, compatibility and overall dependancies). We make sure these dependancies are handled by making sure at each meeting whether these members of the group have sat down and made sure that they're parts would work together properly. This generally means that we often make use of pair-programming. Our logbook structure looks like something as follows:
+\\ 
+\includegraphics[width=100mm]{logbooktemplate.png}
+
 
 \end{document}
