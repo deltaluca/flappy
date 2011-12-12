@@ -115,7 +115,6 @@ some requirements are fulfilled qualitatively and others can be stated
 in terms of numbers.
 
 \begin{itemize}
-
 \item A natural but informal progress metric is to simply estimate for
       each high-level objective defined in the contract a percentage of the
       features which have been successfully implemented. This places emphasis
@@ -137,8 +136,51 @@ in terms of numbers.
       natural / visually pleasing the interface was and what features could
       be supported in the next generation. We have not used any formal methods
       here but trusted our experience with playing similar strategy games.
-
 \end{itemize}
+
+\subsection{Detailed AI metrics}
+
+Within each of these milestones, we can weigh a bot's ability using its only 
+application - playing the game of diplomacy. For this, we need to come up with
+a set of metrics with which we can evaluate a players performance in a game. We
+are planning to equip the server with a tool to measure these statistics during
+the game. By combining these indicators in a weighted fashion (possibly with
+some needed calibration), we should be able to compute an accurate score of how
+well a particular AI is playing. This can be validated by measuring the
+correlation with a high-score and the number of games won/lost.
+\\
+Some key indicators are, with some having precedence over others:
+
+\subsubsection{Games won/lost} 
+This is clearly the most important metric and overrides all others.
+However it gives little insight into what actually caused a bot
+to lose or win the game.
+
+\subsubsection{Supply centres controlled}
+With regards to supply depots, the winning player will own half of them 
+(eighteen), with the second-most successful player owning the second highest 
+amount, and so on and so forth. A player with no supply-depots is very close
+to becoming a losing player.
+
+\subsubsection{Units lost during the game}
+Units lost is a difficult metric to quantise - whilst it may immediately seem
+that losing many units is a bad thing, these could be due to tactical masteries
+involving trappingand deluding many foes. Objectively, it is probably advisable
+to refrain from losing units where possible.
+
+\subsubsection{Provinces conceded during the game}
+Similarly, conceding provinces, unless done in a planned fashion, is a general
+indicator that a player is not performing well.
+
+\subsubsection{Negotiation 'strength'}
+If it were possible to evaluate other players' "attitudes" towards
+the AI player, one might be able to deduce the competence of a bots negotiating
+skills. For instance, making enemies is widely regarded as a poor move,
+especially if those enemies are actively hostile against you. A better tactic 
+might be to give them the illusion of friendship, whilst aligning them for a
+back-stabbing manouever. If we could create a way to reliably score the 
+subtleties of negotiation between players, it might aid us in the creation of
+more advanced diplomising AIs.
 
 \subsection{Team velocity / Milestones}
 We can define our team velocity as the positive change in progress metrics overall. 
@@ -186,95 +228,50 @@ independent from others, these guided how we allocated user stories to the
 
 \subsubsection{AI framework / bots}
 
-AI creation also began at the same time as the AI framework creation. This means
-that as new features are added to the framework, old features may no longer be
-supported or their implementation is changed, resulting in changes being 
-required to the AI. However this was also beneficial in the opposite direction
-- as the AI gained functions and became more complicated, it became evident that
-additional features were required in the framework, which were then added.
+These iterations have run concurrently with server developments (3 iterations
+detailed above):
 
-An initial set of milestones is already present on the DAIDE wiki. It describes 
-an iteratively improved bot, that gains functionality and depth on each iteration.
-As described in an earlier report, the first bot (HoldBot) is simply an AI that
-works, but does nothing. After this, RandomBot is created, which gains the
-ability to analyse what moves are available to it, and then randomly perform one
-of them. As you can see, whereas HoldBot simply is 'functional', but essentially
-blind, RandomBot is capable of evaluating a decision (albeit possibly a bad one).
-After this, negotation aspects are added, further increasing the abilities of
-the bot itself. 
+The user stories we have proposed largely correspond to ideas DAIDE wiki and
+research into machine learning / search techniques. 
 \\
-Within each of these milestones, we can weigh a bot's ability using its only 
-application - playing the game of diplomacy. For this, we need to come up with
-a set of metrics with which we can evaluate a players performance in a game.
-Some key indicators include:
+Each user story contains an iteratively improved version of our current 
+benchmark bot. Hence the overall AI gains functionality and depth on each
+iteration. While there are some components which every bot should have (for
+instance a forward-search in the game state-space) specifics are discussed 
+during the group meetings. The idea is that each team member involved in 
+the AI has done some research and proposes new AI techniques which shall be
+implemeted in the next time-box.
+\\
+Then once a feature is judged mature we incorporate it into the generic AI
+framework discussed at the beginning. This extends the code-base we treat as 
+given for the next iteration. 
 
 \begin{itemize}
-\item The number of supply depots owned at the end of the game.
-\item If the player actually wins the game
-\item Units lost throughout the game
-\item Provinces conceded throughout the game
+\item The first iteration -- HoldBot -- is simply an AI player that does not
+      impede the game progress but is strictly dumb. It always performs the
+      same move -- that is holding. It can be used as a simple unit test 
+      for the server framework.
+\item As a first refinement is RandomBot is created, which now considers every
+      move defined in the Diplomacy rules and selects one uniformly at random. 
+      Reflection capability is optional, that is the bot may or not reason about
+      how the random moves affected its standing in the game.
+\item The first bot designed to compete with other bots through the DAIDE protocol
+      is StrategyBot. At a high-level it must use techniques for performing
+      a search in the game tree, formulate general strategies. Also it should be 
+      able to improve its performance by analyzing previous strategies or moves.
+\item The last iteration is the NegotiatingBot which additionally exchanges 
+      messages with other players. It needs to have an internal model of the other
+      players intentions and reason about which is friend or foe.
 \end{itemize}
 
-These are not all of the same value, of course. Winning a game is possibly the
-most important aspect of a game of diplomacy - if the AI somehow manages to 
-negotiate each of the players in such an extraordinary fashion as to persuade
-them to surrender, it is obviously playing extremely well! 
-\\
-With regards to supply depots, the winning player will own half of them 
-(eighteen), with the second-most successful player owning the second highest 
-amount, and so on and so forth. A player with no supply-depots is very close
-to becoming a losing player.
-\\
-Units lost is a difficult metric to quantise - whilst it may immediately seem
-that losing many units is a bad thing, these could be due to tactical masteries
-involving trappingand deluding many foes. Objectively, it is probably advisable
-to refrain from losing units where possible.
-\\
-Similarly, conceding provinces, unless done in a planned fashion, is a general
-indicator that a player is not performing well.
-\\
-Because of the conceptual simplicity of a game (in that it involves taking 
-supply depots and provinces, using equally matched units), these are about all 
-of the indicators that exist in a game of deplomacy.  By combining these 
-indicators in a weighted fashion (possibly with some needed calibration), we
-should be able to compute an accurate score of how well an particular AI is 
-playing. Additionally, due to the quick nature of a game amongst AIs, it is not
-particularly difficult to run this scoring multiple times to obtain a reliable
-average.
-\\
-An interesting aside is the concept of scoring negotiation, not just general 
-game playing. If it were possible to evaluate other players' "attitudes" towards
-the AI player, one might be able to deduce the competence of a bots negotiating
-skills. For instance, making enemies is widely regarded as a poor move,
-especially if those enemies are actively hostile against you. A better tactic 
-might be to give them the illusion of friendship, whilst aligning them for a
-back-stabbing manouever. If we could create a way to reliably score the 
-subtleties of negotiation between players, it might aid us in the creation of
-more advanced diplomising AIs.
-\\
-As a corollary of this, a higher-scoring AI should generally beat a lower 
-scoring one. We can use this fact to verify that our metric is indeed working
-properly. 
-\\
-Implementation of these measurements should not be too much of an issue. All 
-measurements (except the hypothesised negotiation scoring) can be taken 
-server-side without any difficulty by sampling the map-definition and unit 
-positions between turns. With regards to negotiation scoring, individual 
-communications between players could be intercepted, but this may prove
-difficult to implement without breaking the current setup.
-
-\subsubsection{Where we are currently}
+\subsection{Progress revision at Week 10}
 Unfortunately we suffered some setbacks in the beginning with planning and 
 evaluation of how long it would actually take us to complete the server and
 framework - these miscalculations have now been addressed and we are progressing
-with the AI creation, concurrently with the server/framework improvements. 
+with the AI creation while improving server / framework as appropriate. 
 \\
-The HoldBot and RandomBot have been written (to the current specification of the
-AI framework), and improved versions are in progress. Research has already been 
-done on implementations of these improvements, so all things considered it
-should not be particularly hard to get them up and running. Progress can now 
-also be checked against ready-made bots from the Daide server using the metrics
-mentioned above.
+HoldBot and RandomBot are released (to the current specification of the
+AI framework), and all further iterations are in progress.
 
 \section{General validation}
 
