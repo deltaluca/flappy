@@ -111,8 +111,8 @@ future work respected.
 \subsection{Progress metrics}
 There are multiple ways in which we can measure the progress of our AI. 
 We adopted an aspect-oriented approach in measuring, recognizing that 
-some requirements are fulfilled qualitatively and others demands 
-actual experimental results.
+some requirements are fulfilled qualitatively and others can be stated
+in terms of numbers.
 
 \begin{itemize}
 
@@ -132,28 +132,60 @@ actual experimental results.
       measure by the percentage of valid DAIDE messages supported. Once this
       is close to 100 \% it immediately follows that both are DAIDE-conforming,
       one of our objectives outlined above.
-\item 
+\item As a GUI is hard to test automatically we left 10 mins of our weekly 
+      discussions for informal game walkthroughs. All team members judged how
+      natural / visually pleasing the interface was and what features could
+      be supported in the next generation. We have not used any formal methods
+      here but trusted our experience with playing similar strategy games.
 
 \end{itemize}
 
- Our 
-initial milestone was to create the AI framework and the server, and then 
-proceed to iterate a build of an AI, progressively increasing its abilities and
-making it better. Discussed below is how we can quantise a 'better' AI.
-
-\subsubsection{Framework and Server progress}
-It is difficult to iteratively build a server - the lowest level of operation is
-still quite high. There are many aspects of the Daide language to be implemented
-(it was quite a large language), as well as many functions related to a game of
-Diplomacy. Before the server can be classed as 'working', it has to adhere to a
-strict specification, all of which has to be supported. Fortunately some aspects
-of it are different from others - for instance, the connection and messaging 
-portions can be tested seperately from the game management areas. The same goes
-for an AI framework - without a functional AI to plug into the framework (which 
-doesn't exist yet) it is a challenge to know exactly if it will work as intended.
-Once a working version has been created, however, it is quite simple to see it
-improve, as new (additional) features are added and bugs ironed out.
+\subsection{Team velocity / Milestones}
+We can define our team velocity as the positive change in progress metrics overall. 
+This means that we can allocate team members to the metric which currently has 
+priority. These are typically the ones that are covered by the user-stories for
+the current iteration. Having said that we strived to progress in each part
+of the project to discover problems and dependencies we have not anticipated
+early. 
 \\
+Whereas the velocity-scheme served as a tool to measure our progress internally
+we communicated our progress to the supervisor in terms of coarse-grained 
+milestones. This had the advantage that we did not overload our customer with
+technical details only we as developers care about. Also they co-incided with
+the frequency of meetings with our supervisor. 
+\\
+The milestones agreed upon were to create the AI framework and the
+server, and then proceed to iterate a build of an AI, progressively increasing
+its abilities and making it better. 
+
+\subsection{Description of iterations per subsystem}
+
+\subsubsection{Framework and Server}
+
+For the server we can define some functionality 'chunks' which are strictly 
+independent from others, these guided how we allocated user stories to the
+3 iterations outlined below:
+
+\begin{itemize}
+\item First and foremost the server needs to conform to the DAIDE specification which
+      is an issue of setting up a connection between server and client and parsing
+      conforming issues. This is a well understood task from the 2nd years Compilers
+      course and hence it formed our first iteration. At the end of the iteration
+      substantial testing was performed (see section on Testing for details). Notice
+      there is no dependancy on any other component being working.
+\item Secondly the server needs to advance the game state in response to valid
+      DAIDE messages. This was a longer iteration since all special cases 
+      treated in the game rules needed to be catered for. Again existing bots and
+      GUI clients could be used to instrument the server and validate correct
+      reaction.
+\item The last iteration of the server consisted of User-Stories which were 
+      created during the weekly meetings. They were not strictly necessary but
+      but useful utility features that served to round up the product. Free time
+      was now spent on refactoring the code and fixing remaining bugs.
+\end{itemize}
+
+\subsubsection{AI framework / bots}
+
 AI creation also began at the same time as the AI framework creation. This means
 that as new features are added to the framework, old features may no longer be
 supported or their implementation is changed, resulting in changes being 
@@ -161,8 +193,7 @@ required to the AI. However this was also beneficial in the opposite direction
 - as the AI gained functions and became more complicated, it became evident that
 additional features were required in the framework, which were then added.
 
-\subsubsection{AI progress}
-An initial set of milestones is already present on the Daide wiki. It describes 
+An initial set of milestones is already present on the DAIDE wiki. It describes 
 an iteratively improved bot, that gains functionality and depth on each iteration.
 As described in an earlier report, the first bot (HoldBot) is simply an AI that
 works, but does nothing. After this, RandomBot is created, which gains the
