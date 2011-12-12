@@ -6,7 +6,7 @@
 \usepackage{graphicx}
 \geometry{verbose,lmargin=3cm,rmargin=3cm}
 
-\title{Automated negotiation in the game of diplomacy - Report 3: Software Validation}
+\title{Automated negotiation in the game of diplomacy - Report 3: Overview and Software Validation}
 \author{Matthias Hueser, Andras Slemmer, Luca Deltodesco, Luke Tomlin, Cliff Sun}
 \date{\today}
 
@@ -14,31 +14,129 @@
 \maketitle
 
 \section{Project synopsis}
-The Game of Diplomacy is a multiplayer game that removes the element of 'luck'
-in gameplay and replaces it with negotiation between players. 
+The Game of Diplomacy is a round-based multiplayer strategy-game set in post WWI
+Europe. Each player controls a power which initially operates from a number of 
+home-bases. The ultimate objective of each player is to control the majority of
+supply-centers on the map. A game is structured into a number of rounds, in which
+each player formulates a move order to conquer additional supply centres or
+defend existing ones. Besides the necessity to create effective long-term
+strategies negotiation is integral to the game-experience. There is a thriving
+internet-based community around the Game of Diplomacy and many AI players, so
+called bots, have been created in the past. Most of the existing AI players are
+quite effective decision-makers in general but few of them support negotiation
+or reasoning about the relationship of the powers in the game. Our projects aim
+to create a framework for Diplomacy, including a GUI client, a game server and a
+collection of bots. Crucially one the bots or the highest evolution of our series
+of bots should be able to analyze and act upon messages of human / AI players.
+Then experiments are run to determine whether there is a reward associated with
+negotation capabilities. This will require careful study and implementation of
+automated negotiation techniques from other domains. Hence the project gives us
+ample opportunity to be creative and test different approaches using the
+DAIDE-conforming game framework produced for the project. DAIDE is a standard
+client-server protocol which serves as a 'common language' for different Diplomacy
+bot implementations, enabling them to play a game together on a conforming
+server.
 
-\subsection{Aims of the project}
-The over-arching goal of this project is to create an AI that is capable of 
-negotiating with other players, whether they be human or AI, through a
-predefined language. This is a challenge that involves utilising many different
-facets of AI (learning, tactics, rationalising) and a deep understanding of the
-game itself.
-\\
-As an aside to this AI creation, we are also developing an open-source framework
-on which other users can build their own AIs, as well as creating a server that
-is capable of hosting Diplomacy games between multiple users. These are written
-purely in the functional programming language Haskell.
-\\
-By developing the frameworks and server in an open-source fashion, we are
-helping to develop the Diplomacy community as a whole - for instance, enabling
-users who are not on a Windows-based machine to play the game online or across a
-network. Additionally, by providing a framework for new AI creation, users are
-liberated from the chore of having to work at a low level and are able to simply
-work on the AI itself. Some users may also find the functional programming
-methodology more rewarding than an Obect-Oriented or Imperative approach.
+\subsection{Requirements engineering / management}
+High-level requirements were discussed in the initial phase of the project 
+(weeks 1/2) with our project supervisor -- Iain Philipps -- who was our customer
+in Software Engineering terms. The terms of the collaboration were such that 
+only certain high-level goals were defined and project metrics were defined: 
 
-\subsection{Metrics and Progress}
-There are multiple ways in which we can measure the progress of our AI. Our 
+\begin{itemize}
+
+\item The over-arching goal and hence the most critical requirement is to 
+      design and implement a negotiation bot for Diplomacy whose performance
+      is then compared to existing bots in an experimental setting. 
+\item A collection of other bots which are not capable of commuication should
+      be created for purposes of comparison. These should use proven techniques
+      from the fields of Game Theory and Multi-Agent systems, including learning,
+      tactics and long-term strategies. All bots should support the DAIDE 
+      protocol to compete against existing bots on the DAIDE windows server.
+\item To facilitate experimentation an open-source framework conforming to the
+      existing DAIDE protocol should be created. This framework comprises a 
+      server which hosts games for automated and human clients and a tool. The
+      imperative behind this is to feed-back into the Diplomacy community as 
+      a whole, providing a multi-platform server for the first time. 
+\item In addition a framework for simple generation of Diplomacy bots is 
+      envisioned: Right now a player needs to re-invent the wheel by 
+      implementing well-established game-tree search techniques or certain
+      Machine Learning paradigms in low-level terms. This is clearly 
+      unsatisfactory. Our framework helps to shift the focus to interesting
+      new techniques from academia which can be coded up and layered on top
+      of primitives. Actually this framework is used for the 2nd objective above
+      to quickly generate a series of bots with increasing functionality. 
+      This also works as a proof-of-concept for the framework mentioned before. 
+      At the users convenience extensions are written in the high-level language
+      Haskell which is more expressive and natural to practitioners in the
+      field of Artificial Intelligence / Game Theory.  
+\item Finally to test our server and provide a visually pleasing user interface
+      we will deliver a DAIDE-conforming GUI client for the Game of Diplomacy. 
+      Rather than forcing the player to use a particular device all back-end
+      of the HaXe platform are supported, including HTML5/JS, Flash and C++. 
+
+\end{itemize}
+
+In the above listing the requirements are decreasing in importance. Some of
+the above aims look indivisible in nature but we have still managed to
+extract user-stories to support time-boxed iterations. Requirements management
+in Weeks 3-11 was two-fold. Each team-member kept in mind the overall contract
+with our supervisor (see above) which defines the direction of the project. 
+Having said that the primary focus at any time was on the User-Stories which
+also structured the discussions during the meetings.
+
+\subsection{Change / Risk management}
+We recognized that change is inevitable in such an ambitious and multi-faceted
+project: Therefore we took great care in defining our contracts carefully to
+split up work. Actually this was helped substantially by the existence of the
+DAIDE protocol. Through its rigorous specification it forced everybody to 
+program to an existing interface and there was little scope for confusion as
+to what needs to be supported. 
+\\
+Each of the high-level objectives outlined above can be achieved
+separately and as a result there are little dependencies between team members.
+If communication between two components fails it is matter of determining
+which are not properly realizing the DAIDE protocol. A welcome side-effect
+is that we avoid endless debugging sessions to make two parts of the project
+work together.
+\\
+Using the 'AI generation' framework explained above implicitly makes coding 
+of AI techniques incremental. For instance if a well-tested game-tree search
+or Learning algorithm is in place, each evolutionary bot can delegate
+these tasks without worrying about how they are implemented. Turning this
+into a reality required defining a layered design in Weeks 3-5 which all
+future work respected.
+\\ 
+
+\subsection{Progress metrics}
+There are multiple ways in which we can measure the progress of our AI. 
+We adopted an aspect-oriented approach in measuring, recognizing that 
+some requirements are fulfilled qualitatively and others demands 
+actual experimental results.
+
+\begin{itemize}
+
+\item A natural but informal progress metric is to simply estimate for
+      each high-level objective defined in the contract a percentage of the
+      features which have been successfully implemented. This places emphasis
+      on the big picture rather than measuring the performance of a particular
+      bot we have created.
+\item Another metric which only pertains to the AI side-of-things is a
+      quantative measure of how do we fare against typical existing bots. Such a
+      metric could be gathered for example in a Round-Robin tournament. 
+      As a canonical example we adopted the existing DumbBot which despite its
+      name has considerable playing stregth. According to our supervisor
+      systematically out-performing DumbBot presents the technical benchmark 
+      for the project.
+\item Relevant to the server-framework and the GUI client we can define a 
+      measure by the percentage of valid DAIDE messages supported. Once this
+      is close to 100 \% it immediately follows that both are DAIDE-conforming,
+      one of our objectives outlined above.
+\item 
+
+\end{itemize}
+
+ Our 
 initial milestone was to create the AI framework and the server, and then 
 proceed to iterate a build of an AI, progressively increasing its abilities and
 making it better. Discussed below is how we can quantise a 'better' AI.
@@ -147,17 +245,9 @@ should not be particularly hard to get them up and running. Progress can now
 also be checked against ready-made bots from the Daide server using the metrics
 mentioned above.
 
-\section{Software Validation}
+\section{General validation}
 
-\subsection{Testing}
-
-\subsubsection{Quickcheck}
-
-\subsubsection{Unit tests}
-
-\subsubsection{Acceptance tests}
-
-\subsection{General Validation}
+\subsection{Server code testing}
 A very practical and simple method for us to test out AI is to see if it is 
 capable of playing with a working Daide server. Our AI framework adheres to the
 same language specification as Daide, so in theory should be able to play with
@@ -178,7 +268,7 @@ based upon the combination of all the decisions in the branches below), in that
 we can individually pick apart a decision made my the AI to see exactly why it
 decided to take that action.
 
-\subsubsection{UI design testing}
+\subsubsection{User interface testing}
 There are only limited interactions with the interface on a human client. As 
 long as the player is capable of submitting any possible move on the board
 (whether or not that be a valid move) and is capable of communicating with the
@@ -190,10 +280,12 @@ or more pleasant.
 Automated testing is also a possibility, however. //BLAHBLAH STUFF HERE//
 
 \subsubsection{Other tools}
-Coding was performed in Emacs/Vim/Gedit or other similar simple text editors. No
-IDE was used, or code checking programs, such as lint.
+All deliverables, including code and documentation was produced using Emacs /
+Gedit or other similar simple text editors. We have not used an IDE but several
+Emacs modes and extensions (directory browsing) helped us to keep track of the
+overall struture of the codebase. 
 
-\subsubsection{Code inspection}
+\subsubsection{Code inspection / reviews}
 As the AI framework was built from the ground-up, everyone in the group who
 wished to write or assist in writing the AI was required to know how to use the
 AI framework. As there is (currently) no documentation, this involved reading
@@ -203,6 +295,15 @@ respect to the code of the AI, as we are at different levels of coding ability
 (in Haskell in particular), it has been beneficial to write the AI in pairs, so
 that ideas and implementations can be discussed. This is similar in many ways to
 Pair programming, a technique by the 'Extreme Programming paradigm'.
+
+\section{Testing}
+
+\subsubsection{Quickcheck}
+
+\subsubsection{Unit tests}
+
+\subsubsection{Acceptance tests}
+
 
 \subsubsection{Stress testing}
 The different aspects of our project should be stress tested in different ways.
