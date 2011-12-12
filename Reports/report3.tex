@@ -248,9 +248,8 @@ given for the next iteration.
 
 \begin{itemize}
 \item The first iteration -- HoldBot -- is simply an AI player that does not
-      impede the game progress but is strictly dumb. It always performs the
-      same move -- that is holding. It can be used as a simple unit test 
-      for the server framework.
+      impede the game progress. It always performs the same move -- it holds.
+      It can be used as a simple unit test for the server framework.
 \item As a first refinement is RandomBot is created, which now considers every
       move defined in the Diplomacy rules and selects one uniformly at random. 
       Reflection capability is optional, that is the bot may or not reason about
@@ -264,20 +263,62 @@ given for the next iteration.
       players intentions and reason about which is friend or foe.
 \end{itemize}
 
-\subsection{Progress revision at Week 10}
+\subsection{Progress report for Week 10/11}
 Unfortunately we suffered some setbacks in the beginning with planning and 
 evaluation of how long it would actually take us to complete the server and
-framework - these miscalculations have now been addressed and we are progressing
+framework. These miscalculations have now been addressed and we are progressing
 with the AI creation while improving server / framework as appropriate. 
 \\
-HoldBot and RandomBot are released (to the current specification of the
-AI framework), and all further iterations are in progress.
+On the AI-side HoldBot and RandomBot are released (to the current specification of the
+AI framework). The current iteration focusses on implementing the features of
+StrategyBot.
 
 \section{General validation}
 
-\subsection{Server code testing}
-A very practical and simple method for us to test out AI is to see if it is 
-capable of playing with a working Daide server. Our AI framework adheres to the
+\subsection{Server testing}
+
+\begin{itemize}
+
+\item A very practical and simple method for us to test the server is to let
+      RandomBots join a game and issue arbitrary move commands. We estimate that
+      we get good coverage using this method since a random bot is expected to
+      issue every possible move over a large number of games. We expect that
+      the server does not crash and advances the game state correctly. We check
+      successful completion by checking for any error return codes / exceptions
+      thrown by the server. The latter is tested by cross-checking the game state
+      with the Windows DAIDE server which we forward all messages that our server
+      receives. Since both observe the same game the messages send to clients 
+      should not differ. To automate the tests, we created a script that 
+      intercepts client-server communication and then invokes 'diff' on the
+      messages. 
+
+\item To inspire further confidence in the code's correctness we use the Quick
+      Check tool developed for the Haskell platform: Given pure Haskell code
+      (that is containing no I/O) it generates random function inputs
+      and theoretically allows us to test a function exhaustively. For instance
+      to test a parsing function we can specify the invariant that it accepts
+      precisely the members of the DAIDE language and returns a parsing
+      error otherwise. For the 'state advancing logic' of the server we can
+      check certain properties that we know to be true in general. An example
+      would be: A supply centre can only be conquered if an army of the
+      player was sent there. We decided against a parallel module hierarchy for
+      the tests but instead defined submodules of the form 'X_quickcheck'. 
+      This allowed us to use the tests as documentation when writing the
+      functions and avoided synchronization issues. This also facilitates 
+      testing of functions that are not exported from a module. 
+
+\item To augment testing with QuickCheck one team member has encoded a number
+      of representative game situations as unit test cases. Largely these
+      were taken from the DiplomacyRuleBook, one of the references
+      that specifies correct state advancement. The unit tests 
+      were written in HUnit, whose feature-set largely parallels JUnit for 
+      Java programming. The whole testing framework can be automated, tests 
+      being packages hierarchically in test suite, modules and collections.
+      As QuickCheck tests they live in a module sub-
+      ordinate to the functions tested. 
+
+ 
+ apable of playing on a working Daide server. Our AI framework adheres to the
 same language specification as Daide, so in theory should be able to play with
 other AIs on the server. Similarly, other AIs should be able to play on our AI
 server, amongst themselves and against our own AI. Of course, a 'working' AI 
@@ -285,6 +326,8 @@ does not necessarily mean a fully functioning one - as long as it is capable of
 sending the correct messages, the server will not complain. This is quite a 
 heavy-handed approach to testing, however, as it may not always catch the niche
 cases.
+
+\end{itemize}
 \\
 As discussed above, we can also test how well our AI is working by pitting it
 against other AIs. This is related to progress checks, except with a twist - we
@@ -307,13 +350,13 @@ or more pleasant.
 \\
 Automated testing is also a possibility, however. //BLAHBLAH STUFF HERE//
 
-\subsubsection{Other tools}
+\subsubsection{Static code checking / tools}
 All deliverables, including code and documentation was produced using Emacs /
 Gedit or other similar simple text editors. We have not used an IDE but several
 Emacs modes and extensions (directory browsing) helped us to keep track of the
 overall struture of the codebase. 
 
-\subsubsection{Code inspection / reviews}
+\subsubsection{Code inspection / Refactoring}
 As the AI framework was built from the ground-up, everyone in the group who
 wished to write or assist in writing the AI was required to know how to use the
 AI framework. As there is (currently) no documentation, this involved reading
