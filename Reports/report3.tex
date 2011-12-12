@@ -382,7 +382,12 @@ StrategyBot.
 All deliverables, including code and documentation was produced using Emacs /
 Gedit or other similar simple text editors. We have not used an IDE but several
 Emacs modes and extensions (directory browsing) helped us to keep track of the
-overall struture of the codebase. 
+overall structure of the codebase. Our strategy to achieve good coding style
+was readability was two-fold: Rather than making up our own coding standard
+we have adopted the programming guidelines from ``http://www.haskell.org/haskellwiki/Programming_guidelines''
+and ``http://hackage.haskell.org/trac/ghc/wiki/WorkingConventions''. Secondly
+each team member was required to run each (compiling) commit through 'HLint'
+and the 'Haskell Style Scanner' and resolve issues if necessary. For  
 
 \subsubsection{Code inspection / Refactoring}
 As the AI framework was built from the ground-up, everyone in the group who
