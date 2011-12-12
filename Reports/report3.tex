@@ -348,20 +348,35 @@ StrategyBot.
 
 \end{itemize}
 
+\subsection{GUI client testing}
+
+\begin{itemize}
+
+\item For the GUI client similar criteria to the AI client applied. The
+      client should be live during the game and not issue mal-formed
+      messages. A simple script that instruments the GUIs command-line
+      interface was put in place for this.
+
+\item Unit testing in the HaXe proceeded as recommended in its manual:
+      Simple test cases to check correct parsing of SVG files (encode
+      the map topology) were created by subclassing a TestCase and
+      putting appropriate checks in place.  
+
+\item Functional requirements were largely in-tangible, such as presenting a
+      intuitive, visually appealing interface to the user. Our division of
+      labour allowed that team members involved in the AI could give feedback.
+      Roughly 15 mins of each meeting were dedicated to discuss the user
+      interface: flagging new issues and tracking progress on fixing 
+      previously discovered bugs. These tests were conducted for each
+      end-user device targeted by the HaXe framework, such as mobile 
+      phones or internet browsers.
+
+\item While there exist tools for automated-checking of web interfaces 
+      the team dismissed this as misguided effort better spent elsewhere.
+      The marginal utility would be to know that all buttons worked correctly
+      which can also be tested by manual inspection. 
 
 \end{itemize}
-\\
-
-\subsection{GUI client testing}
-There are only limited interactions with the interface on a human client. As 
-long as the player is capable of submitting any possible move on the board
-(whether or not that be a valid move) and is capable of communicating with the
-other players, the game is classified as functioning (of course some simple 
-window/game functions are also present, such as starting or closing a game).
-Then any additional features merely serve to make the user interaction easier 
-or more pleasant.
-\\
-Automated testing is also a possibility, however. //BLAHBLAH STUFF HERE//
 
 \subsubsection{Static code checking / tools}
 All deliverables, including code and documentation was produced using Emacs /
@@ -379,12 +394,6 @@ respect to the code of the AI, as we are at different levels of coding ability
 (in Haskell in particular), it has been beneficial to write the AI in pairs, so
 that ideas and implementations can be discussed. This is similar in many ways to
 Pair programming, a technique by the 'Extreme Programming paradigm'.
-
-\section{Testing}
-
-\subsubsection{Quickcheck}
-
-\subsubsection{Unit tests}
 
 \subsubsection{Acceptance tests}
 
