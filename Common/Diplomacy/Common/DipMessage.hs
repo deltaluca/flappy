@@ -186,7 +186,7 @@ data DipMessage =
   | CurrentPositionReq
 
     -- |current position of units (SERVER)
-  | CurrentUnitPosition UnitPositions
+  | CurrentUnitPosition Turn UnitPositions
 
     -- |current position of units req. (CLIENT)
   | CurrentUnitPositionReq
@@ -210,7 +210,7 @@ data DipMessage =
   | StartProcessing
 
     -- |result of an order after turn is processed (SERVER)
-  | OrderResult Turn Order Result
+  | OrderResult Turn Order OrderResult
 
     -- |save game (SERVER)
   | SaveGame String
@@ -266,19 +266,6 @@ data Missing =
 
 data PlayerStat = PlayerStat Power String String Int (Maybe Int)
                 deriving (Eq, Show)
-
-data Result = Result (Maybe ResultNormal) (Maybe ResultRetreat)
-            deriving (Eq, Show)
-
-data ResultNormal = Success
-                  | MoveBounced
-                  | SupportCut
-                  | DisbandedConvoy
-                  | NoSuchOrder
-                  deriving (Eq, Show)
-
-data ResultRetreat = ResultRetreat
-                   deriving (Eq, Show)
 
 data VariantOption = Level Int
                    | TimeMovement Int
@@ -507,13 +494,13 @@ pCurrentUnitPosRet = do
   unitPoss <- many . paren . pPair pUnitPosition $ do
     tok1 (DipParam MRT)
     paren . many $ pProvinceNode
-  return . CurrentUnitPosition $ UnitPositionsRet turn unitPoss
+  return . CurrentUnitPosition turn $ UnitPositionsRet unitPoss
 
 pCurrentUnitPos :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPos = do
   turn <- paren pTurn
   unitPoss <- many . paren $ pUnitPosition
-  return . CurrentUnitPosition $ UnitPositions turn unitPoss
+  return . CurrentUnitPosition turn $ UnitPositions unitPoss
 
 pCurrentUnitPosReq :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPosReq = return CurrentUnitPositionReq
@@ -662,7 +649,7 @@ pOrd = do
   result <- paren pResult
   return (OrderResult turn order result)
 
-pResult :: DipRep s t => DipParser s Result
+pResult :: DipRep s t => DipParser s OrderResult
 pResult = do
   normal <- pMaybe pResultNormal
   retreat <- pMaybe pResultRetreat
@@ -1004,17 +991,17 @@ uMsg ms = case ms of
 
   CurrentPositionReq -> uTok (DipCmd SCO)
 
-  CurrentUnitPosition uPoss ->
+  CurrentUnitPosition turn uPoss ->
     uTok (DipCmd NOW)
     . case uPoss of
-      UnitPositions turn unitPoss -> ( uParen uTurn turn
-                                     . uMany (uParen uUnitPosition) unitPoss
-                                     )
-      UnitPositionsRet turn unitPoss -> uParen uTurn turn
-                                        . uMany (uParen (uPair uUnitPosition
-                                                         (\n -> ( uTok (DipParam MRT)
-                                                                . uParen (uMany uProvinceNode) n
-                                                                )))) unitPoss
+      UnitPositions unitPoss -> ( uParen uTurn turn
+                                  . uMany (uParen uUnitPosition) unitPoss
+                                )
+      UnitPositionsRet unitPoss -> uParen uTurn turn
+                                   . uMany (uParen (uPair uUnitPosition
+                                                    (\n -> ( uTok (DipParam MRT)
+                                                             . uParen (uMany uProvinceNode) n
+                                                           )))) unitPoss
 
   CurrentUnitPositionReq ->
     uTok (DipCmd NOW)
@@ -1210,7 +1197,7 @@ uPressArrangement arr = case arr of
     . uPressArrangement arrangement
     )
 
-uResult :: UnDipParser Result
+uResult :: UnDipParser OrderResult
 uResult (Result normal retreat) =
   ( uMaybe uResultNormal normal
   . uMaybe uResultRetreat retreat

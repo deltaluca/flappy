@@ -22,6 +22,9 @@ module Diplomacy.Common.Data ( Power(..)
                              , Adjacencies(..)
                              , Order(..)
                              , OrderNote(..)
+                             , OrderResult(..)
+                             , ResultNormal(..)
+                             , ResultRetreat(..)
                              , OrderRetreat(..)
                              , OrderBuild(..)
                              , OrderMovement(..)
@@ -108,8 +111,8 @@ newtype SupplyCOwnerships = SupplyCOwnerships (Map.Map Power [Province])
                           deriving (Show, Eq)
 
 
-data UnitPositions = UnitPositions Turn [UnitPosition]
-                   | UnitPositionsRet Turn [(UnitPosition, [ProvinceNode])]
+data UnitPositions = UnitPositions [UnitPosition]
+                   | UnitPositionsRet [(UnitPosition, [ProvinceNode])]
                    deriving (Show, Eq)
 
 data UnitPosition = UnitPosition { unitPositionP :: Power
@@ -151,6 +154,19 @@ data OrderNote = MovementOK
                | NoMoreRemovalAllowed
                | NotCurrentSeason
                deriving (Eq, Show)
+
+data OrderResult = Result (Maybe ResultNormal) (Maybe ResultRetreat)
+            deriving (Eq, Show)
+
+data ResultNormal = Success
+                  | MoveBounced
+                  | SupportCut
+                  | DisbandedConvoy
+                  | NoSuchOrder
+                  deriving (Eq, Show)
+
+data ResultRetreat = ResultRetreat
+                   deriving (Eq, Show)
 
 -- this is needed so that impementing the three order types is enforced on the type level but SkelBot still has a uniform interface to them
 class OrderClass o where

@@ -65,23 +65,26 @@ holdBrainMovement = liftBrain (runBrain holdBrainMove)
 holdBrainMove :: HoldBrainMove ()
 holdBrainMove = do
   curMapState <- asksGameState gameStateMap
+  turn <- asksGameState gameStateTurn
   let unitPoss = unitPositions curMapState
-  units <- holdUnitsMove unitPoss
+  units <- holdUnitsMove unitPoss turn
   putOrders $ Just (map holdOrderForUnit units)
 
 holdBrainRetreat :: HoldBrainRetreat ()
 holdBrainRetreat = do
   curMapState <- asksGameState gameStateMap
+  turn <- asksGameState gameStateTurn
   let unitPoss = unitPositions curMapState
-  units <- holdUnitsRetreat unitPoss
+  units <- holdUnitsRetreat unitPoss turn
   putOrders $ Just (map disbandOrderForUnit units)
   
 holdBrainBuild :: HoldBrainBuild ()
 holdBrainBuild = do
   curMapState <- asksGameState gameStateMap
+  turn <- asksGameState gameStateTurn
   let unitPoss = unitPositions curMapState
   ownSupplies <- getOwnSupplies $ supplyOwnerships curMapState --need to define getOwnSupplies here
-  e <- holdUnitsBuild unitPoss ownSupplies
+  e <- holdUnitsBuild unitPoss ownSupplies turn
   putOrders $ Just (either
                       (\units -> map removeOrderForUnit units)
                       (\power -> [Waive power]) e)
@@ -114,41 +117,42 @@ getOwnSupplies (SupplyCOwnerships supplies) = do
   myPower <- getPower
   return . head $ [provinces | (power, provinces) <- toList supplies, myPower == power]
 
-holdUnitsMove :: UnitPositions -> HoldBrainMove [UnitPosition]
-holdUnitsMove (UnitPositions (Turn Spring _) units) = do
+holdUnitsMove :: UnitPositions -> Turn -> HoldBrainMove [UnitPosition]
+holdUnitsMove (UnitPositions units) (Turn Spring _) = do
   myPower <- getPower    
   return $ filter (isMyPower myPower) units
 -- tell all units to hold
 
-holdUnitsMove (UnitPositions (Turn Fall _) units)	 = do
+holdUnitsMove (UnitPositions units) (Turn Fall _) = do
   myPower <- getPower    
   return $ filter (isMyPower myPower) units
 -- tell all units to hold
 
-holdUnitsMove _ = error "Wrong phase(MOVE)"
+holdUnitsMove _ _ = error "Wrong phase(MOVE)"
 
-holdUnitsRetreat :: UnitPositions -> HoldBrainRetreat [UnitPosition]
-holdUnitsRetreat (UnitPositionsRet (Turn Summer _) unitsAndRets) =
+holdUnitsRetreat :: UnitPositions -> Turn -> HoldBrainRetreat [UnitPosition]
+holdUnitsRetreat (UnitPositionsRet unitsAndRets) (Turn Summer _) =
   retreatUnits unitsAndRets
 -- need to retreat our units that need retreating
 -- unitsAndRets is a list of units that need to be retreating and
 -- each unit will have a corresponding list of provinces it can retreat to
 -- in our holdbot case we just disband.
 
-holdUnitsRetreat (UnitPositionsRet (Turn Autumn _) unitsAndRets) =
+holdUnitsRetreat (UnitPositionsRet unitsAndRets) (Turn Autumn _) =
   retreatUnits unitsAndRets
 -- similar to above
 
-holdUnitsRetreat _ = error "Wrong phase(RETREAT)"
+holdUnitsRetreat _ _ = error "Wrong phase(RETREAT)"
 
-holdUnitsBuild :: UnitPositions -> [Province] -> HoldBrainBuild (Either [UnitPosition] Power)
-holdUnitsBuild (UnitPositions (Turn Winter _) units) ownSupplies =
+holdUnitsBuild :: UnitPositions -> [Province] -> Turn
+               -> HoldBrainBuild (Either [UnitPosition] Power)
+holdUnitsBuild (UnitPositions units) ownSupplies (Turn Winter _) =
   removeOrWaive units ownSupplies
 {- need to disband if we have too many units or waive builds if we have the 
    opportunity to build i.e. we have more supply centres than units and units have         
    controlled the province for at least 2 turns 
 -}
-holdUnitsBuild _ _ = error "Wrong phase(BUILD)"
+holdUnitsBuild _ _ _ = error "Wrong phase(BUILD)"
 
 retreatUnits :: [(UnitPosition, [ProvinceNode])] -> HoldBrainRetreat [UnitPosition]
 retreatUnits unitsAndRetreats = do 

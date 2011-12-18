@@ -168,14 +168,10 @@ master bot = do
 
   --pushDip CurrentUnitPositionReq
   now <- popDip
-  unitPoss <- case now of
-    CurrentUnitPosition up -> return up
+  (turn, unitPoss) <- case now of
+    CurrentUnitPosition turn up -> return (turn, up)
     m -> do
       dieUnexpected m
-
-  turn <- case unitPoss of
-    UnitPositions t _ -> return t
-    m -> dieUnexpected (CurrentUnitPosition m)
 
   let gameInfo = GameInfo { gameInfoMapDef = mapDefinition
                           , gameInfoTimeout = 60 * 10 ^ 6
@@ -207,52 +203,74 @@ gameLoop bot timeout = do
               , (Autumn, execPureBrain (dipBotBrainRetreat bot) timeout)
               , (Winter, execPureBrain (dipBotBrainBuild bot) timeout) ]
 
+      -- lifts be here
   forever $ do
-    (GameState _ turn) <- lift get
+    (GameState (MapState scos _) turn) <- lift get
     let ebrain = brainMap Map.! turnPhase turn
     moveOrders <- return . sort =<< ebrain
-    lift . lift $ do
-      pushDip $ SubmitOrder (Just turn) moveOrders
-      respOrders <- unfoldM $ do
-        resp <- peekDip
-        case resp of
-          AckOrder order ordNote -> do
-            _ <- popDip
-            return (Just (order, ordNote))
-          _ -> do
-            return Nothing
-      let sortedRespOrders = sortBy (\(o1, _) (o2, _) -> compare o1 o2) respOrders
-      when (length moveOrders /= length sortedRespOrders) $
-        die "Acknowledging messages missing"
-
-      zipWithM_ (\o1 (o2, oNote) -> do
-                    when (o1 /= o2) $
-                      die "Acknowledging messages don't match orders"
-                    when (oNote /= MovementOK) . die $
-                      "Server returned \"" ++ show oNote ++
-                      "\" for order \"" ++ show o1 ++ "\""
-                ) moveOrders sortedRespOrders
-
-      mMissing <- peekDip
-      case mMissing of
-        (Missing _) -> die "Missing orders, can't handle for now"
-        _ -> return ()
-
-      lift . note $ show mMissing
-
-      sco <- popDip
-      scos <- case sco of
-        CurrentPosition sc -> return sc
-        m -> dieUnexpected m
-
-      now <- popDip
-      unitPoss <- case now of
-        CurrentUnitPosition up -> return up
-        m -> dieUnexpected m
         
-      undefined
-    -- change state
+    lift . lift . pushDip $ SubmitOrder (Just turn) moveOrders
+    respOrders <- lift . lift . unfoldM $ do
+      resp <- peekDip
+      case resp of
+        AckOrder order ordNote -> do
+          _ <- popDip
+          return (Just (order, ordNote))
+        _ -> return Nothing
+    
+    let sortedRespOrders = sortBy (\(o1, _) (o2, _) -> compare o1 o2) respOrders
+    when (length moveOrders /= length sortedRespOrders) $
+      lift . lift . die $ "Acknowledging messages missing"
 
+    zipWithM_ (\o1 (o2, oNote) -> do
+                  when (o1 /= o2) $
+                    lift . lift . die $ "Acknowledging messages don't match orders"
+                  when (oNote /= MovementOK) . lift . lift . die $
+                    "Server returned \"" ++ show oNote ++
+                    "\" for order \"" ++ show o1 ++ "\""
+              ) moveOrders sortedRespOrders
+
+    mMissing <- lift . lift $ peekDip
+    case mMissing of
+      (Missing _) -> lift . lift . die $ "Missing orders, can't handle for now"
+      _ -> return ()
+
+    lift . lift . lift . note $ show mMissing
+
+    resultOrders <- lift . lift . unfoldM $ do
+      res <- peekDip
+      case res of
+        OrderResult trn order result -> do
+          when (turn /= trn) . die $
+            "OrderResults for wrong turn (Got " ++ show trn ++
+            ", expected " ++ show turn ++ ")"
+          _ <- popDip
+          return (Just (order, result))
+        _ -> return Nothing
+      
+    -- process results, save new history
+    -- putHistory =<< return . dipBotProcessResults bot resultOrders =<< getHistory
+    
+    lift . lift . lift . note $ "Results: " ++ show resultOrders
+  
+    sco <- lift . lift $ peekDip
+    mscos <- case sco of
+      CurrentPosition sc -> do
+        _ <- lift . lift $ popDip
+        return (Just sc)
+      m -> return Nothing
+
+    let newScos = maybe scos id mscos
+
+    now <- lift . lift $ popDip
+    (newTurn, newUnitPoss) <- case now of
+      CurrentUnitPosition turn up -> return (turn, up)
+      m -> lift . lift $ dieUnexpected m
+        
+    -- change state
+    lift . lift . lift . note $ "TURN " ++ show turn ++ " ENDED"
+    lift . put $ GameState { gameStateMap = MapState newScos newUnitPoss 
+                           , gameStateTurn = newTurn }
 
 execPureBrain :: (OrderClass o) => Brain o h () -> Int ->
                  GameKnowledgeT h (StateT GameState Master) [Order]

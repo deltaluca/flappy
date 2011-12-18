@@ -8,7 +8,7 @@ import Diplomacy.AI.SkelBot.Brain
 import Control.Monad.State
 
 -- |results of a turn
-data Results = ASD
+type Results = [(Order, OrderResult)]
 
 data DipBot m h = DipBot { dipBotBrainMovement :: BrainCommT OrderMovement h m ()
                          , dipBotBrainRetreat :: Brain OrderRetreat h ()
