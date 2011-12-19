@@ -22,7 +22,6 @@ import Diplomacy.Common.Data
 import Diplomacy.Common.Press
 import Diplomacy.Common.TSeq
 import Diplomacy.AI.SkelBot.Comm
-import Diplomacy.AI.SkelBot.GameInfo
 
 import Control.Monad.Reader
 import Control.Monad.State

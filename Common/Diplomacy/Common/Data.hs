@@ -28,6 +28,7 @@ module Diplomacy.Common.Data ( Power(..)
                              , OrderRetreat(..)
                              , OrderBuild(..)
                              , OrderMovement(..)
+                             , GameInfo(..)
                              , GameState(..)
                              , ProvinceType(..)
                              , OrderClass(..)
@@ -97,6 +98,14 @@ data MapDefinition = MapDefinition { mapDefPowers :: [Power]
 newtype Adjacencies = Adjacencies (Map.Map Province [UnitToProv])
                     deriving (Show, Eq)
 
+
+  -- | Static game info
+data GameInfo = GameInfo { gameInfoMapDef :: MapDefinition
+                         , gameInfoTimeout :: Int
+                         , gameInfoPower :: Power }
+              deriving (Show)
+
+
 -- | Dynamic game state definitions
 
 data GameState = GameState { gameStateMap :: MapState
@@ -111,8 +120,8 @@ newtype SupplyCOwnerships = SupplyCOwnerships (Map.Map Power [Province])
                           deriving (Show, Eq)
 
 
-data UnitPositions = UnitPositions [UnitPosition]
-                   | UnitPositionsRet [(UnitPosition, [ProvinceNode])]
+data UnitPositions = UnitPositions (Map.Map Power [UnitPosition])
+                   | UnitPositionsRet (Map.Map Power [(UnitPosition, [ProvinceNode])])
                    deriving (Show, Eq)
 
 data UnitPosition = UnitPosition { unitPositionP :: Power

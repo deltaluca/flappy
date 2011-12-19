@@ -488,19 +488,24 @@ pNow = tok1 (DipCmd NOW) >> choice [ try pCurrentUnitPosRet
                                    , pCurrentUnitPos
                                    , pCurrentUnitPosReq ]
 
+groupMap :: Ord k => [(k, v)] -> Map.Map k [v]
+groupMap = foldl (\m (k, v) -> Map.alter (maybe (Just [v]) (Just . (v :))) k m) Map.empty
+
 pCurrentUnitPosRet :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPosRet = do
   turn <- paren pTurn
   unitPoss <- many . paren . pPair pUnitPosition $ do
     tok1 (DipParam MRT)
     paren . many $ pProvinceNode
-  return . CurrentUnitPosition turn $ UnitPositionsRet unitPoss
+  let mapUnitPoss = groupMap . map (\(a, b) -> (unitPositionP a, (a, b))) $ unitPoss
+  return . CurrentUnitPosition turn $ UnitPositionsRet mapUnitPoss
 
 pCurrentUnitPos :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPos = do
   turn <- paren pTurn
   unitPoss <- many . paren $ pUnitPosition
-  return . CurrentUnitPosition turn $ UnitPositions unitPoss
+  let mapUnitPoss = groupMap . map (\a -> (unitPositionP a, a)) $ unitPoss
+  return . CurrentUnitPosition turn $ UnitPositions mapUnitPoss
 
 pCurrentUnitPosReq :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPosReq = return CurrentUnitPositionReq
@@ -994,14 +999,18 @@ uMsg ms = case ms of
   CurrentUnitPosition turn uPoss ->
     uTok (DipCmd NOW)
     . case uPoss of
-      UnitPositions unitPoss -> ( uParen uTurn turn
-                                  . uMany (uParen uUnitPosition) unitPoss
-                                )
-      UnitPositionsRet unitPoss -> uParen uTurn turn
-                                   . uMany (uParen (uPair uUnitPosition
-                                                    (\n -> ( uTok (DipParam MRT)
-                                                             . uParen (uMany uProvinceNode) n
-                                                           )))) unitPoss
+      UnitPositions mapUnitPoss ->
+        let unitPoss = concatMap snd . Map.toList $ mapUnitPoss in
+        ( uParen uTurn turn
+          . uMany (uParen uUnitPosition) unitPoss
+        )
+      UnitPositionsRet mapUnitPoss ->
+        let unitPoss = concatMap snd . Map.toList $ mapUnitPoss in        
+        uParen uTurn turn
+        . uMany (uParen (uPair uUnitPosition
+                         (\n -> ( uTok (DipParam MRT)
+                                  . uParen (uMany uProvinceNode) n
+                                )))) unitPoss
 
   CurrentUnitPositionReq ->
     uTok (DipCmd NOW)

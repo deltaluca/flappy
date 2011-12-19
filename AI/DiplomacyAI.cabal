@@ -52,7 +52,7 @@ Library
                    Diplomacy.AI.SkelBot.SkelBot
                    Diplomacy.AI.SkelBot.DipBot
                    Diplomacy.AI.SkelBot.Comm
-                   Diplomacy.AI.SkelBot.GameInfo
+                   Diplomacy.AI.SkelBot.Common
   
   -- Packages needed in order to build this package.
   Build-depends:       

@@ -7,13 +7,11 @@ import Diplomacy.AI.SkelBot.Brain
 
 import Control.Monad.State
 
--- |results of a turn
-type Results = [(Order, OrderResult)]
-
+-- |interface to SkelBot
 data DipBot m h = DipBot { dipBotBrainMovement :: BrainCommT OrderMovement h m ()
-                         , dipBotBrainRetreat :: Brain OrderRetreat h ()
-                         , dipBotBrainBuild :: Brain OrderBuild h ()
-                         , dipBotProcessResults :: Results -> h -> h
+                         , dipBotBrainRetreat :: BrainCommT OrderRetreat h m ()
+                         , dipBotBrainBuild :: BrainCommT OrderBuild h m ()
+                         , dipBotProcessResults :: [(Order, OrderResult)] -> h -> h
                          , dipBotInitHistory :: m h 
                          , dipBotName :: String
                          , dipBotVersion :: Double }

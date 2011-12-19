@@ -12,7 +12,6 @@ import Diplomacy.Common.TSeq
 
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.Comm
-import Diplomacy.AI.SkelBot.GameInfo
 import Diplomacy.AI.SkelBot.DipBot
 
 import Data.List
@@ -192,18 +191,19 @@ master bot = do
        initState
   return ()
 
+  -- TODO: flush press messaging queue when turn is finished/starting!
+
 gameLoop :: DipBot Master h -> Int -> GameKnowledgeT h (StateT GameState Master) ()
 gameLoop bot timeout = do
   -- create TVar for getting partial move
-  ordVar <- liftIO $ newTVarIO Nothing
   let brainMap = Map.fromList
-              [ (Spring, execBrain (dipBotBrainMovement bot) timeout ordVar)
-              , (Summer, execPureBrain (dipBotBrainRetreat bot) timeout)
-              , (Fall,   execBrain (dipBotBrainMovement bot) timeout ordVar)
-              , (Autumn, execPureBrain (dipBotBrainRetreat bot) timeout)
-              , (Winter, execPureBrain (dipBotBrainBuild bot) timeout) ]
+                 [ (Spring, execBrain (dipBotBrainMovement bot) timeout)
+                 , (Summer, execBrain (dipBotBrainRetreat bot) timeout)
+                 , (Fall,   execBrain (dipBotBrainMovement bot) timeout)
+                 , (Autumn, execBrain (dipBotBrainRetreat bot) timeout)
+                 , (Winter, execBrain (dipBotBrainBuild bot) timeout) ]
 
-      -- lifts be here
+  -- lifts be here
   forever $ do
     (GameState (MapState scos _) turn) <- lift get
     let ebrain = brainMap Map.! turnPhase turn
@@ -232,10 +232,10 @@ gameLoop bot timeout = do
 
     mMissing <- lift . lift $ peekDip
     case mMissing of
-      (Missing _) -> lift . lift . die $ "Missing orders, can't handle for now"
+      (Missing _) -> do
+        lift . lift . lift . note $ show mMissing
+        lift . lift . die $ "Missing orders, can't handle for now"
       _ -> return ()
-
-    lift . lift . lift . note $ show mMissing
 
     resultOrders <- lift . lift . unfoldM $ do
       res <- peekDip
@@ -249,10 +249,8 @@ gameLoop bot timeout = do
         _ -> return Nothing
       
     -- process results, save new history
-    -- putHistory =<< return . dipBotProcessResults bot resultOrders =<< getHistory
-    
-    lift . lift . lift . note $ "Results: " ++ show resultOrders
-  
+    modifyHistory (dipBotProcessResults bot resultOrders)
+      
     sco <- lift . lift $ peekDip
     mscos <- case sco of
       CurrentPosition sc -> do
@@ -268,25 +266,25 @@ gameLoop bot timeout = do
       m -> lift . lift $ dieUnexpected m
         
     -- change state
-    lift . lift . lift . note $ "TURN " ++ show turn ++ " ENDED"
     lift . put $ GameState { gameStateMap = MapState newScos newUnitPoss 
                            , gameStateTurn = newTurn }
 
-execPureBrain :: (OrderClass o) => Brain o h () -> Int ->
-                 GameKnowledgeT h (StateT GameState Master) [Order]
-execPureBrain brain timeout = do
-  gameState <- lift get
-  morders <- runMaybeT . runGameKnowledgeTTimed timeout . liftM snd
-             $ runBrainT (mapBrain return brain) gameState
-  orders <- (\err -> maybe err (return . map ordify) morders) $ do
-    lift . lift $ throwEM (WillDieSorry "Pure brain timed out")
-  return orders
+-- execPureBrain :: (OrderClass o) => Brain o h () -> Int ->
+--                  GameKnowledgeT h (StateT GameState Master) [Order]
+-- execPureBrain brain timeout = do
+--   gameState <- lift get
+--   morders <- runMaybeT . runGameKnowledgeTTimed timeout . liftM snd
+--              $ runBrainT (mapBrain return brain) gameState
+--   orders <- (\err -> maybe err (return . map ordify) morders) $ do
+--     lift . lift $ throwEM (WillDieSorry "Pure brain timed out")
+--   return orders
 
 execBrain :: (OrderClass o) => BrainCommT o h Master () -> Int ->
-             TVar (Maybe [o]) -> GameKnowledgeT h (StateT GameState Master) [Order]
-execBrain botBrain timeout ordVar = do
+             GameKnowledgeT h (StateT GameState Master) [Order]
+execBrain botBrain timeout = do
   gameState <- lift get
   (brainIn, brainOut) <- lift ask
+  ordVar <- liftIO $ newTVarIO Nothing
   let gameKnowledge = liftM snd . flip runBrainT gameState
                       . mapBrainT lift
                       $ runBrainCommT botBrain ordVar brainIn brainOut
@@ -309,22 +307,19 @@ runGameKnowledgeTTimed timedelta gameKnowledge = do
   m <- liftIO $ timeout timedelta gameIO
   maybe mzero (MaybeT . return) m
 
-getMoveResults :: Master Results
-getMoveResults = error "come on"
-
 dispatcher :: TSeq DaideMessage -> TSeq OutMessage -> DaideTell ()
 dispatcher masterOut brainOut = forever $ do
   msg <- liftIO . atomically $
          (return . Left =<< readTSeq masterOut)
          `orElse`
          (return . Right =<< readTSeq brainOut)
-  note ("(DISPATCHING) " ++ show msg)
+  -- note ("(DISPATCHING) " ++ show msg)
   tellDaide . either id (DM . SendPress Nothing) $ msg
 
 receiver :: TSeq DaideMessage -> TSeq InMessage -> DaideAsk ()
 receiver masterIn brainIn = forever $ do
   msg <- askDaide
-  note $ ("(RECEIVING) " ++ show msg)
+  -- note $ ("(RECEIVING) " ++ show msg)
   case msg of
     m@(DM dm) -> case dm of
       (ReceivePress p) -> liftIO . atomically $ writeTSeq brainIn p
