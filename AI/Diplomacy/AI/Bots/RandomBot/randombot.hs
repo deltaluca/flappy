@@ -152,7 +152,7 @@ randomUnitsMovement currOrders unitPos = do
   -- let convoyMoves = ...
   
   -- choose a move randomly and append it to the rest
-  let allMoves = supportMoves ++ moveMoves ++ holdMoves
+  let allMoves = supportMoves ++ supportHolds ++ moveMoves ++ holdMoves
   order <- randElem allMoves
   return $ order : currOrders
   
