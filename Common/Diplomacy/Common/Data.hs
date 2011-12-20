@@ -16,7 +16,6 @@ module Diplomacy.Common.Data ( Power(..)
                              , MapState(..)
                              , UnitPositions(..)
                              , UnitPosition(..)
-                             , UnitToProv(..)
                              , ProvinceNode(..)
                              , Turn(..)
                              , Adjacencies(..)
@@ -92,10 +91,11 @@ data Phase
 data MapDefinition = MapDefinition { mapDefPowers :: [Power]
                                    , mapDefProvinces :: [Province]
                                    , mapDefAdjacencies :: Adjacencies
+                                   , mapDefCoasts :: Map.Map Province [Coast]
                                    , mapDefSupplyInit :: SupplyCOwnerships }
                    deriving (Show, Eq)
 
-newtype Adjacencies = Adjacencies (Map.Map Province [UnitToProv])
+newtype Adjacencies = Adjacencies (Map.Map (ProvinceNode, UnitType) [ProvinceNode])
                     deriving (Show, Eq)
 
 
@@ -121,7 +121,7 @@ newtype SupplyCOwnerships = SupplyCOwnerships (Map.Map Power [Province])
 
 
 data UnitPositions = UnitPositions (Map.Map Power [UnitPosition])
-                   | UnitPositionsRet (Map.Map Power [(UnitPosition, [ProvinceNode])])
+                   | UnitPositionsRet (Map.Map Power [(UnitPosition, Maybe [ProvinceNode])])
                    deriving (Show, Eq)
 
 data UnitPosition = UnitPosition { unitPositionP :: Power
@@ -129,13 +129,9 @@ data UnitPosition = UnitPosition { unitPositionP :: Power
                                  , unitPositionLoc :: ProvinceNode }
                   deriving (Eq, Ord, Show)
 
-data ProvinceNode = ProvNode Province 
+data ProvinceNode = ProvNode Province
                   | ProvCoastNode Province Coast
                   deriving (Eq, Ord, Show)
-
-data UnitToProv = UnitToProv UnitType [ProvinceNode]
-                | CoastalFleetToProv Coast [ProvinceNode]
-                deriving (Show, Eq)
 
 -- | Definitions for Orders
 
@@ -223,7 +219,7 @@ instance Arbitrary MapDefinition where
     p2 <- listOf1 arbitrary
     a <- arbitrary
     s <- arbitrary
-    return $ MapDefinition p1 p2 a s
+    return $ MapDefinition p1 p2 a Map.empty s
 
 instance Arbitrary SupplyCOwnerships where
   arbitrary = do
@@ -250,17 +246,6 @@ instance Arbitrary Adjacencies where
       up <- listOf1 arbitrary
       return (p, up)
     return . Adjacencies . Map.fromList $ adj
-
-instance Arbitrary UnitToProv where
-  arbitrary = frequency [ (2, do
-                              u <- arbitrary
-                              pn <- listOf1 arbitrary
-                              return $ UnitToProv u pn)
-                        , (1, do
-                              c <- arbitrary
-                              pn <- listOf1 arbitrary
-                              return $ CoastalFleetToProv c pn)
-                        ]
 
 instance Arbitrary ProvinceNode where
   arbitrary = oneof [ return . ProvNode =<< arbitrary

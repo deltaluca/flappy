@@ -374,8 +374,13 @@ pMapDef :: DipRep s t => DipParser s DipMessage
 pMapDef = do
   powers <- paren (many pPower)
   (scos, provinces) <- paren pProvinces
-  adjacencies <- paren (many (paren pAdjacency))
-  return . MapDef $ MapDefinition powers provinces (Adjacencies $ (foldl (\m (k, v) -> Map.insert k v m) Map.empty) adjacencies) scos
+  adjacencies <- return . concat =<< paren (many (paren pAdjacency))
+  let coasts = mapMaybe (mapCoast . fst . fst) $ adjacencies
+  return . MapDef $ MapDefinition powers provinces (Adjacencies $ (foldl (\m (k, v) -> Map.insert k v m) Map.empty) adjacencies) (groupMap coasts) scos
+
+mapCoast :: ProvinceNode -> Maybe (Province, Coast)
+mapCoast (ProvCoastNode prov coast) = Just (prov, coast)
+mapCoast _ = Nothing
 
 pMapDefReq :: DipRep s t => DipParser s DipMessage
 pMapDefReq = return MapDefReq
@@ -392,11 +397,19 @@ pProvinces = do
   let allProvs = nub . (concatMap snd (Map.toList scos) ++) $ nonSupplyCentres
   return (SupplyCOwnerships scos, allProvs)
 
-pAdjacency :: DipRep s t => DipParser s (Province, [UnitToProv])
+  -- put this somewhere else
+data UnitToProv = UnitToProv UnitType [ProvinceNode]
+                | CoastalFleetToProv Coast [ProvinceNode]
+                deriving (Show, Eq)
+
+pAdjacency :: DipRep s t => DipParser s [((ProvinceNode, UnitType), [ProvinceNode])]
 pAdjacency = do
   province <- pProvince
   unitToProvs <- many (paren (pUnitToProv <|> pCoastalFleetToProv))
-  return (province, unitToProvs)
+  return $ flip map unitToProvs
+    (\u2p -> case u2p of
+        UnitToProv typ nodes -> ((ProvNode province, typ), nodes)
+        CoastalFleetToProv coast nodes -> ((ProvCoastNode province coast, Fleet), nodes))
 
 pUnitToProv :: DipRep s t => DipParser s UnitToProv
 pUnitToProv = do
@@ -484,17 +497,20 @@ pTurn = do
   return (Turn phase year)
 
 pNow :: DipRep s t => DipParser s DipMessage
-pNow = tok1 (DipCmd NOW) >> choice [ try pCurrentUnitPosRet
-                                   , pCurrentUnitPos
+pNow = tok1 (DipCmd NOW) >> choice [ try pCurrentUnitPos
+                                   , pCurrentUnitPosRet
                                    , pCurrentUnitPosReq ]
 
 groupMap :: Ord k => [(k, v)] -> Map.Map k [v]
-groupMap = foldl (\m (k, v) -> Map.alter (maybe (Just [v]) (Just . (v :))) k m) Map.empty
+groupMap = foldl (\m (k, v) -> insertMultiMap k v m) Map.empty
+
+insertMultiMap :: Ord k => k -> v -> Map.Map k [v] -> Map.Map k [v]
+insertMultiMap key val = Map.alter (maybe (Just [val]) (Just . (val :))) key
 
 pCurrentUnitPosRet :: DipRep s t => DipParser s DipMessage
 pCurrentUnitPosRet = do
   turn <- paren pTurn
-  unitPoss <- many . paren . pPair pUnitPosition $ do
+  unitPoss <- many . paren . pPair pUnitPosition . pMaybe $ do
     tok1 (DipParam MRT)
     paren . many $ pProvinceNode
   let mapUnitPoss = groupMap . map (\(a, b) -> (unitPositionP a, (a, b))) $ unitPoss
@@ -528,17 +544,17 @@ pMaybe a = (try a >>= return . Just) <|> return Nothing
 pSub :: DipRep s t => DipParser s DipMessage
 pSub = do
   turn <- (tok1 (DipCmd SUB) >> pMaybe (paren pTurn))
-  orders <- many (paren pOrderOrWaive)
+  orders <- many (paren pOrder)
   return (SubmitOrder turn orders)
 
-pOrderOrWaive :: DipRep s t => DipParser s Order
-pOrderOrWaive = pOrder <|> do
+pOrder :: DipRep s t => DipParser s Order
+pOrder = pOrderNoWaive <|> do
   power <- pPower
   tok1 (DipOrder WVE)
   return (OrderBuild (Waive power))
 
-pOrder :: DipRep s t => DipParser s Order
-pOrder = do
+pOrderNoWaive :: DipRep s t => DipParser s Order
+pOrderNoWaive = do
   unit <- paren (pUnitPosition)
   choice . map ($ unit) $ [ pHld, pMto, pSup, pCvy, pCto -- move
                           , pRto, pDsb                   -- retreat
@@ -938,6 +954,14 @@ uStr = appendListify . map Character
 uInt :: UnDipParser Int
 uInt = uTok . DipInt
 
+toUnitToProvMap :: [((ProvinceNode, UnitType), [ProvinceNode])] -> Map.Map Province [UnitToProv]
+toUnitToProvMap = foldl (\mp ((provNode, typ), nodes) ->
+                          case provNode of
+                            ProvNode prov ->
+                              insertMultiMap prov (UnitToProv typ nodes) mp
+                            ProvCoastNode prov coast ->
+                              insertMultiMap prov (CoastalFleetToProv coast nodes) mp) Map.empty
+
 uMsg :: UnDipParser DipMessage
 uMsg ms = case ms of
   Accept msg -> ( uTok (DipCmd YES)
@@ -970,11 +994,11 @@ uMsg ms = case ms of
                            . uParen uInt passcode
                            )
 
-  MapDef (MapDefinition powers provinces (Adjacencies adjacencies) scos) ->
+  MapDef (MapDefinition powers provinces (Adjacencies adjacencies) _ scos) ->
     ( uTok (DipCmd MDF)
       . uParen (uMany uPower) powers
       . uParen uProvinces (provinces, scos)
-      . uParen (uMany (uParen uAdjacency)) (Map.toList adjacencies)
+      . uParen (uMany (uParen uAdjacency)) (Map.toList . toUnitToProvMap $ Map.toList adjacencies)
     )
 
   MapDefReq -> uTok (DipCmd MDF)
@@ -1008,9 +1032,9 @@ uMsg ms = case ms of
         let unitPoss = concatMap snd . Map.toList $ mapUnitPoss in        
         uParen uTurn turn
         . uMany (uParen (uPair uUnitPosition
-                         (\n -> ( uTok (DipParam MRT)
-                                  . uParen (uMany uProvinceNode) n
-                                )))) unitPoss
+                         (uMaybe (\n -> ( uTok (DipParam MRT)
+                                          . uParen (uMany uProvinceNode) n
+                                        ))))) unitPoss
 
   CurrentUnitPositionReq ->
     uTok (DipCmd NOW)
@@ -1394,4 +1418,15 @@ instance Arbitrary DipMessage where
                         , (1, return MapNameReq)
                         , (9, return . MapDef =<< arbitrary)
                           -- FINISH THIS
+                        ]
+
+instance Arbitrary UnitToProv where
+  arbitrary = frequency [ (2, do
+                              u <- arbitrary
+                              pn <- listOf1 arbitrary
+                              return $ UnitToProv u pn)
+                        , (1, do
+                              c <- arbitrary
+                              pn <- listOf1 arbitrary
+                              return $ CoastalFleetToProv c pn)
                         ]

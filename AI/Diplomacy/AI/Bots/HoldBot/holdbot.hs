@@ -10,14 +10,18 @@ import Data.Map as Map hiding (map, filter)
 import Control.Monad.Trans
 
 -- pure brains
-type HoldBrainMove = Brain OrderMovement ()
-type HoldBrainRetreat = Brain OrderRetreat ()
-type HoldBrainBuild = Brain OrderBuild ()
+type HoldBrain o = Brain o ()
+
+type HoldBrainMove = HoldBrain OrderMovement
+type HoldBrainRetreat = HoldBrain OrderRetreat
+type HoldBrainBuild = HoldBrain OrderBuild
 
 -- impure brains
-type HoldBrainMoveCommT = BrainCommT OrderMovement ()
-type HoldBrainRetreatCommT = BrainCommT OrderRetreat ()
-type HoldBrainBuildCommT = BrainCommT OrderBuild ()
+type HoldBrainCommT o = BrainCommT o ()
+
+type HoldBrainMoveCommT = HoldBrainCommT OrderMovement
+type HoldBrainRetreatCommT = HoldBrainCommT OrderRetreat
+type HoldBrainBuildCommT = HoldBrainCommT OrderBuild
 
 main = skelBot holdBot
 
@@ -31,14 +35,17 @@ holdBot = DipBot { dipBotName = "FlappyHoldBot"
                  , dipBotInitHistory = holdInitHistory }
 
 -- no impure actions, running pure brain
+holdBrainComm :: (MonadIO m, OrderClass o) => HoldBrain o () -> HoldBrainCommT o m ()
+holdBrainComm pureBrain = liftBrain (runBrain pureBrain)
+
 holdBrainMoveComm :: (MonadIO m) => HoldBrainMoveCommT m ()
-holdBrainMoveComm = liftBrain (runBrain holdBrainMove)
+holdBrainMoveComm = holdBrainComm holdBrainMove
 
 holdBrainRetreatComm :: (MonadIO m) => HoldBrainRetreatCommT m ()
-holdBrainRetreatComm = liftBrain (runBrain holdBrainRetreat)
+holdBrainRetreatComm = holdBrainComm holdBrainRetreat
 
 holdBrainBuildComm :: (MonadIO m) => HoldBrainBuildCommT m ()
-holdBrainBuildComm = liftBrain (runBrain holdBrainBuild)
+holdBrainBuildComm = holdBrainComm holdBrainBuild
 
 -- pure decisions
 holdBrainMove :: HoldBrainMove ()

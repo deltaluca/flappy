@@ -313,13 +313,13 @@ dispatcher masterOut brainOut = forever $ do
          (return . Left =<< readTSeq masterOut)
          `orElse`
          (return . Right =<< readTSeq brainOut)
-  -- note ("(DISPATCHING) " ++ show msg)
+  note ("(DISPATCHING) " ++ show msg)
   tellDaide . either id (DM . SendPress Nothing) $ msg
 
 receiver :: TSeq DaideMessage -> TSeq InMessage -> DaideAsk ()
 receiver masterIn brainIn = forever $ do
   msg <- askDaide
-  -- note $ ("(RECEIVING) " ++ show msg)
+  note $ ("(RECEIVING) " ++ show msg)
   case msg of
     m@(DM dm) -> case dm of
       (ReceivePress p) -> liftIO . atomically $ writeTSeq brainIn p
