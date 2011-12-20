@@ -109,6 +109,57 @@ getProvUnitMap = do
   foldM (\m unitPos -> return $
                        Map.insert (provNodeToProv $ unitPositionLoc unitPos) unitPos m) Map.empty units
 
+-- Currently a copy from random. Need to generalise and make it return a mapping from 
+-- units to possible orders (so that, for instance, all possible move combinations can be generated)
+{-genLegalOrders :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => (Map.Map UnitPosition [OrderMovement]) -> 
+		  UnitPosition -> m (Map.Map UnitPosition [OrderMovement])
+genLegalOrders currOrders unitPos = do
+  adjacentNodes <- getAdjacentNodes unitPos
+
+  -- nodes being moved to by other units
+  let movedTo = mapMaybe (\mo -> case mo of
+                             Move u node -> Just (u, node)
+                             _ -> Nothing) currOrders
+  
+  -- possible support moves
+  let supportMoves = [ SupportMove unitPos otherUnit (provNodeToProv node1)
+                     | node1 <- adjacentNodes
+                     , (otherUnit, node2) <- movedTo
+                     , node1 == node2 ]
+  
+  friendlyUnits <- getMyUnits  
+
+  -- adjacent units
+  let adjUnits = [ (otherUnit, otherPos) 
+		 | (otherUnit, otherPos) <- friendlyUnits
+		 , targNode <- adjacentNodes
+		 , targNode == otherPos ] 
+
+  -- own units that are holding
+  let holdOrders = mapMaybe (\ho -> case ho of 
+			      Hold u -> Just u
+			      _ -> Nothing) currOrders
+
+  -- possible support holds
+  let supportHolds = [ SupportHold unitPos otherUnit
+		     | (otherUnit, _) <- adjUnits
+		     , holdUnit <- holdOrders
+                     , holdUnit == otherUnit ]
+    
+  -- possible simple moves
+  let moveMoves = map (Move unitPos) adjacentNodes
+
+  -- hold move
+  let holdMoves = [Hold unitPos]
+
+  -- TODO: create convoy moves here and add them to allMoves below
+  -- let convoyMoves = ...
+  
+  -- choose a move randomly and append it to the rest
+  let allMoves = supportMoves ++ supportHolds ++ moveMoves ++ holdMoves
+  order <- randElem allMoves
+  return $ order : currOrders
+  -}
 --------------------------------------------------------
 --                Metrics motherfucka                 --
 --------------------------------------------------------
