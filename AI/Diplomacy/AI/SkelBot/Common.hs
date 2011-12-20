@@ -123,7 +123,7 @@ getProvOcc power = do
 
 
 -- returns a three-tuple of supply center control, (you, enemy, no-one)
-getSuppControl :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => (Int, Int, Int)
+getSuppControl :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m (Int, Int, Int)
 getSuppControl =
   mapDef <- asksGameInfo gameInfoMapDef
 
@@ -135,3 +135,17 @@ getSuppControl =
   let mySupplies = length =<< getMySupplies
   
   return (mySupplies, allSupplies - mySupplies, numSupplies - mySupplies - allSupplies)
+
+
+-- returns a three-tuple of province occupation around adjacent provinces only
+getAdjProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => UnitPosition -> m (Int, Int, Int)
+getAdjProvOcc unit = do
+  provNodes <- getAdjacentNodes unit
+  let provs = map provNodeToProv provNodes
+  let unitPositions = map (getProvUnitMap Map.lookup) provs
+  myPower <- getMyPower
+  let ourOcc = length [1 | p <- (map unitPositionP unitpositions), p == myPower]
+  let enemyOcc = length unitPositions - ourOcc
+  let noOcc = length provs - length unitPositions
+  return (noOcc, ourOcc, enemyOcc) 
+
