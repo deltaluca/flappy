@@ -67,7 +67,7 @@ holdBrainBuild = do
   let difference = length myUnits - length mySupplies
   let orders = if difference > 0
                then map Remove (take difference myUnits)
-               else [Waive myPower]
+               else replicate (-difference) (Waive myPower)
   putOrders $ Just orders
 
 holdProcessResults :: [(Order, OrderResult)] -> () -> ()

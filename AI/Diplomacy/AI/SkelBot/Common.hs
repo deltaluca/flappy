@@ -3,6 +3,8 @@
 module Diplomacy.AI.SkelBot.Common( getMyPower
                                   , getSupplies
                                   , getMySupplies
+                                  , getHomeSupplies
+                                  , getMyHomeSupplies
                                   , getUnits
                                   , getMyUnits
                                   , getMyRetreats
@@ -35,6 +37,16 @@ getSupplies power = do
 -- get own supplies
 getMySupplies :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m [Province]
 getMySupplies = getSupplies =<< getMyPower
+
+getHomeSupplies :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) =>
+                   Power -> m [Province]
+getHomeSupplies power = do
+  mapDef <- asksGameInfo gameInfoMapDef
+  let SupplyCOwnerships initscs = mapDefSupplyInit mapDef
+  return (initscs Map.! power)
+
+getMyHomeSupplies :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m [Province]
+getMyHomeSupplies = getHomeSupplies =<< getMyPower
 
 -- get units for a given power (special cases depending on regular phase or retreat phase)
 getUnits :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Power -> m [UnitPosition]
@@ -165,17 +177,18 @@ genLegalOrders currOrders unitPos = do
 --------------------------------------------------------
 
 -- given a power returns the number of supply centers owned and non-supply centers owned
-getProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Power -> m (Int, Int)
-getProvOcc power = do
-  suppC <- getSupplies power
-  units <- getUnits power
-  let occupied_prov = map (provNodeToProv . unitPositionLoc) units
-  return (length suppC, length (occupied_prov \\ suppC)) 
+-- ermm non-scs are not owned??
+-- getProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Power -> m (Int, Int)
+-- getProvOcc power = do
+--   suppC <- getSupplies power
+--   units <- getUnits power
+--   let occupied_prov = map (provNodeToProv . unitPositionLoc) units
+--   return (length suppC, length (occupied_prov `div` suppC)) 
 
 
 -- returns a three-tuple of supply center control, (you, enemy, no-one)
 getSuppControl :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m (Int, Int, Int)
-getSuppControl =
+getSuppControl = do
   mapDef <- asksGameInfo gameInfoMapDef
 
   let provinces = mapDefProvinces mapDef
@@ -183,7 +196,7 @@ getSuppControl =
   
   powerSupplies <- mapM getSupplies (mapDefPowers mapDef)
   let allSupplies = sum $ map length powerSupplies
-  let mySupplies = length =<< getMySupplies
+  mySupplies <- return . length =<< getMySupplies
   
   return (mySupplies, allSupplies - mySupplies, numSupplies - mySupplies - allSupplies)
 
@@ -193,9 +206,9 @@ getAdjProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => UnitP
 getAdjProvOcc unit = do
   provNodes <- getAdjacentNodes unit
   let provs = map provNodeToProv provNodes
-  let unitPositions = map (getProvUnitMap Map.lookup) provs
+  unitPositions <- getMyUnits
   myPower <- getMyPower
-  let ourOcc = length [1 | p <- (map unitPositionP unitpositions), p == myPower]
+  let ourOcc = length [1 | p <- (map unitPositionP unitPositions), p == myPower]
   let enemyOcc = length unitPositions - ourOcc
   let noOcc = length provs - length unitPositions
   return (noOcc, ourOcc, enemyOcc) 

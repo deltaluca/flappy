@@ -106,7 +106,7 @@ randomInitHistory = return ()
 randomBrainMove :: RandomBrainMove ()
 randomBrainMove = do
   movementOrders <- foldM randomUnitsMovement [] =<< getMyUnits
-  putOrders $ Just movementOrders
+  trace (show movementOrders) $ putOrders $ Just movementOrders
 
 randomUnitsMovement :: [OrderMovement] -> UnitPosition -> RandomBrainMove [OrderMovement]
 randomUnitsMovement currOrders unitPos = do
@@ -125,22 +125,22 @@ randomUnitsMovement currOrders unitPos = do
   
   friendlyUnits <- getMyUnits  
 
-  -- adjacent units
-  let adjUnits = [ (otherUnit, otherPos) 
-		 | (otherUnit, otherPos) <- friendlyUnits
-		 , targNode <- adjacentNodes
-		 , targNode == otherPos ] 
+  -- -- adjacent units
+  -- let adjUnits = [ (otherUnit, otherPos) 
+  --       	 | (otherUnit, otherPos) <- friendlyUnits
+  --       	 , targNode <- adjacentNodes
+  --       	 , targNode == otherPos ] 
 
-  -- own units that are holding
-  let holdOrders = mapMaybe (\ho -> case ho of 
-			      Hold u -> Just u
-			      _ -> Nothing) currOrders
+  -- -- own units that are holding
+  -- let holdOrders = mapMaybe (\ho -> case ho of 
+  --       		      Hold u -> Just u
+  --       		      _ -> Nothing) currOrders
 
-  -- possible support holds
-  let supportHolds = [ SupportHold unitPos otherUnit
-		     | (otherUnit, _) <- adjUnits
-		     , holdUnit <- holdOrders
-                     , holdUnit == otherUnit ]
+  -- -- possible support holds
+  -- let supportHolds = [ SupportHold unitPos otherUnit
+  --       	     | (otherUnit, _) <- adjUnits
+  --       	     , holdUnit <- holdOrders
+  --                    , holdUnit == otherUnit ]
     
   -- possible simple moves
   let moveMoves = map (Move unitPos) adjacentNodes
@@ -152,7 +152,7 @@ randomUnitsMovement currOrders unitPos = do
   -- let convoyMoves = ...
   
   -- choose a move randomly and append it to the rest
-  let allMoves = supportMoves ++ supportHolds ++ moveMoves ++ holdMoves
+  let allMoves = supportMoves ++ moveMoves -- ++ holdMoves ++ supportHolds
   order <- randElem allMoves
   return $ order : currOrders
   
@@ -181,20 +181,21 @@ randomBrainBuild = do
     
   ords <- if difference < 0
             then do
-            let emptySupplies =
-                  mapMaybe (\sc -> maybe Nothing (const (Just sc))
-                                   (Map.lookup sc provUnitMap)) mySupplies
-            mapM buildRandomUnit (take difference emptySupplies)
+            homescs <- getMyHomeSupplies
+            flip mapM (take (-difference) mySupplies) $
+              \sc -> do
+                if (isNothing (Map.lookup sc provUnitMap) && -- if sc is unoccupied
+                    sc `elem` homescs)                       -- and is a home supply
+                  then buildRandomUnit sc                    -- then build
+                  else return (Waive myPower)                -- otherwise waive
                                    
             -- TODO randomise which ones to remove
             else return . map Remove $ take difference myUnits -- remove 
-  
 
-  -- TODO figure out what Waive is supposed to do
-  putOrders . Just =<< if ords == []
-                          -- waive if no order was produced
-                       then return [Waive myPower]
-                       else return ords
+  -- trace ("DIFFERENCE = " ++ show difference ++ ", LENGTH(ORDERS) = " ++ show (length ords)) $
+  --     trace ("MY SUPPLIES = " ++ show mySupplies) $
+  --     trace ("MY UNITS = " ++ show myUnits) $
+  trace (show ords) $ putOrders (Just ords)
 
 buildRandomUnit :: Province -> RandomBrainBuild OrderBuild
 buildRandomUnit prov = do
