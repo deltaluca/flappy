@@ -111,7 +111,7 @@ randomBrainMove = do
 randomUnitsMovement :: [OrderMovement] -> UnitPosition -> RandomBrainMove [OrderMovement]
 randomUnitsMovement currOrders unitPos = do
   adjacentNodes <- getAdjacentNodes unitPos
-  
+
   -- nodes being moved to by other units
   let movedTo = mapMaybe (\mo -> case mo of
                              Move u node -> Just (u, node)
@@ -122,15 +122,37 @@ randomUnitsMovement currOrders unitPos = do
                      | node1 <- adjacentNodes
                      , (otherUnit, node2) <- movedTo
                      , node1 == node2 ]
+  
+  friendlyUnits <- getMyUnits  
+
+  -- adjacent units
+  let adjUnits = [ (otherUnit, otherPos) 
+		 | (otherUnit, otherPos) <- friendlyUnits
+		 , targNode <- adjacentNodes
+		 , targNode == otherPos ] 
+
+  -- own units that are holding
+  let holdOrders = mapMaybe (\ho -> case ho of 
+			      Hold u -> Just u
+			      _ -> Nothing) currOrders
+
+  -- possible support holds
+  let supportHolds = [ SupportHold unitPos otherUnit
+		     | (otherUnit, _) <- adjUnits
+		     , holdUnit <- holdOrders
+                     , holdUnit == otherUnit ]
     
   -- possible simple moves
   let moveMoves = map (Move unitPos) adjacentNodes
+
+  -- hold move
+  let holdMoves = [Hold unitPos]
 
   -- TODO: create convoy moves here and add them to allMoves below
   -- let convoyMoves = ...
   
   -- choose a move randomly and append it to the rest
-  let allMoves = supportMoves ++ moveMoves
+  let allMoves = supportMoves ++ moveMoves ++ holdMoves
   order <- randElem allMoves
   return $ order : currOrders
   
