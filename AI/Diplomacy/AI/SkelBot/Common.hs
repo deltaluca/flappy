@@ -20,6 +20,7 @@ import Diplomacy.Common.Data
 import Data.Maybe
 import Control.Monad
 import Control.Monad.Random
+import Data.List
 
 import qualified Data.Map as Map
 
@@ -121,42 +122,49 @@ getProvUnitMap = do
   foldM (\m unitPos -> return $
                        Map.insert (provNodeToProv $ unitPositionLoc unitPos) unitPos m) Map.empty units
 
+{-
 -- Currently a copy from random. Need to generalise and make it return a mapping from 
 -- units to possible orders (so that, for instance, all possible move combinations can be generated)
-{-genLegalOrders :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => (Map.Map UnitPosition [OrderMovement]) -> 
-		  UnitPosition -> m (Map.Map UnitPosition [OrderMovement])
-genLegalOrders currOrders unitPos = do
+-- At this point in time only considers supporting own units
+genLegalOrders :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => 
+							(Map.Map Province UnitPosition) ->
+							(Map.Map UnitPosition [OrderMovement]) -> UnitPosition -> m (Map.Map UnitPosition [OrderMovement])
+genLegalOrders provUnitMap currOrders unitPos = do
   adjacentNodes <- getAdjacentNodes unitPos
+  mapDef <- asksGameInfo gameInfoMapDef
+  let Adjacencies adjMap = mapDefAdjacencies mapDef
 
-  -- nodes being moved to by other units
-  let movedTo = mapMaybe (\mo -> case mo of
-                             Move u node -> Just (u, node)
-                             _ -> Nothing) currOrders
-  
+  -- for every adjacent node, get adjacent units (ie. units that could move to that node)
+  let myLoc = unitPositionLoc unitPos
+  let adjNodesAndSurround = [(node,(adjMap Map.! (node, Army)) ++ (adjMap Map.! (node, Fleet))) | node <- adjacentNodes ]
+  -- Remove adjacent nodes to adjancencies that are our location or do not contain our units
+  -- only looks for adjacent province nodes now, not coasts. TO ADD
+  let activeAdjNodes = map (\(node,adjProvs) -> (node,(filter (\x -> (x /= myLoc)&&(Map.member x provUnitMap)) adjProvs))) adjNodesAndSurround
+
   -- possible support moves
-  let supportMoves = [ SupportMove unitPos otherUnit (provNodeToProv node1)
-                     | node1 <- adjacentNodes
-                     , (otherUnit, node2) <- movedTo
-                     , node1 == node2 ]
+  let supportMoves = [ SupportMove unitPos (provUnitMap Map.! friendlyProv) (provNodeToProv node)
+                     | (node,adjProvs) <- activeAdjNodes
+										 , friendlyProv <- adjProvs
+                     , adjProvs /= []]
   
   friendlyUnits <- getMyUnits  
 
   -- adjacent units
-  let adjUnits = [ (otherUnit, otherPos) 
-		 | (otherUnit, otherPos) <- friendlyUnits
-		 , targNode <- adjacentNodes
-		 , targNode == otherPos ] 
+  let adjUnits = [ unit 
+              	 | unit <- friendlyUnits
+   			      	 , targNode <- adjacentNodes
+  	    		   	 , targNode == (unitPositionLoc unit) ] 
 
   -- own units that are holding
   let holdOrders = mapMaybe (\ho -> case ho of 
-			      Hold u -> Just u
-			      _ -> Nothing) currOrders
+        		      Hold u -> Just u
+        		      _ -> Nothing) currOrders
 
   -- possible support holds
-  let supportHolds = [ SupportHold unitPos otherUnit
-		     | (otherUnit, _) <- adjUnits
-		     , holdUnit <- holdOrders
-                     , holdUnit == otherUnit ]
+  let supportHolds = [ SupportHold unitPos aUnit
+        	     			 | aUnit <- adjUnits
+        	     			 , hUnit <- holdOrders
+                		 , hUnit == aUnit ]
     
   -- possible simple moves
   let moveMoves = map (Move unitPos) adjacentNodes
@@ -168,22 +176,22 @@ genLegalOrders currOrders unitPos = do
   -- let convoyMoves = ...
   
   -- choose a move randomly and append it to the rest
-  let allMoves = supportMoves ++ supportHolds ++ moveMoves ++ holdMoves
+  let allMoves = supportMoves ++ moveMoves ++ holdMoves ++ supportHolds
   order <- randElem allMoves
-  return $ order : currOrders
-  -}
+  return order : currOrders
+    -} 
 --------------------------------------------------------
---                Metrics motherfucka                 --
+--                Metrics                             --
 --------------------------------------------------------
 
--- given a power returns the number of supply centers owned and non-supply centers owned
--- ermm non-scs are not owned??
--- getProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Power -> m (Int, Int)
--- getProvOcc power = do
---   suppC <- getSupplies power
---   units <- getUnits power
---   let occupied_prov = map (provNodeToProv . unitPositionLoc) units
---   return (length suppC, length (occupied_prov `div` suppC)) 
+
+-- given a power returns the number of supply centers owned and non-supply centers occupied
+getProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Power -> m (Int, Int)
+getProvOcc power = do
+   suppC <- getSupplies power
+   units <- getUnits power
+   let occupied_prov = map (provNodeToProv . unitPositionLoc) units
+   return (length suppC, length (occupied_prov \\ suppC)) 
 
 
 -- returns a three-tuple of supply center control, (you, enemy, no-one)

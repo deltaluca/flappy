@@ -127,22 +127,22 @@ randomUnitsMovement currOrders unitPos = do
   
   friendlyUnits <- getMyUnits  
 
-  -- -- adjacent units
-  -- let adjUnits = [ (otherUnit, otherPos) 
-  --       	 | (otherUnit, otherPos) <- friendlyUnits
-  --       	 , targNode <- adjacentNodes
-  --       	 , targNode == otherPos ] 
+  -- adjacent units
+  let adjUnits = [ unit 
+              	 | unit <- friendlyUnits
+   			      	 , targNode <- adjacentNodes
+  	    		   	 , targNode == (unitPositionLoc unit) ] 
 
-  -- -- own units that are holding
-  -- let holdOrders = mapMaybe (\ho -> case ho of 
-  --       		      Hold u -> Just u
-  --       		      _ -> Nothing) currOrders
+  -- own units that are holding
+  let holdOrders = mapMaybe (\ho -> case ho of 
+        		      Hold u -> Just u
+        		      _ -> Nothing) currOrders
 
-  -- -- possible support holds
-  -- let supportHolds = [ SupportHold unitPos otherUnit
-  --       	     | (otherUnit, _) <- adjUnits
-  --       	     , holdUnit <- holdOrders
-  --                    , holdUnit == otherUnit ]
+  -- possible support holds
+  let supportHolds = [ SupportHold unitPos aUnit
+        	     			 | aUnit <- adjUnits
+        	     			 , hUnit <- holdOrders
+                		 , hUnit == aUnit ]
     
   -- possible simple moves
   let moveMoves = map (Move unitPos) adjacentNodes
@@ -154,7 +154,7 @@ randomUnitsMovement currOrders unitPos = do
   -- let convoyMoves = ...
   
   -- choose a move randomly and append it to the rest
-  let allMoves = supportMoves ++ moveMoves -- ++ holdMoves ++ supportHolds
+  let allMoves = supportMoves ++ moveMoves ++ holdMoves ++ supportHolds
   order <- randElem allMoves
   return $ order : currOrders
   
