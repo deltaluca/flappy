@@ -83,10 +83,12 @@ randomBot = DipBot { dipBotName = "FlappyRandomBot"
 randomBrainComm :: (MonadIO m, OrderClass o) => RandomBrain o () -> RandomBrainCommT o m ()
 randomBrainComm pureBrain = do
   stdGen <- liftIO getStdGen
-  liftBrain                     -- lift pure brain
+  
+  (_, newStdGen) <- liftBrain   -- lift pure brain
     . runBrain                  -- no underlying monad
-    . liftM fst                 -- discard output stdGen
     . runRandT pureBrain $ stdGen
+  
+  liftIO $ setStdGen newStdGen  -- set new stdgen
 
 randomBrainMoveComm :: (MonadIO m) => RandomBrainMoveCommT m ()
 randomBrainMoveComm = randomBrainComm randomBrainMove

@@ -32,7 +32,7 @@ getSupplies :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Power -
 getSupplies power = do
   curMapState <- asksGameState gameStateMap
   let SupplyCOwnerships supplies = supplyOwnerships curMapState
-  return (supplies Map.! power)
+  return $ maybe [] id (Map.lookup power supplies)
 
 -- get own supplies
 getMySupplies :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m [Province]
@@ -57,12 +57,12 @@ getUnits power = do
     UnitPositions units -> do
       if not $ phase `elem` [Spring, Fall, Winter]
         then error $ "Wrong Phase (Got " ++ show phase ++ ", expected [Spring, Fall, Winter]"
-        else return (units Map.! power)
+        else return (maybe [] id (Map.lookup power units))
       
     UnitPositionsRet units -> do
       if not $ phase `elem` [Summer, Autumn]
         then error $ "Wrong Phase (Got " ++ show phase ++ ", expected [Summer, Autumn]"
-        else return (map fst $ units Map.! power)
+        else return (map fst $ maybe [] id (Map.lookup power units))
 
 -- get own units
 getMyUnits :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m [UnitPosition]
@@ -78,7 +78,7 @@ getMyRetreats = do
       if not $ phase `elem` [Summer, Autumn]
         then error $ "Wrong Phase (Got " ++ show phase ++ ", expected [Summer, Autumn]"
         else do
-        allElems <- return . (units Map.!) =<< getMyPower
+        allElems <- return . maybe [] id . flip Map.lookup units =<< getMyPower
         return . mapMaybe (\(a, mb) -> maybe Nothing (\b -> Just (a, b)) mb) $ allElems
     _ -> error $ "getMyRetreats called with UnitPositions"
 
