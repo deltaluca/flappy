@@ -55,8 +55,8 @@ holdBrainMove = do
 
 holdBrainRetreat :: HoldBrainRetreat ()
 holdBrainRetreat = do
-  myUnits <- getMyUnits
-  putOrders $ Just (map Disband myUnits)
+  myRetreats <- getMyRetreats
+  putOrders $ Just (map (Disband . fst) myRetreats)
   
 holdBrainBuild :: HoldBrainBuild ()
 holdBrainBuild = do

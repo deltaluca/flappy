@@ -6,15 +6,19 @@ import Diplomacy.Common.DaideHandle
 import Diplomacy.Common.DaideMessage
 import Diplomacy.Common.DaideError
 import Diplomacy.Common.DipMessage
+import Diplomacy.Common.DipError
 import Diplomacy.Common.Data
 import Diplomacy.Common.Press
 import Diplomacy.Common.TSeq
 
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.Comm
+import Diplomacy.AI.SkelBot.Common
 import Diplomacy.AI.SkelBot.DipBot
 
+import Data.Maybe
 import Data.List
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Maybe
 import Control.Monad.Error
@@ -35,23 +39,54 @@ import Network.BSD
 import qualified Data.Map as Map
 
   -- Master thread's monad
-newtype MasterT m a = Master { unMaster :: (ReaderT (TSeq InMessage, TSeq OutMessage)
-                                            (CommT DaideMessage DaideMessage m) a)}
-                    deriving (Monad, MonadIO, MonadReader (TSeq InMessage, TSeq OutMessage))
+newtype MasterT m a = Master { unMaster :: (ReaderT (ThreadId, ThreadId) -- for shutting down
+                                            (ReaderT (TSeq InMessage, TSeq OutMessage)
+                                             (CommT DaideMessage DaideMessage m)) a)}
+                    deriving (Functor, Monad, MonadIO, MonadReader (ThreadId, ThreadId))
 
 type Master = MasterT DaideHandle
 
 instance MonadTrans MasterT where
-  lift = Master . lift . lift
+  lift = Master . lift . lift . lift
 
 instance (MonadIO m) => MonadComm DaideMessage DaideMessage (MasterT m) where
-  pushMsg = Master . lift . pushMsg
-  popMsg = Master . lift $ popMsg
-  peekMsg = Master . lift $ peekMsg
+  pushMsg = Master . lift . lift . pushMsg
+  popMsg = Master . lift . lift $ popMsg
+  peekMsg = Master . lift . lift $ peekMsg
+  pushBackMsg = Master . lift . lift . pushBackMsg
 
 instance DaideErrorClass (MasterT DaideHandle) where
-  throwEM = Master . lift . lift . throwEM
+  throwEM = Master . lift . lift . lift . throwEM
 
+runMaster :: Master a -> DaideHandle a
+runMaster master = do
+  -- Create messaging queues that interface with the Brain
+  brainIn <- liftIO (newTSeqIO :: IO (TSeq InMessage))
+  brainOut <- liftIO (newTSeqIO :: IO (TSeq OutMessage))
+
+  -- Create lower level messaging queues that interface with Master
+  masterIn <- liftIO (newTSeqIO :: IO (TSeq DaideMessage))
+  masterOut <- liftIO (newTSeqIO :: IO (TSeq DaideMessage))
+
+  -- Create messaging threads
+  hndleInfo <- ask
+  t1 <- liftIO . forkIO $ runDaideT (runDaideAsk (receiver masterIn brainIn)) hndleInfo
+  t2 <- liftIO . forkIO $ runDaideT (runDaideTell (dispatcher masterOut brainOut)) hndleInfo
+
+  note "Starting master"
+  -- run master
+  runCommT (runReaderT (runReaderT (unMaster master)
+                        (t1, t2))
+            (brainIn, brainOut))
+    masterIn masterOut  
+
+shutdownMaster :: Master a
+shutdownMaster = do
+  (t1, t2) <- Master ask
+  liftIO $ killThread t1
+  liftIO $ killThread t2
+  lift shutdownDaide
+  
 skelBot :: DipBot Master h -> IO ()
 skelBot bot = do
   updateGlobalLogger "Main" (setLevel NOTICE)
@@ -78,24 +113,8 @@ communicate bot = do
     RM -> return ()
     _ -> throwEM RMNotFirst
 
-  -- Create messaging queues that interface with the Brain
-  brainIn <- liftIO (newTSeqIO :: IO (TSeq InMessage))
-  brainOut <- liftIO (newTSeqIO :: IO (TSeq OutMessage))
+  runMaster (masterThread bot)
 
-  -- Create lower level messaging queues that interface with Master
-  masterIn <- liftIO (newTSeqIO :: IO (TSeq DaideMessage))
-  masterOut <- liftIO (newTSeqIO :: IO (TSeq DaideMessage))
-
-  -- Create messaging threads
-  hndleInfo <- ask
-  liftIO . forkIO $ runDaideT (runDaideAsk (receiver masterIn brainIn)) hndleInfo
-  liftIO . forkIO $ runDaideT (runDaideTell (dispatcher masterOut brainOut)) hndleInfo
-
-  note "Starting master"
-  -- run master
-  runCommT (runReaderT (unMaster (master bot))
-            (brainIn, brainOut))
-    masterIn masterOut
   return ()
 
 expectWith :: (DipMessage -> Master ()) -> DipMessage -> Master ()
@@ -107,17 +126,10 @@ expect :: DipMessage -> Master ()
 expect = expectWith (\msg -> dieUnexpected msg)
 
 die = throwEM . WillDieSorry
-dieUnexpected = die . ("Unexpected message: " ++) . show
+dieUnexpected = die . ("Unexpected message: " ++) . show  
 
-peekDip :: Master DipMessage
-peekDip = do
-  msg <- peekMsg
-  case msg of
-    IM _ -> throwEM IMFromServer
-    RM -> throwEM ManyRMs
-    FM -> lift shutdownDaide
-    EM err -> die (show err)
-    DM dm -> return dm
+requeueDip :: DipMessage -> Master ()
+requeueDip = pushBackMsg . DM
 
 popDip :: Master DipMessage
 popDip = do
@@ -125,15 +137,39 @@ popDip = do
   case msg of
     IM _ -> throwEM IMFromServer
     RM -> throwEM ManyRMs
-    FM -> lift shutdownDaide
-    EM err -> die (show err)
-    DM dm -> return dm
+    FM -> shutdownMaster
+    EM err -> do
+      lift . note $ "EM : " ++ show err
+      shutdownMaster
+    DM dm -> handleGeneral dm
+
+-- |handle general messages
+-- put here anything that can be received at an arbitrary point in time!
+             -- RESUME HERE implement shutdownMaster for shutting down queues safely
+handleGeneral :: DipMessage -> Master DipMessage
+handleGeneral m = case m of
+  ExitClient -> pushMsg FM >> shutdownMaster
+  SoloWinGame pow -> do
+    lift . note $ "Solo win: " ++ show pow
+    popDip
+  DrawGame mPowers -> do
+    lift . note $ "Draw" ++ maybe "" ((": " ++) . show) mPowers
+    popDip
+  DipError (CivilDisorder _) -> popDip -- it dont make no difference to me baby
+  DipError err -> do
+    lift . note $ "DipError: " ++ show err
+    pushMsg FM >> shutdownMaster
+  EndGameStats turn stats -> do
+    lift . note $ "End Game Statistics (" ++ show turn ++ "):\n" ++ show stats
+    popDip
+  otherMsg -> return otherMsg
+
 
 pushDip :: DipMessage -> Master ()
 pushDip = pushMsg . DM
 
-master :: DipBot Master h -> Master ()
-master bot = do
+masterThread :: DipBot Master h -> Master ()
+masterThread bot = do
 
   let nameMsg = Name (dipBotName bot) (show $ dipBotVersion bot)
   pushDip nameMsg
@@ -191,7 +227,7 @@ master bot = do
        initState
   return ()
 
-  -- TODO: flush press messaging queue when turn is finished/starting!
+  -- TODO flush press messaging queue when turn is finished/starting!
 
 gameLoop :: DipBot Master h -> Int -> GameKnowledgeT h (StateT GameState Master) ()
 gameLoop bot timeout = do
@@ -207,68 +243,87 @@ gameLoop bot timeout = do
   forever $ do
     (GameState (MapState scos _) turn) <- lift get
     let ebrain = brainMap Map.! turnPhase turn
+
+    -- sort so that we can do some checks on the responses
+    -- TODO sanity checks on orders (all units are taken care of, validity)
     moveOrders <- return . sort =<< ebrain
-        
-    -- dont submit empty order list
-    when (moveOrders /= []) $ lift . lift . pushDip $ SubmitOrder (Just turn) moveOrders
-    respOrders <- lift . lift . unfoldM $ do
-      resp <- peekDip
-      case resp of
-        AckOrder order ordNote -> do
-          _ <- popDip
-          return (Just (order, ordNote))
-        _ -> return Nothing
     
-    let sortedRespOrders = sortBy (\(o1, _) (o2, _) -> compare o1 o2) respOrders
-    when (length moveOrders /= length sortedRespOrders) $
-      lift . lift . die $ "Acknowledging messages missing"
+    lift . lift $ do            -- not concerned with history/gamestate yet
+      
+      -- dont submit empty order list
+      when (moveOrders /= []) $ pushDip $ SubmitOrder (Just turn) moveOrders
+      respOrders <- unfoldM $ do
+        resp <- popDip
+        case resp of
+          AckOrder order ordNote -> return (Just (order, ordNote))
+          other -> requeueDip other >> return Nothing
+    
+      let sortedRespOrders = sortBy (\(o1, _) (o2, _) -> compare o1 o2) respOrders
+      when (length moveOrders /= length sortedRespOrders) $ do
+        lastMsg <- popDip
+        die $ "Acknowledging messages missing, last message: " ++ show lastMsg
 
-    zipWithM_ (\o1 (o2, oNote) -> do
-                  when (o1 /= o2) $
-                    lift . lift . die $ "Acknowledging messages don't match orders"
-                  when (oNote /= MovementOK) . lift . lift . die $
-                    "Server returned \"" ++ show oNote ++
-                    "\" for order \"" ++ show o1 ++ "\""
-              ) moveOrders sortedRespOrders
+      zipWithM_ (\o1 (o2, oNote) -> do
+                    when (o1 /= o2) $
+                      die $ "Acknowledging messages don't match orders"
+                    when (oNote /= MovementOK) . die $
+                      "Server returned \"" ++ show oNote ++
+                      "\" for order \"" ++ show o1 ++ "\""
+                ) moveOrders sortedRespOrders
 
-    mMissing <- lift . lift $ peekDip
-    case mMissing of
-      (Missing _) -> do
-        lift . lift . lift . note $ show mMissing
-        lift . lift . die $ "Missing orders, can't handle for now"
-      _ -> return ()
+      mMissing <- popDip
+      case mMissing of
+        (Missing _) -> do
+          lift . note $ show mMissing
+          die $ "Missing orders, can't handle for now"
+        other -> requeueDip other
 
     resultOrders <- lift . lift . unfoldM $ do
-      res <- peekDip
+      res <- popDip
       case res of
         OrderResult trn order result -> do
           when (turn /= trn) . die $
             "OrderResults for wrong turn (Got " ++ show trn ++
             ", expected " ++ show turn ++ ")"
-          _ <- popDip
           return (Just (order, result))
-        _ -> return Nothing
+        other -> requeueDip other >> return Nothing
       
     -- process results, save new history
     modifyHistory (dipBotProcessResults bot resultOrders)
       
-    sco <- lift . lift $ peekDip
-    mscos <- case sco of
-      CurrentPosition sc -> do
-        _ <- lift . lift $ popDip
-        return (Just sc)
-      m -> return Nothing
+      -- new SCO
+    newScos <- lift . lift $ do
+      sco <- popDip
+      mscos <- case sco of
+        CurrentPosition sc -> return (Just sc)
+        other -> requeueDip other >> return Nothing
+      return (maybe scos id mscos)
 
-    let newScos = maybe scos id mscos
-
-    now <- lift . lift $ popDip
-    (newTurn, newUnitPoss) <- case now of
-      CurrentUnitPosition turn up -> return (turn, up)
-      m -> lift . lift $ dieUnexpected m
+      -- new NOW
+    (newTurn, newUnitPoss) <- lift . lift $ do
+      now <- popDip
+      case now of
+        CurrentUnitPosition turn up -> return (turn, up)
+        m -> dieUnexpected m
         
+    checkLost newScos newUnitPoss
+
     -- change state
     lift . put $ GameState { gameStateMap = MapState newScos newUnitPoss 
                            , gameStateTurn = newTurn }
+
+    
+-- |check whether we've lost
+checkLost :: SupplyCOwnerships -> UnitPositions ->
+             GameKnowledgeT h (StateT GameState Master) ()
+checkLost (SupplyCOwnerships supplies) (UnitPositions up) = do
+  myPower <- getMyPower
+  when (isNothing (Map.lookup myPower supplies) &&
+        isNothing (Map.lookup myPower up))
+    . lift . lift $ do
+    lift . note $ "i lost i guess?"
+    pushMsg FM >> shutdownMaster
+checkLost _ _ = return ()
 
 -- execPureBrain :: (OrderClass o) => Brain o h () -> Int ->
 --                  GameKnowledgeT h (StateT GameState Master) [Order]
@@ -284,7 +339,7 @@ execBrain :: (OrderClass o) => BrainCommT o h Master () -> Int ->
              GameKnowledgeT h (StateT GameState Master) [Order]
 execBrain botBrain timeout = do
   gameState <- lift get
-  (brainIn, brainOut) <- lift ask
+  (brainIn, brainOut) <- lift . lift . Master . lift $ ask
   ordVar <- liftIO $ newTVarIO Nothing
   let gameKnowledge = liftM snd . flip runBrainT gameState
                       . mapBrainT lift

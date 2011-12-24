@@ -43,8 +43,8 @@ type DaideCommT m = State.StateT L.ByteString (ReaderT DaideHandleInfo m)
 -- DaideHandle is a Daide communication with error handling and exiting
 newtype DaideHandleT m a = DaideHandle
                            { runDaideHandle :: ErrorT (Maybe DaideError) (DaideCommT m) a }
-                         deriving ( Monad, MonadIO, MonadReader DaideHandleInfo,
-                                    MonadError (Maybe DaideError), State.MonadState L.ByteString)
+                         deriving ( Functor, Monad, MonadIO, MonadReader DaideHandleInfo
+                                  , MonadError (Maybe DaideError), State.MonadState L.ByteString)
 
 instance MonadTrans DaideHandleT where
   lift = DaideHandle . lift . lift . lift

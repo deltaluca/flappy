@@ -108,11 +108,13 @@ randomInitHistory = return ()
 randomBrainMove :: RandomBrainMove ()
 randomBrainMove = do
   movementOrders <- foldM randomUnitsMovement [] =<< getMyUnits
-  trace (show movementOrders) $ putOrders $ Just movementOrders
+  putOrders $ Just movementOrders
 
 randomUnitsMovement :: [OrderMovement] -> UnitPosition -> RandomBrainMove [OrderMovement]
 randomUnitsMovement currOrders unitPos = do
   adjacentNodes <- getAdjacentNodes unitPos
+  provUnitMap <- getProvUnitMap
+  myPower <- getMyPower
 
   -- nodes being moved to by other units
   let movedTo = mapMaybe (\mo -> case mo of
@@ -125,24 +127,21 @@ randomUnitsMovement currOrders unitPos = do
                      , (otherUnit, node2) <- movedTo
                      , node1 == node2 ]
   
-  friendlyUnits <- getMyUnits  
-
-  -- adjacent units
-  let adjUnits = [ unit 
-              	 | unit <- friendlyUnits
-   			      	 , targNode <- adjacentNodes
-  	    		   	 , targNode == (unitPositionLoc unit) ] 
+  let adjUnits = [ otherUnit
+        	 | otherPos <- adjacentNodes
+                 , otherUnit <- maybeToList $
+                                provNodeToProv otherPos `Map.lookup` provUnitMap
+        	 , unitPositionP otherUnit == myPower ] 
 
   -- own units that are holding
   let holdOrders = mapMaybe (\ho -> case ho of 
         		      Hold u -> Just u
         		      _ -> Nothing) currOrders
 
-  -- possible support holds
-  let supportHolds = [ SupportHold unitPos aUnit
-        	     			 | aUnit <- adjUnits
-        	     			 , hUnit <- holdOrders
-                		 , hUnit == aUnit ]
+  let supportHolds = [ SupportHold unitPos otherUnit
+        	     | otherUnit <- adjUnits
+        	     , holdUnit <- holdOrders
+                     , holdUnit == otherUnit ]
     
   -- possible simple moves
   let moveMoves = map (Move unitPos) adjacentNodes
@@ -197,7 +196,7 @@ randomBrainBuild = do
   -- trace ("DIFFERENCE = " ++ show difference ++ ", LENGTH(ORDERS) = " ++ show (length ords)) $
   --     trace ("MY SUPPLIES = " ++ show mySupplies) $
   --     trace ("MY UNITS = " ++ show myUnits) $
-  trace (show ords) $ putOrders (Just ords)
+  putOrders (Just ords)
 
 buildRandomUnit :: Province -> RandomBrainBuild OrderBuild
 buildRandomUnit prov = do

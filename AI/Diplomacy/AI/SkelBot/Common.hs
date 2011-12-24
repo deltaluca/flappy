@@ -1,5 +1,8 @@
 -- |Common module (convenience functions) for all bots
 
+-- use flexible contexts to restrict certain functions to a specific phase in the type level!(see getMyRetreats)
+{-# LANGUAGE FlexibleContexts #-}
+
 module Diplomacy.AI.SkelBot.Common( getMyPower
                                   , getSupplies
                                   , getMySupplies
@@ -25,7 +28,7 @@ import Data.List
 import qualified Data.Map as Map
 
 -- get own power token
-getMyPower :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m Power
+getMyPower :: (MonadGameKnowledge h m) => m Power
 getMyPower = asksGameInfo gameInfoPower
 
 -- get supplies for a given power
@@ -39,14 +42,14 @@ getSupplies power = do
 getMySupplies :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m [Province]
 getMySupplies = getSupplies =<< getMyPower
 
-getHomeSupplies :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) =>
+getHomeSupplies :: (MonadGameKnowledge h m) =>
                    Power -> m [Province]
 getHomeSupplies power = do
   mapDef <- asksGameInfo gameInfoMapDef
   let SupplyCOwnerships initscs = mapDefSupplyInit mapDef
   return (initscs Map.! power)
 
-getMyHomeSupplies :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m [Province]
+getMyHomeSupplies :: (MonadGameKnowledge h m) => m [Province]
 getMyHomeSupplies = getHomeSupplies =<< getMyPower
 
 -- get units for a given power (special cases depending on regular phase or retreat phase)
@@ -70,7 +73,7 @@ getMyUnits :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m [UnitP
 getMyUnits = getUnits =<< getMyPower
 
 -- get possible retreats
-getMyRetreats :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m [(UnitPosition, [ProvinceNode])]
+getMyRetreats :: (MonadBrain OrderRetreat m, MonadGameKnowledge h m) => m [(UnitPosition, [ProvinceNode])]
 getMyRetreats = do
   (GameState mapState (Turn phase _)) <- askGameState
                                          
@@ -84,7 +87,7 @@ getMyRetreats = do
     _ -> error $ "getMyRetreats called with UnitPositions"
 
 -- get adjacent nodes to a given unit
-getAdjacentNodes :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => UnitPosition -> m [ProvinceNode]
+getAdjacentNodes :: (MonadGameKnowledge h m) => UnitPosition -> m [ProvinceNode]
 getAdjacentNodes (UnitPosition _ unitType provNode) = do
   mapDef <- asksGameInfo gameInfoMapDef
   let Adjacencies adjMap = mapDefAdjacencies mapDef
@@ -111,7 +114,7 @@ getProvUnitMap = do
   units <- case unitPositions mapState of
     UnitPositions units -> do
       if not $ phase `elem` [Spring, Fall, Winter]
-        then error $ "Wrong Phase (Got " ++ show phase ++ ", expected [Summer, Autumn]"
+        then error $ "Wrong Phase (Got " ++ show phase ++ ", expected [Spring, Fall, Winter]"
         else return (concat . Map.elems $ units)
       
     UnitPositionsRet units -> do

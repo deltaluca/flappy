@@ -1,5 +1,6 @@
 module Diplomacy.Common.TSeq(liftSeq, TSeq, 
                              writeTSeq,
+                             requeueTSeq,
                              readTSeq,
                              newTSeq,
                              newTSeqIO,
@@ -29,6 +30,10 @@ liftSeq f (TSeq tSequ) = do
 writeTSeq :: TSeq a -> a -> STM ()
 writeTSeq (TSeq tSequ) a = do
   writeTVar tSequ . (|> a) =<< readTVar tSequ
+
+requeueTSeq :: TSeq a -> a -> STM ()
+requeueTSeq (TSeq tSequ) a = do
+  writeTVar tSequ . (a <|) =<< readTVar tSequ
 
 readTSeq :: TSeq a -> STM a
 readTSeq (TSeq tVar) = do
