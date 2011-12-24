@@ -58,6 +58,8 @@ Library
     Diplomacy.Common.DaideError
     Diplomacy.Common.DaideHandle
     Diplomacy.Common.TSeq  
+    Diplomacy.Common.MonadSTM
+    Diplomacy.Common.TStream      
 
   -- Packages needed in order to build this package.
   Build-depends:
