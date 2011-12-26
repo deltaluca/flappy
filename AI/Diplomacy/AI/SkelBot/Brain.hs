@@ -21,6 +21,7 @@ module Diplomacy.AI.SkelBot.Brain ( Brain, BrainT
 import Diplomacy.Common.Data
 import Diplomacy.Common.Press
 import Diplomacy.Common.TSeq
+import Diplomacy.Common.MonadSTM
 import Diplomacy.AI.SkelBot.Comm
 
 import Control.Monad.Reader
@@ -65,7 +66,7 @@ type OrderVar o = TVar (Maybe [o])
 newtype BrainCommT o h m a = BrainComm (ReaderT (OrderVar o) (CommT InMessage OutMessage (BrainT o h m)) a)
                            deriving (Functor, Monad)
 
-instance OrderClass o => MonadTrans (BrainT o h) where
+instance (OrderClass o) => MonadTrans (BrainT o h) where
   lift = Brain . lift . lift . lift
 
 instance OrderClass o => MonadTrans (BrainCommT o h) where
@@ -76,6 +77,10 @@ instance (MonadIO m) => MonadIO (GameKnowledgeT h m) where
 
 instance (MonadIO m, OrderClass o) => MonadIO (BrainT o h m) where
   liftIO = Brain . lift . liftIO
+
+instance (OrderClass o, MonadSTM m) => MonadSTM (BrainT o h m) where
+  liftSTM = lift . liftSTM
+  getSTM = liftM return
 
 instance (MonadIO m, OrderClass o) => MonadIO (BrainCommT o h m) where
   liftIO = BrainComm . lift . lift . lift . liftIO
@@ -133,7 +138,7 @@ runBrain = mapBrain return
 liftBrain :: (Monad m, OrderClass o) => BrainT o h m a -> BrainCommT o h m a
 liftBrain = BrainComm . lift . lift
 
-instance (MonadIO m, OrderClass o) => MonadComm InMessage OutMessage (BrainCommT o h m) where
+instance (MonadSTM m, OrderClass o) => MonadComm InMessage OutMessage (BrainCommT o h m) where
   popMsg = BrainComm . lift $ popMsg
   peekMsg = BrainComm . lift $ peekMsg
   pushMsg = BrainComm . lift . pushMsg
