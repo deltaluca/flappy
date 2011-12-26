@@ -74,7 +74,8 @@ Library
     stm,
     QuickCheck >= 2.0,
     time,
-    deepseq
+    deepseq,
+    transformers
   
   -- Modules not exported by this package.
   -- Other-modules:       

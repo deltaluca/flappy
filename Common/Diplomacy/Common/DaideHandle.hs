@@ -30,8 +30,6 @@ import Data.Time.Clock
 import Control.DeepSeq
 import Control.Monad.Error
 import Control.Monad.Reader
-import Control.Monad.Trans
-import Control.Monad.Cont
 import Control.Exception as E
 import Network
 
