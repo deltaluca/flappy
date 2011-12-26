@@ -149,7 +149,11 @@ tokenPrim a b c = Protocol $ Parsec.tokenPrim a b c
 parserZero = Protocol Parsec.parserZero
 parserFail = Protocol . Parsec.parserFail
 many = Protocol . Parsec.many . unProtocol
+try = Protocol . Parsec.try . unProtocol
 a <|> b = Protocol $ unProtocol a Parsec.<|> unProtocol b
+
+manyTry :: Protocol a -> Protocol [a]
+manyTry p = unfoldM ((try p >>= return . Just) <|> return Nothing)
 
 dipMsg :: (DipMessage -> Protocol (Maybe a)) -> Protocol a
 dipMsg f = do
@@ -253,8 +257,8 @@ gameLoop bot timeout = do
     -- dont submit empty order list
     when (moveOrders /= []) . pushDip $ SubmitOrder (Just turn) moveOrders
       
-    respOrders <- many [ (order, ordNote)
-                       | AckOrder order ordNote <- nextDip ]
+    respOrders <- manyTry [ (order, ordNote)
+                          | AckOrder order ordNote <- nextDip ]
     let sortedRespOrders = sortBy (\(o1, _) (o2, _) -> compare o1 o2) respOrders
         
     when (length moveOrders /= length sortedRespOrders) $ do
@@ -269,7 +273,7 @@ gameLoop bot timeout = do
                     "\" for order \"" ++ show o1 ++ "\""
               ) moveOrders sortedRespOrders
 
-    join $ (do
+    join $ (try $ do
                Missing missing <- nextDip
                return $ do
                  liftMaster . lift . note $ show missing
@@ -277,7 +281,7 @@ gameLoop bot timeout = do
            ) <|>
       return (return ())
       
-  resultOrders <- lift . lift . many $
+  resultOrders <- lift . lift . manyTry $
                   [ (order, result)
                   | OrderResult trn order result <- nextDip
                   , _ <- when (turn /= trn) . parserFail $
@@ -286,7 +290,7 @@ gameLoop bot timeout = do
   
   modifyHistory (dipBotProcessResults bot resultOrders)  
       
-  newScos <- lift . lift $ [ newScos | CurrentPosition newScos <- nextDip ] <|> return scos
+  newScos <- lift . lift $ try [ newScos | CurrentPosition newScos <- nextDip ] <|> return scos
   CurrentUnitPosition newTurn newUnitPoss <- lift . lift $ nextDip
   
   checkLost newScos newUnitPoss
