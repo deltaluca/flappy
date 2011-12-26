@@ -1,7 +1,7 @@
 all: ser obs
 
 ser:
-	cd "/home/exfalso/.wine/drive_c/Program Files/daide/aiserver" && wine AiServer.exe -start &
+	cd "${HOME}/.wine/drive_c/Program Files/daide/aiserver" && wine AiServer.exe -start &
 
 obs:
 	cd UserClient && make run &
