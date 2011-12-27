@@ -221,7 +221,7 @@ genLegalOrders currOrders unitPos = do
   friendlies <- return.(filter (/= unitPos)) =<< getMyUnits
 
   -- possible support moves
-  let supportMoves =  [map (SupportMove unitPos otherUnit) ((intersect adjacentNodes) =<< (getAdjacentNodes otherUnit))
+  let supportMoves =  concat [map ((SupportMove unitPos otherUnit).provNodeToProv) $ (intersect adjacentNodes) =<< (getAdjacentNodes otherUnit) 
                       | otherUnit <- friendlies]
    
   let adjUnits =  [ otherUnit
@@ -245,8 +245,7 @@ genLegalOrders currOrders unitPos = do
   
   -- add all possible moves for this unit into the map
   let allMoves = supportMoves ++ moveMoves ++ holdMoves ++ supportHolds
-  Map.insert unitPos allMoves currOrders
-  return currOrders
+  return $ Map.insert unitPos allMoves currOrders
 -}
 --------------------------------------------------------
 --                Metrics                             --
