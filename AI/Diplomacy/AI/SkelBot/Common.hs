@@ -12,20 +12,33 @@ module Diplomacy.AI.SkelBot.Common( getMyPower
                                   , getMyUnits
                                   , getMyRetreats
                                   , getAdjacentNodes
+                                  , getAdjacentUnits
+                                  , getAllAdjacentNodes
+                                  , getAllAdjacentNodes2
                                   , getProvUnitMap
+                                  , getProvNodeUnitMap
+                                  , getSupplyPowerMap
+                                  , getSupplyPowerMapNoUno
+                                  , getAllProvs
+                                  , getAllProvNodes
                                   , randElem
                                   , provNodeToProv
+                                  , noUno
                                   ) where
 
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.Common.Data
 
 import Data.Maybe
+import Data.List
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Random
-import Data.List
 
 import qualified Data.Map as Map
+
+(!) :: (Ord a) => Map.Map a [b] -> a -> [b]
+mp ! i = maybe [] id (Map.lookup i mp)
 
 -- get own power token
 getMyPower :: (MonadGameKnowledge h m) => m Power
@@ -35,7 +48,7 @@ getMyPower = asksGameInfo gameInfoPower
 getSupplies :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Power -> m [Province]
 getSupplies power = do
   curMapState <- asksGameState gameStateMap
-  let SupplyCOwnerships supplies = supplyOwnerships curMapState
+  let supplies = supplyOwnerships curMapState
   return $ maybe [] id (Map.lookup power supplies)
 
 -- get own supplies
@@ -46,8 +59,8 @@ getHomeSupplies :: (MonadGameKnowledge h m) =>
                    Power -> m [Province]
 getHomeSupplies power = do
   mapDef <- asksGameInfo gameInfoMapDef
-  let SupplyCOwnerships initscs = mapDefSupplyInit mapDef
-  return (initscs Map.! power)
+  let initscs = mapDefSupplyInit mapDef
+  return (initscs ! power)
 
 getMyHomeSupplies :: (MonadGameKnowledge h m) => m [Province]
 getMyHomeSupplies = getHomeSupplies =<< getMyPower
@@ -91,8 +104,24 @@ getAdjacentNodes :: (MonadGameKnowledge h m) => UnitPosition -> m [ProvinceNode]
 getAdjacentNodes (UnitPosition _ unitType provNode) = do
   mapDef <- asksGameInfo gameInfoMapDef
   let Adjacencies adjMap = mapDefAdjacencies mapDef
-  return $ adjMap Map.! (provNode, unitType)
-  
+  return $ adjMap ! (provNode, unitType)
+
+-- gets all adjacent nodes to a given province
+getAllAdjacentNodes :: (MonadGameKnowledge h m) => Province -> m [ProvinceNode]
+getAllAdjacentNodes prov = do
+  mapDef <- asksGameInfo gameInfoMapDef
+  let Adjacencies adjMap = mapDefAdjacencies mapDef
+      provNodes = mapDefProvNodes mapDef ! prov
+      nodeUnits = liftM2 (,) provNodes [Army, Fleet]
+  return $ foldl1 union . map (adjMap !) $ nodeUnits
+
+-- gets all adjacent nodes to a given provinceNode
+getAllAdjacentNodes2 :: (MonadGameKnowledge h m) => ProvinceNode -> m [ProvinceNode]
+getAllAdjacentNodes2 provNode = do
+  mapDef <- asksGameInfo gameInfoMapDef
+  let Adjacencies adjMap = mapDefAdjacencies mapDef
+  return $ (adjMap ! (provNode, Army)) `union` (adjMap ! (provNode, Fleet))
+
 -- pick a random element from a list
 randElem :: (MonadRandom m) => [a] -> m a
 randElem l = do
@@ -124,6 +153,62 @@ getProvUnitMap = do
     
   foldM (\m unitPos -> return $
                        Map.insert (provNodeToProv $ unitPositionLoc unitPos) unitPos m) Map.empty units
+
+-- returns a mapping from provinceNodes to units
+getProvNodeUnitMap :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) =>
+                  m (Map.Map ProvinceNode UnitPosition)
+getProvNodeUnitMap = do
+  (GameState mapState (Turn phase _)) <- askGameState
+  units <- case unitPositions mapState of
+    UnitPositions units -> do
+      if not $ phase `elem` [Spring, Fall, Winter]
+        then error $ "Wrong Phase (Got " ++ show phase ++ ", expected [Spring, Fall, Winter]"
+        else return (concat . Map.elems $ units)
+      
+    UnitPositionsRet units -> do
+      if not $ phase `elem` [Summer, Autumn]
+        then error $ "Wrong Phase (Got " ++ show phase ++ ", expected [Summer, Autumn]"
+        else return (map fst . concat . Map.elems $ units)
+    
+  foldM (\m unitPos -> return $
+                       Map.insert (unitPositionLoc unitPos) unitPos m) Map.empty units
+
+getSupplyPowerMap :: (OrderClass o, MonadBrain o m,
+                      MonadGameKnowledge h m) => m (Map.Map Province Power)
+getSupplyPowerMap = do
+  curMapState <- asksGameState gameStateMap
+  let supplies = supplyOwnerships curMapState
+  return . Map.foldlWithKey
+    (\mp pow prs -> foldl (\mp pr -> Map.insert pr pow mp) mp prs) Map.empty $ supplies
+
+getSupplyPowerMapNoUno :: (OrderClass o, MonadBrain o m,
+                           MonadGameKnowledge h m) => m (Map.Map Province Power)
+getSupplyPowerMapNoUno = do
+  curMapState <- asksGameState gameStateMap
+  let supplies = noUno (supplyOwnerships curMapState)
+  return . Map.foldlWithKey
+    (\mp pow prs -> foldl (\mp pr -> Map.insert pr pow mp) mp prs) Map.empty $ supplies
+
+getAdjacentUnits :: (OrderClass o, MonadBrain o m,
+                     MonadGameKnowledge h m) => Province -> m [UnitPosition]
+getAdjacentUnits prov = do
+  provNodeUnitMap <- getProvNodeUnitMap
+  adjNodes <- getAllAdjacentNodes prov
+  return $ mapMaybe (`Map.lookup` provNodeUnitMap) adjNodes
+
+getAllProvs :: (Functor m, OrderClass o, MonadBrain o m,
+                MonadGameKnowledge h m) => m [Province]
+getAllProvs = mapDefProvinces <$> asksGameInfo gameInfoMapDef
+
+getAllProvNodes :: (Functor m, OrderClass o, MonadBrain o m,
+                    MonadGameKnowledge h m) => m [ProvinceNode]
+getAllProvNodes = do
+  allProvs <- getAllProvs
+  p2pn <- mapDefProvNodes <$> asksGameInfo gameInfoMapDef
+  return $ concatMap (p2pn Map.!) allProvs
+
+noUno :: Map.Map Power a -> Map.Map Power a
+noUno = Map.delete Neutral
 
 {-
 -- Currently a copy from random. Need to generalise and make it return a mapping from 

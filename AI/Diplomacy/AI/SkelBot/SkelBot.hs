@@ -304,7 +304,7 @@ gameLoop bot timeout = do
 -- |check whether we've lost
 checkLost :: SupplyCOwnerships -> UnitPositions ->
              GameKnowledgeT h (StateT GameState Protocol) ()
-checkLost (SupplyCOwnerships supplies) (UnitPositions up) = do
+checkLost supplies (UnitPositions up) = do
   myPower <- getMyPower
   when (isNothing (Map.lookup myPower supplies) &&
         isNothing (Map.lookup myPower up))

@@ -200,6 +200,7 @@ randomBrainBuild = do
 
 buildRandomUnit :: Province -> RandomBrainBuild OrderBuild
 buildRandomUnit prov = do
+  provToProvNodes <- return . mapDefProvNodes =<< asksGameInfo gameInfoMapDef
   myPower <- getMyPower
   return . Build =<< case provinceType prov of
     Inland -> return $ UnitPosition myPower Army (ProvNode prov)
@@ -208,9 +209,7 @@ buildRandomUnit prov = do
       utyp <- randElem [Army, Fleet]
       return $ UnitPosition myPower Fleet (ProvNode prov)
     BiCoastal -> do
-      utyp <- randElem [Army, Fleet]
-      case utyp of
-        Army -> return $ UnitPosition myPower Army (ProvNode prov)
-        Fleet -> do
-          coast <- randElem . (Map.! prov) . mapDefCoasts =<< asksGameInfo gameInfoMapDef
-          return $ UnitPosition myPower Fleet (ProvCoastNode prov coast)
+      provNode <- randElem (provToProvNodes Map.! prov)
+      case provNode of
+        ProvNode _ -> return $ UnitPosition myPower Army provNode
+        ProvCoastNode _ _ -> return $ UnitPosition myPower Fleet provNode

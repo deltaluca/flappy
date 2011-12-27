@@ -375,12 +375,12 @@ pMapDef = do
   powers <- paren (many pPower)
   (scos, provinces) <- paren pProvinces
   adjacencies <- return . concat =<< paren (many (paren pAdjacency))
-  let coasts = mapMaybe (mapCoast . fst . fst) $ adjacencies
-  return . MapDef $ MapDefinition powers provinces (Adjacencies $ (foldl (\m (k, v) -> Map.insert k v m) Map.empty) adjacencies) (groupMap coasts) scos
+  let provNodes = map (mapProvinceNode . fst . fst) $ adjacencies
+  return . MapDef $ MapDefinition powers provinces (Adjacencies $ (foldl (\m (k, v) -> Map.insert k v m) Map.empty) adjacencies) (groupMap provNodes) scos
 
-mapCoast :: ProvinceNode -> Maybe (Province, Coast)
-mapCoast (ProvCoastNode prov coast) = Just (prov, coast)
-mapCoast _ = Nothing
+mapProvinceNode :: ProvinceNode -> (Province, ProvinceNode)
+mapProvinceNode pn@(ProvCoastNode prov _) = (prov, pn)
+mapProvinceNode pn@(ProvNode prov) = (prov, pn)
 
 pMapDefReq :: DipRep s t => DipParser s DipMessage
 pMapDefReq = return MapDefReq
@@ -392,10 +392,10 @@ pPower = tok (\t -> case t of { DipPow (Pow p) -> Just (Power p)
 
 pProvinces :: DipRep s t => DipParser s (SupplyCOwnerships, [Province])
 pProvinces = do
-  (SupplyCOwnerships scos) <- paren (pSupplyCOs)
+  scos <- paren (pSupplyCOs)
   nonSupplyCentres <- paren (many pProvince)
   let allProvs = nub . (concatMap snd (Map.toList scos) ++) $ nonSupplyCentres
-  return (SupplyCOwnerships scos, allProvs)
+  return (scos, allProvs)
 
   -- put this somewhere else
 data UnitToProv = UnitToProv UnitType [ProvinceNode]
@@ -442,7 +442,7 @@ pSupplyCOs = do
     pow <- pPower
     centres <- many pProvince
     return (pow, centres)
-  return . SupplyCOwnerships . (foldl (\m (k, v) -> Map.insert k v m) Map.empty) $ scos
+  return . (foldl (\m (k, v) -> Map.insert k v m) Map.empty) $ scos
 
 pProvince :: DipRep s t => DipParser s Province
 pProvince = tok (\t -> case t of {(DipProv p) -> Just p ; _ -> Nothing})
@@ -1013,7 +1013,7 @@ uMsg ms = case ms of
 
   StartPing -> uTok (DipCmd HLO)
 
-  CurrentPosition (SupplyCOwnerships supplyCentres) ->
+  CurrentPosition supplyCentres ->
     ( uTok (DipCmd SCO)
     . uMany uSupplyCentre (Map.toList supplyCentres)
     )
@@ -1341,7 +1341,7 @@ uPower (Power p) = uTok (DipPow (Pow p))
 uPower Neutral = uTok (DipParam UNO)
 
 uProvinces :: UnDipParser ([Province], SupplyCOwnerships)
-uProvinces (provs, (SupplyCOwnerships scos)) =
+uProvinces (provs, scos) =
   let nscos = filter provinceIsSupply provs in
   ( uParen (uMany (uParen uSupplyCentre)) (Map.toList scos)
   . uParen (uMany uProvince) nscos

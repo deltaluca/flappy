@@ -7,7 +7,7 @@
 -} 
 
 module Diplomacy.Common.Data ( Power(..)
-                             , SupplyCOwnerships(..)
+                             , SupplyCOwnerships
                              , Province(..)
                              , Coast(..)
                              , UnitType(..)
@@ -91,7 +91,7 @@ data Phase
 data MapDefinition = MapDefinition { mapDefPowers :: [Power]
                                    , mapDefProvinces :: [Province]
                                    , mapDefAdjacencies :: Adjacencies
-                                   , mapDefCoasts :: Map.Map Province [Coast]
+                                   , mapDefProvNodes :: Map.Map Province [ProvinceNode]
                                    , mapDefSupplyInit :: SupplyCOwnerships }
                    deriving (Show, Eq)
 
@@ -116,8 +116,7 @@ data MapState = MapState { supplyOwnerships :: SupplyCOwnerships
                          , unitPositions :: UnitPositions }
               deriving (Show, Eq)
 
-newtype SupplyCOwnerships = SupplyCOwnerships (Map.Map Power [Province])
-                          deriving (Show, Eq)
+type SupplyCOwnerships = Map.Map Power [Province]
 
 
 data UnitPositions = UnitPositions (Map.Map Power [UnitPosition])
@@ -221,13 +220,13 @@ instance Arbitrary MapDefinition where
     s <- arbitrary
     return $ MapDefinition p1 p2 a Map.empty s
 
-instance Arbitrary SupplyCOwnerships where
+instance (Ord a, Arbitrary a, Arbitrary b) => Arbitrary (Map.Map a b) where
   arbitrary = do
     scos <- listOf1 $ do
            p <- arbitrary
-           ps <- listOf1 arbitrary
+           ps <- arbitrary
            return (p, ps)
-    return . SupplyCOwnerships . Map.fromList $ scos
+    return . Map.fromList $ scos
 
 instance Arbitrary Province where
   arbitrary = do
