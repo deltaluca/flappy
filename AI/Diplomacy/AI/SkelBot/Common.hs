@@ -211,49 +211,29 @@ noUno :: Map.Map Power a -> Map.Map Power a
 noUno = Map.delete Neutral
 
 {-
--- Currently a copy from random. Need to generalise and make it return a mapping from 
--- units to possible orders (so that, for instance, all possible move combinations can be generated)
--- At this point in time only considers supporting own units
+-- Generates all legal orders only involving own units
 genLegalOrders :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => 
-							(Map.Map Province UnitPosition) ->
 							(Map.Map UnitPosition [OrderMovement]) -> UnitPosition -> m (Map.Map UnitPosition [OrderMovement])
-genLegalOrders provUnitMap currOrders unitPos = do
+genLegalOrders currOrders unitPos = do
   adjacentNodes <- getAdjacentNodes unitPos
-  mapDef <- asksGameInfo gameInfoMapDef
-  let Adjacencies adjMap = mapDefAdjacencies mapDef
-
-  -- for every adjacent node, get adjacent units (ie. units that could move to that node)
-  let myLoc = unitPositionLoc unitPos
-  let adjNodesAndSurround = [(node,(adjMap Map.! (node, Army)) ++ (adjMap Map.! (node, Fleet))) | node <- adjacentNodes ]
-  -- Remove adjacent nodes to adjancencies that are our location or do not contain our units
-  -- only looks for adjacent province nodes now, not coasts. TO ADD
-  let activeAdjNodes = map (\(node,adjProvs) -> (node,(filter (\x -> (x /= myLoc)&&(Map.member x provUnitMap)) adjProvs))) adjNodesAndSurround
+  provUnitMap <- getProvUnitMap
+  myPower <- getMyPower
+  friendlies <- return.(filter (/= unitPos)) =<< getMyUnits
 
   -- possible support moves
-  let supportMoves = [ SupportMove unitPos (provUnitMap Map.! friendlyProv) (provNodeToProv node)
-                     | (node,adjProvs) <- activeAdjNodes
-										 , friendlyProv <- adjProvs
-                     , adjProvs /= []]
-  
-  friendlyUnits <- getMyUnits  
+  let supportMoves =  [map (SupportMove unitPos otherUnit) ((intersect adjacentNodes) =<< (getAdjacentNodes otherUnit))
+                      | otherUnit <- friendlies]
+   
+  let adjUnits =  [ otherUnit
+        	        | otherPos <- adjacentNodes
+                  , otherUnit <- maybeToList $
+                    provNodeToProv otherPos `Map.lookup` provUnitMap
+        	        , unitPositionP otherUnit == myPower ] 
 
-  -- adjacent units
-  let adjUnits = [ unit 
-              	 | unit <- friendlyUnits
-   			      	 , targNode <- adjacentNodes
-  	    		   	 , targNode == (unitPositionLoc unit) ] 
+  -- possible support holds (ie. just adjacent friendlies)
+  let supportHolds =  [ SupportHold unitPos otherUnit
+        	            | otherUnit <- adjUnits]
 
-  -- own units that are holding
-  let holdOrders = mapMaybe (\ho -> case ho of 
-        		      Hold u -> Just u
-        		      _ -> Nothing) currOrders
-
-  -- possible support holds
-  let supportHolds = [ SupportHold unitPos aUnit
-        	     			 | aUnit <- adjUnits
-        	     			 , hUnit <- holdOrders
-                		 , hUnit == aUnit ]
-    
   -- possible simple moves
   let moveMoves = map (Move unitPos) adjacentNodes
 
@@ -263,11 +243,11 @@ genLegalOrders provUnitMap currOrders unitPos = do
   -- TODO: create convoy moves here and add them to allMoves below
   -- let convoyMoves = ...
   
-  -- choose a move randomly and append it to the rest
+  -- add all possible moves for this unit into the map
   let allMoves = supportMoves ++ moveMoves ++ holdMoves ++ supportHolds
-  order <- randElem allMoves
-  return order : currOrders
-    -} 
+  Map.insert unitPos allMoves currOrders
+  return currOrders
+-}
 --------------------------------------------------------
 --                Metrics                             --
 --------------------------------------------------------
