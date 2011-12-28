@@ -112,3 +112,24 @@ Executable randombot
   
 --   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
 --   -- Build-tools:     
+
+Executable dumbbot
+  Main-is:           Diplomacy/AI/Bots/DumbBot/dumbbot.hs
+  -- Packages needed in order to build this package.
+  Build-depends:       
+    base >= 4,
+    cmdargs,
+    hslogger,
+    mtl,
+    DiplomacyCommon <= 1,
+    MonadRandom,
+    random,
+    random-shuffle,
+    containers,
+    transformers
+
+--   -- Modules not exported by this package.
+--   -- Other-modules:       
+  
+--   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
+--   -- Build-tools:     

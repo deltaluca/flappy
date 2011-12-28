@@ -24,6 +24,7 @@ module Diplomacy.AI.SkelBot.Common( getMyPower
                                   , randElem
                                   , provNodeToProv
                                   , noUno
+                                  , (!)
                                   ) where
 
 import Diplomacy.AI.SkelBot.Brain

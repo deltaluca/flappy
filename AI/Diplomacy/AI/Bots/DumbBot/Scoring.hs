@@ -1,5 +1,6 @@
 module Diplomacy.AI.Bots.DumbBot.Scoring ( calculateDestValue 
-                                         , calculateWinterDestValue ) where
+                                         , calculateWinterDestValue 
+                                         , calculateComp ) where
 
 import Diplomacy.Common.Data
 import Diplomacy.AI.SkelBot.Brain
@@ -108,7 +109,8 @@ calculateProxs = do
   let provVal pr = if provinceIsSupply pr
                    then if pr `elem` mySupplies
                         then (defenceWeight *) <$> calculateDefenceValue pr
-                        else (attackWeight *) <$> powerSize (supplyPowerMap Map.! pr)
+                        else (attackWeight *) <$> 
+                             (maybe (return 0) powerSize (pr `Map.lookup` supplyPowerMap))
                    else return 0
   startVals <- zip allProvs <$> mapM provVal allProvs
 
@@ -137,6 +139,13 @@ calculateProvPowStr = do
         return (maximum ((0, Neutral) : powStrs))
   allProvs <- getAllProvs
   Map.fromList <$> mapM (\p -> (,) p <$> oneProv p) allProvs
+
+calculateComp :: ( Functor m, Monad m, OrderClass o, MonadBrain o m
+                 , MonadGameKnowledge h m ) => m (Map.Map Province Int)
+calculateComp = do
+  provPowStr <- calculateProvPowStr
+  myPower <- getMyPower
+  return (Map.map (\(i, p) -> if p == myPower then 0 else i) provPowStr)
 
 calculateAddedProxs :: ( Functor m, Monad m, OrderClass o, MonadBrain o m
                        , MonadGameKnowledge h m ) => m (Map.Map ProvinceNode Int)

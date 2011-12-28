@@ -13,6 +13,8 @@ holdrandom:
 	cd AI/dist/build/randombot && ./randombot localhost 16713 &
 	cd AI/dist/build/holdbot && zsh -c 'for i in {1..6} ; do ./holdbot localhost 16713 &> outp.$$i & ; done' 
 
+hold6:
+	cd AI/dist/build/holdbot && zsh -c 'for i in {1..6} ; do ./holdbot localhost 16713 &> outp.$$i & ; done'
 
 viewerr:
 	cd AI/dist/build/randombot && emacs outp.*

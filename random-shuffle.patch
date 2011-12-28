@@ -1,0 +1,54 @@
+diff -crB random-shuffle-0.0.2/random-shuffle.cabal random-shuffle-0.0.2p/random-shuffle.cabal
+*** random-shuffle-0.0.2/random-shuffle.cabal	2009-03-22 14:37:47.000000000 +0000
+--- random-shuffle-0.0.2p/random-shuffle.cabal	2011-12-28 03:54:35.520710130 +0000
+***************
+*** 18,24 ****
+  stability:        Beta
+  
+  library
+!     build-depends:      base, random
+      exposed-modules:    System.Random.Shuffle
+      hs-source-dirs:     src
+      ghc-options:        -Wall
+--- 18,24 ----
+  stability:        Beta
+  
+  library
+!     build-depends:      base, random, MonadRandom
+      exposed-modules:    System.Random.Shuffle
+      hs-source-dirs:     src
+      ghc-options:        -Wall
+Only in random-shuffle-0.0.2p/src/System/Random: patch.patch
+diff -crB random-shuffle-0.0.2/src/System/Random/Shuffle.hs random-shuffle-0.0.2p/src/System/Random/Shuffle.hs
+*** random-shuffle-0.0.2/src/System/Random/Shuffle.hs	2009-03-22 14:37:47.000000000 +0000
+--- random-shuffle-0.0.2p/src/System/Random/Shuffle.hs	2011-12-28 03:53:12.644492443 +0000
+***************
+*** 10,19 ****
+--- 10,22 ----
+      (
+       shuffle
+      , shuffle'
++     , shuffleM
+      ) where
+  
+  import Data.Function (fix)
+  import System.Random (RandomGen, randomR)
++ import Control.Monad (liftM2)
++ import Control.Monad.Random (MonadRandom, getRandomR)
+  
+  
+  -- A complete binary tree, of leaves and internal nodes.
+***************
+*** 95,97 ****
+--- 98,108 ----
+              rseq' i gen = (j, gen) : rseq' (i - 1) gen'
+                  where
+                    (j, gen') = randomR (0, i) gen
++ 
++ -- shuffle' wrapped in a random monad
++ shuffleM :: MonadRandom m => [a] -> Int -> m [a]
++ shuffleM elements len = return . shuffle elements =<< rseqM len
++   where
++     rseqM :: MonadRandom m => Int -> m [Int]
++     rseqM 0 = return []
++     rseqM i = (:) `liftM2` getRandomR (0, i) $ rseqM (i - 1)
