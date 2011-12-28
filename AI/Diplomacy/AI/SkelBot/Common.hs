@@ -24,6 +24,7 @@ module Diplomacy.AI.SkelBot.Common( getMyPower
                                   , randElem
                                   , provNodeToProv
                                   , noUno
+                                  , genLegalOrders
                                   , (!)
                                   ) where
 
@@ -211,7 +212,7 @@ getAllProvNodes = do
 noUno :: Map.Map Power a -> Map.Map Power a
 noUno = Map.delete Neutral
 
-{-
+
 -- Generates all legal orders only involving own units
 genLegalOrders :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => 
 							(Map.Map UnitPosition [OrderMovement]) -> UnitPosition -> m (Map.Map UnitPosition [OrderMovement])
@@ -220,11 +221,13 @@ genLegalOrders currOrders unitPos = do
   provUnitMap <- getProvUnitMap
   myPower <- getMyPower
   friendlies <- return.(filter (/= unitPos)) =<< getMyUnits
-
-  -- possible support moves
-  let supportMoves =  concat [map ((SupportMove unitPos otherUnit).provNodeToProv) $ (intersect adjacentNodes) =<< (getAdjacentNodes otherUnit) 
-                      | otherUnit <- friendlies]
    
+  --let supportMoves = concat $ mapM (\x -> (map ((SupportMove unitPos x).provNodeToProv) (intersect adjacentNodes (getAdjacentNodes x)))) friendlies
+  
+  adjUnitNodes <- mapM getAdjacentNodes friendlies
+  let relevantAdjUnitNodes = (map (intersect adjacentNodes) adjUnitNodes)
+  let supportMoves = concat [map ((SupportMove unitPos otherUnit).provNodeToProv) otherNodes | (otherUnit, otherNodes) <- zip friendlies relevantAdjUnitNodes]
+
   let adjUnits =  [ otherUnit
         	        | otherPos <- adjacentNodes
                   , otherUnit <- maybeToList $
@@ -247,7 +250,7 @@ genLegalOrders currOrders unitPos = do
   -- add all possible moves for this unit into the map
   let allMoves = supportMoves ++ moveMoves ++ holdMoves ++ supportHolds
   return $ Map.insert unitPos allMoves currOrders
--}
+
 --------------------------------------------------------
 --                Metrics                             --
 --------------------------------------------------------
