@@ -22,10 +22,19 @@ module Diplomacy.AI.SkelBot.Common( getMyPower
                                   , getAllProvs
                                   , getAllProvNodes
                                   , randElem
+				  , randElems
                                   , provNodeToProv
                                   , noUno
                                   , genLegalOrders
                                   , (!)
+                                  -- Metrics
+                                  , getProvOcc
+                                  , getSuppControl
+                                  , getAdjProvOcc
+                                  , targNodeOccupied
+                                  , targNodeFriendly
+                                  , targNodeIsSupply
+                                  , targNodeAdjUnits
                                   ) where
 
 import Diplomacy.AI.SkelBot.Brain
@@ -132,6 +141,14 @@ randElem l = do
     then error "randElem called with empty list"
     else return . (l !!) =<< getRandomR (0, len - 1)
 
+-- pick N random elements from a list
+randElems :: (MonadRandom m, Eq a) => Integer -> [a] -> m [a]
+randElems 0 l = return []
+randElems n l = do
+	x <- randElem l
+	xs <- randElems (n-1) (delete x l)
+	return (x : xs)
+
 -- abstracts a province to just its name (ie. disregarding coasts etc.)
 provNodeToProv :: ProvinceNode -> Province
 provNodeToProv (ProvNode prov) = prov
@@ -222,10 +239,10 @@ genLegalOrders currOrders unitPos = do
   myPower <- getMyPower
   friendlies <- return.(filter (/= unitPos)) =<< getMyUnits
    
-  --let supportMoves = concat $ mapM (\x -> (map ((SupportMove unitPos x).provNodeToProv) (intersect adjacentNodes (getAdjacentNodes x)))) friendlies
-  
   adjUnitNodes <- mapM getAdjacentNodes friendlies
+  
   let relevantAdjUnitNodes = (map (intersect adjacentNodes) adjUnitNodes)
+  
   let supportMoves = concat [map ((SupportMove unitPos otherUnit).provNodeToProv) otherNodes | (otherUnit, otherNodes) <- zip friendlies relevantAdjUnitNodes]
 
   let adjUnits =  [ otherUnit
@@ -285,10 +302,33 @@ getAdjProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => UnitP
 getAdjProvOcc unit = do
   provNodes <- getAdjacentNodes unit
   let provs = map provNodeToProv provNodes
-  unitPositions <- getMyUnits
+  unitPositions <- (getAdjacentUnits.provNodeToProv.unitPositionLoc) unit
   myPower <- getMyPower
   let ourOcc = length [1 | p <- (map unitPositionP unitPositions), p == myPower]
   let enemyOcc = length unitPositions - ourOcc
   let noOcc = length provs - length unitPositions
   return (noOcc, ourOcc, enemyOcc) 
 
+targNodeOccupied :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Province -> m Bool 
+targNodeOccupied prov = do
+	unitMap <- getProvUnitMap
+	case prov `Map.lookup` unitMap of
+		Nothing -> return False
+		_ -> return True
+
+targNodeFriendly :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Province -> m Bool
+targNodeFriendly prov = do
+	unitMap <- getProvUnitMap
+	myPower <- getMyPower
+	case prov `Map.lookup` unitMap of
+		Just u -> return (myPower == (unitPositionP u))
+		_ -> return True --Empty province is friendly I guess?
+
+targNodeIsSupply :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Province -> m Bool 
+targNodeIsSupply prov = do
+	return $ provinceIsSupply prov
+
+targNodeAdjUnits :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Province -> m Int
+targNodeAdjUnits prov = do
+	return.length =<< getAdjacentUnits prov
+	
