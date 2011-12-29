@@ -7,6 +7,8 @@
 
 module Main where
 
+import Diplomacy.AI.Bots.LearnBot.PatternWeights
+
 import Diplomacy.AI.SkelBot.SkelBot
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.DipBot

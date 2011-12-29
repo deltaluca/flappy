@@ -75,6 +75,27 @@ Library
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
   -- Build-tools:         
   
+Executable learnbot
+  Main-is:           Diplomacy/AI/Bots/LearnBot/learnbot.hs
+  -- Packages needed in order to build this package.
+  Build-depends:       
+    base >= 4,
+    cmdargs,
+    hslogger,
+    mtl,
+    DiplomacyCommon <= 1,
+    MonadRandom,
+    random,
+    containers,
+    transformers,
+    HDBC,
+    HDBC-sqlite3
+
+--   -- Modules not exported by this package.
+--   -- Other-modules:       
+  
+--   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
+--   -- Build-tools:     
 Executable holdbot
   Main-is:           Diplomacy/AI/Bots/HoldBot/holdbot.hs
   -- Packages needed in order to build this package.
@@ -133,3 +154,4 @@ Executable dumbbot
   
 --   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
 --   -- Build-tools:     
+
