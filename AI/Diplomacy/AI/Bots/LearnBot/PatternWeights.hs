@@ -23,10 +23,19 @@ doNothing :: ( Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowle
 doNothing = do
   return ()
 
---weighs the ordersets based on a set of given metrics, and obtains the weights
---from the weight database
+average :: [Double] -> Double
+average l = (sum l) / ((fromIntegral.length) l)
+
+weighOrder :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => OrderMovement -> m Double
+weighOrder = undefined
+
+weighOrderSet :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => [OrderMovement] -> m (Double, [OrderMovement])
+weighOrderSet orders = do
+  orderSetWeight <- return.average =<< mapM weighOrder orders
+  return (orderSetWeight, orders)
+
 weighOrderSets :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => [[OrderMovement]] -> m [(Double, [OrderMovement])]
-weighOrderSets = undefined
+weighOrderSets = return =<< mapM weighOrderSet 
 
 randWeightedElem :: (MonadRandom m) => [(Double, [a])] -> m [a]
 randWeightedElem elemWeights = do
