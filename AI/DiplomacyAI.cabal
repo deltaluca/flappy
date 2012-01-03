@@ -48,11 +48,12 @@ Cabal-version:       >=1.2
 
 Library
   -- Modules exported by the library.
-  Exposed-modules: Diplomacy.AI.SkelBot.Brain,
+  Exposed-modules: Diplomacy.AI.SkelBot.Brain
                    Diplomacy.AI.SkelBot.SkelBot
                    Diplomacy.AI.SkelBot.DipBot
                    Diplomacy.AI.SkelBot.Comm
                    Diplomacy.AI.SkelBot.Common
+                   Diplomacy.AI.SkelBot.Scoring
   
   -- Packages needed in order to build this package.
   Build-depends:       
@@ -67,7 +68,9 @@ Library
     MaybeT,
     monad-loops,
     MonadRandom,
-    parsec
+    parsec,
+    deepseq,
+    time
     
   -- Modules not exported by this package.
   -- Other-modules:       
@@ -148,6 +151,8 @@ Executable dumbbot
     random-shuffle,
     containers,
     transformers
+
+  Ghc-Options: -Wall -Werror -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
 
 --   -- Modules not exported by this package.
 --   -- Other-modules:       

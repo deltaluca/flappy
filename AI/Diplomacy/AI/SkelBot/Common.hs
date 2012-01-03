@@ -13,6 +13,7 @@ module Diplomacy.AI.SkelBot.Common( getMyPower
                                   , getMyRetreats
                                   , getAdjacentNodes
                                   , getAdjacentUnits
+                                  , getAdjacentUnits2
                                   , getAllAdjacentNodes
                                   , getAllAdjacentNodes2
                                   , getProvUnitMap
@@ -35,18 +36,29 @@ module Diplomacy.AI.SkelBot.Common( getMyPower
                                   , targNodeFriendly
                                   , targNodeIsSupply
                                   , targNodeAdjUnits
+                                  , lengthI
+                                  , brainLog
+                                  , shuff
                                   ) where
 
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.Common.Data
 
+import System.Random.Shuffle
+import System.Log.Logger
 import Data.Maybe
 import Data.List
+import Data.Time.Clock
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Random
+import Control.Monad.IO.Class
 
 import qualified Data.Map as Map
+
+  -- for hslogger bug
+import Control.Exception
+import Control.DeepSeq
 
 (!) :: (Ord a) => Map.Map a [b] -> a -> [b]
 mp ! i = maybe [] id (Map.lookup i mp)
@@ -142,12 +154,15 @@ randElem l = do
     else return . (l !!) =<< getRandomR (0, len - 1)
 
 -- pick N random elements from a list
-randElems :: (MonadRandom m, Eq a) => Integer -> [a] -> m [a]
-randElems 0 l = return []
-randElems n l = do
-	x <- randElem l
-	xs <- randElems (n-1) (delete x l)
-	return (x : xs)
+randElems :: (MonadRandom m) => Int -> [a] -> m [a]
+randElems n l = return . take n =<< shuff l
+
+             -- wat 
+-- randElems 0 _ = return []
+-- randElems n l = do
+-- 	x <- randElem l
+-- 	xs <- randElems (n-1) (delete x l)
+-- 	return (x : xs)
 
 -- abstracts a province to just its name (ie. disregarding coasts etc.)
 provNodeToProv :: ProvinceNode -> Province
@@ -198,7 +213,7 @@ getSupplyPowerMap = do
   curMapState <- asksGameState gameStateMap
   let supplies = supplyOwnerships curMapState
   return . Map.foldlWithKey
-    (\mp pow prs -> foldl (\mp pr -> Map.insert pr pow mp) mp prs) Map.empty $ supplies
+    (\mp pow prs -> foldl (\m pr -> Map.insert pr pow m) mp prs) Map.empty $ supplies
 
 getSupplyPowerMapNoUno :: (OrderClass o, MonadBrain o m,
                            MonadGameKnowledge h m) => m (Map.Map Province Power)
@@ -206,7 +221,7 @@ getSupplyPowerMapNoUno = do
   curMapState <- asksGameState gameStateMap
   let supplies = noUno (supplyOwnerships curMapState)
   return . Map.foldlWithKey
-    (\mp pow prs -> foldl (\mp pr -> Map.insert pr pow mp) mp prs) Map.empty $ supplies
+    (\mp pow prs -> foldl (\m pr -> Map.insert pr pow m) mp prs) Map.empty $ supplies
 
 getAdjacentUnits :: (OrderClass o, MonadBrain o m,
                      MonadGameKnowledge h m) => Province -> m [UnitPosition]
@@ -214,6 +229,12 @@ getAdjacentUnits prov = do
   provNodeUnitMap <- getProvNodeUnitMap
   adjNodes <- getAllAdjacentNodes prov
   return $ mapMaybe (`Map.lookup` provNodeUnitMap) adjNodes
+
+-- same as getAdjacentUnits but only gives units that can move to the province
+getAdjacentUnits2 :: (OrderClass o, MonadBrain o m,
+                      MonadGameKnowledge h m) => Province -> m [UnitPosition]
+getAdjacentUnits2 prov = do
+  filterM (\u -> return . elem prov . map provNodeToProv =<< getAdjacentNodes u) =<< getAdjacentUnits prov
 
 getAllProvs :: (Functor m, OrderClass o, MonadBrain o m,
                 MonadGameKnowledge h m) => m [Province]
@@ -273,40 +294,42 @@ genLegalOrders currOrders unitPos = do
 --------------------------------------------------------
 
 
+lengthI = fromIntegral . length
+
 -- given a power returns the number of supply centers owned and non-supply centers occupied
-getProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Power -> m (Int, Int)
+getProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Power -> m (Integer, Integer)
 getProvOcc power = do
    suppC <- getSupplies power
    units <- getUnits power
    let occupied_prov = map (provNodeToProv . unitPositionLoc) units
-   return (length suppC, length (occupied_prov \\ suppC)) 
+   return (lengthI suppC, lengthI (occupied_prov \\ suppC)) 
 
 
 -- returns a three-tuple of supply center control, (you, enemy, no-one)
-getSuppControl :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m (Int, Int, Int)
+getSuppControl :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m (Integer, Integer, Integer)
 getSuppControl = do
   mapDef <- asksGameInfo gameInfoMapDef
 
   let provinces = mapDefProvinces mapDef
-  let numSupplies = length [1 | p <- provinces, provinceIsSupply p == True]
+  let numSupplies = lengthI . filter provinceIsSupply $ provinces
   
   powerSupplies <- mapM getSupplies (mapDefPowers mapDef)
-  let allSupplies = sum $ map length powerSupplies
-  mySupplies <- return . length =<< getMySupplies
+  let allSupplies = sum $ map lengthI powerSupplies
+  mySupplies <- return . lengthI =<< getMySupplies
   
   return (mySupplies, allSupplies - mySupplies, numSupplies - mySupplies - allSupplies)
 
 
 -- returns a three-tuple of province occupation around adjacent provinces only
-getAdjProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => UnitPosition -> m (Int, Int, Int)
+getAdjProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => UnitPosition -> m (Integer, Integer, Integer)
 getAdjProvOcc unit = do
   provNodes <- getAdjacentNodes unit
   let provs = map provNodeToProv provNodes
-  unitPositions <- (getAdjacentUnits.provNodeToProv.unitPositionLoc) unit
+  unitPoss <- (getAdjacentUnits.provNodeToProv.unitPositionLoc) unit
   myPower <- getMyPower
-  let ourOcc = length [1 | p <- (map unitPositionP unitPositions), p == myPower]
-  let enemyOcc = length unitPositions - ourOcc
-  let noOcc = length provs - length unitPositions
+  let ourOcc = lengthI . filter ((myPower ==) . unitPositionP) $ unitPoss
+  let enemyOcc = lengthI unitPoss - ourOcc
+  let noOcc = lengthI provs - lengthI unitPoss
   return (noOcc, ourOcc, enemyOcc) 
 
 targNodeOccupied :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Province -> m Bool 
@@ -332,3 +355,16 @@ targNodeAdjUnits :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Pr
 targNodeAdjUnits prov = do
 	return.length =<< getAdjacentUnits prov
 	
+
+shuff :: (MonadRandom m) => [a] -> m [a]
+shuff [] = return []
+shuff l = shuffleM l (length l - 1)
+
+brainLog :: (MonadIO m, OrderClass o, MonadBrain o m) => String -> m ()
+brainLog msg = do
+  toPrint <- liftIO . evaluate . force $ msg
+  time <- liftIO getCurrentTime
+  Turn phase year <- asksGameState gameStateTurn
+  liftIO . noticeM "Main" $
+    "[" ++ show time ++ " : " ++ show year ++
+    " (" ++ show phase ++ ")] " ++ toPrint  

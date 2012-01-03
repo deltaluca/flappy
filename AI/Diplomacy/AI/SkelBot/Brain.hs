@@ -1,6 +1,9 @@
 {-# LANGUAGE 
   MultiParamTypeClasses
 , FlexibleInstances
+, FlexibleContexts
+, UndecidableInstances
+, OverlappingInstances
 , GeneralizedNewtypeDeriving
 , FunctionalDependencies #-}
 
@@ -28,7 +31,6 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Identity
 import Control.Concurrent.STM
-import Data.Functor
 
 newtype GameKnowledgeT h m a = GameKnowledge (StateT h (ReaderT GameInfo m) a)
                              deriving (Functor, Monad, MonadReader GameInfo, MonadState h)
@@ -90,6 +92,18 @@ instance (Monad m, OrderClass o) => MonadGameKnowledge h (BrainT o h m) where
   getsHistory = liftGameKnowledge . getsHistory
   putHistory = liftGameKnowledge . putHistory
   
+instance (OrderClass o, MonadBrain o m, MonadTrans t, Monad (t m)) =>
+         MonadBrain o (t m) where
+  asksGameState = lift . asksGameState
+  getsOrders = lift . getsOrders
+  putOrders = lift . putOrders
+
+instance (MonadGameKnowledge h m, MonadTrans t, Monad (t m)) =>
+         MonadGameKnowledge h (t m) where
+  asksGameInfo = lift . asksGameInfo
+  getsHistory = lift . getsHistory
+  putHistory = lift . putHistory
+
 class (Monad m, OrderClass o) => MonadBrain o m | m -> o where
   asksGameState :: (GameState -> a) -> m a
   getsOrders :: ([o] -> a) -> m (Maybe a)
@@ -104,14 +118,14 @@ class (Monad m, OrderClass o) => MonadBrain o m | m -> o where
 
 instance (Monad m, OrderClass o) => MonadBrain o (BrainT o h m) where
   asksGameState = Brain . asks
-  getsOrders f = maybe (return Nothing) (return . Just . f) =<< getOrders
-  putOrders = Brain . put
+  getsOrders f = maybe (return Nothing) (return . Just . f) =<< Brain get
+  putOrders o = Brain (put o)
 
 liftGameKnowledge :: (Monad m, OrderClass o) => GameKnowledgeT h m a -> BrainT o h m a
 liftGameKnowledge = Brain . lift . lift
 
 runBrainT :: (OrderClass o) => BrainT o h m a -> GameState -> GameKnowledgeT h m (a, Maybe [o])
-runBrainT (Brain brain) mapState = runStateT (runReaderT brain mapState) Nothing
+runBrainT (Brain brain) mapSt = runStateT (runReaderT brain mapSt) Nothing
 
 mapBrainT :: (Monad m, Monad n, OrderClass o) =>
              (m ((a, Maybe [o]), h) -> n ((b, Maybe [o]), h)) ->

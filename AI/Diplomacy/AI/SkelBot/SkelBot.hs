@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleInstances, DeriveDataTypeable, MultiParamTypeClasses, FunctionalDependencies, TypeSynonymInstances, MonadComprehensions #-}
 
-module Diplomacy.AI.SkelBot.SkelBot (skelBot, Master(..)) where
+module Diplomacy.AI.SkelBot.SkelBot (skelBot, Master) where
 
 import Diplomacy.Common.DaideHandle
 import Diplomacy.Common.DaideMessage
@@ -37,6 +37,8 @@ import System.IO
 import Network
 import Network.BSD
 
+-- import qualified Control.Exception as Exc
+-- import qualified Control.DeepSeq as DS
 import qualified Text.Parsec.Prim as Parsec
 import qualified Data.Map as Map
 
@@ -123,8 +125,8 @@ connectToServer :: String -> PortNumber -> IO DaideHandleInfo
 connectToServer server port = do
   hndle <- connectTo server (PortNumber port)
   hSetBuffering hndle NoBuffering
-  hostName <- getHostName
-  return (Handle hndle hostName port)
+  hostNam <- getHostName
+  return (Handle hndle hostNam port)
 
 communicate :: DipBot Master h -> DaideHandle ()
 communicate bot = do
@@ -148,7 +150,7 @@ runProtocol (Protocol prot) = do
 tokenPrim a b c = Protocol $ Parsec.tokenPrim a b c
 parserZero = Protocol Parsec.parserZero
 parserFail = Protocol . Parsec.parserFail
-many = Protocol . Parsec.many . unProtocol
+--many = Protocol . Parsec.many . unProtocol
 try = Protocol . Parsec.try . unProtocol
 a <|> b = Protocol $ unProtocol a Parsec.<|> unProtocol b
 
@@ -179,9 +181,9 @@ dipMsg f = do
       DipError err -> liftMaster $ do
         lift . note $ "DipError: " ++ show err
         pushMsg FM >> shutdownMaster
-      EndGameStats turn stats -> do
-        liftMaster . lift . note $ "End Game Statistics (" ++ show turn ++ "):\n" ++ show stats
-        dipMsg f
+      EndGameStats turn stats -> liftMaster $ do
+        lift . note $ "End Game Statistics (" ++ show turn ++ "):\n" ++ show stats
+        pushMsg FM >> shutdownMaster
       otherMsg -> maybe parserZero return =<< f otherMsg
 
 dipMsg1 :: DipMessage -> Protocol DipMessage
@@ -213,45 +215,47 @@ protocol bot = do
   -- initialise history
   initHist <- liftMaster $ dipBotInitHistory bot -- pass in mapDef?  
   
-  Start power startCode _ _ <- nextDip
+  Start power _ _ _ <- nextDip
   
   CurrentPosition scos <- nextDip
   CurrentUnitPosition turn unitPoss <- nextDip
   
   let gameInfo = GameInfo { gameInfoMapDef = mapDefinition
-                          , gameInfoTimeout = 60 * 10 ^ 6
+                          , gameInfoTimeout = 6 * 1000
                           , gameInfoPower = power }
 
   let initState = GameState { gameStateMap = MapState { supplyOwnerships = scos
                                                       , unitPositions = unitPoss }
                             , gameStateTurn = turn }
 
-  let mapDef = gameInfoMapDef gameInfo
-  let timeout = gameInfoTimeout gameInfo  
+  let tout = gameInfoTimeout gameInfo  
       
   liftMaster . lift . note $ "Starting main game loop"
   -- Run the main game loop
-  _ <- runStateT (runGameKnowledgeT (forever (gameLoop bot timeout))
+  _ <- runStateT (runGameKnowledgeT (forever (gameLoop bot tout))
                   gameInfo initHist
                  )
        initState
   return ()  
 
 gameLoop :: DipBot Master h -> Int -> GameKnowledgeT h (StateT GameState Protocol) ()
-gameLoop bot timeout = do
+gameLoop bot tout = do
   let brainMap = Map.fromList
-                 [ (Spring, execBrain (dipBotBrainMovement bot) timeout)
-                 , (Summer, execBrain (dipBotBrainRetreat bot) timeout)
-                 , (Fall,   execBrain (dipBotBrainMovement bot) timeout)
-                 , (Autumn, execBrain (dipBotBrainRetreat bot) timeout)
-                 , (Winter, execBrain (dipBotBrainBuild bot) timeout) ]  
+                 [ (Spring, execBrain (dipBotBrainMovement bot) tout)
+                 , (Summer, execBrain (dipBotBrainRetreat bot) tout)
+                 , (Fall,   execBrain (dipBotBrainMovement bot) tout)
+                 , (Autumn, execBrain (dipBotBrainRetreat bot) tout)
+                 , (Winter, execBrain (dipBotBrainBuild bot) tout) ]  
   
   (GameState (MapState scos _) turn) <- lift get
   let ebrain = brainMap Map.! turnPhase turn
 
   -- sort so that we can do some checks on the responses
   -- TODO sanity checks on orders (all units are taken care of, validity)
+  lift . lift . liftMaster . lift . note $ "Running Brain"
   moveOrders <- sort <$> ebrain
+  lift . lift . liftMaster . lift . note $
+    "Brain finished with " ++ show (length moveOrders) ++ " moves"
   
   lift . lift $ do            -- not concerned with history/gamestate yet
     -- dont submit empty order list
@@ -326,7 +330,7 @@ checkLost _ _ = return ()
 -- dont mind the lifts
 execBrain :: (OrderClass o) => BrainCommT o h Master () -> Int ->
              GameKnowledgeT h (StateT GameState Protocol) [Order]
-execBrain botBrain timeout = do
+execBrain botBrain tout = do
   gameState <- lift get
   (brainIn, brainOut) <- lift . lift . liftMaster . Master . lift $ ask -- wat
   ordVar <- liftIO $ newTVarIO Nothing
@@ -335,7 +339,7 @@ execBrain botBrain timeout = do
                       $ runBrainCommT botBrain ordVar brainIn brainOut
   morders <- runMaybeT $ do
     -- run the brain
-    let earlyFinish = runGameKnowledgeTTimed timeout gameKnowledge
+    let earlyFinish = runGameKnowledgeTTimed tout gameKnowledge
     -- check TVar if timed out
     let timeoutFinish = MaybeT . liftIO . atomically $ readTVar ordVar
     earlyFinish `mplus` timeoutFinish

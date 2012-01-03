@@ -3,13 +3,10 @@ module Diplomacy.AI.SkelBot.Comm( CommT, runCommT
                                 , MonadComm(..)
                                 ) where
 
-import Diplomacy.Common.DipMessage
-import Diplomacy.Common.Data
 import Diplomacy.Common.TSeq
 import Diplomacy.Common.MonadSTM
 
 import Control.Monad.Reader
-import Control.Monad.Trans
 import Control.Concurrent.STM
 
                        -- (receiver, dispatcher)

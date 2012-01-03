@@ -8,28 +8,27 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
 module Main where
 
-import Diplomacy.AI.Bots.DumbBot.Scoring
+import Diplomacy.AI.SkelBot.Scoring
 
 import Diplomacy.AI.SkelBot.SkelBot
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.DipBot
 import Diplomacy.AI.SkelBot.Common
 
-import Diplomacy.Common.DipMessage
 import Diplomacy.Common.Data
 
 import Data.Maybe
 import Data.List
 import System.Random
-import System.Random.Shuffle
 import Control.Monad.IO.Class
 import Control.Monad.Random
 import Control.Monad.Trans
 import Control.Monad
+--import Control.DeepSeq
+
+--import Debug.Trace
 
 import qualified Data.Map as Map
-
-import Debug.Trace
 
 -- pure brains
 
@@ -46,19 +45,13 @@ type DumbBrainMoveCommT = BrainCommT OrderMovement ()
 type DumbBrainRetreatCommT = BrainCommT OrderRetreat ()
 type DumbBrainBuildCommT = BrainCommT OrderBuild ()
 
-instance (OrderClass o) => MonadBrain o (DumbBrain o) where
-  asksGameState = lift . asksGameState
-  getsOrders = lift . getsOrders
-  putOrders = lift . putOrders
+_SEED = 0 :: Int
 
-instance (OrderClass o) => MonadGameKnowledge () (DumbBrain o) where
-  asksGameInfo = lift . asksGameInfo
-  getsHistory = lift . getsHistory
-  putHistory = lift . putHistory
+main = do
+  --setStdGen (mkStdGen _SEED)
+  skelBot dumbBot
 
-main = skelBot dumbBot
-
-dumbBot :: (MonadIO m) => DipBot m ()
+dumbBot :: (Functor m, MonadIO m) => DipBot m ()
 dumbBot = DipBot { dipBotName = "FlappyDumbBot"
                  , dipBotVersion = 0.1
                  , dipBotBrainMovement = dumbBrainMoveComm
@@ -67,120 +60,187 @@ dumbBot = DipBot { dipBotName = "FlappyDumbBot"
                  , dipBotProcessResults = dumbProcessResults
                  , dipBotInitHistory = dumbInitHistory }
 
-withStdGen :: (MonadIO m, OrderClass o) =>
-              DumbBrain o a -> BrainCommT o () m a
-withStdGen ranBrain = do
-  (ret, newStdGen) <- liftBrain
-                      . runBrain
-                      . runRandT ranBrain
-                      =<< liftIO getStdGen
-  liftIO $ setStdGen newStdGen  -- set new stdgen
-  return ret
+withStdGen :: (MonadIO m, OrderClass o) => RandT StdGen (DumbBrainCommT o m) () -> DumbBrainCommT o m ()
+withStdGen rand = do
+  (_, nextStdGen) <- runRandT rand =<< liftIO getStdGen
+  liftIO $ setStdGen nextStdGen  -- set new stdgen
 
-dumbBrainMoveComm :: (MonadIO m) => DumbBrainMoveCommT m ()
+dumbBrainMoveComm :: (Functor m, MonadIO m) => DumbBrainMoveCommT m ()
 dumbBrainMoveComm = withStdGen $ do
-  destMap <- calculateDestValue
-  competition <- calculateComp
+  --brainLog "Entering dumbBrainMoveComm"
   units <- getMyUnits
-  runits <- shuffleM units (length units)
-    
-  -- ERROR there is a bug somewhere here (inf loop)
-  -- -may- have been better to split this up into helpers... NOT
-  (\f -> foldM_ f [] runits) $ \occNodeUnits unit -> do
+  --brainLog $ "Units : " ++ show units
+  runits <- shuff units
+  --brainLog $ "Random Units : " ++ show runits
+  destMap <- calculateDestValue
+  --brainLog $ "DestMap : " ++ show destMap
+  competition <- calculateComp
+  --brainLog $ "Competition : " ++ show competition
+
+  --brainLog "CALCULATING MMAP"
+
+  mmap <- (\f -> foldM f Map.empty runits) $ \movementMap unit -> do
+    --brainLog $ "Move for " ++ show unit
     adjNodes <- getAdjacentNodes unit
     let makeMove nodeset = do
-          let nodes = unitPositionLoc unit : nodeset
-              -- square the weights
-              weights = map ((\x -> x * x) . (destMap Map.!)) nodes
-              weightsSum = sum weights
-          x <- getRandomR (0, weightsSum - 1) -- implicit normalisation
-          let pickNode [(_, n)] _ = n
-              pickNode ((a, n) : as) x = if x < a
-                                         then n
-                                         else pickNode as (x - a)
-              chosenNode = pickNode (zip weights nodes) x
-          case chosenNode `lookup` occNodeUnits of
-            Nothing -> do                             -- if noone occupies
-              appendOrder $ move unit chosenNode -- move
-              return $ (chosenNode, unit) : occNodeUnits -- add occupation
-            Just otherUnit ->                          -- if someone already occupies
-              if competition Map.! (provNodeToProv chosenNode) > 1 -- if support is needed
-              then do
-                appendOrder $ support unit otherUnit chosenNode -- support
-                return $ (unitPositionLoc unit, unit) : occNodeUnits -- add occupation
-              else makeMove (chosenNode `delete` nodeset) -- try again
-    makeMove adjNodes
-                    
-  -- DEBUG should this be in Common.hs?
-  where move unit node =
-          if unitPositionLoc unit == node
-          then Hold unit
-          else Move unit node
-        support unit otherUnit node =
-          if unitPositionLoc otherUnit == node
-          then SupportHold unit otherUnit
-          else SupportMove unit otherUnit (provNodeToProv node)
-
-dumbBrainRetreatComm :: (MonadIO m) => DumbBrainRetreatCommT m ()
-dumbBrainRetreatComm = withStdGen $ do
-  destMap <- calculateDestValue
-  retreats <- lift getMyRetreats
-  rretreats <- shuffleM retreats (length retreats)
+          chosenNode <- chooseNode destMap nodeset
+          --brainLog $ "Chosen node: " ++ show chosenNode
+          let prov = provNodeToProv chosenNode
+          case prov `Map.lookup` movementMap of
+            Nothing ->          -- if noone's choosing it
+              return $ Map.insert prov [(unit, chosenNode)] movementMap
+            Just moveList ->    -- if there are peeps choosing it
+              if competition Map.! prov > 1 || unitPositionLoc unit == chosenNode -- if support is needed or holding
+              then
+                return $ Map.insert prov ((unit, chosenNode) : moveList) movementMap
+              else
+                makeMove (chosenNode `delete` nodeset) -- try again
     
+    makeMove (unitPositionLoc unit : adjNodes)
+
+  --brainLog $ show mmap
+
+    -- make the moves
+  (\f -> mapM_ f (Map.toList mmap)) $ \(prov, unitNodeList) -> do
+    -- first list is possibly a singleton with the holding unit
+    let (as, bs) = partition (\(u, pn) -> unitPositionLoc u == pn) unitNodeList
+    case listToMaybe as of
+      Nothing -> do
+        let ((mvUnit, mvPn) : supps) = bs
+        appendOrder $ Move mvUnit mvPn
+        mapM_ (\(suppUnit, _) ->
+                appendOrder $ SupportMove suppUnit mvUnit prov) supps
+      Just (holdUnit, _) -> do
+        appendOrder $ Hold holdUnit
+        mapM_ (\(suppUnit, _) ->
+                appendOrder $ SupportHold suppUnit holdUnit) bs
+
+  --brainLog "MOVES MADE"
+  -- (\f -> foldM_ f [] runits) $ \occNodeUnits unit -> do
+  --   adjNodes <- getAdjacentNodes unit
+  --         makeMove nodeset = do
+  --           chosenNode <- chooseNode destMap nodeset
+  --           case chosenNode `lookup` occNodeUnits of
+  --             Nothing -> do                             -- if noone occupies
+  --               appendOrder $ move unit chosenNode -- move
+  --               return $ (chosenNode, unit) : occNodeUnits -- add occupation
+  --             Just otherUnit ->                          -- if someone already occupies
+  --               if competition Map.! (provNodeToProv chosenNode) > 1 -- if support is needed
+  --               then do
+  --                 appendOrder $ support unit otherUnit chosenNode -- support
+  --                 return $ (unitPositionLoc unit, unit) : occNodeUnits -- add occupation
+  --               else makeMove (chosenNode `delete` nodeset) -- try again
+  
+  --     makeMove (unitPositionLoc unit : adjNodes)
+
+  -- DEBUG should this be in Common.hs?
+move :: UnitPosition -> ProvinceNode -> OrderMovement
+move unit node =
+  if unitPositionLoc unit == node
+  then Hold unit
+  else Move unit node
+
+support :: UnitPosition -> UnitPosition -> ProvinceNode -> OrderMovement
+support unit otherUnit node =
+  if unitPositionLoc otherUnit == node
+  then SupportHold unit otherUnit
+  else SupportMove unit otherUnit (provNodeToProv node)
+
+chooseNode destMap nodes = do
+  -- square the weights
+  let weights = map (\x -> x * x) . normalise . map (destMap Map.!) $ nodes
+      weightsSum = sum weights
+  x <- getRandomR (0.0, weightsSum)
+  return $ pickNode (zip weights nodes) x
+  
+
+pickNode :: [(Double, a)] -> Double -> a
+pickNode [(_, n)] _ = n
+pickNode ((a, n) : as) x = if x < a
+                           then n
+                           else pickNode as (x - a)
+pickNode [] _ = error "pickNode []"
+
+-- DEBUG refactor stuff
+dumbBrainRetreatComm :: (Functor m, MonadIO m) => DumbBrainRetreatCommT m ()
+dumbBrainRetreatComm = withStdGen $ do
+  --brainLog $ "Entering dumbBrainRetreatComm"
+  
+  destMap <- calculateDestValue
+  
+  --brainLog $ "destMap: " ++ show destMap
+  
+  retreats <- lift getMyRetreats
+  
+  --brainLog $ "retreats: " ++ show retreats
+  
+  rretreats <- shuff retreats
+
+  --brainLog $ "rretreats: " ++ show rretreats
+  
+  putOrders $ Just []
   (\f -> foldM_ f [] rretreats) $ \occNodeUnits (unit, retNodes) -> do
-    let makeMove [] = lift (appendOrder (Disband unit)) >> return occNodeUnits
-        makeMove nodeset = do
-          let nodes = unitPositionLoc unit : nodeset
-              -- square the weights
-              weights = map ((\x -> x * x) . (destMap Map.!)) nodes
-              weightsSum = sum weights
-          x <- getRandomR (0, weightsSum - 1) -- implicit normalisation
-          let pickNode [(_, n)] _ = n
-              pickNode ((a, n) : as) x = if x < a
-                                         then n
-                                         else pickNode as (x - a)
-              chosenNode = pickNode (zip weights nodes) x
+    let makMove [] = lift (appendOrder (Disband unit)) >> return occNodeUnits
+        makMove nodeset = do
+          chosenNode <- chooseNode destMap nodeset
           case chosenNode `lookup` occNodeUnits of
             Nothing -> do                             -- if noone occupies
               appendOrder $ Retreat unit chosenNode -- move
               return $ (chosenNode, unit) : occNodeUnits -- add occupation
-            Just otherUnit ->                          -- if someone already occupies
-              makeMove (chosenNode `delete` nodeset) -- try again
-    makeMove retNodes
-    
+            Just _ ->                          -- if someone already occupies
+              makMove (chosenNode `delete` nodeset) -- try again
+    makMove retNodes
 
-dumbBrainBuildComm :: (MonadIO m) => DumbBrainBuildCommT m ()
+normalise :: Integral a => [a] -> [Double]
+normalise l = map (\x -> fromIntegral x / fromIntegral (sum l)) l
+
+dumbBrainBuildComm :: (Functor m, MonadIO m) => DumbBrainBuildCommT m ()
 dumbBrainBuildComm = withStdGen $ do
+  --brainLog $ "Entering dumbBrainBuildComm"
+  
   myPower <- getMyPower
+  --brainLog $ "myPower: " ++ show myPower
   myUnits <- getMyUnits
+  --brainLog $ "myUnits: " ++ show myUnits
   mySupplies <- getMySupplies
+  --brainLog $ "mySupplies: " ++ show mySupplies
   provUnitMap <- getProvUnitMap
+  --brainLog $ "provUnitMap: " ++ show provUnitMap
   destMap <- calculateWinterDestValue
-    
+  --brainLog $ "destMap: " ++ show destMap
+  
   let difference = length myUnits - length mySupplies
 
   if difference < 0
-    then 
+    then
     do
-      homes <- getMyHomeSupplies
-      let homeVal = reverse . sort $ flip zip homes $ map ((destMap Map.!) . ProvNode) homes
-      putOrders . Just =<< mapM (\(_, h) -> case h `Map.lookup` provUnitMap of
-                                    Nothing -> buildRandomUnit h
-                                    Just _ -> return (Waive myPower)
-                                ) (take (-difference) homeVal)
+      --brainLog $ "Building"
+      allHomes <- getMyHomeSupplies
+      let homes = filter (`elem` mySupplies) allHomes
+          unoccHomes = filter (\h -> maybe True (const False)
+                                     (h `Map.lookup` provUnitMap)) homes
+          sortedHomes = map snd $
+                        reverse . sort $
+                        (`zip` unoccHomes) $
+                        map ((destMap Map.!) . ProvNode) unoccHomes
+      buildOrders <- mapM buildRandomUnit (take (-difference) sortedHomes)
+      let allOrders = replicate (-(length buildOrders + difference)) (Waive myPower)
+                      ++ buildOrders
+      putOrders (Just allOrders)
     else
     do
+      --brainLog $ "Removing"
       let unitVal = sort $ flip zip myUnits $ map ((destMap Map.!) . unitPositionLoc) myUnits
       -- we dont choose randomly
       putOrders . Just $ map (\(_, u) -> Remove u) (take difference unitVal)
-    
+
 dumbProcessResults :: [(Order, OrderResult)] -> () -> ()
 dumbProcessResults _ = id
 
 dumbInitHistory :: (MonadIO m) => m ()
 dumbInitHistory = return ()
 
-buildRandomUnit :: Province -> DumbBrainBuild OrderBuild
+--buildRandomUnit :: Province -> DumbBrainBuild OrderBuild
 buildRandomUnit prov = do
   provToProvNodes <- return . mapDefProvNodes =<< asksGameInfo gameInfoMapDef
   myPower <- getMyPower
@@ -189,7 +249,7 @@ buildRandomUnit prov = do
     Sea -> return $ UnitPosition myPower Fleet (ProvNode prov)
     Coastal -> do
       utyp <- randElem [Army, Fleet]
-      return $ UnitPosition myPower Fleet (ProvNode prov)
+      return $ UnitPosition myPower utyp (ProvNode prov)
     BiCoastal -> do
       provNode <- randElem (provToProvNodes Map.! prov)
       case provNode of

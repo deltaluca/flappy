@@ -5,8 +5,6 @@ module Diplomacy.AI.SkelBot.DipBot where
 import Diplomacy.Common.Data
 import Diplomacy.AI.SkelBot.Brain
 
-import Control.Monad.State
-
 -- |interface to SkelBot
 data DipBot m h = DipBot { dipBotBrainMovement :: BrainCommT OrderMovement h m ()
                          , dipBotBrainRetreat :: BrainCommT OrderRetreat h m ()

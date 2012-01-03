@@ -68,7 +68,11 @@ instance (OrderClass o) => MonadGameKnowledge () (RandomBrain o) where
   getsHistory = lift . getsHistory
   putHistory = lift . putHistory
   
-main = skelBot randomBot
+_SEED = 0 :: Int
+
+main = do
+  --setStdGen (mkStdGen _SEED) >>
+  skelBot randomBot
 
 randomBot :: (MonadIO m) => DipBot m ()
 randomBot = DipBot { dipBotName = "FlappyRandomBot"
@@ -207,7 +211,7 @@ buildRandomUnit prov = do
     Sea -> return $ UnitPosition myPower Fleet (ProvNode prov)
     Coastal -> do
       utyp <- randElem [Army, Fleet]
-      return $ UnitPosition myPower Fleet (ProvNode prov)
+      return $ UnitPosition myPower utyp (ProvNode prov)
     BiCoastal -> do
       provNode <- randElem (provToProvNodes Map.! prov)
       case provNode of
