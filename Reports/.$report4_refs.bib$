@@ -42,7 +42,7 @@
 }
 
 @INPROCEEDINGS{Polberg2011,
-  author = {Polberg, S.  and Paprzycki, M.  and Ganzha, M.},
+  author = {Polberg, S. and Paprzycki, M. and Ganzha, M.},
   title = {Developing intelligent bots for the Diplomacy game},
   booktitle = {Proc. Federated Conf. Computer Science and Information Systems (FedCSIS)},
   year = {2011},
