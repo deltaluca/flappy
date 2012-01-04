@@ -1,3 +1,11 @@
+{-
+ - PATTERN WEIGHTS DATABASE
+ - Current version is missing database functionality. I have no real idea how to do this ><
+ -
+ - Once database functionality is working however, should function for a 1-pattern learning bot. A couple of modifications should enable it to work for 2, and n-pattern bots also. 
+ -}
+
+
 module Diplomacy.AI.Bots.LearnBot.PatternWeights  (weighOrderSets
                                                   ,randWeightedElem
                                                   ) where
@@ -19,6 +27,7 @@ import Database.HDBC.Sqlite3
 
 import qualified Data.Map as Map
 
+-- arbitrary numberings for the various types of move orders
 data MOrderType = THold
                 | TMove
                 | TSupportHold
@@ -36,7 +45,7 @@ mOT2Int = (mOTTmap Map.!)
 bool2Int :: Bool -> Int
 bool2Int b = if b then 1 else 0
 
--- f : MoveOrder -> Int
+-- metrics in use (YES this is ugly as hell, I have no idea how to neatly tie together half-formed monads though :()
 metrics :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => [(OrderMovement -> m Int)]
 metrics = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv x)
           ,(\x -> return . bool2Int =<< targNodeOccupied =<< moveOrderToTargProv x)
@@ -67,7 +76,6 @@ moveOrderToTargProv order =
     SupportMove _ u _ -> return . provNodeToProv . unitPositionLoc $ u
     Convoy _ u _      -> return . provNodeToProv . unitPositionLoc $ u
     MoveConvoy u _ _  -> return . provNodeToProv . unitPositionLoc $ u
-  
 
 moveOrderToType :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => OrderMovement -> m MOrderType
 moveOrderToType order =
@@ -82,9 +90,19 @@ moveOrderToType order =
 average :: [Double] -> Double
 average l = (sum l) / ((fromIntegral.length) l)
 
--- weigh an order using metrics listed in metric, and access database based on function id and return value (an integer)
+--------------------------------------------------------------------
+-- order weighing 
+
 weighOrder :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => OrderMovement -> m Double
-weighOrder = undefined
+weighOrder order = do
+  metricVals <- sequence [f order | f <- metrics]
+
+  -- access database according to function and value
+  -- if pattern not in database, add entry with value of 0.5 and use that
+  let weights :: [Double]; weights = undefined
+  -- weights <- dbLookup (zip metrics metricVals)
+
+  return $ average weights
 
 weighOrderSet :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => [OrderMovement] -> m (Double, [OrderMovement])
 weighOrderSet orders = do
@@ -105,6 +123,9 @@ randWeightedElem elemWeights = do
   if len == 0
     then error "randWeightedElem called with empty list"
     else return $ results !! index
+
+------------------------------------------------------------------------
+-- metrics
 
 targNodeOccupied :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Province -> m Bool 
 targNodeOccupied prov = do
