@@ -1,0 +1,51 @@
+% This file was created with JabRef 2.6.
+% Encoding: UTF-8
+
+@MISC{Fabregues_negotiatingwith,
+  author = {Angela Fabregues and Carles Sierra and Human Negotiations},
+  title = {Negotiating with humans using the Diplomacy game}
+}
+
+@ARTICLE{Kraus95designingand,
+  author = {Sarit Kraus},
+  title = {Designing and building a negotiating automated agent},
+  journal = {Computational Intelligence},
+  year = {1995},
+  volume = {11},
+  pages = {132--171}
+}
+
+@MISC{daidewebsite,
+  author = {N/A},
+  title = {DAIDE Protocol for the Game of Diplomacy},
+  howpublished = {Web},
+  owner = {mh2308},
+  timestamp = {2012.01.04}
+}
+
+@INPROCEEDINGS{Polberg2011,
+  author = {Polberg, S.  and Paprzycki, M.  and Ganzha, M. },
+  title = {Developing intelligent bots for the Diplomacy game},
+  booktitle = {Proc. Federated Conf. Computer Science and Information Systems (FedCSIS)},
+  year = {2011},
+  pages = {589--596},
+  __markedentry = {[mh2308]},
+  owner = {mh2308},
+  timestamp = {2012.01.04}
+}
+
+@INPROCEEDINGS{Shapiro02learninga,
+  author = {Ari Shapiro and Gil Fuchs and Robert Levinson},
+  title = {Learning a game strategy using patternweights and self-play},
+  booktitle = {In Proc. of the Third International Conference on Computers and Games},
+  year = {2002}
+}
+
+@comment{jabref-meta: selector_publisher:}
+
+@comment{jabref-meta: selector_author:}
+
+@comment{jabref-meta: selector_journal:}
+
+@comment{jabref-meta: selector_keywords:}
+

@@ -11,15 +11,53 @@ play in diplomacy
 ///////////////////// NEGOTIATION ////////////////////////////////////////////////////////
 
 Need database to store aspects of trust, reputation of other players
-(Q: Are actions of other players known?)
+(Q: Are actions of other players known?) -- How to create this knowledge base? Haskell
+or SQL?
+[[what information does the agent have at any time?]
+
+Access methods for database :: Can each part of the nego brain access them separately
+or arbitrator?
+
+How separate emotions and rationality (to mirror human behaviour)?
 
 How to model personality of a bot (aggressiveness or tendency to backstab etc..)?
 
 ( --> Could produce candidate plans and rate them wrt. to some character metrics and
       then maximize the correspondence with bot character)
 
+Negotation system is again split up, modelled after a state
+
+   -- Foreign secretary (resp. for formulating actual requests) or have many
+      bots, that deal with specific powers or types of powers)
+   -- Arbitrators (deals with knowledge transfer)
+   -- Strategy expert (cross-checking move proposals by other bots)
+   -- And some kind of IF to TACTICS/STRATEGY
+
+Emotions :: (not strictly necessary but makes play more authentic, 
+             capabilities in this area can also lead to better insight into 
+             behaviour of human opponents and helps anticipating actions)
+
+Define categories and internal representation of emotions
+
+Simple: Happy, Sad, Angry, Very Angry etc.. 
+For debugging: Collection of reasons giving rise to emotions, such
+               as previous moves or messages in the game.
+Power: Power this emotion is associated with
+Various aggregated metrics that simplify coming up with a move wrt this player
 
 
+Short-cut trick: 
+
+When no-time to polish AI create simple heuristic rules that generate
+immediate moves from negotiation messages. Not very generic but probably acceptable
+since focus of project is on negotations
+
+///////////////////////// REFLECTION / FEEDBACK /////////////////////////////////////////
+
+Need way of judging good actions in retrospect, thus remember previous moves and
+try to correlate with effects (can be a bit messy to figure out causality here..)
+
+Genetic algorithms might be a simple soln
 
 /////////////////////// TACTICS / STRATEGY //////////////////////////////////////////////
 
