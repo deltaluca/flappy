@@ -2,8 +2,19 @@
 % Encoding: UTF-8
 
 @MISC{Fabregues_negotiatingwith,
-  author = {Angela Fabregues and Carles Sierra and Human Negotiations},
+  author = {Angela Fabregues and Carles Sierra},
   title = {Negotiating with humans using the Diplomacy game}
+}
+
+@ARTICLE{automateddipplayer,
+  author = {Kraus and Lehmann and Ephrati},
+  title = {An automated Diplomacy player},
+  journal = {Heuristic Programming in Artificial Intelligence: The 1st Computer
+	Olympia},
+  year = {1989},
+  pages = {134--153},
+  owner = {mh2308},
+  timestamp = {2012.01.04}
 }
 
 @ARTICLE{Kraus95designingand,
@@ -15,6 +26,13 @@
   pages = {132--171}
 }
 
+@TECHREPORT{Levinson94apattern-weight,
+  author = {Robert Levinson and Gil Fuchs},
+  title = {A Pattern-Weight Formulation of Search Knowledge},
+  institution = {Computational Intelligence},
+  year = {1994}
+}
+
 @MISC{daidewebsite,
   author = {N/A},
   title = {DAIDE Protocol for the Game of Diplomacy},
@@ -24,7 +42,7 @@
 }
 
 @INPROCEEDINGS{Polberg2011,
-  author = {Polberg, S.  and Paprzycki, M.  and Ganzha, M. },
+  author = {Polberg, S.  and Paprzycki, M.  and Ganzha, M.},
   title = {Developing intelligent bots for the Diplomacy game},
   booktitle = {Proc. Federated Conf. Computer Science and Information Systems (FedCSIS)},
   year = {2011},
@@ -34,11 +52,28 @@
   timestamp = {2012.01.04}
 }
 
+@ARTICLE{automatednegsurvey,
+  author = {Raz Lin, Sarit Kraus},
+  title = {Can automated agents proficiently negotiate with humans?},
+  journal = {Communications of the ACM},
+  year = {2010},
+  volume = {78-89},
+  owner = {mh2308},
+  timestamp = {2012.01.04}
+}
+
 @INPROCEEDINGS{Shapiro02learninga,
   author = {Ari Shapiro and Gil Fuchs and Robert Levinson},
   title = {Learning a game strategy using patternweights and self-play},
   booktitle = {In Proc. of the Third International Conference on Computers and Games},
   year = {2002}
+}
+
+@MISC{TempDiffLearning,
+  author = {Tesauro},
+  title = {Temporal Difference Learning and TD Gammon},
+  owner = {mh2308},
+  timestamp = {2012.01.04}
 }
 
 @comment{jabref-meta: selector_publisher:}

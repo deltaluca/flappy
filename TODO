@@ -18,9 +18,18 @@ or SQL?
 Access methods for database :: Can each part of the nego brain access them separately
 or arbitrator?
 
+How to simulatenously negotiate with dif. opponents (multi-agent -> threads?),
+state of an agent: (see Kraus paper)
+
 How separate emotions and rationality (to mirror human behaviour)?
 
 How to model personality of a bot (aggressiveness or tendency to backstab etc..)?
+(separate module that selects final decision)
+
+Data structures for KB:
+
+Store agreements reached with other powers and estimate how likely 
+they turn into reality.
 
 ( --> Could produce candidate plans and rate them wrt. to some character metrics and
       then maximize the correspondence with bot character)
@@ -50,7 +59,10 @@ Short-cut trick:
 
 When no-time to polish AI create simple heuristic rules that generate
 immediate moves from negotiation messages. Not very generic but probably acceptable
-since focus of project is on negotations
+since focus of project is on negotations... 
+
+Alternatively: output a number of candidate moves from AI and use Negotiation
+to select among them.
 
 ///////////////////////// REFLECTION / FEEDBACK /////////////////////////////////////////
 
@@ -70,6 +82,8 @@ Action evaluation with limited game tree search (1-2 levels)
 
 Need database to store history of the game 
 
+Do not have to look at whole board, rather plan strategies for each 
+'good looking' front or attack line?
 
 
 
