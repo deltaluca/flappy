@@ -6,14 +6,23 @@
 \usepackage{graphicx}
 \geometry{verbose,lmargin=3cm,rmargin=3cm}
 
-\title{Automated negotiation in the game of diplomacy - Report 3: Overview and Software Validation}
+\title{Automated negotiation in the game of diplomacy - Final report}
 \author{Matthias Hueser, Andras Slemmer, Luca Deltodesco, Luke Tomlin, Cliff Sun}
 \date{\today}
 
 \begin{document}
 \maketitle
 
-\section{Project synopsis}
+\begin{Abstract}
+
+
+\end{Abstract}
+
+\tableofcontents
+
+\section{Acknowledgements}
+
+\section{Introduction}
 The Game of Diplomacy is a round-based multiplayer strategy-game set in post WWI
 Europe. Each player controls a power which initially operates from a number of 
 home-bases. The ultimate objective of each player is to control the majority of
@@ -37,7 +46,9 @@ also produced for the project. DAIDE is a standard client-server protocol which
 serves as a 'common language' for different Diplomacy bot implementations, 
 enabling them to play a game together on a conforming server.
 
-\subsection{Requirements engineering / management}
+\section{Background and Related work}
+
+\section{Requirements}
 High-level requirements were discussed in the initial phase of the project 
 (weeks 1/2) with our project supervisor -- Iain Philipps -- who is our customer
 in Software Engineering terms. The terms of the collaboration were such that 
@@ -87,7 +98,7 @@ with our supervisor (see above) which defines the direction of the project.
 Based on this User-Stories were defined which guide the primary development
 focus during the iterations.
 
-\subsection{Change / Risk management}
+\subsection{Change management / Risk mitigation}
 We recognized that change is inevitable in such an ambitious and multi-faceted
 project. Therefore we took great care in defining our contracts carefully to
 split up work. Actually this was helped substantially by the existence of the
@@ -300,7 +311,14 @@ On the AI-side HoldBot and RandomBot are released (to the current specification 
 AI framework). The current iteration focusses on implementing the features of
 StrategyBot.
 
-\section{General validation}
+
+\section{Software architecture}
+
+\subsection{AI methods}
+
+\subsection{Negotation methods}
+
+\section{Validation}
 
 \subsection{Server testing}
 
@@ -493,6 +511,13 @@ case, but the client should still discover the problem and disconnect
 safely. Similarly we have to defend against an adversary who addresses spam
 to force our player to time-out during move generation.   
 
+\section{Project evaluation / experiments}
+
+\begin{comment}
+
+\end{comment}
+
+
 \section{Managerial Documentation}
 
 \subsection{Collaboration tools}
@@ -661,5 +686,36 @@ we have defined the AI framework in terms of metaphors from the Neuroscience
 domain (Brain etc..). For this to be effective and improve communication every 
 team member needed to be aware of the terms.
 
+\section{Contribution of team members}
+
+\section{Self evaluation / reflection}
+
+\subsection{Specification vs. final result}
+
+\subsection{Group collaboration}
+
+\subsection{Technical challenges}
+
+\begin{comment} Possible overlap with change management \end{comment}
+
+\subsection{Learning}
+
+
+
+\section{Conclusions}
+
+
+\section{Future work}
+
+\section{Appendix}
+
+\begin{comment}
+
+User guides, documentation etc, Tutorials, Experiment results (??) 
+
+\end{comment}
+
+
+\bibliography{report4_refs}
 
 \end{document}

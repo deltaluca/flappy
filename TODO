@@ -1,2 +1,42 @@
+
+
 enforce Build/Remove orders on the type level by checking which one is needed in SkelBot
 repurify dumbbot after fixing the bugsies
+
+
+At high-level bot has brain parts for negotation and generic rule-based 
+play in diplomacy
+
+
+///////////////////// NEGOTIATION ////////////////////////////////////////////////////////
+
+Need database to store aspects of trust, reputation of other players
+(Q: Are actions of other players known?)
+
+How to model personality of a bot (aggressiveness or tendency to backstab etc..)?
+
+( --> Could produce candidate plans and rate them wrt. to some character metrics and
+      then maximize the correspondence with bot character)
+
+
+
+
+/////////////////////// TACTICS / STRATEGY //////////////////////////////////////////////
+
+(decreasing priority)
+
+
+Pattern-weight learning (done by Luke right now)
+
+Action evaluation with limited game tree search (1-2 levels)
+
+Need database to store history of the game 
+
+
+
+
+
+
+
+
+
