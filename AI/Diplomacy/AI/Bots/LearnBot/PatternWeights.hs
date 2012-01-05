@@ -99,18 +99,37 @@ average l = (sum l) / ((fromIntegral.length) l)
 -- order weighing 
 -- 
 
+updatePatternsGetWeight :: Connection -> (Int,Int) -> Double
+updatePatternsGetWeight conn (mid, mval) = do 
+  result <- quickQuery' conn "SELECT mid, mval FROM test WHERE mid = ?" [toSql mid] 
+  case length result of
+    0 -> do
+           run conn "INSERT INTO test VALUES (?,?,?,?)" [toSql mid, toSql mval, toSql 0.5, toSql 0]
+           return 0.5
+   {- _ -> do
+           run conn "UPDATE test SET age = (age + 1) WHERE mid = ?" [toSql mid]
+           return . fromSql . head . quickQuery' conn "SELECT weight FROM test WHERE mid = ? AND mval = ?" [toSql mid, toSql mval] -}
+  return 0.0
+
+
 weighOrder :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => OrderMovement -> m Double
 weighOrder order = do
   metricVals <- sequence [f order | f <- metrics]
   
   let mKeyVals = zip metricIDs metricVals
+  conn <- connectSqlite3 "test.db" --hardcoded for now
+  --mKeyVals is a list of tubles of mid and mval
+  --need to check each pair if it exists in table, if not then add entry with value 0.5 (see below)
+  let weights = map (updatePatternsGetWeight conn) mKeyVals
 
   -- access database according to function ID and value
   -- if pattern not in database, add entry with value of 0.5 and age 0 and use that
   -- if pattern is in database, take weight and increment age
-  let weights :: [Double]; weights = undefined
+    
+  -- <<WEIGHTS DEFINED ABOVE>> let weights :: [Double]; weights = undefined
   -- weights <- dbLookup (zip metrics metricVals)
 
+  -- need to consider the weighting of the age
   return $ average weights
 
 weighOrderSet :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => [OrderMovement] -> m (Double, [OrderMovement])
