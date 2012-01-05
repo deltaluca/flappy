@@ -6,7 +6,8 @@
  -
  - Currently, I guess database should be a mapping from functions and value
  - to a weight and age
- - ((OrderMovement -> m Int), Int) -> (Double, Int)
+ - (function ID, value) -> (Weight, Age)
+ - ie. (Int, Int) -> (Double, Int)
  -}
 
 
@@ -50,13 +51,16 @@ bool2Int :: Bool -> Int
 bool2Int b = if b then 1 else 0
 
 -- metrics in use (YES this is ugly as hell, I have no idea how to neatly tie together half-formed monads though :()
-metrics :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => [(OrderMovement -> m Int)]
+-- ordering is important!
+metrics :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => [OrderMovement -> m Int]
 metrics = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv x)
           ,(\x -> return . bool2Int =<< targNodeOccupied =<< moveOrderToTargProv x)
           ,(\x -> return . bool2Int =<< targNodeIsSupply =<< moveOrderToTargProv x)
           ,(\x -> targNodeAdjUnits            =<< moveOrderToTargProv x)
           ,(\x -> targNodeAdjUnits            =<< moveOrderToOwnProv x)
           ,(\x -> return . mOT2Int                     =<< moveOrderToType x)]
+
+metricIDs = [1..]
 
 moveOrderToOwnProv :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => OrderMovement -> m Province
 moveOrderToOwnProv order = 
@@ -93,12 +97,15 @@ average l = (sum l) / ((fromIntegral.length) l)
 
 --------------------------------------------------------------------
 -- order weighing 
+-- 
 
 weighOrder :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => OrderMovement -> m Double
 weighOrder order = do
   metricVals <- sequence [f order | f <- metrics]
+  
+  let mKeyVals = zip metricIDs metricVals
 
-  -- access database according to function and value
+  -- access database according to function ID and value
   -- if pattern not in database, add entry with value of 0.5 and age 0 and use that
   -- if pattern is in database, take weight and increment age
   let weights :: [Double]; weights = undefined
@@ -156,11 +163,11 @@ targNodeAdjUnits prov = do
 -- temporal learning
 
 -- takes the list of ordermovements metrics and the return values that resulted in a successful streak, and applies temporal difference learning over the entire database
-applyTDiff :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => [[((OrderMovement -> m Int),Int)]] -> m ()
+applyTDiff :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => [[(Int,Int)]] -> m ()
 applyTDiff keys = do
   -- keys should be a subset of dbkeys, as new entries should be added as they're not found whilst the game is being played
   let l = length keys
-  let dbkeys :: [((OrderMovement -> m Int),Int)]; dbkeys = undefined 
+  let dbkeys :: [(Int,Int)]; dbkeys = undefined 
   
   -- Assuming can get some form of equivalences on dbkeys (otherwise can't use elem)
   -- for every set of turn (and set of moves that were used that turn), update the database with the next weight, dependent on whether that move was used that turn and the k value for that turn, ie.
