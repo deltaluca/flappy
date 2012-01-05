@@ -32,10 +32,7 @@ module Diplomacy.AI.SkelBot.Common( getMyPower
                                   , getProvOcc
                                   , getSuppControl
                                   , getAdjProvOcc
-                                  , targNodeOccupied
-                                  , targNodeFriendly
-                                  , targNodeIsSupply
-                                  , targNodeAdjUnits
+				  -- Other non-metric stuff
                                   , lengthI
                                   , brainLog
                                   , shuff
@@ -331,29 +328,6 @@ getAdjProvOcc unit = do
   let enemyOcc = lengthI unitPoss - ourOcc
   let noOcc = lengthI provs - lengthI unitPoss
   return (noOcc, ourOcc, enemyOcc) 
-
-targNodeOccupied :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Province -> m Bool 
-targNodeOccupied prov = do
-	unitMap <- getProvUnitMap
-	case prov `Map.lookup` unitMap of
-		Nothing -> return False
-		_ -> return True
-
-targNodeFriendly :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Province -> m Bool
-targNodeFriendly prov = do
-	unitMap <- getProvUnitMap
-	myPower <- getMyPower
-	case prov `Map.lookup` unitMap of
-		Just u -> return (myPower == (unitPositionP u))
-		_ -> return True --Empty province is friendly I guess?
-
-targNodeIsSupply :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Province -> m Bool 
-targNodeIsSupply prov = do
-	return $ provinceIsSupply prov
-
-targNodeAdjUnits :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Province -> m Int
-targNodeAdjUnits prov = do
-	return.length =<< getAdjacentUnits prov
 	
 
 shuff :: (MonadRandom m) => [a] -> m [a]
