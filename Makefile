@@ -20,7 +20,7 @@ viewerr:
 	cd AI/dist/build/randombot && emacs outp.*
 
 dumb:
-	cd AI/dist/build/dumbbot && zsh -c './dumbbot localhost 16713'
+	cd AI/dist/build/dumbbot && zsh -c './dumbbot localhost 16713  &> outp &'
 
 
 debug:
