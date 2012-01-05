@@ -6,6 +6,25 @@
   title = {Negotiating with humans using the Diplomacy game}
 }
 
+@ARTICLE{Huff05,
+  author = {Andrew Huff and Vincent Chan and Laurence Tondelier and Damian Bundred
+	and Colm Egan},
+  title = {Automated Negotiation in the Game of Diplomacy},
+  journal = {Imperial College Project Report},
+  year = {2005},
+  owner = {mh2308},
+  timestamp = {2012.01.05}
+}
+
+@PHDTHESIS{Kraus88,
+  author = {Kraus},
+  title = {Planning and Communicating in a Mult-Agent environment},
+  school = {Hebrew University},
+  year = {1988},
+  owner = {mh2308},
+  timestamp = {2012.01.05}
+}
+
 @ARTICLE{automateddipplayer,
   author = {Kraus and Lehmann and Ephrati},
   title = {An automated Diplomacy player},
@@ -17,7 +36,7 @@
   timestamp = {2012.01.04}
 }
 
-@ARTICLE{Kraus95designingand,
+@ARTICLE{Kraus95,
   author = {Sarit Kraus},
   title = {Designing and building a negotiating automated agent},
   journal = {Computational Intelligence},
@@ -26,11 +45,20 @@
   pages = {132--171}
 }
 
-@TECHREPORT{Levinson94apattern-weight,
+@TECHREPORT{Levinson94,
   author = {Robert Levinson and Gil Fuchs},
   title = {A Pattern-Weight Formulation of Search Knowledge},
   institution = {Computational Intelligence},
   year = {1994}
+}
+
+@MISC{Lorber98,
+  author = {Sean Lorber},
+  title = {SeaNail Diplomacy AI},
+  howpublished = {Website},
+  year = {1998},
+  owner = {mh2308},
+  timestamp = {2012.01.05}
 }
 
 @MISC{daidewebsite,
@@ -39,6 +67,28 @@
   howpublished = {Web},
   owner = {mh2308},
   timestamp = {2012.01.04}
+}
+
+@MISC{ParsecLib,
+  author = {N/A},
+  title = {Parsec Library HaskellWiki},
+  howpublished = {Website},
+  month = {N/A},
+  year = {N/A},
+  note = {http://www.haskell.org/haskellwiki/Parsec},
+  owner = {mh2308},
+  timestamp = {2012.01.05}
+}
+
+@MISC{DAIDEsyntax10,
+  author = {N/A},
+  title = {DAIDE language syntax specification},
+  howpublished = {Website},
+  month = {March},
+  year = {2010},
+  note = {http://www.ellought.demon.co.uk/dipai/daide_syntax.pdf},
+  owner = {mh2308},
+  timestamp = {2012.01.05}
 }
 
 @INPROCEEDINGS{Polberg2011,
@@ -62,7 +112,7 @@
   timestamp = {2012.01.04}
 }
 
-@INPROCEEDINGS{Shapiro02learninga,
+@INPROCEEDINGS{Shapiro02,
   author = {Ari Shapiro and Gil Fuchs and Robert Levinson},
   title = {Learning a game strategy using patternweights and self-play},
   booktitle = {In Proc. of the Third International Conference on Computers and Games},
