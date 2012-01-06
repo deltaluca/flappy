@@ -1,0 +1,28 @@
+# Inferring alliances #:
+
+Based upon looking at previous state's possible moves and the outcome this turn, coupled with our previous scoring of their 'alliance factors'.
+
+Interesting factors in the previous state:
+  - Possible attacks for each enemy unit, and the 'value' of these attacks.
+    If they choose a lesser-valued attack over a higher-valued one against
+    another power, this is an indicator of a possible alliance.
+  - Possible supply-center acquisition. 
+    Ignoring a nearby supply-center owned by an enemy player is a clear indication
+    of possible alliance.
+
+Interesting factors in the change from previous to current state:
+  - Net movement of units.
+    If an enemy has a 'net movement' towards a group of powers, or around a power's
+    'area of operations', this might indicate that they are avoiding pressing into
+    that enemies' territory. Similarly for the reverse.
+  - Conflicts.
+    If a power moved into another powers supply-centers, or attacked their units,
+    this indicates that alliance is unlikely.
+    
+The reinforcement mechanism for this will probably be similar to that used by LearnBot. A database of keys linking (power,power) to a double value between 0 and 1 should be used, 0 indicating definitely no alliance, and 1 indicating certainty of alliance. Every turn, new evidence should be applied to the database, altering the weights. In the absence of new evidence, and as the game progresses, the weights should 'decay' back towards 0.5, indicating unsureness. 
+
+Certain periods of the game will undoubtedly have more alliances than others. Alliances will be difficult to detect in the initial steps. It'll be interesting to see what 'game times' are most convenient to try to form alliances in.
+
+Each factor will have a different weight, of how it affects the values in the database. 
+
+
