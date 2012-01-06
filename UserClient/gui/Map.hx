@@ -495,6 +495,8 @@ class Map extends GuiElem {
 			txti.width = 6*idtxt.length+6;
 			txt.height = 10.2;
 			txti.height = if(idtxt=="") 0 else 10.2;
+
+			txt.filters = [new nme.filters.GlowFilter(0xffffff,0.6,4,6,4,1)];
 		}
 	}
 
