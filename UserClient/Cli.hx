@@ -75,7 +75,8 @@ class Cli {
 		{name:"test",help:"test daide message"},
 	#if cpp	{name:"run",help:"run file - run file consisting of terminal commands"}, #end
 		{name:"send_im",help:"send im message to server"},
-		{name:"delay",help:"set delay on socket (seconds)"}
+		{name:"delay",help:"set delay on socket (seconds)"},
+		{name:"displayid",help:"toggle display of province daide ID's"}
 	];
 
 	public function completion(cmd:String) {
@@ -105,6 +106,9 @@ class Cli {
 	}
 	function cmdarg(cmdargs:Array<String>) {
 	switch(cmdargs[0]) {
+		case "displayid":
+			if(gint.ggui.map==null) log("no map loaded yet");
+			else gint.ggui.map.inform_displayid();
 		case "delay":
 			if(cmdargs.length!=2) log("delay time");
 			else {

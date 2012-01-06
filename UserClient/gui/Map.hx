@@ -11,6 +11,8 @@ import nme.geom.Point;
 import nme.filters.BlurFilter;
 import nme.filters.ColorMatrixFilter;
 import nme.events.MouseEvent;
+import nme.text.TextField;
+import nme.text.TextFormat;
 
 import gui.Gui;
 import gui.MipMap;
@@ -95,7 +97,7 @@ class Map extends GuiElem {
 				arrow_height = 3;
 				0x30f030;
 			},
-			pair(aSupport, false ) = { //support cut
+			pair(aSupport, false ) = { //support cut[Ma
 				arrow_height = 2;
 				0x10a010;
 			},
@@ -217,6 +219,11 @@ class Map extends GuiElem {
 		display();
 	}
 
+	public function inform_displayid() {
+		displayid = !displayid;
+		display();
+	}
+
 	var icon_army :Array<MipMap>;
 	var icon_fleet:Array<MipMap>;
 	function genunit(type:UnitType) {
@@ -253,6 +260,40 @@ class Map extends GuiElem {
 		return mapdata.locations.get(name);
 	}
 
+	//-------------------------------------------------------------
+	// Mapping locations to integers and back again. not just provinces to integers (mapnames)
+	public static var coastids = [""," NC"," SC"," EC"," WC"," NEC"," SWC"," SEC"," NWC"];
+	public static inline var COASTOFF = 26;
+
+	public function province_coast(location:String) {
+		var l3 = location.substr(location.length-3); var p3 = location.substr(0,location.length-3);
+		var l4 = location.substr(location.length-4); var p4 = location.substr(0,location.length-4);
+	
+		var province = "";
+		var coast = 0;
+		if     (l3==" NC")  { province = p3; coast = 1; }
+		else if(l3==" SC")  { province = p3; coast = 2; }
+		else if(l3==" EC")  { province = p3; coast = 3; }
+		else if(l3==" WC")  { province = p3; coast = 4; }
+		else if(l4==" NEC") { province = p4; coast = 5; }
+		else if(l4==" SWC") { province = p4; coast = 6; }
+		else if(l4==" SEC") { province = p4; coast = 7; }
+		else if(l4==" NWC") { province = p4; coast = 8; }
+		else province = location;
+
+		var provinceid = mapnames.idOf(province);
+		return { value: provinceid | (coast << COASTOFF),
+			provinceid: provinceid,
+			  province: province,
+				 coast: coastids[coast]
+		};
+	}
+	public function location_pc(pc:Int) {
+		var coast = pc >>> COASTOFF; pc ^= (coast<<COASTOFF);
+		return mapnames.nameOf(pc) + coastids[coast];
+	}
+	//-------------------------------------------------------------
+
 	var unitlocs:Array<{power:Int, pos:Point, type:UnitType, mip:MipMap}>;
 	public function inform_locations(locs:Array<UnitWithLocAndMRT>) {
 		arrows.graphics.clear();
@@ -272,7 +313,6 @@ class Map extends GuiElem {
 			var pos = location_point(u.location);
 			var mip = genunit(u.type);
 			mip.filters = [MapConfig.powerFilter(u.power)];
-
 			addChild(mip);
 			unitlocs.push({power:u.power, pos:pos, mip:mip, type:u.type});
 		}
@@ -284,6 +324,9 @@ class Map extends GuiElem {
 
 	//mipmap of map graphics + mapdata for pointer selection and highlighting etc.
 	var map:MipMap; var mapdata:map.Map; var mapnames:MapNames;
+	//debug id's
+	var debugids:IntHash<{p:TextField,i:TextField}>;
+	public var displayid:Bool; //display debugid.i txtfield also.
 
 	//supply centres
 	var supplies:Hash<MipMap>;
@@ -422,6 +465,39 @@ class Map extends GuiElem {
 		addEventListener(MouseEvent.MOUSE_UP, mup);
 		addEventListener(MouseEvent.MOUSE_WHEEL, mwheel);
 		addEventListener(MouseEvent.MOUSE_MOVE, mmove);
+
+		//debug ids
+		var font = Assets.getFont("Assets/Courier.ttf");
+
+		debugids = new IntHash<{p:TextField,i:TextField}>();
+		for(MDF in mapdata.locations.keys()) {
+			var loc = mapdata.locations.get(MDF);
+			var txt = new TextField();
+			txt.defaultTextFormat = new TextFormat(font.fontName,10,0);
+			txt.selectable = false;
+
+			var txti = new TextField();
+			txti.defaultTextFormat = new TextFormat(font.fontName,10,0x333333);
+			txti.selectable = false;
+
+			var id = province_coast(MDF);	
+			debugids.set(id.value,{p:txt,i:txti});
+			addChild(txt);
+			addChild(txti);
+
+			var mdftxt = if(id.coast=="") id.province else id.coast;
+			var idtxt = if(id.coast=="") "0x"+StringTools.hex(id.provinceid) else "";
+
+			txt.text = mdftxt;
+			txti.text = idtxt;
+
+			txt.width = 6*mdftxt.length+6;
+			txti.width = 6*idtxt.length+6;
+			txt.height = 13.2;
+			txti.height = if(idtxt=="") 0 else 12.2;
+
+			txt.filters = [new nme.filters.GlowFilter(0xffffff,0.6,4,6,4,1)];
+		}
 	}
 
 	//--------------------------------------------------------------------------------------------
@@ -453,7 +529,8 @@ class Map extends GuiElem {
 		highlight.width  = arrows.width  = map.width;
 		highlight.height = arrows.height = map.height;
 
-		var rad = Std.int(10*Math.sqrt(zoom_scale()) * (Match.match(stageScale, sSmall=1.0, sDefault=1.5, sLarge=2.0)));
+		var scale = Match.match(stageScale, sSmall=1.0, sDefault=1.5, sLarge=2.0);
+		var rad = Std.int(10*zoom_scale() * scale);
 
 		for(key in supplies.keys()) {
 			var mp = supplies.get(key);
@@ -473,6 +550,22 @@ class Map extends GuiElem {
 			mp.resize(rad,Std.int(rad*mp.ratio));
 			mp.x = pos.x - (mp.width /2);
 			mp.y = pos.y - (mp.height/2);
+		}
+
+		var sc = scale*Math.sqrt(zoom_scale())*0.8;
+
+		for(MDFid in debugids.keys()) {
+			var txt = debugids.get(MDFid);	
+			var MDF = location_pc(MDFid);
+			var loc = mapdata.locations.get(MDF);
+			var npos = mapToScreen(loc.x,loc.y);
+		
+			txt.i.scaleX = txt.i.scaleY = txt.p.scaleX = txt.p.scaleY = sc;
+			txt.p.x = npos.x-txt.p.width/2*sc;
+			txt.p.y = npos.y - txt.p.height/2*sc;
+			txt.i.x = npos.x-txt.i.width/2*sc;
+			txt.i.y = txt.p.y + txt.p.height*sc;
+			txt.i.visible = displayid;
 		}
 	}
 

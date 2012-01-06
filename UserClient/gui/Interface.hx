@@ -14,8 +14,9 @@ import haxe.Timer;
 **/
 
 class GuiInterface {
-	var ggui:Gui;
-	var cli:Cli;
+	public var ggui:Gui;
+	public var cli:Cli;
+
 	public function log(x:Dynamic) cli.log(x)
 	public function daide(x:Message) cli.daide(x)
 	public function daidestr(x:String) cli.cmd("daide "+x)
