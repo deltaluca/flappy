@@ -206,19 +206,9 @@ class Map extends GuiElem {
 
 	//--------------------------------------------------------------------------------------------
 
-	/*
-
-		discern when turn ends based on information supplied.
-
-		When an order result is received, we begin rendering the arrows displaying unit movement and results
-		When a supply ownership/location message is received, we assume that no more order results are to be given
-		And arrows are cleared with units moved to the new location.
-
-		To this effect, when supply/locations are informed, arrows are simply cleared which fits the above rules.
-	
-	*/
-
-	//--------------------------------------------------------------------------------------------
+	public function clear_results() {
+		arrows.graphics.clear();
+	}
 
 	public function inform_result(order:MsgOrder, result:CompOrderResult) {
 		switch(order) {
@@ -238,8 +228,6 @@ class Map extends GuiElem {
 	}
 
 	public function inform_supplyOwnerships(scos:Array<ScoEntry>) {
-		arrows.graphics.clear();
-
 		for(sco in scos) {
 			var power = sco.power;
 			var cmf = MapConfig.powerFilter(power);
@@ -331,8 +319,6 @@ class Map extends GuiElem {
 
 	var unitlocs:Array<{power:Int, pos:Point, type:UnitType, mip:MipMap}>;
 	public function inform_locations(locs:Array<UnitWithLocAndMRT>) {
-		arrows.graphics.clear();
-
 		for(x in unitlocs) {
 			removeChild(x.mip);
 			switch(x.type) {
