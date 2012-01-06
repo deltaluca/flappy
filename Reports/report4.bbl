@@ -1,0 +1,50 @@
+\begin{thebibliography}{10}
+
+\bibitem{DaideWeb}
+Daide protocol for the game of diplomacy.
+\newblock Web.
+
+\bibitem{ParsecLib}
+Parsec library haskellwiki.
+\newblock http://www.haskell.org/haskellwiki/Parsec.
+
+\bibitem{DAIDEsyntax10}
+Daide language syntax specification.
+\newblock Website, March 2010.
+
+\bibitem{DiploRules00}
+Avalon Hill Company.
+\newblock {\em Rules of Diplomacy}, 4 edition, 2000.
+
+\bibitem{Huff05}
+Andrew Huff, Vincent Chan, Laurence Tondelier, Damian Bundred, and Colm Egan.
+\newblock Automated negotiation in the game of diplomacy.
+\newblock {\em Imperial College Project Report}, 2005.
+
+\bibitem{Kraus88}
+Kraus.
+\newblock {\em Planning and Communicating in a Mult-Agent environment}.
+\newblock PhD thesis, Hebrew University, 1988.
+
+\bibitem{Kraus95}
+Sarit Kraus.
+\newblock Designing and building a negotiating automated agent.
+\newblock {\em Computational Intelligence}, 11:132--171, 1995.
+
+\bibitem{Levinson94}
+Robert Levinson and Gil Fuchs.
+\newblock A pattern-weight formulation of search knowledge.
+\newblock Technical report, Computational Intelligence, 1994.
+
+\bibitem{Lorber98}
+Sean Lorber.
+\newblock Seanail diplomacy ai.
+\newblock Website, 1998.
+
+\bibitem{Shapiro02}
+Ari Shapiro, Gil Fuchs, and Robert Levinson.
+\newblock Learning a game strategy using patternweights and self-play.
+\newblock In {\em In Proc. of the Third International Conference on Computers
+  and Games}, 2002.
+
+\end{thebibliography}
