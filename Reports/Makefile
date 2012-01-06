@@ -17,3 +17,12 @@ report_2: report_2_draft.tex
 clean: 
 	rm *.aux *.dvi *.log
 
+# Final report
+
+report_4: report4.tex report4.bib
+	pdflatex report4 ; bibtex report4 ; pdflatex report4 ; pdflatex report4
+
+clean_r4: 
+	rm -f report4.pdf report4.aux report4.log report4.bbl report4.toc report4.dvi report4.blg
+
+
