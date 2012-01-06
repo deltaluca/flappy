@@ -1,0 +1,469 @@
+Related work on AI engines:
+
+http://sites.google.com/site/diplomacyai/albert
+http://www.diplom.org/~diparch/resources/postal/artificial.htm
+http://www.daide.org.uk/wiki/Main_Page
+www.tofgarion.net/lectures/XX201/diplomacy/master-haard.pdf
+
+------------------------------------------------------------------------------
+
+After writing the rest of the parsing rules (though without ast
+generation)
+
+I came across a few tokens which did not exist.
+
+And it turns out that the DAIDE homepage is a bit outdated....
+
+the low-level protocol on daide homepage is r13, whilst i have found
+an r14 on another page which has a few changes.
+
+Mainly old tokens that exists no longer exist, or new ones have been
+created (that are used int he grammar) with one token being replaced
+with another using the same 16bit value.
+
+Even with r14 however, there are two tokens which the r14 protocol
+document still do not give a value for (these being the tokens NAR and
+CCL) which are used int he grammar. how shit.
+
+:)
+
+reference for more recent protocol document:
+ 
+http://www.ellought.demon.co.uk/dipai/
+
+I'm hoping there is not some big changes should we fine a more recent
+one again.
+
+the syntax pdf is dated 7th march 2010. The r13 protcol document was
+dated 2003, and the r14 one that i've now found is dated 2006.
+
+------------------------------------------------------------------------------
+
+Hey guys, I believe the next 2 weeks aren't going to be so bad as
+*most* courseworks are done and most of us have finished with
+interviews. We need some maximum effort so that we can actually hand
+in something that works. I know your futures important and shit but
+you have to complete the task in hand too! So when we mentioned last
+time that we should meet up every day, lets actually do that shall we?
+We don't have that many lectures this term so I know for a fact that
+everyone should have some spare time every day to get into labs and do
+some work. Also I know all of you guys have PMT's at lunch once a
+week, but I expect to see all of you in labs at lunchtime whenever you
+don't have PMT sessions. Obviously if you have commitments like
+societies and whatnot then that's fine, but I want to see at least 3
+people working together at one time. We definitely need more help on
+the server side of things and with the AI, it's mainly been Slemi so
+far (when I say mainly, I mean totally with a bit of help here and
+there) otherwise we'll end up handing in something that's most likely
+not going to work (or if it does work it would probably be shit). So
+in reply to this, I want everyone to tell me what you're schedule is
+like for the next 2 weeks. I.e. in terms of interviews, societies,
+other commitments and shit so I can try and get everyone together as
+often as possible (basically at least once a day).  Furthermore, we
+need to start planning out our last report (I believe Luke's started
+that) and plan out what we're going to include in our hand in on the
+11th. Then we can start thinking about how we can add on to it during
+christmas. Personally, I'm not really up for doing a huge amount of
+work over christmas as that's the only time us guys on the MEng course
+can really get some rest before diving back into term 2 and then
+placements straight after, but if it has to be done it will be done!
+Lets do this guys, if we all put some effort into this (as much effort
+as we can fit in) then I'm sure we can get a decent mark!
+
+Cliff 'I'm fucking so psyched up right now' Sun
+
+p.s. any questions or anything you wanna say, then please don't
+hesitate to reply
+
+--------------------------------------------------------------------------------
+
+also as i said in the commit message dumbbot does not work yet and
+runs out of memory very quickly. i indicated in the code with -- ERROR
+which chunk is causing it.  if the code seems obscure please download
+the original dumbbot source and see DumbBot.cpp's
+generate_move_ish_function. it is mostly that except for their garbage
+sampler (we just square the weights and sample, they do weird
+retry-in-a-loop stuff) Slemmer, Andras [Reply All] Inbox 28 December
+2011 10:54 AM Yes, sorry for that i was in a bit of a rush. shuffleM
+was added by me, i emailed the maintainer to add it but it will take a
+while i guess please do this (replace PROJECT_DIR) after git pull:
+
+cabal install random-shuffle cd
+~/.cabal/packages/hackage.haskell.org/random-shuffle/0.0.2/ tar -zxf
+random-shuffle-0.0.2.tar.gz cp PROJECT_DIR/random-shuffle.patch .
+patch -p0 -i random-shuffle.patch cd random-shuffle-0.0.2 cabal
+install
+
+should work afterwards Feladó: Luke Tomlin [lt609@doc.ic.ac.uk]
+Küldve: 2011. december 28. 10:11 Címzett: Slemmer, Andras Tárgy: Re:
+guys...
+
+ 
+Hey,
+
+Thanks for that Slemi. I see you've done a hearty chunk of dumbbot as
+well! Awesome. However I'm having some compilation errors (sidenote:
+everything installs fine on my desktop once I've installed ghc 7.2.2,
+it only doesn't work on my laptop for some reason. No idea why).
+
+The compiler says the function shuffleM is not in scope. Whereabouts
+is this function defined?
+
+Hope you have a good holiday, wherever it might be!
+
+Cheers,
+
+Luke
+
+2011/12/27 Slemmer, Andras <andras.slemmer09@imperial.ac.uk> hey,
+getAdjacentNodes is a MonadGameKnowledge monad computation and you are
+using it in a list comprehension which doesnt work. remember (=<<)'s
+lhs must return a monad computation.  it deduces that "(intersect
+...)" returns a list, therefore =<<'s monad has to be the list monad
+which is not the case.  try using mapM over friendlies instead of a
+list comprehension!
+
+Feladó: Luke Tomlin [lt609@doc.ic.ac.uk] Küldve: 2011. december
+27. 22:06 Címzett: Slemmer, Andras Tárgy: Re: guys...
+
+ 
+Hi Slemi,
+
+Quick question before you leave tomorrow and we all start screaming
+and dying,
+
+I have
+
+-- possible support moves let supportMoves = concat [map ((SupportMove
+unitPos otherUnit).provNodeToProv) $ (intersect adjacentNodes) =<<
+(getAdjacentNodes otherUnit) | otherUnit <- friendlies]
+
+
+Which probably doesn't work because I've done something wrong, but I
+get the error:
+
+ Could not deduce (MonadGameKnowledge h0 []) arising from a use of
+      `getAdjacentNodes' from the context (OrderClass o, MonadBrain o
+      m, MonadGameKnowledge h m) bound by the type signature for
+      genLegalOrders :: (OrderClass o, MonadBrain o m,
+      MonadGameKnowledge h m) => Map.Map UnitPosition [OrderMovement]
+      -> UnitPosition -> m (Map.Map UnitPosition [OrderMovement]) at
+      Diplomacy/AI/SkelBot/Common.hs:(217,1)-(248,49)
+ 
+
+Could you shed any light on this? The code is commented out in
+Common.hs
+
+Thanks,
+
+Luke
+
+2011/12/26 Slemmer, Andras <andras.slemmer09@imperial.ac.uk> Slemmer,
+Andras [Reply All] Inbox 26 December 2011 5:58 PM happy <relevant
+winter solstice substitute>!
+
+i'll be away from 28th until the 4th. i will try to implement dumbbot
+till the 28th. what i suggest is either 1. extend dumbbot to include
+diplomatic arrangements (add weightings according to allies/enemies
+plus some (possibly random *wink wink*) way of initiating these)
+2. implement a novel ai. (in this case you actually have to start
+WORKING) either way please PLEASE ask now if you dont understand
+something, because i wont be available later.
+
+
+i added a Makefile in the root dir.  'make' will start the server and
+a gui observer instance.  in the observer you will have to connect
+with the cli. you can do this either by "connect localhost 16713"
+"daide OBS" or "run try"
+
+once the observer is connected you can launch 7 randombots with 'make
+random7' see the Makefile for details on how this works and how you
+should add your own test make targets.
+
+in order for the above to work you have to have a wine-installed DAIDE
+server and a compiled (UserClient) observer.  DAIDE server:
+http://www.ellought.demon.co.uk/dipai/aiserver.msi then use msiexec
+(comes with wine) to install UserClient: ask Luca, and/or see
+haxe_setup for details (btw Luca in the script the envs that are added
+to ~/.haxenv should also be exported before installing! forgot to push
+sry!)
+
+i'm also working on a branch that refactors the protocol with
+parsec(!) which is much neater and is something we can talk about if
+we wont have stuff to present. (it parses the stream into a
+computation how cool is that)
+
+another thing you want to implement is a general sanity checker for
+the moves in SkelBot.hs, this is very useful if you want to have more
+verbose er
+
+---------------------------------------------------------------------------
+
+Hey,
+
+The report is due on the 9th. We also need to do some stuff for the
+presentation, but we can probably hack that together in a few hours so
+that's as much of a problem.
+
+I don't want to spend too long on this pattern weight thing, because
+obviously our main aim is to get some negotiation going on, so I'll
+probably have a fiddle around with that tomorrow or the day
+after. Unfortunately I think we're going to have to start from
+scratch, and Slemi isn't around to guide us through how the messaging
+works, if it works at all, so that'll be interesting. I guess if we
+can devise a clever method to handle it all though (ie. plan out in
+detail exactly how it will be done and implemented) then we can just
+code it off of that specification without too much problem when
+everyone is back. Plus those plans will be useful to put in the report
+I suppose.
+
+Let me know if anything crops up, I'm going to try to talk to Cliff
+too and get a plan going for when everyone is back.
+
+Cheers,
+
+Luke Hueser, Matthias Hey, unfortunately our internet was down
+(provider change) from 28th til today.. lll be back in London on the
+3rd. When is the report due? Maybe I can finish that and work on the
+negotiation side as we go along. For the negotiation I thought about
+having a Fri 30/12 Luke Tomlin [luke.tomlin@googlemail.com] [Reply]
+[Reply All] [Forward] Actions To: Hueser, Matthias Inbox 28 December
+2011 11:43 AM You replied on 30/12/2011 9:29 AM.  Hi Matthias,
+
+Just thought I'd get a quick catch-up with you on the project - as
+you're probably aware, Slemi is now away until the 4th January, so
+it's up to the four of us now to get as much done as possible so the
+last week isn't too disastrous! I've started work on the
+pattern-weights learning bot recently, and most of the metrics/helper
+functions are down. The only hard bit now would be making the database
+and stuff, but I'm hoping to get that done over the next day or
+two. Hopefully it won't be too difficult!
+
+I'm hoping to make it as general as possible, so maybe we can apply it
+to negotiation too. I think the major thing at the moment is to get
+started with *something* on the negotiation side. Slemi mentioned (and
+it's in use in some of the other negotiation bots) a method that used
+a scoring mechanism for each province, and the messages would be sent
+to the enemy players based on their location around these provinces
+and the relative weightings.
+
+If we can get a plan of what needs to be done over the next week and a
+half, hopefully we'll have something good by the end of it! If by the
+time we're finished we have holdbot, randombot, dumbbot, patternweight
+(non-negotiation), negotation, and maybe some other flavour of
+negotiation, we'll probably be well set :D
+
+Let me know what you think. I'm trying to work on little bits of the
+report to in between.
+
+Hope your holidays are good!
+
+Cheers,
+
+Luke
+
+----------------------------------------------------------------------
+
+Yo Matthias,
+
+Shall we meet in labs tomorrow morning, earlyish? Can you do 9 or is
+that too early? If we can write some detailed specifications for
+negotiation AI, we can pass them on to Slemi and he can hopefully work
+his magic.
+
+Cheers,
+
+Luke Sun, Cliff [Reply] [Reply All] [Forward] Actions To: Slemmer,
+Andras Cc: Hueser, Matthias‎; Tomlin, Luke‎; Deltodesco, Luca Deleted
+Items 03 January 2012 8:05 PM I'll be in labs from the 5th onwards,
+Matthias and Luke, will you guys be there?  Slemmer, Andras [Reply
+All] Deleted Items 03 January 2012 8:01 PM sorry for the confusion i'm
+not in london yet (will be at 9th), only back from the 5dayish holiday
+during which i was internetless.  Hueser, Matthias [Reply All] Sent
+Items 03 January 2012 7:11 PM Back in London.. can we meet in the labs
+tomorrow?
+
+Matthias Hueser Department of Computing Imperial College London
+E-mail: mh2308@doc.ic.ac.uk Mobile: 07833543707
+ 
+Slemmer, Andras [Reply All] Deleted Items 03 January 2012 6:52 PM Ok,
+back from holiday earlier.
+
+Cliff, Luke, Matthias:
+http://bbsimg.ngfiles.com/1/21840000/ngbbs4c9f9269c2bbd.jpg i finished
+dumbbot and i was hoping by now we could test it against our own
+ai... not exactly the case, i frankly don't really see the ai part
+getting anywhere.  as you've done some reading on existing ais i was
+hoping you could suggest one that can be implemented in the little
+time we have left.  i don't really expect coding cooperation at this
+point, but it would be very helpful if you could send me
+papers/sources on the chosen ai.
+
+Luca: Can you please add display of province IDs(numbers not tokens)
+to the GUI, it would be most helpful for debugging.  It would also be
+nice to have pausing-rewinding.
+
+this is a shit email. i hate shitty emails slemi
+
+-----------------------------------------------------------------------
+
+Hi guys,
+
+Had a cheeky peek around and found these past reports from other
+years,
+
+2005
+
+2008
+
+2009
+
+All three groups based their tactical bot around DumbBot, and used
+Daide. They operated a (very) watered down version of negotiation. I
+believe all three bots were written in Java.
+
+Some comments:
+
+2005 Their negotiation worked purely on support moves - a list of
+'useful supports' for each power is generated, in order of
+preference. The list is then iterated through, until one of the
+suggestions is accepted. If none are accepted, the list is iterated
+through again, but this time with a free 'IOU' attached to it, This
+continues until the other power accepts or the 'cost' of the IOUs is
+too high.
+
+2008 Their end-product negotiation was not fully fledged, they had
+started to implement some form of trust and back stabbing mechanism
+based around a 'banking' metaphor, but then ran short of time.
+
+2009 This paper looks the most advanced. Haven't read it all yet
+though.
+
+If we can even get a small subset of negotiation going on (such as
+making alliances ie. not attacking specific units if 'allied' with
+them, or backstabbing and trust and such) then we'll certainly be on
+par with these past papers, as we have a LOT to talk about with the
+framework and individual bots and game structure, as well as a
+fancy-ass GUI.
+
+Cool.
+
+Luke
+
+-------------------------------------------------------------------------
+
+Hey, just writing parts of the report and happy that I have some
+Diplo/AI I can write about in the 'our own contribution' - part of the
+report.
+
+@Luca Can I have an update on the GUI client? For two reasons a) There
+will be a chapter on it in the final report. b) Some screenshots of a
+clean map and some typical game situations (attack, standoff, convoy)
+would be handy for the 'Background section of the report'. Then I
+would not need to draw arrows and check copyright of web screenshots
+for inclusions.
+ 
+-----------------------------------------------------------
+ 
+>>First develop an ai that is 'aware' of groups, that is it considers
+them to be one body when making moves. This will ?>>default to every
+man for himself. Later this "grouping" should be weakened to
+one-to-one relationship strength and >>volatility between powers (we
+will also need a "certainty" metric to account for imperfect knowledge
+ofc) The certainty metric can be derived from a -character database-
+that is constructed from an analysis of previous moves. For instance
+if agreement and actual behaviour consistently diverge for some power
+we give them a low rating for trustworthiness.. Also we need to take
+into account what relationship our group has with the other power's
+group. If they acted as an adversary in the past, lying and
+back-stabbing is likely. Higher-level measures like volatility can be
+learned during the game and across games (we can simply measure the
+average duration a group persists).  For other things there is a body
+of knowledge on the Diplomacy AI portal, which we can crawl through
+when the above is running.
+ 
+>>Second develop a 'passive' ai that does not actively seek alliances
+>>or propose orders, only reacts to other proposals >> and updates its
+>>knowledge (recalc. moves). Note that we will need external
+>>negotioating ais for testing this, we should >> get our hands on
+>>java clients to test on linux.  This passive ai should also try to
+>>infer alliances based on attacks and potential conflicts that were
+>>avoided (simply >>looking at who attacked who would instantly make
+>>England and Turkey allies)
+
+This is the problem of reconciling results from our own Learning
+component and other powers suggestions. In my opinion acting upon
+other peoples suggestions should only be done if they are uttered in
+the context of a long-term strategy. I think this must be possible
+with the DAIDE syntax but only at higher press levels. If such a
+strategy is cross-checked for sound-ness (i.e. we are not leaving own
+supply centres exposed as a result and we are not neglecting easier
+targets as a result) positively we approve future move suggestions
+that are associated with this strategy. If such strategies succeed we
+can make note of the fact that the initiating power is clever and
+adopt their strategies / join their group more often in the future. I
+agree that we need to have some experiments. it would look against
+previous projects because they had few validation.
+ 
+Inferring alliances is a great idea, I wonder if there are formal
+alliances sealed by a DAIDE message, did not have time to read the
+relevant parts yet. However we cannot observe communication between
+other powers so inferring is well important.
+ 
+>> Problem-solving / planning as a team
+ 
+I liked Lukes idea that we consider our current group as a team and
+pretend that we can control all units to formulate a sound
+strategy. This works best with powers that are known to follow or
+suggestions / orders (hehe) and is fragile otherwise. On another level
+this also helps us to find worthy groups to enter, by pretending that
+they are in our group.
+ 
+>> The basis should be a shortest-path-tree on the map.  Then for each
+>> of our supply centres we should make a list of pairs/map/whatever
+>> of (no. of turns)->(no. of units) for each group. This would
+>> describe how many turns it would take for the group to reach the sc
+>> with that many units. Then >>use this to calculate a raw "threat"
+>> metric for each sc.  This should be weighted based on the knowledge
+>> of groups, meaning that if we are in group A then B will most
+>> likely >>not use all their units to attack us but also to attack C,
+>> and will divide its units based on how powerful A and C is.  Later
+>> this should be refined with reasoning about where each enemy unit
+>> is, that is which enemy groups they are >>closest to.  For the
+>> offensive side of things a quite old paper suggested using a
+>> Dynamic-Programming type approach. Commit one unit to a certain
+>> move / move-sequence and optimize on the success that can be
+>> reached with the remaining units. We should aim to quantify success
+>> of a move or a move-sequence: I think Luke already has code to
+>> measure aspects (by aspect I mean a function from the game state to
+>> a real number) of the map, these work like heuristics on a chess
+>> position. So the sucbe even better if we first developed a passive
+>> ai that is only considering enemy groups and will never be in one
+>> itself, as being in a group requires additional thought (for
+>> example as you pointed out an ally getting an sc is not necessarily
+>> increasing our utility)
+
+
+
+My thoughts on the negotiationless ai:
+
+The basis should be a shortest-path-tree on the map.  Then for each of
+our supply centres we should make a list of pairs/map/whatever of
+(no. of turns)->(no. of units) for each group. This would describe how
+many turns it would take for the group to reach the sc with that many
+units. Then use this to calculate a raw "threat" metric for each sc.
+This should be weighted based on the knowledge of groups, meaning that
+if we are in group A then B will most likely not use all their units
+to attack us but also to attack C, and will divide its units based on
+how powerful A and C is.  Later this should be refined with reasoning
+about where each enemy unit e we can come up with something.
+
+If we can implement these, we'll certainly have something to show and
+it won't differ hugely from what has been done in previous
+years. Except it won't be in Java. And we'll be submitting something
+waaay bigger than one AI. And it won't be in Java.
+
+Let me know what you guys think, or ideas on how to implement the
+little bits,
+
+Luke

@@ -1,9 +1,10 @@
 % This file was created with JabRef 2.6.
 % Encoding: UTF-8
 
-@MISC{Fabregues_negotiatingwith,
+@MISC{Fabregues2011,
   author = {Angela Fabregues and Carles Sierra},
-  title = {Negotiating with humans using the Diplomacy game}
+  title = {Negotiating with humans using the Diplomacy game},
+  year = {2011}
 }
 
 @ARTICLE{Huff05,
@@ -25,7 +26,7 @@
   timestamp = {2012.01.05}
 }
 
-@ARTICLE{automateddipplayer,
+@ARTICLE{Kraus89,
   author = {Kraus and Lehmann and Ephrati},
   title = {An automated Diplomacy player},
   journal = {Heuristic Programming in Artificial Intelligence: The 1st Computer
@@ -45,11 +46,30 @@
   pages = {132--171}
 }
 
-@TECHREPORT{Levinson94apattern-weight,
+@TECHREPORT{Levinson94,
   author = {Robert Levinson and Gil Fuchs},
   title = {A Pattern-Weight Formulation of Search Knowledge},
   institution = {Computational Intelligence},
   year = {1994}
+}
+
+@MASTERSTHESIS{Lim2009,
+  author = {Lim and Paula and Cheng and Ng and Gong},
+  title = {Automated Negotiation in the Game of Diplomacy},
+  school = {Imperial College London},
+  year = {2009},
+  owner = {mh2308},
+  timestamp = {2012.01.05}
+}
+
+@ARTICLE{Lin2010,
+  author = {Raz Lin and Sarit Kraus},
+  title = {Can automated agents proficiently negotiate with humans?},
+  journal = {Communications of the ACM},
+  year = {2010},
+  volume = {78-89},
+  owner = {mh2308},
+  timestamp = {2012.01.04}
 }
 
 @MISC{Lorber98,
@@ -57,25 +77,6 @@
   title = {SeaNail Diplomacy AI},
   howpublished = {Website},
   year = {1998},
-  owner = {mh2308},
-  timestamp = {2012.01.05}
-}
-
-@MISC{daidewebsite,
-  author = {N/A},
-  title = {DAIDE Protocol for the Game of Diplomacy},
-  howpublished = {Web},
-  owner = {mh2308},
-  timestamp = {2012.01.04}
-}
-
-@MISC{,
-  author = {N/A},
-  title = {DAIDE language syntax specification},
-  howpublished = {Website},
-  month = {March},
-  year = {2010},
-  note = {http://www.ellought.demon.co.uk/dipai/daide_syntax.pdf},
   owner = {mh2308},
   timestamp = {2012.01.05}
 }
@@ -91,28 +92,75 @@
   timestamp = {2012.01.04}
 }
 
-@ARTICLE{automatednegsurvey,
-  author = {Raz Lin, Sarit Kraus},
-  title = {Can automated agents proficiently negotiate with humans?},
-  journal = {Communications of the ACM},
-  year = {2010},
-  volume = {78-89},
-  owner = {mh2308},
-  timestamp = {2012.01.04}
-}
-
-@INPROCEEDINGS{Shapiro02learninga,
+@INPROCEEDINGS{Shapiro02,
   author = {Ari Shapiro and Gil Fuchs and Robert Levinson},
   title = {Learning a game strategy using patternweights and self-play},
   booktitle = {In Proc. of the Third International Conference on Computers and Games},
   year = {2002}
 }
 
-@MISC{TempDiffLearning,
+@MISC{Tesauro,
   author = {Tesauro},
   title = {Temporal Difference Learning and TD Gammon},
   owner = {mh2308},
   timestamp = {2012.01.04}
+}
+
+@MASTERSTHESIS{Webb08,
+  author = {Webb and Chin and Wilkins and Payce and Dedoyard@MASTERSTHESIS{Webb08,
+	
+	 author = {Webb and Chin and Wilkins and Payce and Dedoyard},
+	
+	 title = {Automated Negotiation in the Game of Diplomacy},
+	
+	 school = {Imperial College London},
+	
+	 year = {2008},
+	
+	 owner = {mh2308},
+	
+	 timestamp = {2012.01.05}
+	
+	}},
+  title = {Automated Negotiation in the Game of Diplomacy},
+  school = {Imperial College London},
+  year = {2008},
+  owner = {mh2308},
+  timestamp = {2012.01.05}
+}
+
+@MISC{DaideWeb,
+  title = {DAIDE Protocol for the Game of Diplomacy},
+  howpublished = {Web},
+  owner = {mh2308},
+  timestamp = {2012.01.04}
+}
+
+@MISC{ParsecLib,
+  title = {Parsec Library HaskellWiki},
+  howpublished = {http://www.haskell.org/haskellwiki/Parsec},
+  month = {N/A},
+  year = {N/A},
+  owner = {mh2308},
+  timestamp = {2012.01.05}
+}
+
+@MISC{DAIDEsyntax10,
+  title = {DAIDE language syntax specification},
+  howpublished = {Website},
+  month = {March},
+  year = {2010},
+  owner = {mh2308},
+  timestamp = {2012.01.05}
+}
+
+@MANUAL{DiploRules00,
+  title = {Rules of Diplomacy},
+  organization = {Avalon Hill Company},
+  edition = {4},
+  year = {2000},
+  owner = {mh2308},
+  timestamp = {2012.01.05}
 }
 
 @comment{jabref-meta: selector_publisher:}
