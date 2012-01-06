@@ -493,8 +493,8 @@ class Map extends GuiElem {
 
 			txt.width = 6*mdftxt.length+6;
 			txti.width = 6*idtxt.length+6;
-			txt.height = 10.2;
-			txti.height = if(idtxt=="") 0 else 10.2;
+			txt.height = 13.2;
+			txti.height = if(idtxt=="") 0 else 12.2;
 
 			txt.filters = [new nme.filters.GlowFilter(0xffffff,0.6,4,6,4,1)];
 		}
@@ -529,7 +529,8 @@ class Map extends GuiElem {
 		highlight.width  = arrows.width  = map.width;
 		highlight.height = arrows.height = map.height;
 
-		var rad = Std.int(10*Math.sqrt(zoom_scale()) * (Match.match(stageScale, sSmall=1.0, sDefault=1.5, sLarge=2.0)));
+		var scale = Match.match(stageScale, sSmall=1.0, sDefault=1.5, sLarge=2.0);
+		var rad = Std.int(10*zoom_scale() * scale);
 
 		for(key in supplies.keys()) {
 			var mp = supplies.get(key);
@@ -551,19 +552,20 @@ class Map extends GuiElem {
 			mp.y = pos.y - (mp.height/2);
 		}
 
-		if(true) {
-			for(MDFid in debugids.keys()) {
-				var txt = debugids.get(MDFid);	
-				var MDF = location_pc(MDFid);
-				var loc = mapdata.locations.get(MDF);
-				var npos = mapToScreen(loc.x,loc.y);
-				var sumh = txt.p.height + (displayid ? txt.i.height : 0);
-				txt.p.x = npos.x-txt.p.width/2;
-				txt.p.y = npos.y - sumh/2;
-				txt.i.x = npos.x-txt.i.width/2;
-				txt.i.y = npos.y - sumh/2 + txt.p.height;
-				txt.i.visible = displayid;
-			}
+		var sc = scale*Math.sqrt(zoom_scale())*0.8;
+
+		for(MDFid in debugids.keys()) {
+			var txt = debugids.get(MDFid);	
+			var MDF = location_pc(MDFid);
+			var loc = mapdata.locations.get(MDF);
+			var npos = mapToScreen(loc.x,loc.y);
+		
+			txt.i.scaleX = txt.i.scaleY = txt.p.scaleX = txt.p.scaleY = sc;
+			txt.p.x = npos.x-txt.p.width/2*sc;
+			txt.p.y = npos.y - txt.p.height/2*sc;
+			txt.i.x = npos.x-txt.i.width/2*sc;
+			txt.i.y = txt.p.y + txt.p.height*sc;
+			txt.i.visible = displayid;
 		}
 	}
 
