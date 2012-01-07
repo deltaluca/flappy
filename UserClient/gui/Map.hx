@@ -52,10 +52,11 @@ class MapConfig {
 }
 
 enum ArrowType {
-	aHold;
-	aNormal;
+	aMove;
+	aRetreat;
 	aSupport;
 	aConvoy;
+	aBuild;
 }
 
 class Map extends GuiElem {
@@ -79,41 +80,34 @@ class Map extends GuiElem {
 
 	//--------------------------------------------------------------------------------------------
 
-	public function arrow(x:Location, y:Location, type:ArrowType, s1:Bool, s2:Bool=false) {
-		var xloc = location_point(x);
-		var yloc = location_point(y);
-
+	public function stdarrow(x:Location, y:Location, type:ArrowType, s1=true, s2=false) {
+		arrow(location_point(x),location_point(y),type,s1,s2);
+	}
+	public function arrow(xloc:Point, yloc:Point, type:ArrowType, s1=true, s2=false) {
 		var arrow_height:Float;
-		var col = Match.match(pair(type,s1),
-			pair(aNormal, true ) = {
-				arrow_height = 8;
-				0;
-			},
-			pair(aNormal, false) = { //move bounced
-				arrow_height = 5;
-				0xff0000;
-			},
-			pair(aSupport, true ) = {
-				arrow_height = 5;
-				0x30f030;
-			},
-			pair(aSupport, false ) = { //support cut[Ma
-				arrow_height = 3;
-				0x10a010;
-			},
-			pair(aHold, true) = {
-				arrow_height = 5;
-				0x4040ff;
-			},
-			pair(aHold, false) = {
-				arrow_height = 5;
-				0;
-			},
-			_ = {
-				arrow_height = 3;
-				0xffffff;
-			}
-		);
+		var dashed = false;
+		var col:Int = 0xffffff;
+
+		switch(type) {
+			case aMove:
+				col = if(s1) 0xff0000 else 0x660000;
+				arrow_height = 15;
+			case aRetreat:
+				col = if(s1) 0xff00ff else 0x660066;
+				arrow_height = 15;
+				dashed = true;
+			case aSupport:
+				col = if(s1) 0xff00 else 0x6600;
+				arrow_height = 12;
+				dashed = true;
+			case aBuild:
+				col = 0xffffff;
+				arrow_height = 12;
+				dashed = true;
+			default:
+				arrow_height = 0;
+		}
+		
 		var scale = Match.match(stageScale, sSmall=1.0, sDefault=1.5, sLarge=2.0);
 		var sc = Math.max(1,scale*Math.sqrt(zoom_scale())*0.5);
 
@@ -121,7 +115,6 @@ class Map extends GuiElem {
 		var arrow_width = arrow_height*0.75;
 
 		var g = arrows.graphics;
-		g.lineStyle(0.1,0,1);
 
 		var nx = - (yloc.y-xloc.y);
 		var ny =   (yloc.x-xloc.x);
@@ -129,34 +122,61 @@ class Map extends GuiElem {
 		nx*= nl;
 		ny*= nl;
 
-		var cx = (xloc.x+yloc.x)/2 - (yloc.y-xloc.y)*0.25;
-		var cy = (xloc.y+yloc.y)/2 + (yloc.x-xloc.x)*0.25;
-		g.moveTo(xloc.x,xloc.y);
-		g.curveTo(cx,cy,yloc.x+nx*arrow_width/2,yloc.y+ny*arrow_width/2);
-		g.moveTo(yloc.x-nx*arrow_width/2,yloc.y-ny*arrow_width/2);
-		g.curveTo(cx,cy,xloc.x,xloc.y);
+		var cx = (xloc.x+yloc.x)/2 - (yloc.y-xloc.y)*0.3;
+		var cy = (xloc.y+yloc.y)/2 + (yloc.x-xloc.x)*0.3;
+		var cvx = (xloc.x+yloc.x)/2 - (yloc.y-xloc.y)*0.2;
+		var cvy = (xloc.y+yloc.y)/2 + (yloc.x-xloc.x)*0.2;
 
 		//nme can't render non-convex polygons (BAH)
 		//render arrow in patches
 		var u = {x:xloc.x,y:xloc.y}; var un = {x:yloc.x+nx*arrow_width/2, y:yloc.y+ny*arrow_width/2};
 		var v = {x:xloc.x,y:xloc.y}; var vn = {x:yloc.x-nx*arrow_width/2, y:yloc.y-ny*arrow_width/2};
-		g.lineStyle(0,0,0);
-		for(i in 1...21) {
-			var t = i/20;
-			g.beginFill(col,1);
+
+		//doesn't need to be accurate.
+		var arclength = Math.sqrt(Math.pow(yloc.x-xloc.x,2)+Math.pow(yloc.y-xloc.y,2));
+		var cnt = Math.round(arclength/(5));
+
+		for(i in 1...cnt) {
+			var part = i%4;
+			var skip = dashed && part<2;
+
+			if(skip && part==0) {
+				g.lineStyle(1,0,1);
+				g.moveTo(u.x,u.y);
+				g.lineTo(v.x,v.y);
+			}
+
+			var t = i/cnt;
+			g.lineStyle(0,0,0);
+			g.beginFill(col,skip?0.25:1.0);
 			g.moveTo(u.x,u.y);
 			g.lineTo(v.x,v.y);
 
+			var ux = u.x; var uy = u.y;
+			var vx = v.x; var vy = v.y;
 			u.x = (1-t)*(1-t)*xloc.x + 2*(1-t)*t*cx + t*t*un.x;
 			u.y = (1-t)*(1-t)*xloc.y + 2*(1-t)*t*cy + t*t*un.y;
-			v.x = (1-t)*(1-t)*xloc.x + 2*(1-t)*t*cx + t*t*vn.x;
-			v.y = (1-t)*(1-t)*xloc.y + 2*(1-t)*t*cy + t*t*vn.y;
+			v.x = (1-t)*(1-t)*xloc.x + 2*(1-t)*t*cvx + t*t*vn.x;
+			v.y = (1-t)*(1-t)*xloc.y + 2*(1-t)*t*cvy + t*t*vn.y;
 
 			g.lineTo(v.x,v.y);
 			g.lineTo(u.x,u.y);
 			g.endFill();
+
+			g.lineStyle(1,0,1);
+			g.moveTo(ux,uy);
+			g.lineTo(u.x,u.y);
+			g.moveTo(vx,vy);
+			g.lineTo(v.x,v.y);
+			
+			if(skip && part==1) {
+				g.lineStyle(1,0,1);
+				g.moveTo(u.x,u.y);
+				g.lineTo(v.x,v.y);
+			}
+
 		}
-		g.lineStyle(0.1,0,1);
+		g.lineStyle(1,0,1);
 		//----------------------
 
 		if(!s2) {
@@ -213,16 +233,23 @@ class Map extends GuiElem {
 	public function inform_result(order:MsgOrder, result:CompOrderResult) {
 		switch(order) {
 			case moHold(unitloc):
-				arrow(unitloc.location, unitloc.location, aHold, Match.match(result.result, rSuccess=true, _=false), true);
+				//display something when hold is fail?
 			case moMove(unitloc, loc):
-				arrow(unitloc.location, loc, aNormal, Match.match(result.result, rSuccess=true, _=false));
+				var success = Match.match(result.result, rSuccess=true,_=false);
+				stdarrow(unitloc.location, loc, aMove, success);
 			case moSupport(unitloc, supportloc, move):
 				var success = Match.match(result.result, rSupportCut=false,_=true);
 				if(move==null) { //support a hold
-					arrow(unitloc.location, supportloc.location, aSupport, success, true); 
+					stdarrow(unitloc.location, supportloc.location, aSupport, success); 
 				}else { //support a move
-					arrow(unitloc.location, { province:move, coast:null /*!!!*/ }, aSupport, success);
+					stdarrow(unitloc.location, { province:move, coast:null /*!!!*/ }, aSupport, success);
 				}	
+			case moBuild(unitloc):
+				var sco = supply_point(unitloc.location);
+				arrow(sco, location_point(unitloc.location), aBuild);
+			case moRetreat(unit,loc):
+				var success = Match.match(result.result, rSuccess=true,_=false);
+				stdarrow(unit.location,loc,aRetreat,success);
 			default: //don't care (yet)
 		}
 	}
@@ -268,6 +295,12 @@ class Map extends GuiElem {
 		}
 	}
 
+	public function supply_point(location:Location) {
+		var id = TokenUtils.provinceId(location.province);
+		var name = mapnames.nameOf(id);
+
+		return mapdata.supplies.get(name);
+	}
 	public function location_point(location:Location) {
 		var id = TokenUtils.provinceId(location.province);
 		var name = mapnames.nameOf(id);
@@ -449,9 +482,8 @@ class Map extends GuiElem {
 		addChild(map);
 
 		highlight = new Sprite();	
-		addChild(highlight);
+		//addChild(highlight);
 		arrows = new Sprite();
-		addChild(arrows);
 
 		//
 		var cmf = ColorMatrix.fromred(0xffffff).filter();
@@ -519,6 +551,8 @@ class Map extends GuiElem {
 
 			txt.filters = [new nme.filters.GlowFilter(0xffffff,0.6,4,6,4,1)];
 		}
+
+		addChild(arrows);
 	}
 
 	//--------------------------------------------------------------------------------------------
@@ -551,7 +585,7 @@ class Map extends GuiElem {
 		highlight.height = arrows.height = map.height;
 
 		var scale = Match.match(stageScale, sSmall=1.0, sDefault=1.5, sLarge=2.0);
-		var rad = Std.int(10*zoom_scale() * scale);
+		var rad = Std.int(15*zoom_scale() * scale);
 
 		for(key in supplies.keys()) {
 			var mp = supplies.get(key);
