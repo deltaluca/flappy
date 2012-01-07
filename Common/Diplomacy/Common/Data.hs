@@ -18,7 +18,6 @@ module Diplomacy.Common.Data ( Power(..)
                              , UnitPosition(..)
                              , ProvinceNode(..)
                              , Turn(..)
-                             , Adjacencies(..)
                              , Order(..)
                              , OrderNote(..)
                              , OrderResult(..)
@@ -33,7 +32,9 @@ module Diplomacy.Common.Data ( Power(..)
                              , OrderClass(..)
                              ) where
 
+import Control.Monad
 import Test.QuickCheck -- Unit testing
+
 import qualified Data.Map as Map  -- Use for all dictionary types
 
 -- | Misc. game entities
@@ -90,14 +91,12 @@ data Phase
 
 data MapDefinition = MapDefinition { mapDefPowers :: [Power]
                                    , mapDefProvinces :: [Province]
-                                   , mapDefAdjacencies :: Adjacencies
+                                   , mapDefArmyNodes :: [ProvinceNode]
+                                   , mapDefFleetNodes :: [ProvinceNode]
+                                   , mapDefAdjacencies :: Map.Map (ProvinceNode, UnitType) [ProvinceNode]
                                    , mapDefProvNodes :: Map.Map Province [ProvinceNode]
                                    , mapDefSupplyInit :: SupplyCOwnerships }
                    deriving (Show, Eq)
-
-newtype Adjacencies = Adjacencies (Map.Map (ProvinceNode, UnitType) [ProvinceNode])
-                    deriving (Show, Eq)
-
 
   -- | Static game info
 data GameInfo = GameInfo { gameInfoMapDef :: MapDefinition
@@ -214,19 +213,28 @@ instance Arbitrary Power where
 
 instance Arbitrary MapDefinition where
   arbitrary = do
-    p1 <- listOf1 arbitrary
-    p2 <- listOf1 arbitrary
-    a <- arbitrary
-    s <- arbitrary
-    return $ MapDefinition p1 p2 a Map.empty s
+    p1 <- arbitrary
+    p2 <- arbitrary
+    ar <- arbitrary
+    fl <- arbitrary
+    adj <- arbitrary
+    pn <- arbitrary
+    si <- arbitrary
+    return $ MapDefinition { mapDefPowers = p1
+                           , mapDefProvinces = p2
+                           , mapDefArmyNodes = ar
+                           , mapDefFleetNodes = fl
+                           , mapDefAdjacencies = adj
+                           , mapDefProvNodes = pn
+                           , mapDefSupplyInit = si }
 
-instance (Ord a, Arbitrary a, Arbitrary b) => Arbitrary (Map.Map a b) where
-  arbitrary = do
-    scos <- listOf1 $ do
-           p <- arbitrary
-           ps <- arbitrary
-           return (p, ps)
-    return . Map.fromList $ scos
+-- instance (Ord a, Arbitrary a, Arbitrary b) => Arbitrary (Map.Map a b) where
+--   arbitrary = do
+--     scos <- listOf1 $ do
+--            p <- arbitrary
+--            ps <- arbitrary
+--            return (p, ps)
+--     return . Map.fromList $ scos
 
 instance Arbitrary Province where
   arbitrary = do
@@ -238,13 +246,18 @@ instance Arbitrary Province where
     i <- arbitrary
     return $ Province b t i
 
-instance Arbitrary Adjacencies where
+instance (Ord k, Arbitrary k, Arbitrary v) => Arbitrary (Map.Map k v) where
   arbitrary = do
-    adj <- listOf1 $ do
-      p <- arbitrary
-      up <- listOf1 arbitrary
-      return (p, up)
-    return . Adjacencies . Map.fromList $ adj
+    kvs <- listOf1 $ liftM2 (,) arbitrary arbitrary
+    return $ Map.fromList kvs
+
+-- instance Arbitrary Adjacencies where
+--   arbitrary = do
+--     adj <- listOf1 $ do
+--       p <- arbitrary
+--       up <- listOf1 arbitrary
+--       return (p, up)
+--     return . Adjacencies . Map.fromList $ adj
 
 instance Arbitrary ProvinceNode where
   arbitrary = oneof [ return . ProvNode =<< arbitrary

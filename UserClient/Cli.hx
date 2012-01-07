@@ -22,7 +22,6 @@ import Mut;
 
 class Cli {
 	var sock:Socket;
-	public var socketdelay:Float;
 
 	public var logger:Dynamic->Void;
 	public inline function log(x:Dynamic) {
@@ -30,7 +29,6 @@ class Cli {
 	}
 
 	public function new() {
-		socketdelay = -1.0;
 		sock = new Socket();
 		sock.logger = log;
 	}
@@ -113,7 +111,7 @@ class Cli {
 			if(cmdargs.length!=2) log("delay time");
 			else {
 				var snd = Std.parseFloat(cmdargs[1]);
-				socketdelay = snd;
+				gint.setDelay(snd);
 			}
 		case "run":
 			if(cmdargs.length!=2) log("run file");

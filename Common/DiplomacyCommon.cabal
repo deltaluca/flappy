@@ -60,6 +60,7 @@ Library
     Diplomacy.Common.TSeq  
     Diplomacy.Common.MonadSTM
     Diplomacy.Common.TStream      
+    Diplomacy.Common.FloydWarshall
 
   -- Packages needed in order to build this package.
   Build-depends:
@@ -75,8 +76,9 @@ Library
     QuickCheck >= 2.0,
     time,
     deepseq,
-    transformers
-  
+    transformers,
+    array
+    
   -- Modules not exported by this package.
   -- Other-modules:       
   

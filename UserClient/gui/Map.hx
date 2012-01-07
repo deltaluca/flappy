@@ -86,43 +86,78 @@ class Map extends GuiElem {
 		var arrow_height:Float;
 		var col = Match.match(pair(type,s1),
 			pair(aNormal, true ) = {
-				arrow_height = 6;
+				arrow_height = 8;
 				0;
 			},
 			pair(aNormal, false) = { //move bounced
-				arrow_height = 3;
+				arrow_height = 5;
 				0xff0000;
 			},
 			pair(aSupport, true ) = {
-				arrow_height = 3;
+				arrow_height = 5;
 				0x30f030;
 			},
 			pair(aSupport, false ) = { //support cut[Ma
-				arrow_height = 2;
+				arrow_height = 3;
 				0x10a010;
 			},
 			pair(aHold, true) = {
-				arrow_height = 3;
+				arrow_height = 5;
 				0x4040ff;
 			},
 			pair(aHold, false) = {
-				arrow_height = 3;
+				arrow_height = 5;
 				0;
 			},
 			_ = {
-				arrow_height = 2;
+				arrow_height = 3;
 				0xffffff;
 			}
 		);
+		var scale = Match.match(stageScale, sSmall=1.0, sDefault=1.5, sLarge=2.0);
+		var sc = Math.max(1,scale*Math.sqrt(zoom_scale())*0.5);
+
+		arrow_height *= sc;
 		var arrow_width = arrow_height*0.75;
 
 		var g = arrows.graphics;
-		g.lineStyle(2,col,1);
+		g.lineStyle(0.1,0,1);
 
-		g.moveTo(xloc.x,xloc.y);
+		var nx = - (yloc.y-xloc.y);
+		var ny =   (yloc.x-xloc.x);
+		var nl = 1/Math.sqrt(nx*nx+ny*ny);
+		nx*= nl;
+		ny*= nl;
+
 		var cx = (xloc.x+yloc.x)/2 - (yloc.y-xloc.y)*0.25;
 		var cy = (xloc.y+yloc.y)/2 + (yloc.x-xloc.x)*0.25;
-		g.curveTo(cx,cy,yloc.x,yloc.y);
+		g.moveTo(xloc.x,xloc.y);
+		g.curveTo(cx,cy,yloc.x+nx*arrow_width/2,yloc.y+ny*arrow_width/2);
+		g.moveTo(yloc.x-nx*arrow_width/2,yloc.y-ny*arrow_width/2);
+		g.curveTo(cx,cy,xloc.x,xloc.y);
+
+		//nme can't render non-convex polygons (BAH)
+		//render arrow in patches
+		var u = {x:xloc.x,y:xloc.y}; var un = {x:yloc.x+nx*arrow_width/2, y:yloc.y+ny*arrow_width/2};
+		var v = {x:xloc.x,y:xloc.y}; var vn = {x:yloc.x-nx*arrow_width/2, y:yloc.y-ny*arrow_width/2};
+		g.lineStyle(0,0,0);
+		for(i in 1...21) {
+			var t = i/20;
+			g.beginFill(col,1);
+			g.moveTo(u.x,u.y);
+			g.lineTo(v.x,v.y);
+
+			u.x = (1-t)*(1-t)*xloc.x + 2*(1-t)*t*cx + t*t*un.x;
+			u.y = (1-t)*(1-t)*xloc.y + 2*(1-t)*t*cy + t*t*un.y;
+			v.x = (1-t)*(1-t)*xloc.x + 2*(1-t)*t*cx + t*t*vn.x;
+			v.y = (1-t)*(1-t)*xloc.y + 2*(1-t)*t*cy + t*t*vn.y;
+
+			g.lineTo(v.x,v.y);
+			g.lineTo(u.x,u.y);
+			g.endFill();
+		}
+		g.lineStyle(0.1,0,1);
+		//----------------------
 
 		if(!s2) {
 			var dcx = yloc.x-cx;
@@ -130,8 +165,8 @@ class Map extends GuiElem {
 			var dcl = 1/Math.sqrt(dcx*dcx+dcy*dcy);
 			dcx *= dcl; dcy *= dcl;
 	
-			g.beginFill(col,1);
 			g.moveTo(yloc.x,yloc.y);
+			g.beginFill(col,1);
 			g.lineTo(yloc.x - dcx*arrow_height + dcy*arrow_width,
 					 yloc.y - dcy*arrow_height - dcx*arrow_width);
 			g.lineTo(yloc.x - dcx*arrow_height - dcy*arrow_width,
@@ -171,19 +206,9 @@ class Map extends GuiElem {
 
 	//--------------------------------------------------------------------------------------------
 
-	/*
-
-		discern when turn ends based on information supplied.
-
-		When an order result is received, we begin rendering the arrows displaying unit movement and results
-		When a supply ownership/location message is received, we assume that no more order results are to be given
-		And arrows are cleared with units moved to the new location.
-
-		To this effect, when supply/locations are informed, arrows are simply cleared which fits the above rules.
-	
-	*/
-
-	//--------------------------------------------------------------------------------------------
+	public function clear_results() {
+		arrows.graphics.clear();
+	}
 
 	public function inform_result(order:MsgOrder, result:CompOrderResult) {
 		switch(order) {
@@ -203,8 +228,6 @@ class Map extends GuiElem {
 	}
 
 	public function inform_supplyOwnerships(scos:Array<ScoEntry>) {
-		arrows.graphics.clear();
-
 		for(sco in scos) {
 			var power = sco.power;
 			var cmf = MapConfig.powerFilter(power);
@@ -296,8 +319,6 @@ class Map extends GuiElem {
 
 	var unitlocs:Array<{power:Int, pos:Point, type:UnitType, mip:MipMap}>;
 	public function inform_locations(locs:Array<UnitWithLocAndMRT>) {
-		arrows.graphics.clear();
-
 		for(x in unitlocs) {
 			removeChild(x.mip);
 			switch(x.type) {

@@ -376,7 +376,17 @@ pMapDef = do
   (scos, provinces) <- paren pProvinces
   adjacencies <- return . concat =<< paren (many (paren pAdjacency))
   let provNodes = map (mapProvinceNode . fst . fst) $ adjacencies
-  return . MapDef $ MapDefinition powers provinces (Adjacencies $ (foldl (\m (k, v) -> Map.insert k v m) Map.empty) adjacencies) (groupMap provNodes) scos
+      (armyNodes, fleetNodes) = partition (\(_, ut) -> case ut of 
+                                              Army -> True
+                                              Fleet -> False) (map fst adjacencies)
+  return . MapDef $
+    MapDefinition { mapDefPowers = powers
+                  , mapDefProvinces = provinces
+                  , mapDefArmyNodes = map fst armyNodes
+                  , mapDefFleetNodes = map fst fleetNodes
+                  , mapDefAdjacencies = Map.fromList adjacencies
+                  , mapDefProvNodes = groupMap provNodes 
+                  , mapDefSupplyInit = scos }
 
 mapProvinceNode :: ProvinceNode -> (Province, ProvinceNode)
 mapProvinceNode pn@(ProvCoastNode prov _) = (prov, pn)
@@ -994,7 +1004,7 @@ uMsg ms = case ms of
                            . uParen uInt passcode
                            )
 
-  MapDef (MapDefinition powers provinces (Adjacencies adjacencies) _ scos) ->
+  MapDef (MapDefinition powers provinces _ _ adjacencies _ scos) ->
     ( uTok (DipCmd MDF)
       . uParen (uMany uPower) powers
       . uParen uProvinces (provinces, scos)
