@@ -4,17 +4,16 @@ import Diplomacy.Common.Data
 
 import Data.Array
 import Data.List
-import Data.Maybe
+import Data.Maybe(mapMaybe)
 import Control.Monad (liftM, liftM2)
 import qualified Data.Map as Map
 
-(?) :: Bool -> a -> a -> a
-(?) a b c = if a then b else c
+--import Debug.Trace
 
   -- looks obscure but it's all just so that we have a nice interface to a fast access array
   -- Nothing represents no path
 floydWarshall :: MapDefinition -> (ProvinceNode, UnitType) -> ProvinceNode -> Maybe Int
-floydWarshall mapDef (provFrom, utyp) provTo =
+floydWarshall mapDef (provFrom, utyp) provTo = 
   floydWarshall' (map pid provNodes) ! (pid provFrom, pid provTo)
   where
     provNodes = case utyp of Army -> mapDefArmyNodes mapDef
@@ -38,17 +37,23 @@ floydWarshall mapDef (provFrom, utyp) provTo =
          Nothing -> error "inconsistent ProvCoastNode coast, the provNodes map doesn't contain it"
          Just i -> provinceId prov + (maxProvId - minProvId) * i
     arrayRange = ((minPid, minPid), (maxPid, maxPid))
-    initList = [(elem y (adj x) ?
-                 ((pid x, pid y), Just 1) $
-                 ((pid x, pid y), Nothing)) | (x, y) <- liftM2 (,) provNodes provNodes]
+    initArray = listArray arrayRange (repeat Nothing)
+                // [ ((pid x, pid y), Just 1)
+                   | x <- provNodes, y <- adj x ]
     adj x = mapDefAdjacencies mapDef Map.! (x, utyp)
     
     -- the important part
     floydWarshall' :: [Int] -> Array (Int, Int) (Maybe Int)
-    floydWarshall' [] = array arrayRange initList
+    floydWarshall' [] = initArray
     floydWarshall' (i : is) = let prevArr = floydWarshall' is in
-      prevArr // [ ((x, y), min (prevArr ! (x, y)) (prevArr ! (x, i) + prevArr ! (i, y)))
+      prevArr // [ ((x, y), mini (prevArr ! (x, y)) (prevArr ! (x, i) + prevArr ! (i, y)))
                  | (x, y) <- range arrayRange]
+
+--trc a = traceShow a a
+
+mini Nothing a = a
+mini a Nothing = a
+mini a b = min a b
 
 instance (Num a) => Num (Maybe a) where
   (+) = liftM2 (+)
