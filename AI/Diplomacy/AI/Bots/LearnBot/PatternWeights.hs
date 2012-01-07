@@ -92,18 +92,14 @@ average l = (sum l) / ((fromIntegral.length) l)
 
 --WTF HASKELL WTF I HATE YOU
 
-updatePatternsGetWeightAge :: Connection -> (Int,Int) -> IO Double
+updatePatternsGetWeightAge :: Connection -> (Int,Int) -> IO (Double,Int)
 updatePatternsGetWeightAge conn (mid, mval) = do 
   result <- quickQuery' conn "SELECT mid, mval FROM test WHERE mid = ?" [toSql mid] 
   if (length result == 0) 
-    then run conn "INSERT INTO test VALUES (?,?,0.5,0)" [toSql mid, toSql mval]
+    then run conn "INSERT INTO test VALUES (?,?,0.5,1)" [toSql mid, toSql mval]
     else run conn "UPDATE test SET age = (age + 1) WHERE mid = ?" [toSql mid]
-  weightsResult <- quickQuery' conn "SELECT weight FROM test WHERE mid = ? AND mval = ?" [toSql mid, toSql mval]
-  let weight = (fromSql . head $ head weightsResult )::Double
-  return weight
-  --let x :: Double; x = undefined
---  x
-
+  weightsResult <- quickQuery' conn "SELECT weight, age FROM test WHERE mid = ? AND mval = ?" [toSql mid, toSql mval]
+  return $ (\[x,y] -> (fromSql x, fromSql y)::(Double,Int)) $ head weightsResult
 
 sortGT :: (Double, a) -> (Double, a) ->  Ordering
 sortGT (d1,_) (d2,_)
@@ -116,19 +112,15 @@ weighOrder order = do
   
   let mKeyVals = zip metricIDs metricVals
   conn <- liftIO $ connectSqlite3 "test.db"--hardcoded for now
-  --mKeyVals is a list of tubles of mid and mval
-  --need to check each pair if it exists in table, if not then add entry with value 0.5 (see below)
-  weights <- liftIO ( sequence $ map (updatePatternsGetWeightAge conn) mKeyVals)
-  --let weights = map 
+  
+  weightAges <- liftIO (sequence $ map (updatePatternsGetWeightAge conn) mKeyVals)
+  
   liftIO $ commit conn
   liftIO $ disconnect conn
-  -- access database according to function ID and value
-  -- if pattern not in database, add entry with value of 0.5 and age 0 and use that
-  -- if pattern is in database, take weight and increment age
-    
-  --let weights :: [Double]; weights = undefined
-  -- weights <- dbLookup (zip metrics metricVals)
-  
+ 
+  -- weights are linearly biased by their ages 
+  let weights =  map (\(x,y) -> x + (fromIntegral y)) weightAges
+
   -- need to consider the weighting of the age
   return $ average weights
 
