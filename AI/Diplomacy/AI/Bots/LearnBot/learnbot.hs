@@ -67,7 +67,7 @@ learnBrainMove = do
   trimmedOrders <- mapM ((randElems 3) . (legalUnitMoves Map.!)) myUnits
   let possibleOrderSets = Traversable.sequenceA trimmedOrders
   highestWeightedOrders <- weighOrderSets possibleOrderSets
-  orders <- randWeightedElem highestWeightedOrders  
+  orders <- randWeightedElem $ take 5 highestWeightedOrders  
   putOrders $ Just orders
 
 

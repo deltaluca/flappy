@@ -117,6 +117,12 @@ updatePatternsGetWeightAge conn (mid, mval) = do
 --  x
 
 
+sortGT :: (Double, a) -> (Double, a) ->  Ordering
+sortGT (d1,_) (d2,_)
+    | d1 < d2 = GT
+    | d1 >= d2 = LT
+
+
 weighOrder :: (MonadIO m, OrderClass o) => OrderMovement -> LearnBrainT o m Double
 weighOrder order = do
   metricVals <- sequence [f order | f <- metrics]
@@ -145,7 +151,7 @@ weighOrderSet orders = do
   return (orderSetWeight, orders)
 
 weighOrderSets :: (MonadIO m, OrderClass o) => [[OrderMovement]] -> LearnBrainT o m [(Double, [OrderMovement])]
-weighOrderSets = return =<< mapM weighOrderSet 
+weighOrderSets orderSets = (return . (sortBy sortGT)) =<< mapM weighOrderSet orderSets
 
 randWeightedElem :: (MonadIO m, OrderClass o) => [(Double, [a])] -> LearnBrainT o m [a]
 randWeightedElem elemWeights = do
