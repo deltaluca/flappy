@@ -7,6 +7,15 @@
   year = {2011}
 }
 
+@UNPUBLISHED{Hall95,
+  author = {Michael R. Hall and Daniel E. Loeb},
+  title = {Thoughts on programming a Diplomat},
+  month = {November},
+  year = {1995},
+  owner = {mh2308},
+  timestamp = {2012.01.07}
+}
+
 @ARTICLE{Huff05,
   author = {Andrew Huff and Vincent Chan and Laurence Tondelier and Damian Bundred
 	and Colm Egan},
@@ -50,7 +59,8 @@
   author = {Robert Levinson and Gil Fuchs},
   title = {A Pattern-Weight Formulation of Search Knowledge},
   institution = {Computational Intelligence},
-  year = {1994}
+  year = {1994},
+  abstract = {\5}
 }
 
 @MASTERSTHESIS{Lim2009,
