@@ -91,6 +91,8 @@ class Terminal {
 
 		if(visible) logger.addEventListener   (Event.ENTER_FRAME, update);
 		else        logger.removeEventListener(Event.ENTER_FRAME, update);
+		
+		inp.text = "";
 		return visible;
 	}
 	function update(_) {

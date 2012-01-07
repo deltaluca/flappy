@@ -27,6 +27,8 @@ module Diplomacy.AI.SkelBot.Common( getMyPower
                                   , provNodeToProv
                                   , noUno
                                   , genLegalOrders
+                                  , getOMTargetUnit
+                                  , getOMSubjectUnit
                                   , (!)
                                   -- Metrics
                                   , getProvOcc
@@ -123,14 +125,14 @@ getMyRetreats = do
 getAdjacentNodes :: (MonadGameKnowledge h m) => UnitPosition -> m [ProvinceNode]
 getAdjacentNodes (UnitPosition _ unitType provNode) = do
   mapDef <- asksGameInfo gameInfoMapDef
-  let Adjacencies adjMap = mapDefAdjacencies mapDef
+  let adjMap = mapDefAdjacencies mapDef
   return $ adjMap ! (provNode, unitType)
 
 -- gets all adjacent nodes to a given province
 getAllAdjacentNodes :: (MonadGameKnowledge h m) => Province -> m [ProvinceNode]
 getAllAdjacentNodes prov = do
   mapDef <- asksGameInfo gameInfoMapDef
-  let Adjacencies adjMap = mapDefAdjacencies mapDef
+  let adjMap = mapDefAdjacencies mapDef
       provNodes = mapDefProvNodes mapDef ! prov
       nodeUnits = liftM2 (,) provNodes [Army, Fleet]
   return $ foldl1 union . map (adjMap !) $ nodeUnits
@@ -139,7 +141,7 @@ getAllAdjacentNodes prov = do
 getAllAdjacentNodes2 :: (MonadGameKnowledge h m) => ProvinceNode -> m [ProvinceNode]
 getAllAdjacentNodes2 provNode = do
   mapDef <- asksGameInfo gameInfoMapDef
-  let Adjacencies adjMap = mapDefAdjacencies mapDef
+  let adjMap = mapDefAdjacencies mapDef
   return $ (adjMap ! (provNode, Army)) `union` (adjMap ! (provNode, Fleet))
 
 -- pick a random element from a list
@@ -153,13 +155,6 @@ randElem l = do
 -- pick N random elements from a list
 randElems :: (MonadRandom m) => Int -> [a] -> m [a]
 randElems n l = return . take n =<< shuff l
-
-             -- wat 
--- randElems 0 _ = return []
--- randElems n l = do
--- 	x <- randElem l
--- 	xs <- randElems (n-1) (delete x l)
--- 	return (x : xs)
 
 -- abstracts a province to just its name (ie. disregarding coasts etc.)
 provNodeToProv :: ProvinceNode -> Province
@@ -247,6 +242,25 @@ getAllProvNodes = do
 noUno :: Map.Map Power a -> Map.Map Power a
 noUno = Map.delete Neutral
 
+getOMTargetUnit :: OrderMovement -> UnitPosition
+getOMTargetUnit order = 
+  case order of 
+    Hold u            -> u
+    Move u _          -> u
+    SupportHold _ u   -> u
+    SupportMove _ u _ -> u
+    Convoy _ u _      -> u
+    MoveConvoy u _ _  -> u
+
+getOMSubjectUnit :: OrderMovement -> UnitPosition
+getOMSubjectUnit order = 
+  case order of 
+    Hold u            -> u
+    Move u _          -> u
+    SupportHold u _   -> u
+    SupportMove u _ _ -> u
+    Convoy u _ _      -> u
+    MoveConvoy u _ _  -> u
 
 -- Generates all legal orders only involving own units
 genLegalOrders :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => 

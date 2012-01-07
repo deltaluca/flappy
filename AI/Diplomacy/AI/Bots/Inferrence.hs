@@ -2,7 +2,7 @@
  -
 -}
 
-
+{- Doesn't compile yet
 
 module Diplomacy.AI.Bots.Inferrence  (
                                      ) where
@@ -61,3 +61,5 @@ getPossibleAttacks pPos pow = do
 -- # Inferrence database update functions # --
 --
 -- evaluateEvidence
+
+-}
