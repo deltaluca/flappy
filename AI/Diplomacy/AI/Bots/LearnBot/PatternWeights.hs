@@ -44,6 +44,16 @@ data MOrderType = THold
                 | TMoveConvoy
                 deriving (Eq, Ord, Show)
 
+moveOrderToType :: (OrderClass o, MonadIO m) => OrderMovement -> LearnBrainT o m MOrderType
+moveOrderToType order =
+  case order of 
+    Hold _            -> return THold 
+    Move _ _          -> return TMove
+    SupportHold _ _   -> return TSupportHold
+    SupportMove _ _ _ -> return TSupportMove
+    Convoy _ _ _      -> return TConvoy
+    MoveConvoy _ _ _  -> return TMoveConvoy
+
 mOTTmap :: Map.Map MOrderType Int
 mOTTmap = Map.fromList $ zip [THold,TMove,TSupportHold,TSupportMove,TConvoy,TMoveConvoy] [1..] 
 
@@ -66,34 +76,12 @@ metrics = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv
 metricIDs = [1..]
 
 moveOrderToOwnProv :: (OrderClass o, MonadIO m) => OrderMovement -> LearnBrainT o m Province
-moveOrderToOwnProv order = 
-  case order of 
-    Hold u            -> return . provNodeToProv . unitPositionLoc $ u
-    Move u _          -> return . provNodeToProv . unitPositionLoc $ u
-    SupportHold u _   -> return . provNodeToProv . unitPositionLoc $ u  
-    SupportMove u _ _ -> return . provNodeToProv . unitPositionLoc $ u
-    Convoy u _ _      -> return . provNodeToProv . unitPositionLoc $ u
-    MoveConvoy u _ _  -> return . provNodeToProv . unitPositionLoc $ u
+moveOrderToOwnProv = 
+  return . provNodeToProv . unitPositionLoc . getOMSubjectUnit
  
 moveOrderToTargProv :: (OrderClass o, MonadIO m) => OrderMovement -> LearnBrainT o m Province
-moveOrderToTargProv order = 
-  case order of 
-    Hold u            -> return . provNodeToProv . unitPositionLoc $ u
-    Move u _          -> return . provNodeToProv . unitPositionLoc $ u
-    SupportHold _ u   -> return . provNodeToProv . unitPositionLoc $ u  
-    SupportMove _ u _ -> return . provNodeToProv . unitPositionLoc $ u
-    Convoy _ u _      -> return . provNodeToProv . unitPositionLoc $ u
-    MoveConvoy u _ _  -> return . provNodeToProv . unitPositionLoc $ u
-
-moveOrderToType :: (OrderClass o, MonadIO m) => OrderMovement -> LearnBrainT o m MOrderType
-moveOrderToType order =
-  case order of 
-    Hold _            -> return THold 
-    Move _ _          -> return TMove
-    SupportHold _ _   -> return TSupportHold
-    SupportMove _ _ _ -> return TSupportMove
-    Convoy _ _ _      -> return TConvoy
-    MoveConvoy _ _ _  -> return TMoveConvoy
+moveOrderToTargProv =
+    return . provNodeToProv . unitPositionLoc . getOMTargetUnit
 
 average :: [Double] -> Double
 average l = (sum l) / ((fromIntegral.length) l)
