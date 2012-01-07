@@ -58,7 +58,7 @@ instance (OrderClass o) => MonadGameKnowledge () (LearnBrain o) where
   
 main = skelBot learnBot
 
-learnBot :: (MonadIO m) => DipBot m ()
+learnBot :: (MonadRandom m, Functor m, MonadIO m) => DipBot m ()
 learnBot = DipBot { dipBotName = "FlappyLearningBot"
                    , dipBotVersion = 0.1
                    , dipBotBrainMovement = learnBrainMoveComm
@@ -78,8 +78,20 @@ learnBrainComm pureBrain = do
   
   liftIO $ setStdGen newStdGen  -- set new stdgen
 
-learnBrainMoveComm :: (MonadIO m) => LearnBrainMoveCommT m ()
-learnBrainMoveComm = learnBrainComm learnBrainMove
+learnBrainMoveComm :: (MonadRandom m, Functor m, MonadIO m) => LearnBrainMoveCommT m ()
+--learnBrainMoveComm = learnBrainComm learnBrainMove
+learnBrainMoveComm = do 
+  myUnits <- getMyUnits
+	
+  --obtain all legal moves
+  legalUnitMoves <- foldM genLegalOrders Map.empty myUnits
+	
+  trimmedOrders <- mapM ((randElems 3) . (legalUnitMoves Map.!)) myUnits
+  let possibleOrderSets = Traversable.sequenceA trimmedOrders
+  highestWeightedOrders <- weighOrderSets possibleOrderSets
+  orders <- randWeightedElem highestWeightedOrders  
+  putOrders $ Just orders
+
 
 learnBrainRetreatComm :: (MonadIO m) => LearnBrainRetreatCommT m ()
 learnBrainRetreatComm = learnBrainComm learnBrainRetreat
@@ -93,7 +105,7 @@ learnProcessResults _ = id
 learnInitHistory :: (MonadIO m) => m ()
 learnInitHistory = return ()
 
-learnBrainMove :: LearnBrainMove ()
+{-learnBrainMove :: LearnBrainMoveCommT ()
 learnBrainMove = do
   myUnits <- getMyUnits
 	
@@ -104,8 +116,7 @@ learnBrainMove = do
   let possibleOrderSets = Traversable.sequenceA trimmedOrders
   highestWeightedOrders <- weighOrderSets possibleOrderSets
   orders <- randWeightedElem highestWeightedOrders  
-
-  putOrders $ Just orders
+  putOrders $ Just orders-}
 
 learnBrainRetreat :: LearnBrainRetreat ()
 learnBrainRetreat = do

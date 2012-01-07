@@ -21,6 +21,7 @@ import Diplomacy.AI.SkelBot.Common
 
 import Control.Monad
 import Control.Monad.Random
+import Control.Monad.Trans
 import Control.Applicative
 
 import System.Random
@@ -100,43 +101,48 @@ average l = (sum l) / ((fromIntegral.length) l)
 -- 
 
 --WTF HASKELL WTF I HATE YOU
---
---updatePatternsGetWeightAge :: (Int,Int) -> Double
---updatePatternsGetWeightAge (mid, mval) = do 
---  result <- return [] --quickQuery' conn "SELECT mid, mval FROM test WHERE mid = ?" [toSql mid] 
-  --if (True) then run conn "INSERT INTO test VALUES (?,?,?,?)" [toSql mid, toSql mval, toSql 0.5, toSql 0]
-  --run conn "UPDATE test SET age = (age + 1) WHERE mid = ?" [toSql mid]
-                --fromSql . head . quickQuery' conn "SELECT weight FROM test WHERE mid = ? AND mval = ?" [toSql mid, toSql mval]}
---  let x :: Double; x = undefined;
+
+updatePatternsGetWeightAge :: Connection -> (Int,Int) -> IO Double
+updatePatternsGetWeightAge conn (mid, mval) = do 
+  result <- quickQuery' conn "SELECT mid, mval FROM test WHERE mid = ?" [toSql mid] 
+  if (length result == 0) 
+    then run conn "INSERT INTO test VALUES (?,?,0.5,0)" [toSql mid, toSql mval]
+    else run conn "UPDATE test SET age = (age + 1) WHERE mid = ?" [toSql mid]
+  weightsResult <- quickQuery' conn "SELECT weight FROM test WHERE mid = ? AND mval = ?" [toSql mid, toSql mval]
+  let weight = (fromSql . head $ head weightsResult )::Double
+  return weight
+  --let x :: Double; x = undefined
 --  x
 
 
-weighOrder :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => OrderMovement -> m Double
+weighOrder :: (Functor m, Monad m, MonadIO m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => OrderMovement -> m Double
 weighOrder order = do
   metricVals <- sequence [f order | f <- metrics]
   
   let mKeyVals = zip metricIDs metricVals
-  --conn <- connectSqlite3 "test.db" --hardcoded for now
+  conn <- liftIO $ connectSqlite3 "test.db"--hardcoded for now
   --mKeyVals is a list of tubles of mid and mval
   --need to check each pair if it exists in table, if not then add entry with value 0.5 (see below)
-  --let weights = map (updatePatternsGetWeight conn) mKeyVals
-
+  weights <- liftIO ( sequence $ map (updatePatternsGetWeightAge conn) mKeyVals)
+  --let weights = map 
+  liftIO $ commit conn
+  liftIO $ disconnect conn
   -- access database according to function ID and value
   -- if pattern not in database, add entry with value of 0.5 and age 0 and use that
   -- if pattern is in database, take weight and increment age
     
-  let weights :: [Double]; weights = undefined
+  --let weights :: [Double]; weights = undefined
   -- weights <- dbLookup (zip metrics metricVals)
   
   -- need to consider the weighting of the age
   return $ average weights
 
-weighOrderSet :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => [OrderMovement] -> m (Double, [OrderMovement])
+weighOrderSet :: (Functor m, Monad m, MonadIO m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => [OrderMovement] -> m (Double, [OrderMovement])
 weighOrderSet orders = do
   orderSetWeight <- return.average =<< mapM weighOrder orders
   return (orderSetWeight, orders)
 
-weighOrderSets :: (Functor m, Monad m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => [[OrderMovement]] -> m [(Double, [OrderMovement])]
+weighOrderSets :: (Functor m, Monad m, MonadIO m, OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => [[OrderMovement]] -> m [(Double, [OrderMovement])]
 weighOrderSets = return =<< mapM weighOrderSet 
 
 randWeightedElem :: (MonadRandom m) => [(Double, [a])] -> m [a]
