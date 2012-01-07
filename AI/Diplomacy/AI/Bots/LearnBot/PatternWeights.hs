@@ -44,6 +44,17 @@ data MOrderType = THold
                 | TMoveConvoy
                 deriving (Eq, Ord, Show)
 
+data Pattern = Pattern {  getMetrics :: [Int]
+                       ,  getN :: Int
+                       ,  getID :: Int
+                       ,  getNCant :: [Int] -> Int }
+
+instance Eq Pattern where
+  a == b  = (getID a) == (getID b)
+
+--generatePatterns :: [Int] -> [Pattern]
+--generatePatterns ns = $ take (length metrics) metricsIDs
+
 moveOrderToType :: (OrderClass o, MonadIO m) => OrderMovement -> LearnBrainT o m MOrderType
 moveOrderToType order =
   case order of 
@@ -72,6 +83,7 @@ metrics = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv
           ,(\x -> targNodeAdjUnits            =<< moveOrderToTargProv x)
           ,(\x -> targNodeAdjUnits            =<< moveOrderToOwnProv x)
           ,(\x -> return . mOT2Int                     =<< moveOrderToType x)]
+
 
 metricIDs = [1..]
 
@@ -109,7 +121,9 @@ sortGT (d1,_) (d2,_)
 weighOrder :: (MonadIO m, OrderClass o) => OrderMovement -> LearnBrainT o m Double
 weighOrder order = do
   metricVals <- sequence [f order | f <- metrics]
+ 
   
+ 
   let mKeyVals = zip metricIDs metricVals
   conn <- liftIO $ connectSqlite3 "test.db"--hardcoded for now
   
@@ -174,13 +188,13 @@ targNodeAdjUnits prov = do
 -- temporal learning
 
 -- takes the list of ordermovements metrics and the return values that resulted in a successful streak, and applies temporal difference learning over the entire database
-applyTDiff :: (MonadIO m, OrderClass o) => [[(Int,Int)]] -> LearnBrainT o m ()
+applyTDiff :: [[(Int,Int)]] -> IO ()
 applyTDiff succTurnKeys = do
   -- keys should be a subset of dbkeys, as new entries should be added as they're not found whilst the game is being played
   let l = length succTurnKeys
-  dbKeyVals <- liftIO $ getAllDBValues
+  dbKeyVals <- getAllDBValues
   let (_,dbKeyFinalVals) = foldl (updateWeights l) (1,dbKeyVals) succTurnKeys
-  liftIO $ updateDB dbKeyFinalVals 
+  updateDB dbKeyFinalVals 
   return ()
 
 getAllDBValues :: IO [((Int,Int),Double)]
