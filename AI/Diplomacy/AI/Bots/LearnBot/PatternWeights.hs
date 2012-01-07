@@ -122,7 +122,6 @@ sortGT (d1,_) (d2,_)
     | d1 < d2 = GT
     | d1 >= d2 = LT
 
-
 weighOrder :: (MonadIO m, OrderClass o) => OrderMovement -> LearnBrainT o m Double
 weighOrder order = do
   metricVals <- sequence [f order | f <- metrics]
@@ -157,7 +156,7 @@ randWeightedElem :: (MonadIO m, OrderClass o) => [(Double, [a])] -> LearnBrainT 
 randWeightedElem elemWeights = do
   let (weights, results) = unzip elemWeights
   let sumWeights = sum weights
-  let cumProb = reverse.scanr1 (+) $ map (/sumWeights) weights
+  let cumProb = scanl1 (+) $ map (/sumWeights) weights
   ranDouble <- getRandomR (0.0,1.0)
   let index = length $ takeWhile (< ranDouble) cumProb
   let len = length results
@@ -196,16 +195,36 @@ targNodeAdjUnits prov = do
 
 -- takes the list of ordermovements metrics and the return values that resulted in a successful streak, and applies temporal difference learning over the entire database
 applyTDiff :: (MonadIO m, OrderClass o) => [[(Int,Int)]] -> LearnBrainT o m ()
-applyTDiff keys = do
+applyTDiff succTurnKeys = do
   -- keys should be a subset of dbkeys, as new entries should be added as they're not found whilst the game is being played
-  let l = length keys
-  let dbkeys :: [(Int,Int)]; dbkeys = undefined 
-  
-  -- Assuming can get some form of equivalences on dbkeys (otherwise can't use elem)
-  -- for every set of turn (and set of moves that were used that turn), update the database with the next weight, dependent on whether that move was used that turn and the k value for that turn, ie.
-  -- let updates = [[updateDB dbk (getNextWeight (readDB dbk) n (getK n l) (dbk `elem` sucMovs)) | dbk <- dbkeys ] | (n,sucMovs) <- zip [2.. l] keys]
-
+  let l = length succTurnKeys
+  dbKeyVals <- liftIO $ getAllDBValues
+  let (_,dbKeyFinalVals) = foldl (updateWeights l) (1,dbKeyVals) succTurnKeys
+  liftIO $ updateDB dbKeyFinalVals 
   return ()
+
+getAllDBValues :: IO [((Int,Int),Double)]
+getAllDBValues = do
+  conn <- connectSqlite3 "test.db"
+  results <- quickQuery' conn "SELECT mid, mval, weight FROM test" []
+  commit conn
+  disconnect conn
+  return $ map convListToTuple results
+  
+convListToTuple :: [SqlValue] -> ((Int,Int),Double)
+convListToTuple [s1,s2,s3] = ((fromSql s1, fromSql s2),fromSql s3)
+
+updateWeights :: Int -> (Int,[((Int,Int),Double)]) -> [(Int,Int)]  -> (Int,[((Int,Int),Double)])
+updateWeights l (n,keyVals) succKeys = (n+1 , map (\(key,prev) -> (key, getNextWeight prev (n+1) (getK n l) (key `elem` succKeys))) keyVals)
+
+updateDB :: [((Int,Int),Double)] -> IO ()
+updateDB finalVals = do
+    conn <- connectSqlite3 "test.db"
+    sequence $ map (\((mid,mval),weight) -> 
+                         run conn "UPDATE test SET weight = ? WHERE mid = ? AND mval = ?" [toSql weight, toSql mid, toSql mval])
+               finalVals
+    commit conn
+    disconnect conn
 
 -- given the current turn and number of turns, returns a new k to simulate annealing
 -- for now just increases linearly as the turns gets closer to the end
