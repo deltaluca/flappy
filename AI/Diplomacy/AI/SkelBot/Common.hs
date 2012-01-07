@@ -123,14 +123,14 @@ getMyRetreats = do
 getAdjacentNodes :: (MonadGameKnowledge h m) => UnitPosition -> m [ProvinceNode]
 getAdjacentNodes (UnitPosition _ unitType provNode) = do
   mapDef <- asksGameInfo gameInfoMapDef
-  let Adjacencies adjMap = mapDefAdjacencies mapDef
+  let adjMap = mapDefAdjacencies mapDef
   return $ adjMap ! (provNode, unitType)
 
 -- gets all adjacent nodes to a given province
 getAllAdjacentNodes :: (MonadGameKnowledge h m) => Province -> m [ProvinceNode]
 getAllAdjacentNodes prov = do
   mapDef <- asksGameInfo gameInfoMapDef
-  let Adjacencies adjMap = mapDefAdjacencies mapDef
+  let adjMap = mapDefAdjacencies mapDef
       provNodes = mapDefProvNodes mapDef ! prov
       nodeUnits = liftM2 (,) provNodes [Army, Fleet]
   return $ foldl1 union . map (adjMap !) $ nodeUnits
@@ -139,7 +139,7 @@ getAllAdjacentNodes prov = do
 getAllAdjacentNodes2 :: (MonadGameKnowledge h m) => ProvinceNode -> m [ProvinceNode]
 getAllAdjacentNodes2 provNode = do
   mapDef <- asksGameInfo gameInfoMapDef
-  let Adjacencies adjMap = mapDefAdjacencies mapDef
+  let adjMap = mapDefAdjacencies mapDef
   return $ (adjMap ! (provNode, Army)) `union` (adjMap ! (provNode, Fleet))
 
 -- pick a random element from a list
