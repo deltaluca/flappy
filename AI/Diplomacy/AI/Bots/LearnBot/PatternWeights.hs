@@ -237,28 +237,40 @@ applyTDiffTurn turnValKeys = do
   sequence $ zipWith updateDBTurns (init turnKeyVals) weightCoeffs
   return ()
 
--- For you CRIFF
--- For every element of turnsKeys, multiply that turn's keys by the coeff and update
--- into the DB
-updateDBTurns :: [(Int,Int)] -> Double -> IO ()
-updateDBTurns turnKeys coeff = do
+updateDBTurns :: [(Int,Int)] -> (Double -> Double -> Double -> Double) -> IO ()
+updateDBTurns turnKeys weightFu = do
    conn <- connectSqlite3 "test.db"
-   sequence $ map (\(pid,pval) -> 
-                            run conn 
-                            "UPDATE test SET weight = (weight * ?) WHERE pid = ? AND pval = ?" 
-                            [toSql coeff, toSql pid, toSql pval] ) 
-                  turnKeys
+   sequence $ map (updateDBTurns' conn weightFu) turnKeys
    commit conn
    disconnect conn
 
-evaluateChangeStates :: [Double] -> [Double]
+_c :: Double
+_c = undefined
+_k :: Double
+_k = undefined
+
+updateDBTurns' :: Connection -> (Double -> Double -> Double -> Double) -> (Int,Int) -> IO ()
+updateDBTurns' conn weightFu (pid,pval) = do
+  weight <- (return .fromSql . head . head) =<< quickQuery' conn "SELECT weight FROM test WHERE pid = ? AND pval = ?" [toSql pid, toSql pval]
+  let newWeight = weightFu _k _c weight
+  run conn "UPDATE test SET weight = weight WHERE pid = ? AND pval = ?" [toSql newWeight, toSql pid, toSql pval]
+  return ()
+  
+
+evaluateChangeStates :: [Double] -> [(Double -> Double -> Double -> Double)]
 evaluateChangeStates [x] = []
 evaluateChangeStates (x:x':xs) =
   evaluateChangeState x x' : evaluateChangeStates (x':xs)
 
--- generates coefficient to alter weights
-evaluateChangeState :: Double -> Double -> Double  
-evaluateChangeState preWeight postWeight = undefined
+-- generates function f :: K -> C -> old_weight -> Double
+evaluateChangeState :: Double -> Double -> (Double -> Double -> Double -> Double)  
+evaluateChangeState w1 w2 = (\k c ow -> ((ow*c) + k*(vfromD (w2 - w1)))/(c+k))
+
+-- helper function, maps -1 -> 1 to 0 -> 1
+vfromD :: Double -> Double
+vfromD d
+  | d <= 0  = undefined
+  | d > 0   = undefined
 
 applyTDiffEnd :: [[(Int,Int)]] -> IO ()
 applyTDiffEnd succTurnKeys = do
