@@ -168,7 +168,7 @@ class Terminal {
 		inp.y = logger.height;
 
 		maxlines = Std.int(logger.height/10.02);
-		maxwidth = Std.int(logger.width/6);
+		maxwidth = Std.int(logger.width/(10*72/96));
 		mlog.with(function (x:Log) {
 			x.lines--; crop(); x.lines++;
 		});

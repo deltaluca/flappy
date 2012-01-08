@@ -24,6 +24,7 @@ class MipMap extends Sprite {
 		this.mips = new Array<Bitmap>();		
 		for(m in mips) this.mips.push(new Bitmap(m, PixelSnapping.AUTO, true));
 		ratio = mips[0].height/mips[0].width;
+		resize(mips[0].width,mips[0].height);
 	}
 	public function resize(width:Int,height:Int) {
 		while(numChildren>0) removeChild(getChildAt(0));

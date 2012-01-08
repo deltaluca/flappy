@@ -49,7 +49,7 @@ class GuiInterface {
 		this.ggui = ggui;
 		this.cli = cli;
 		cli.bind(this);
-		//ggui.bind(this);
+		ggui.bind(this);
 
 		msgqueue = new Mut<Array<Message>>([]);
 		turnqueue = new Mut<Array<GameTurn>>([]);
