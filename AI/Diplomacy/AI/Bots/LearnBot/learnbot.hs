@@ -32,7 +32,7 @@ import Debug.Trace
   
 main = skelBot learnBot
 
-learnBot :: (MonadIO m) => DipBot m [[(Int,Int)]]
+learnBot :: (MonadIO m) => DipBot m LearnHistory
 learnBot = DipBot { dipBotName = "FlappyLearningBot"
                   , dipBotVersion = 0.1
                   , dipBotBrainMovement = learnBrainMoveComm
@@ -42,19 +42,19 @@ learnBot = DipBot { dipBotName = "FlappyLearningBot"
                   , dipBotInitHistory = learnInitHistory }
 
 
-withStdGen :: (MonadIO m, OrderClass o) => LearnBrainT o m () -> BrainCommT o [[(Int,Int)]] m ()
+withStdGen :: (MonadIO m, OrderClass o) => LearnBrainT o m () -> BrainCommT o LearnHistory m ()
 withStdGen brain = do
   stdGen <- liftIO getStdGen
   ((), nextStdGen) <- runRandT brain $ stdGen
   liftIO $ setStdGen nextStdGen  -- set new stdgen
 
-learnBrainMoveComm :: (MonadIO m) => BrainCommT OrderMovement [[(Int,Int)]] m ()
+learnBrainMoveComm :: (MonadIO m) => BrainCommT OrderMovement LearnHistory m ()
 learnBrainMoveComm = withStdGen learnBrainMove
 
-learnBrainRetreatComm :: (MonadIO m) => BrainCommT OrderRetreat [[(Int,Int)]] m ()
+learnBrainRetreatComm :: (MonadIO m) => BrainCommT OrderRetreat LearnHistory m ()
 learnBrainRetreatComm = withStdGen learnBrainRetreat
 
-learnBrainBuildComm :: (MonadIO m) => BrainCommT OrderBuild [[(Int,Int)]] m ()
+learnBrainBuildComm :: (MonadIO m) => BrainCommT OrderBuild LearnHistory m ()
 learnBrainBuildComm = withStdGen learnBrainBuild
 
 learnBrainMove :: (MonadIO m) => LearnBrainMoveT m ()
@@ -73,7 +73,7 @@ learnBrainMove = do
 
 learnProcessResults _ = id
 
-learnInitHistory :: (MonadIO m) => m [[(Int,Int)]]
+learnInitHistory :: (MonadIO m) => m LearnHistory
 learnInitHistory = return []
 
 {-learnBrainMove :: LearnBrainMoveCommT ()

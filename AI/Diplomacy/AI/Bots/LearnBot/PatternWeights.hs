@@ -13,7 +13,8 @@
 
 module Diplomacy.AI.Bots.LearnBot.PatternWeights  (weighOrderSets
                                                   ,randWeightedElem
-                                                  ,applyTDiff
+                                                  ,applyTDiffEnd
+                                                  ,applyTDiffTurn
                                                   ) where
 
 import Diplomacy.AI.Bots.LearnBot.Monad
@@ -178,7 +179,8 @@ weighOrderSets orderSets = do
   --hist <- getHistory
   weightKeys <- mapM weighOrderSet orderSets
   let (weights, keys) = unzip weightKeys
-  --putHistory (hist ++ [concat keys])
+  let stateValue :: Double; stateValue = undefined
+  --putHistory (hist ++ [(stateValue, concat keys)])
   (return . (sortBy sortGT)) weights
 
 randWeightedElem :: (MonadIO m, OrderClass o) => [(Double, [a])] -> LearnBrainT o m [a]
@@ -223,8 +225,14 @@ targNodeAdjUnits prov = do
 -- temporal learning
 
 -- takes the list of ordermovements metrics and the return values that resulted in a successful streak, and applies temporal difference learning over the entire database
-applyTDiff :: [[(Int,Int)]] -> IO ()
-applyTDiff succTurnKeys = do
+
+applyTDiffTurn :: [(Double,[(Int,Int)])] -> IO ()
+applyTDiffTurn turnValMetrics = undefined
+  
+
+
+applyTDiffEnd :: [[(Int,Int)]] -> IO ()
+applyTDiffEnd succTurnKeys = do
   -- keys should be a subset of dbkeys, as new entries should be added as they're not found whilst the game is being played
   let l = length succTurnKeys
   putStrLn "Getting all keys!"
