@@ -285,16 +285,16 @@ class Map extends GuiElem {
 		switch(type) {
 			case utArmy:
 				if(icon_army.length==0) return new MipMap([
+					Assets.getBitmapData("Assets/army-big2.png"),
 					Assets.getBitmapData("Assets/army-big1.png"),
-					Assets.getBitmapData("Assets/army.png"),
-					Assets.getBitmapData("Assets/army-sm1.png")
+					Assets.getBitmapData("Assets/army.png")
 				]);
 				else return icon_army.pop();
 			case utFleet:
 				if(icon_fleet.length==0) return new MipMap([
+					Assets.getBitmapData("Assets/fleet-big2.png"),
 					Assets.getBitmapData("Assets/fleet-big1.png"),
-					Assets.getBitmapData("Assets/fleet.png"),
-					Assets.getBitmapData("Assets/fleet-sm1.png")
+					Assets.getBitmapData("Assets/fleet.png")
 				]);
 				else return icon_fleet.pop();
 		}

@@ -79,7 +79,7 @@ class Gui extends GuiElem {
 		addChild(mainmenu = new Menu());
 
 		var close = new RoundButton(30);
-		var ex = new MipMap([Assets.getBitmapData("Assets/x_marks_the_spot.png")]);
+		var ex = new MipMap([Assets.getBitmapData("Assets/PowerButton.png")]);
 		close.addChild(ex);
 		close.onResize = function(w,_,_) {
 			var ws = Std.int(w*40/50);
