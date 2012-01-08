@@ -10,6 +10,7 @@
  - ie. (Int, Int) -> (Double, Int)
  -}
 
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Diplomacy.AI.Bots.LearnBot.PatternWeights  (weighOrderSets
                                                   ,randWeightedElem
@@ -55,11 +56,11 @@ instance Eq Pattern where
 
 applyPattern :: (OrderClass o, MonadIO m) => Pattern -> OrderMovement -> LearnBrainT o m (Int,Int)
 applyPattern patt order = do
-  mVals <- sequence [(metrics !! (i-1)) order | i <- getMetrics patt]
+  mVals <- sequence [(metrics undefined !! (i-1)) order | i <- getMetrics patt]
   return (getID patt, ncant mVals)
 
-generatePatterns :: [Int] -> [Int -> Pattern]
-generatePatterns ns = concat [[(Pattern ms n) | ms <- combN n metricIDs] | n <- ns]
+generatePatterns :: (OrderClass o, MonadIO m) => Dummy o m -> [Int] -> [Int -> Pattern]
+generatePatterns d ns = concat [[(Pattern ms n) | ms <- combN n (metricIDs d)] | n <- ns]
 
 cantor :: Int -> Int -> Int
 cantor a b = floor (fromIntegral ((a + b)*(a + b + 1)) /2) + b
@@ -103,22 +104,24 @@ bool2Int b = if b then 1 else 0
 -- Pattern generation
 
 -- ordering is important!
-metrics :: (OrderClass o, MonadIO m) => [OrderMovement -> LearnBrainT o m Int]
-metrics = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv x)
-          ,(\x -> return . bool2Int =<< targNodeOccupied =<< moveOrderToTargProv x)
-          ,(\x -> return . bool2Int =<< targNodeIsSupply =<< moveOrderToTargProv x)
-          ,(\x -> targNodeAdjUnits            =<< moveOrderToTargProv x)
-          ,(\x -> targNodeAdjUnits            =<< moveOrderToOwnProv x)
-          ,(\x -> return . mOT2Int                     =<< moveOrderToType x)]
+metrics :: (OrderClass o, MonadIO m) => Dummy o m -> [OrderMovement -> LearnBrainT o m Int]
+metrics _ = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv x)
+            ,(\x -> return . bool2Int =<< targNodeOccupied =<< moveOrderToTargProv x)
+            ,(\x -> return . bool2Int =<< targNodeIsSupply =<< moveOrderToTargProv x)
+            ,(\x -> targNodeAdjUnits            =<< moveOrderToTargProv x)
+            ,(\x -> targNodeAdjUnits            =<< moveOrderToOwnProv x)
+            ,(\x -> return . mOT2Int                     =<< moveOrderToType x)]
 
--- HACKED, fix later
-metricIDs = [1..6] --take (length metrics) [1..]
+data Dummy o m = Dummy (m o)
+
+metricIDs :: (OrderClass o, MonadIO m) => Dummy o m -> [Int]
+metricIDs d = take (length (metrics d)) [1..]
 
 zipApply :: [a -> b] -> [a] -> [b]
 zipApply fs xs = map (\(f,x) -> f x) $ zip fs xs
 
-patterns :: [Pattern]
-patterns    = zipApply (generatePatterns [1,2]) [1..]
+patterns :: (OrderClass o, MonadIO m) => Dummy o m -> [Pattern]
+patterns d  = zipApply (generatePatterns d [1,2]) [1..]
 
 moveOrderToOwnProv :: (OrderClass o, MonadIO m) => OrderMovement -> LearnBrainT o m Province
 moveOrderToOwnProv = 
@@ -151,9 +154,9 @@ sortGT (d1,_) (d2,_)
     | d1 < d2 = GT
     | d1 >= d2 = LT
 
-weighOrder :: (MonadIO m, OrderClass o) => OrderMovement -> LearnBrainT o m (Double,[(Int,Int)])
+weighOrder :: forall o m. (MonadIO m, OrderClass o) => OrderMovement -> LearnBrainT o m (Double,[(Int,Int)])
 weighOrder order = do
-  keyVals <- sequence [applyPattern p order | p <- patterns]
+  keyVals <- sequence [applyPattern p order | p <- patterns (undefined :: Dummy o m)]
  
   conn <- liftIO $ connectSqlite3 "test.db"--hardcoded for now
   

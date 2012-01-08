@@ -73,7 +73,7 @@ holdBrainBuild = do
 holdProcessResults :: [(Order, OrderResult)] -> () -> ()
 holdProcessResults _ = id
 
-holdInitHistory :: (MonadIO m) => m ()
-holdInitHistory = return ()
+holdInitHistory :: (MonadIO m) => GameInfo -> GameState -> m ()
+holdInitHistory _ _ = return ()
 
 

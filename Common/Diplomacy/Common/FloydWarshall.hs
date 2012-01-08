@@ -12,8 +12,9 @@ import qualified Data.Map as Map
 
   -- looks obscure but it's all just so that we have a nice interface to a fast access array
   -- Nothing represents no path
-floydWarshall :: MapDefinition -> (ProvinceNode, UnitType) -> ProvinceNode -> Maybe Int
-floydWarshall mapDef (provFrom, utyp) provTo = 
+  -- it is symmetric
+floydWarshall :: MapDefinition -> UnitType -> ProvinceNode -> ProvinceNode -> Maybe Int
+floydWarshall mapDef utyp provFrom provTo = 
   floydWarshall' (map pid provNodes) ! (pid provFrom, pid provTo)
   where
     provNodes = case utyp of Army -> mapDefArmyNodes mapDef

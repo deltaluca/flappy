@@ -211,10 +211,7 @@ protocol bot = do
   MapDef mapDefinition <- nextDip
 
   pushDip (Accept (MapName mapName))
-  
-  -- initialise history
-  initHist <- liftMaster $ dipBotInitHistory bot -- pass in mapDef?  
-  
+    
   Start power _ _ _ <- nextDip
   
   CurrentPosition scos <- nextDip
@@ -230,6 +227,9 @@ protocol bot = do
 
   let tout = gameInfoTimeout gameInfo  
       
+  -- initialise history
+  initHist <- liftMaster $ dipBotInitHistory bot gameInfo initState
+
   liftMaster . lift . note $ "Starting main game loop"
   -- Run the main game loop
   _ <- runStateT (runGameKnowledgeT (forever (gameLoop bot tout))

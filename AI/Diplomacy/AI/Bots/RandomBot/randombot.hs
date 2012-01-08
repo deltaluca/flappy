@@ -106,8 +106,8 @@ randomBrainBuildComm = randomBrainComm randomBrainBuild
 randomProcessResults :: [(Order, OrderResult)] -> () -> ()
 randomProcessResults _ = id
 
-randomInitHistory :: (MonadIO m) => m ()
-randomInitHistory = return ()
+randomInitHistory :: (MonadIO m) => GameInfo -> GameState -> m ()
+randomInitHistory _ _ = return ()
 
 randomBrainMove :: RandomBrainMove ()
 randomBrainMove = do

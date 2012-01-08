@@ -27,13 +27,14 @@ import Diplomacy.Common.TSeq
 import Diplomacy.Common.MonadSTM
 import Diplomacy.AI.SkelBot.Comm
 
+import Data.Functor
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Identity
 import Control.Concurrent.STM
 
 newtype GameKnowledgeT h m a = GameKnowledge (StateT h (ReaderT GameInfo m) a)
-                             deriving (Functor, Monad, MonadReader GameInfo, MonadState h)
+                             deriving (Monad, MonadReader GameInfo, MonadState h)
 
 instance MonadTrans (GameKnowledgeT h) where
   lift = GameKnowledge . lift . lift
@@ -61,12 +62,12 @@ instance (Monad m) => MonadGameKnowledge h (GameKnowledgeT h m) where
 
   -- |h = history type, o = order type
 newtype BrainT o h m a = Brain (ReaderT GameState (StateT (Maybe [o]) (GameKnowledgeT h m)) a)
-                       deriving (Functor, Monad, MonadReader GameState, MonadState (Maybe [o]))
+                       deriving (Monad, MonadReader GameState, MonadState (Maybe [o]))
 
 type OrderVar o = TVar (Maybe [o])
 
 newtype BrainCommT o h m a = BrainComm (ReaderT (OrderVar o) (CommT InMessage OutMessage (BrainT o h m)) a)
-                           deriving (Functor, Monad)
+                           deriving (Monad)
 
 instance (OrderClass o) => MonadTrans (BrainT o h) where
   lift = Brain . lift . lift . lift
@@ -86,6 +87,15 @@ instance (OrderClass o, MonadSTM m) => MonadSTM (BrainT o h m) where
 
 instance (MonadIO m, OrderClass o) => MonadIO (BrainCommT o h m) where
   liftIO = BrainComm . lift . lift . lift . liftIO
+
+instance (Monad m) => Functor (GameKnowledgeT h m) where
+  fmap = liftM
+
+instance (Monad m, OrderClass o) => Functor (BrainT o h m) where
+  fmap = liftM
+
+instance (Monad m, OrderClass o) => Functor (BrainCommT o h m) where
+  fmap = liftM
 
 instance (Monad m, OrderClass o) => MonadGameKnowledge h (BrainT o h m) where
   asksGameInfo = liftGameKnowledge . asksGameInfo
