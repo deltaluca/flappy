@@ -13,6 +13,7 @@
 
 module Diplomacy.AI.Bots.LearnBot.PatternWeights  (weighOrderSets
                                                   ,randWeightedElem
+                                                  ,applyTDiff
                                                   ) where
 
 import Diplomacy.AI.Bots.LearnBot.Monad
@@ -46,14 +47,33 @@ data MOrderType = THold
 
 data Pattern = Pattern {  getMetrics :: [Int]
                        ,  getN :: Int
-                       ,  getID :: Int
-                       ,  getNCant :: [Int] -> Int }
+                       ,  getID :: Int }
 
 instance Eq Pattern where
   a == b  = (getID a) == (getID b)
 
---generatePatterns :: [Int] -> [Pattern]
---generatePatterns ns = $ take (length metrics) metricsIDs
+generatePatterns :: [Int] -> [Int -> Pattern]
+generatePatterns ns = concat [[(Pattern ms n) | ms <- combN n metricIDs] | n <- ns]
+
+
+cantor :: Int -> Int -> Int
+cantor a b = floor (fromIntegral ((a + b)*(a + b + 1)) /2) + b
+
+ncant :: [Int] -> Int
+ncant [x] = x
+ncant l = ncant' (length l) l
+  where
+    ncant' 2 [a,b]  = cantor a b
+    ncant' n (x:xs) = cantor x $ ncant' (n-1) xs
+
+combN :: Int -> [a] -> [[a]]
+combN 1 l = [[x] | x <- l]
+combN n l
+  | length l == n = [l]
+  | otherwise     = concat [ map (x:) (combN (n-1) xs) | (x:xs) <- getLists n l]
+
+getLists :: Int -> [a] -> [[a]] 
+getLists n l = takeWhile ((>= n).length) $ iterate tail l
 
 moveOrderToType :: (OrderClass o, MonadIO m) => OrderMovement -> LearnBrainT o m MOrderType
 moveOrderToType order =
@@ -74,7 +94,6 @@ mOT2Int = (mOTTmap Map.!)
 bool2Int :: Bool -> Int
 bool2Int b = if b then 1 else 0
 
--- metrics in use (YES this is ugly as hell, I have no idea how to neatly tie together half-formed monads though :()
 -- ordering is important!
 metrics :: (OrderClass o, MonadIO m) => [OrderMovement -> LearnBrainT o m Int]
 metrics = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv x)
@@ -85,7 +104,8 @@ metrics = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv
           ,(\x -> return . mOT2Int                     =<< moveOrderToType x)]
 
 
-metricIDs = [1..]
+metricIDs = [1..] --take (length metrics) [1..]
+
 
 moveOrderToOwnProv :: (OrderClass o, MonadIO m) => OrderMovement -> LearnBrainT o m Province
 moveOrderToOwnProv = 
@@ -192,9 +212,12 @@ applyTDiff :: [[(Int,Int)]] -> IO ()
 applyTDiff succTurnKeys = do
   -- keys should be a subset of dbkeys, as new entries should be added as they're not found whilst the game is being played
   let l = length succTurnKeys
+  putStrLn "Getting all keys!"
   dbKeyVals <- getAllDBValues
   let (_,dbKeyFinalVals) = foldl (updateWeights l) (1,dbKeyVals) succTurnKeys
+  putStrLn "Updating new values"
   updateDB dbKeyFinalVals 
+  putStrLn "Done."
   return ()
 
 getAllDBValues :: IO [((Int,Int),Double)]
