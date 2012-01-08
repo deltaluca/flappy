@@ -176,11 +176,11 @@ weighOrderSet orders = do
 
 weighOrderSets :: (MonadIO m, OrderClass o) => [[OrderMovement]] -> LearnBrainT o m [(Double, [OrderMovement])]
 weighOrderSets orderSets = do
-  --hist <- getHistory
+  hist <- getHistory
   weightKeys <- mapM weighOrderSet orderSets
   let (weights, keys) = unzip weightKeys
   let stateValue :: Double; stateValue = undefined
-  --putHistory (hist ++ [(stateValue, concat keys)])
+  putHistory (hist ++ [(stateValue, concat keys)])
   (return . (sortBy sortGT)) weights
 
 randWeightedElem :: (MonadIO m, OrderClass o) => [(Double, [a])] -> LearnBrainT o m [a]
@@ -228,19 +228,19 @@ targNodeAdjUnits prov = do
 
 applyTDiffTurn :: [(Double,[(Int,Int)])] -> IO ()
 applyTDiffTurn turnValMetrics = undefined
-  
+ -- dbKeyVals <- getAllDBValues 
 
+-- generates coefficient to alter weights
+evaluateChangeState :: Double -> Double -> Double  
+evaluateChangeState preWeight postWeight = undefined
 
 applyTDiffEnd :: [[(Int,Int)]] -> IO ()
 applyTDiffEnd succTurnKeys = do
   -- keys should be a subset of dbkeys, as new entries should be added as they're not found whilst the game is being played
   let l = length succTurnKeys
-  putStrLn "Getting all keys!"
   dbKeyVals <- getAllDBValues
   let (_,dbKeyFinalVals) = foldl (updateWeights l) (1,dbKeyVals) succTurnKeys
-  putStrLn "Updating new values"
   updateDB dbKeyFinalVals 
-  putStrLn "Done."
   return ()
 
 getAllDBValues :: IO [((Int,Int),Double)]
