@@ -52,9 +52,12 @@ data Pattern = Pattern {  getMetrics :: [Int]
 instance Eq Pattern where
   a == b  = (getID a) == (getID b)
 
+applyPattern :: (OrderClass o, MonadIO m) => Pattern -> OrderMovement -> LearnBrainT o m [Int]
+applyPattern patt order = do
+  sequence [(metrics !! (i-1)) order | i <- getMetrics patt]
+
 generatePatterns :: [Int] -> [Int -> Pattern]
 generatePatterns ns = concat [[(Pattern ms n) | ms <- combN n metricIDs] | n <- ns]
-
 
 cantor :: Int -> Int -> Int
 cantor a b = floor (fromIntegral ((a + b)*(a + b + 1)) /2) + b
@@ -94,6 +97,9 @@ mOT2Int = (mOTTmap Map.!)
 bool2Int :: Bool -> Int
 bool2Int b = if b then 1 else 0
 
+-----------------------------------------------------------------
+-- Pattern generation
+
 -- ordering is important!
 metrics :: (OrderClass o, MonadIO m) => [OrderMovement -> LearnBrainT o m Int]
 metrics = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv x)
@@ -103,9 +109,14 @@ metrics = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv
           ,(\x -> targNodeAdjUnits            =<< moveOrderToOwnProv x)
           ,(\x -> return . mOT2Int                     =<< moveOrderToType x)]
 
+-- HACKED, fix later
+metricIDs = [1..6] --take (length metrics) [1..]
 
-metricIDs = [1..] --take (length metrics) [1..]
+zipApply :: [a -> b] -> [a] -> [b]
+zipApply fs xs = map (\(f,x) -> f x) $ zip fs xs
 
+patterns :: [Pattern]
+patterns    = zipApply (generatePatterns [1,2]) [1..]
 
 moveOrderToOwnProv :: (OrderClass o, MonadIO m) => OrderMovement -> LearnBrainT o m Province
 moveOrderToOwnProv = 
@@ -140,11 +151,9 @@ sortGT (d1,_) (d2,_)
 
 weighOrder :: (MonadIO m, OrderClass o) => OrderMovement -> LearnBrainT o m Double
 weighOrder order = do
-  metricVals <- sequence [f order | f <- metrics]
+  metricVals <- sequence [applyPattern p order | p <- patterns]
  
-  
- 
-  let mKeyVals = zip metricIDs metricVals
+  let mKeyVals = zip metricIDs $ map ncant metricVals
   conn <- liftIO $ connectSqlite3 "test.db"--hardcoded for now
   
   weightAges <- liftIO (sequence $ map (updatePatternsGetWeightAge conn) mKeyVals)
