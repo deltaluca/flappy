@@ -57,6 +57,7 @@ enum ArrowType {
 	aSupport;
 	aConvoy;
 	aBuild;
+	aDislodge;
 }
 
 class Map extends GuiElem {
@@ -74,16 +75,17 @@ class Map extends GuiElem {
 		build();
 		viewport = null;
 
+		dislodged = [];
 		icon_army = [];
 		icon_fleet = [];
 	}
 
 	//--------------------------------------------------------------------------------------------
 
-	public function stdarrow(x:Location, y:Location, type:ArrowType, s1=true, s2=false) {
-		arrow(location_point(x),location_point(y),type,s1,s2);
+	public function stdarrow(x:Location, y:Location, type:ArrowType, s1=true) {
+		arrow(location_point(x),location_point(y),type,s1);
 	}
-	public function arrow(xloc:Point, yloc:Point, type:ArrowType, s1=true, s2=false) {
+	public function arrow(xloc:Point, yloc:Point, type:ArrowType, s1=true) {
 		var arrow_height:Float;
 		var dashed = false;
 		var col:Int = 0xffffff;
@@ -96,6 +98,8 @@ class Map extends GuiElem {
 				col = if(s1) 0xff00ff else 0x660066;
 				arrow_height = 15;
 				dashed = true;
+				xloc.x += 20;
+				xloc.y += 20;
 			case aSupport:
 				col = if(s1) 0xff00 else 0x6600;
 				arrow_height = 12;
@@ -104,10 +108,18 @@ class Map extends GuiElem {
 				col = 0xffffff;
 				arrow_height = 12;
 				dashed = true;
+			case aDislodge:
+				col = 0xffffff;
+				arrow_height = -8;
+				yloc.x += 20;
+				yloc.y += 20;
 			default:
 				arrow_height = 0;
 		}
-		
+	
+		var circle = arrow_height<0;
+		arrow_height = Math.abs(arrow_height);
+	
 		var scale = Match.match(stageScale, sSmall=1.0, sDefault=1.5, sLarge=2.0);
 		var sc = Math.max(1,scale*Math.sqrt(zoom_scale())*0.5);
 
@@ -179,7 +191,7 @@ class Map extends GuiElem {
 		g.lineStyle(1,0,1);
 		//----------------------
 
-		if(!s2) {
+		if(!circle) {
 			var dcx = yloc.x-cx;
 			var dcy = yloc.y-cy;
 			var dcl = 1/Math.sqrt(dcx*dcx+dcy*dcy);
@@ -194,34 +206,13 @@ class Map extends GuiElem {
 			g.lineTo(yloc.x,yloc.y);
 			g.endFill();
 		}else {
-			g.beginFill(((col&0x7f7f7f)<<1)|(col&0x808080), 1);
+			g.beginFill(col,1);
 			g.drawCircle(yloc.x,yloc.y,arrow_height);
 			g.endFill();
 		}
 	}
 
 	public function inform_defn(powers:Array<Int>, provinces:MdfProvinces, adjs:Array<MdfProAdjacencies>) {
-/*		var spr = new Sprite();
-		addChild(spr);
-		var g = spr.graphics;
-		g.lineStyle(2,0,1);
-	
-		for(adj in adjs) {
-			var pro = adj.pro;
-			var adjs = adj.coasts;
-
-			for(adj in adjs) {
-				switch(adj.unit) {
-				case utArmy:
-					for(loc in adj.locs)
-						arrow({province:pro, coast:null}, loc);
-				case utFleet:
-					for(loc in adj.locs)
-						arrow({province:pro, coast:adj.coast}, loc);
-				default:
-				}
-			}
-		}	*/
 	}
 
 	//--------------------------------------------------------------------------------------------
@@ -231,13 +222,23 @@ class Map extends GuiElem {
 	}
 
 	public function inform_result(order:MsgOrder, result:CompOrderResult) {
+		function dislodge(x:UnitWithLoc) {
+			if(result.ret) {
+				stdarrow(x.location,x.location,aDislodge);
+				setDislodged(x,true);
+			}
+		}
+
 		switch(order) {
 			case moHold(unitloc):
+				dislodge(unitloc);
 				//display something when hold is fail?
 			case moMove(unitloc, loc):
+				dislodge(unitloc);
 				var success = Match.match(result.result, rSuccess=true,_=false);
 				stdarrow(unitloc.location, loc, aMove, success);
 			case moSupport(unitloc, supportloc, move):
+				dislodge(unitloc);
 				var success = Match.match(result.result, rSupportCut=false,_=true);
 				if(move==null) { //support a hold
 					stdarrow(unitloc.location, supportloc.location, aSupport, success); 
@@ -245,11 +246,15 @@ class Map extends GuiElem {
 					stdarrow(unitloc.location, { province:move, coast:null /*!!!*/ }, aSupport, success);
 				}	
 			case moBuild(unitloc):
+				dislodge(unitloc);
 				var sco = supply_point(unitloc.location);
-				arrow(sco, location_point(unitloc.location), aBuild);
+				arrow(sco, location_point(unitloc.location), aBuild, true);
 			case moRetreat(unit,loc):
 				var success = Match.match(result.result, rSuccess=true,_=false);
 				stdarrow(unit.location,loc,aRetreat,success);
+				var t = isDislodged(unit);
+				if(t==null) { result.ret = true; dislodge(unit); }
+				isDislodged(unit).rem = true;
 			default: //don't care (yet)
 		}
 	}
@@ -313,7 +318,8 @@ class Map extends GuiElem {
 			);
 		}
 
-		return mapdata.locations.get(name);
+		var ret = mapdata.locations.get(name);
+		return new Point(ret.x,ret.y);
 	}
 
 	//-------------------------------------------------------------
@@ -350,7 +356,35 @@ class Map extends GuiElem {
 	}
 	//-------------------------------------------------------------
 
-	var unitlocs:Array<{power:Int, pos:Point, type:UnitType, mip:MipMap}>;
+	var dislodged:Array<{unit:UnitWithLoc,rem:Bool}>;
+	public function isDislodged(x:UnitWithLoc) {
+		for(dx in dislodged) {
+			var d = dx.unit;
+			if(d.power == x.power && Type.enumEq(x.type,d.type) && Type.enumEq(x.location.province,d.location.province) && Type.enumEq(x.location.coast,d.location.coast))
+				return dx;
+		}
+		return null;
+	}
+
+	public function setDislodged(x:UnitWithLoc, add:Bool) {
+		if(add) {
+			if(isDislodged(x)!=null) return;
+			else dislodged.push({unit:x,rem:false});
+		}else {
+			var d = isDislodged(x);
+			if(d==null) return;
+
+			for(i in 0...dislodged.length) {
+				if(dislodged[i]==d) {
+					dislodged[i] = dislodged[dislodged.length-1];
+					dislodged.pop();
+					break;
+				}
+			}
+		}
+	}
+
+	var unitlocs:Array<{power:Int, pos:Point, type:UnitType, mip:MipMap, dis:Bool}>;
 	public function inform_locations(locs:Array<UnitWithLocAndMRT>) {
 		for(x in unitlocs) {
 			removeChild(x.mip);
@@ -365,10 +399,16 @@ class Map extends GuiElem {
 			var u = x.unitloc;
 
 			var pos = location_point(u.location);
+			var dis = isDislodged(u);
+			if(dis!=null && dis.rem) {
+				setDislodged(u,false);
+				dis = null;
+			}
+
 			var mip = genunit(u.type);
 			mip.filters = [MapConfig.powerFilter(u.power)];
 			addChild(mip);
-			unitlocs.push({power:u.power, pos:pos, mip:mip, type:u.type});
+			unitlocs.push({power:u.power, pos:pos, mip:mip, type:u.type, dis:dis!=null});
 		}
 
 		display();
@@ -600,7 +640,8 @@ class Map extends GuiElem {
 		rad *= 2;
 
 		for(x in unitlocs) {
-			var pos = mapToScreen(x.pos.x,x.pos.y);
+			var ploc = if(x.dis) new Point(x.pos.x+20,x.pos.y+20) else x.pos;
+			var pos = mapToScreen(ploc.x,ploc.y);
 			var mp = x.mip;
 			mp.resize(rad,Std.int(rad*mp.ratio));
 			mp.x = pos.x - (mp.width /2);
