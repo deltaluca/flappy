@@ -227,8 +227,22 @@ targNodeAdjUnits prov = do
 -- takes the list of ordermovements metrics and the return values that resulted in a successful streak, and applies temporal difference learning over the entire database
 
 applyTDiffTurn :: [(Double,[(Int,Int)])] -> IO ()
-applyTDiffTurn turnValMetrics = undefined
- -- dbKeyVals <- getAllDBValues 
+applyTDiffTurn turnValKeys = do
+  
+  let (stateValues,turnKeyVals) = unzip turnValKeys
+  let weightCoeffs = evaluateChangeStates stateValues
+  updateDBTurns (init turnKeyVals) weightCoeffs
+
+-- For you CRIFF
+-- For every element of turnsKeys, multiple that turns keys by the coeff and update
+-- into the DB
+updateDBTurns :: [[(Int,Int)]] -> [Double] -> IO ()
+updateDBTurns turnKeys turnCoeff = undefined
+
+evaluateChangeStates :: [Double] -> [Double]
+evaluateChangeStates [x] = []
+evaluateChangeStates (x:x':xs) =
+  evaluateChangeState x x' : evaluateChangeStates (x':xs)
 
 -- generates coefficient to alter weights
 evaluateChangeState :: Double -> Double -> Double  
@@ -241,7 +255,6 @@ applyTDiffEnd succTurnKeys = do
   dbKeyVals <- getAllDBValues
   let (_,dbKeyFinalVals) = foldl (updateWeights l) (1,dbKeyVals) succTurnKeys
   updateDB dbKeyFinalVals 
-  return ()
 
 getAllDBValues :: IO [((Int,Int),Double)]
 getAllDBValues = do
