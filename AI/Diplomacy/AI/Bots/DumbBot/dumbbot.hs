@@ -237,8 +237,8 @@ dumbBrainBuildComm = withStdGen $ do
 dumbProcessResults :: [(Order, OrderResult)] -> () -> ()
 dumbProcessResults _ = id
 
-dumbInitHistory :: (MonadIO m) => m ()
-dumbInitHistory = return ()
+dumbInitHistory :: (MonadIO m) => GameInfo -> GameState -> m ()
+dumbInitHistory _ _ = return ()
 
 --buildRandomUnit :: Province -> DumbBrainBuild OrderBuild
 buildRandomUnit prov = do

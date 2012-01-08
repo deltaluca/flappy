@@ -73,8 +73,8 @@ learnBrainMove = do
 
 learnProcessResults _ = id
 
-learnInitHistory :: (MonadIO m) => m LearnHistory
-learnInitHistory = return []
+learnInitHistory :: (MonadIO m) => GameInfo -> GameState -> m LearnHistory
+learnInitHistory _ _ = return []
 
 {-learnBrainMove :: LearnBrainMoveCommT ()
 learnBrainMove = do
