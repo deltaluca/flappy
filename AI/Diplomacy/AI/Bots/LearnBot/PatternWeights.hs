@@ -231,13 +231,22 @@ applyTDiffTurn turnValKeys = do
   
   let (stateValues,turnKeyVals) = unzip turnValKeys
   let weightCoeffs = evaluateChangeStates stateValues
-  updateDBTurns (init turnKeyVals) weightCoeffs
+  sequence $ zipWith updateDBTurns (init turnKeyVals) weightCoeffs
+  return ()
 
 -- For you CRIFF
--- For every element of turnsKeys, multiple that turns keys by the coeff and update
+-- For every element of turnsKeys, multiply that turn's keys by the coeff and update
 -- into the DB
-updateDBTurns :: [[(Int,Int)]] -> [Double] -> IO ()
-updateDBTurns turnKeys turnCoeff = undefined
+updateDBTurns :: [(Int,Int)] -> Double -> IO ()
+updateDBTurns turnKeys coeff = do
+   conn <- connectSqlite3 "test.db"
+   sequence $ map (\(pid,pval) -> 
+                            run conn 
+                            "UPDATE test SET weight = (weight * ?) WHERE pid = ? AND pval = ?" 
+                            [toSql coeff, toSql pid, toSql pval] ) 
+                  turnKeys
+   commit conn
+   disconnect conn
 
 evaluateChangeStates :: [Double] -> [Double]
 evaluateChangeStates [x] = []
