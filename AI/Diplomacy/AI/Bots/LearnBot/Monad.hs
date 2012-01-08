@@ -9,8 +9,10 @@ import Control.Monad.Trans
 
 -- no pure brains blah
 
+type LearnHistory = [(Double, [(Int, Int)])]
+
 -- impure brains
-type LearnBrainT o m = RandT StdGen (BrainCommT o [[(Int,Int)]] m)
+type LearnBrainT o m = RandT StdGen (BrainCommT o LearnHistory m)
 
 type LearnBrainMoveT m = LearnBrainT OrderMovement m
 type LearnBrainRetreatT m = LearnBrainT OrderRetreat m
@@ -21,7 +23,7 @@ instance (OrderClass o, MonadIO m) => MonadBrain o (LearnBrainT o m) where
   getsOrders = lift . getsOrders
   putOrders = lift . putOrders
 
-instance (OrderClass o, MonadIO m) => MonadGameKnowledge [[(Int,Int)]] (LearnBrainT o m) where
+instance (OrderClass o, MonadIO m) => MonadGameKnowledge LearnHistory (LearnBrainT o m) where
   asksGameInfo = lift . asksGameInfo
   getsHistory = lift . getsHistory
   putHistory = lift . putHistory

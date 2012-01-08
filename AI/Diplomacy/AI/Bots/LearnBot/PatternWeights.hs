@@ -13,7 +13,8 @@
 
 module Diplomacy.AI.Bots.LearnBot.PatternWeights  (weighOrderSets
                                                   ,randWeightedElem
-                                                  ,applyTDiff
+                                                  ,applyTDiffEnd
+                                                  ,applyTDiffTurn
                                                   ) where
 
 import Diplomacy.AI.Bots.LearnBot.Monad
@@ -52,9 +53,10 @@ data Pattern = Pattern {  getMetrics :: [Int]
 instance Eq Pattern where
   a == b  = (getID a) == (getID b)
 
-applyPattern :: (OrderClass o, MonadIO m) => Pattern -> OrderMovement -> LearnBrainT o m [Int]
+applyPattern :: (OrderClass o, MonadIO m) => Pattern -> OrderMovement -> LearnBrainT o m (Int,Int)
 applyPattern patt order = do
-  sequence [(metrics !! (i-1)) order | i <- getMetrics patt]
+  mVals <- sequence [(metrics !! (i-1)) order | i <- getMetrics patt]
+  return (getID patt, ncant mVals)
 
 generatePatterns :: [Int] -> [Int -> Pattern]
 generatePatterns ns = concat [[(Pattern ms n) | ms <- combN n metricIDs] | n <- ns]
@@ -149,14 +151,13 @@ sortGT (d1,_) (d2,_)
     | d1 < d2 = GT
     | d1 >= d2 = LT
 
-weighOrder :: (MonadIO m, OrderClass o) => OrderMovement -> LearnBrainT o m Double
+weighOrder :: (MonadIO m, OrderClass o) => OrderMovement -> LearnBrainT o m (Double,[(Int,Int)])
 weighOrder order = do
-  metricVals <- sequence [applyPattern p order | p <- patterns]
+  keyVals <- sequence [applyPattern p order | p <- patterns]
  
-  let mKeyVals = zip metricIDs $ map ncant metricVals
   conn <- liftIO $ connectSqlite3 "test.db"--hardcoded for now
   
-  weightAges <- liftIO (sequence $ map (updatePatternsGetWeightAge conn) mKeyVals)
+  weightAges <- liftIO (sequence $ map (updatePatternsGetWeightAge conn) keyVals)
   
   liftIO $ commit conn
   liftIO $ disconnect conn
@@ -165,15 +166,22 @@ weighOrder order = do
   let weights =  map (\(x,y) -> x + (fromIntegral y)) weightAges
 
   -- need to consider the weighting of the age
-  return $ average weights
+  return $ (average weights,keyVals)
 
-weighOrderSet :: (MonadIO m, OrderClass o) => [OrderMovement] -> LearnBrainT o m (Double, [OrderMovement])
+weighOrderSet :: (MonadIO m, OrderClass o) => [OrderMovement] -> LearnBrainT o m ((Double, [OrderMovement]),[(Int,Int)])
 weighOrderSet orders = do
-  orderSetWeight <- return.average =<< mapM weighOrder orders
-  return (orderSetWeight, orders)
+  orderKeys <- mapM weighOrder orders
+  let (weights, keys) = unzip orderKeys
+  return ((average weights, orders),concat keys)
 
 weighOrderSets :: (MonadIO m, OrderClass o) => [[OrderMovement]] -> LearnBrainT o m [(Double, [OrderMovement])]
-weighOrderSets orderSets = (return . (sortBy sortGT)) =<< mapM weighOrderSet orderSets
+weighOrderSets orderSets = do
+  --hist <- getHistory
+  weightKeys <- mapM weighOrderSet orderSets
+  let (weights, keys) = unzip weightKeys
+  let stateValue :: Double; stateValue = undefined
+  --putHistory (hist ++ [(stateValue, concat keys)])
+  (return . (sortBy sortGT)) weights
 
 randWeightedElem :: (MonadIO m, OrderClass o) => [(Double, [a])] -> LearnBrainT o m [a]
 randWeightedElem elemWeights = do
@@ -217,8 +225,14 @@ targNodeAdjUnits prov = do
 -- temporal learning
 
 -- takes the list of ordermovements metrics and the return values that resulted in a successful streak, and applies temporal difference learning over the entire database
-applyTDiff :: [[(Int,Int)]] -> IO ()
-applyTDiff succTurnKeys = do
+
+applyTDiffTurn :: [(Double,[(Int,Int)])] -> IO ()
+applyTDiffTurn turnValMetrics = undefined
+  
+
+
+applyTDiffEnd :: [[(Int,Int)]] -> IO ()
+applyTDiffEnd succTurnKeys = do
   -- keys should be a subset of dbkeys, as new entries should be added as they're not found whilst the game is being played
   let l = length succTurnKeys
   putStrLn "Getting all keys!"
