@@ -1,0 +1,20 @@
+gui package encloses all parts of the real GUI including it's interface to the DAIDE socket.
+
+daide package encloses everything to do with lexing/serialising/unserialising/parsing/unparsing daide messages together with a wrapper around an Async. TCP Socket handling the low-level DAIDE protocol dispatching messages to the GUI interface and receiving any messages to be sent to the server.
+
+map package encloses everything to do with reading .svg files and other related files for maps together with a struct for enclosing all map information for rendering and though now unused, a fast method utilising an aabb tree for determining the region under a given point for mouse selection.
+
+toplevel package includes the very small Main class instantiating the GUI, CLI and Terminal.
+The Terminal is a simple gui in it's own right whilst the CLI provides the commands available to the Terminal used also by the Gui Interface.
+
+--------------------------------
+
+The entire GUI operates on 2 threads.
+
+The Main thread which deals with most of the work, specifically all GUI related work which must be done on the main thread as demanded by the NME library.
+
+The DAIDE socket thread deals with receiving messages from the server, and can reply to basic low level DAID protocol, or send the message to the Interface to be processed and entered into one of two areas.
+
+A queue for dealing with all messages not part of an active turn, or accumulated into a record for the current turn until that turn is compelted and this completed turn reord is added to the turn queue.
+
+A Timer event off of the Main thread processes all received messages, either ignoring or sending them off further to the GUI to display some information after which (unless the game is paused) It will process each completed turn until the required delay set by the GUI ui speed up/slow down buttons has passed.
