@@ -1,0 +1,67 @@
+\documentclass[pdftex,12pt,a4paper]{report} 
+
+% Document settings
+
+\usepackage{algorithm} 
+\usepackage{fullpage}
+\usepackage{cite}
+\usepackage{datetime} 
+\usepackage{geometry}
+\usepackage[pdftex]{graphicx}
+\usepackage{verbatim}
+\usepackage{todonotes}
+
+\geometry{verbose,lmargin=3cm,rmargin=3cm}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\begin{document}
+
+%--------------------------------------------------------------------------------
+
+% Title page of report
+
+\input{./gui.tex}
+
+Whilst there exists already a GUI for observing the state of a DAIDE Diplomacy game, we felt that this GUI was outdated and in keeping with our cross-platform open source goals (The existing GUI is closed source and Windows only) etc.
+
+The GUI is built using the haXe programming language with the NME library. It was originally envisioned to have the GUI able to run in Adobe Flash, HTML5+JS as well as desktops and mobiles but the limitations of Flash and complications with targeting JS meant that a sole target of C++ (For desktops running Linux/Mac/Windows and Android/OSX mobile devices) was chosen.
+
+The haXe language was chosen to provide the cross-target capabilities, and NME chosen for it's cross-platform graphics library targeting all of the intended platforms with the same capabilities. In hindsight the eventual lack of a Flash and JS target means that a different language could have been chosen.
+
+To this end the GUI is designed to be resizable to any (reasonable) device resolution with a scrolling/zoomable viewport onto the game.
+
+-------------------------------------------------------------------------
+
+The GUI is pre-loaded with the standard map used in DAIDE diplomacy games, with other maps able to be included following the format used by the GUI.
+
+@ This consists of a simple text file mapping Province names to their DAIDE protocol ID.
+
+@ An .svg vector graphic file which encodes via graphic paths the set of clickable regions with their province names, and various other graphic paths used to describe the positioning of units, supply centres and coastal locations for multi-location provinces.
+
+@ A set of .png/.jpg renderings of the visual map for use in a trilinearly filtered mipmap to provide crisp renderings at a wide range of zoom levels and display sizes without the overhead and limitation of rendering vector graphics at runtime on potentially low-power devices.
+
+--------------------------------------------------------------------------
+
+Whilst it was originally envisioned to provide a full GUI including human-player interactions, time restrictions meant this was not achievable and the GUI was completed to a limited spec of observing a running game only.
+
+The UI includes simply playback controls to step through game turns or play at varying speeds, with a simple extension needed to allow reverse playback through the game's history.
+
+---------------------------------------------------------------------------
+
+Graphical arrows are rendered to display the various moves players make and their results.
+
+the GUI also includes a command line interface which can be used for debugging purposes (displaying province numerical id's along side names for instance) and for manual input of DAIDE commands which allows a human player to play a game, albeit without a UI for inputting commands without writing DAIDE language sentences. 
+
+---------------------------------------------------------------------------
+
+<< non GUI specific haXe shit.
+
+To implement the GUI in haXe required an implementatino of the DAIDE language and protocol. This was done using 2 existing haXe libraries to generate a parser for the library, and a lexer for the command line interface input of DAIDE commands. 
+
+Lacking an existing library for parsing of .svg graphic files, a simple parser was written with the ability to extract the clickable regions and all meta-paths for location markers.
+
+The implementation of the DAIDE language and protocol was tested against the Haskell implementation at various times to ensure consistancy, as well as extensively against the Windows DAIDE server (running in a virtual machine, through Wine or natively on a Windows computer).
+
+\end{document}
+
