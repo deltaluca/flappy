@@ -1,0 +1,19 @@
+Our further developments include more research and testing into AI's and more
+advanced ways to do negotiation. Due to time constraints in testing and due to 
+the large game space and the amount of time needed for a game of Diplomacy we 
+have not been able to explore as many routes as we would have liked. For example:
+\\
+\begin{enumerate}
+\item Improvements to pattern weights (and learnbot) as described in 
+Ari Shapiro's paper on pattern weights, for example future patterns to take 
+into account specific locations of other pieces.
+\item Perform temporal difference learning of games played by humans and store 
+that knowledge in a pattern-weight database. We could not do this as we do not have 
+support for human players on our user client.
+\item Extend the user client to allow a human user to play Diplomacy with a 
+tutorial to aid new players and create a well designed UI.
+\item To be able to optimise negotiation features, like when the best time to 
+backstab is, this is one of the most important aspects of the game and makes 
+the difference between winning or losing.
+\end{enumerate}
+
