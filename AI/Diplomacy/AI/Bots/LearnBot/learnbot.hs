@@ -60,7 +60,6 @@ learnBrainBuildComm = withStdGen learnBrainBuild
 learnBrainMove :: (MonadIO m) => LearnBrainMoveT m ()
 learnBrainMove = do 
   myUnits <- getMyUnits
-	
   --obtain all legal moves
   legalUnitMoves <- foldM genLegalOrders Map.empty myUnits
 	
@@ -70,24 +69,20 @@ learnBrainMove = do
   orders <- randWeightedElem $ take 5 highestWeightedOrders  
   putOrders $ Just orders
 
+learnBrainEnd :: (MonadIO m, MonadGameKnowledge h m, MonadBrain o m) => m Bool
+learnBrainEnd = do
+  myPower <- getMyPower
+  UnitPositions up <- asksGameState (unitPositions.gameStateMap)
+  supplies <- getSupplies myPower
+  let lost = ((length supplies == 0) && isNothing (Map.lookup myPower up))
+  powers <- asksGameInfo (mapDefPowers.gameInfoMapDef)
+  powSuppNums <- sequence $ [(return.length) =<< (getSupplies p) | p <- powers]  
+  return $ (lost ||) $(>0) $ length $ filter (>= _noOfSCNeededToWin) powSuppNums
 
 learnProcessResults _ = id
 
 learnInitHistory :: (MonadIO m) => GameInfo -> GameState -> m LearnHistory
 learnInitHistory _ _ = return []
-
-{-learnBrainMove :: LearnBrainMoveCommT ()
-learnBrainMove = do
-  myUnits <- getMyUnits
-	
-  --obtain all legal moves
-  legalUnitMoves <- foldM genLegalOrders Map.empty myUnits
-	
-  trimmedOrders <- mapM ((randElems 3) . (legalUnitMoves Map.!)) myUnits
-  let possibleOrderSets = Traversable.sequenceA trimmedOrders
-  highestWeightedOrders <- weighOrderSets possibleOrderSets
-  orders <- randWeightedElem highestWeightedOrders  
-  putOrders $ Just orders-}
 
 learnBrainRetreat :: (MonadIO m) => LearnBrainRetreatT m ()
 learnBrainRetreat = do
