@@ -1,104 +1,127 @@
-\contentsline {section}{\numberline {1}Acknowledgements}{3}
-\contentsline {section}{\numberline {2}Group members}{4}
-\contentsline {chapter}{\numberline {1}Introduction}{5}
-\contentsline {section}{\numberline {1}Automated negotiation}{5}
-\contentsline {section}{\numberline {2}Diplomacy and negotiation}{5}
-\contentsline {paragraph}{Zero-sum property}{6}
-\contentsline {paragraph}{Imperfect information}{6}
-\contentsline {paragraph}{Simultaneous movements}{6}
-\contentsline {paragraph}{Deterministic operators}{6}
-\contentsline {subsection}{\numberline {2.1}Rationale of negotiation}{6}
-\contentsline {section}{\numberline {3}DAIDE framework}{7}
-\contentsline {chapter}{\numberline {2}The game of Diplomacy}{10}
-\contentsline {section}{\numberline {1}Overview}{10}
-\contentsline {paragraph}{Game elements}{10}
-\contentsline {paragraph}{Provinces}{10}
-\contentsline {paragraph}{Supply centres}{10}
-\contentsline {paragraph}{Units}{11}
-\contentsline {section}{\numberline {2}Game turns / phases}{11}
-\contentsline {paragraph}{1. Diplomacy phase}{11}
-\contentsline {paragraph}{2. Order writing phase}{11}
-\contentsline {paragraph}{3. Order resolution phase}{11}
-\contentsline {paragraph}{4. Retreat and Disbanding phase}{11}
-\contentsline {paragraph}{5. Gaining and Losing phase (Winter)}{12}
-\contentsline {section}{\numberline {3}Order submission}{12}
-\contentsline {section}{\numberline {4}Order types}{12}
-\contentsline {paragraph}{Hold order}{12}
-\contentsline {paragraph}{Move or attack order}{12}
-\contentsline {paragraph}{Support order}{13}
-\contentsline {paragraph}{Convoy order}{14}
-\contentsline {paragraph}{Retreat order}{14}
-\contentsline {paragraph}{Disband order}{15}
-\contentsline {paragraph}{Build order}{16}
-\contentsline {paragraph}{Remove order}{16}
-\contentsline {section}{\numberline {5}Related work}{17}
-\contentsline {subsection}{\numberline {5.1}Existing negotiation bots}{17}
-\contentsline {paragraph}{Diplomat by Kraus et al}{17}
-\contentsline {paragraph}{DipGame testbed by Fabregues}{17}
-\contentsline {paragraph}{SeaNail by Lorber}{17}
-\contentsline {paragraph}{Previous project by Huff et al}{17}
-\contentsline {subsection}{\numberline {5.2}Strategy-only bots}{17}
-\contentsline {section}{\numberline {6}Project aims}{18}
-\contentsline {chapter}{\numberline {3}Strategy and tactics}{20}
-\contentsline {section}{\numberline {1}Challenges in Diplomacy}{20}
-\contentsline {paragraph}{Short-term vs. long term payoff}{20}
-\contentsline {paragraph}{Tremendous search space}{20}
-\contentsline {paragraph}{Deceit}{20}
-\contentsline {paragraph}{Move prediction}{20}
-\contentsline {subsubsection}{Move patterns}{21}
-\contentsline {subsection}{\numberline {1.1}Temporal difference learning}{21}
-\contentsline {subsubsection}{Evolution rule}{21}
-\contentsline {subsection}{\numberline {1.2}Joint group planning}{22}
-\contentsline {subsection}{\numberline {1.3}Objective queue}{22}
-\contentsline {chapter}{\numberline {4}Negotiation}{23}
-\contentsline {subsection}{\numberline {0.4}Character traits}{23}
-\contentsline {subsection}{\numberline {0.5}Emotion database}{23}
-\contentsline {chapter}{\numberline {5}Software engineering}{24}
-\contentsline {subsection}{\numberline {0.6}Change management / Risk mitigation}{24}
-\contentsline {subsection}{\numberline {0.7}Planning / task estimation}{24}
-\contentsline {subsection}{\numberline {0.8}Progress metrics}{25}
-\contentsline {subsection}{\numberline {0.9}Detailed AI metrics}{26}
-\contentsline {subsubsection}{Games won/lost}{26}
-\contentsline {subsubsection}{Supply centres controlled}{26}
-\contentsline {subsubsection}{Units lost during the game}{26}
-\contentsline {subsubsection}{Provinces conceded during the game}{26}
-\contentsline {subsubsection}{Negotiation 'strength'}{26}
-\contentsline {subsection}{\numberline {0.10}Team velocity / Milestones}{27}
-\contentsline {subsection}{\numberline {0.11}Description of iterations per subsystem}{27}
-\contentsline {subsubsection}{Framework and Server}{27}
-\contentsline {subsubsection}{AI framework / bots}{28}
-\contentsline {subsection}{\numberline {0.12}Progress report for Week 10/11}{28}
-\contentsline {section}{\numberline {1}Validation}{29}
-\contentsline {subsection}{\numberline {1.1}Server testing}{29}
-\contentsline {subsection}{\numberline {1.2}AI client testing}{30}
-\contentsline {subsection}{\numberline {1.3}GUI client testing}{30}
-\contentsline {subsection}{\numberline {1.4}Examples of bugs discovered during testing}{31}
-\contentsline {subsection}{\numberline {1.5}Static code checking / tools}{31}
-\contentsline {subsection}{\numberline {1.6}Code documentation}{31}
-\contentsline {subsubsection}{Developer documention}{31}
-\contentsline {subsubsection}{User documention}{32}
-\contentsline {subsection}{\numberline {1.7}Code inspection / Refactoring}{32}
-\contentsline {subsection}{\numberline {1.8}Acceptance tests}{32}
-\contentsline {subsection}{\numberline {1.9}Stress testing}{32}
-\contentsline {subsubsection}{Server loading}{32}
-\contentsline {subsubsection}{AI / GUI client loading}{33}
-\contentsline {section}{\numberline {2}Project evaluation / experiments}{33}
-\contentsline {section}{\numberline {3}Managerial Documentation}{33}
-\contentsline {subsection}{\numberline {3.1}Collaboration tools}{33}
-\contentsline {subsection}{\numberline {3.2}Terms of collaboration}{33}
-\contentsline {subsubsection}{Working hours / patterns}{33}
-\contentsline {subsubsection}{Group meeting conditions}{34}
-\contentsline {subsubsection}{Group meeting structure}{34}
-\contentsline {subsection}{\numberline {3.3}Version control}{35}
-\contentsline {subsection}{\numberline {3.4}Automated build}{35}
-\contentsline {subsection}{\numberline {3.5}Management / Organisational policies}{35}
-\contentsline {subsection}{\numberline {3.6}Knowledge transfer within the group}{35}
-\contentsline {section}{\numberline {4}Self reflection}{37}
-\contentsline {subsection}{\numberline {4.1}Goals vs. available time}{37}
-\contentsline {subsection}{\numberline {4.2}Group coordination}{37}
-\contentsline {section}{\numberline {5}Time estimation}{37}
-\contentsline {section}{\numberline {6}Knowledge transfer}{37}
-\contentsline {subsection}{\numberline {6.1}Choice of implementation language}{37}
-\contentsline {section}{\numberline {7}Conclusions}{39}
-\contentsline {section}{\numberline {8}Future work}{40}
-\contentsline {section}{\numberline {9}Appendix}{41}
+\contentsline {section}{\numberline {1}Acknowledgements}{4}
+\contentsline {section}{\numberline {2}Group members}{5}
+\contentsline {chapter}{\numberline {1}Introduction}{6}
+\contentsline {section}{\numberline {1}Automated negotiation}{6}
+\contentsline {section}{\numberline {2}Diplomacy and negotiation}{7}
+\contentsline {paragraph}{Zero-sum property}{7}
+\contentsline {paragraph}{Imperfect information}{7}
+\contentsline {paragraph}{Free-form negotiation}{7}
+\contentsline {paragraph}{Simultaneous movements}{7}
+\contentsline {paragraph}{Deterministic operators}{7}
+\contentsline {subsection}{\numberline {2.1}Rationale of negotiation}{8}
+\contentsline {section}{\numberline {3}DAIDE framework}{9}
+\contentsline {chapter}{\numberline {2}The game of Diplomacy}{12}
+\contentsline {section}{\numberline {1}Overview}{12}
+\contentsline {paragraph}{Game elements}{12}
+\contentsline {paragraph}{Provinces}{12}
+\contentsline {paragraph}{Supply centres}{12}
+\contentsline {paragraph}{Units}{13}
+\contentsline {section}{\numberline {2}Game turns / phases}{13}
+\contentsline {paragraph}{1. Diplomacy phase}{13}
+\contentsline {paragraph}{2. Order writing phase}{13}
+\contentsline {paragraph}{3. Order resolution phase}{13}
+\contentsline {paragraph}{4. Retreat and Disbanding phase}{13}
+\contentsline {paragraph}{5. Gaining and Losing phase (Winter)}{14}
+\contentsline {section}{\numberline {3}Order submission}{14}
+\contentsline {section}{\numberline {4}Order types}{14}
+\contentsline {paragraph}{Hold order}{14}
+\contentsline {paragraph}{Move or attack order}{14}
+\contentsline {paragraph}{Support order}{15}
+\contentsline {paragraph}{Convoy order}{16}
+\contentsline {paragraph}{Retreat order}{16}
+\contentsline {paragraph}{Disband order}{17}
+\contentsline {paragraph}{Build order}{18}
+\contentsline {paragraph}{Remove order}{18}
+\contentsline {section}{\numberline {5}Related work}{19}
+\contentsline {subsection}{\numberline {5.1}Existing negotiation bots}{19}
+\contentsline {paragraph}{Diplomat by Kraus et al}{19}
+\contentsline {paragraph}{DipGame testbed by Fabregues}{19}
+\contentsline {paragraph}{SeaNail by Lorber}{19}
+\contentsline {paragraph}{Previous project by Huff et al}{19}
+\contentsline {subsection}{\numberline {5.2}Strategy-only bots}{19}
+\contentsline {paragraph}{Original Hasbro AI}{19}
+\contentsline {section}{\numberline {6}Project aims}{21}
+\contentsline {chapter}{\numberline {3}Strategy and tactics}{23}
+\contentsline {section}{\numberline {1}Challenges in Diplomacy}{23}
+\contentsline {paragraph}{Short-term vs. long term payoff}{23}
+\contentsline {paragraph}{Tremendous search space}{23}
+\contentsline {paragraph}{Deceit}{23}
+\contentsline {paragraph}{Move prediction}{23}
+\contentsline {subsubsection}{Move patterns}{24}
+\contentsline {subsection}{\numberline {1.1}Temporal difference learning}{24}
+\contentsline {subsubsection}{Evolution rule}{24}
+\contentsline {subsection}{\numberline {1.2}Joint group planning}{25}
+\contentsline {subsection}{\numberline {1.3}Objective queue}{25}
+\contentsline {chapter}{\numberline {4}Software architecture}{26}
+\contentsline {section}{\numberline {1}Multi-agent approach}{26}
+\contentsline {section}{\numberline {2}Machine learning}{26}
+\contentsline {section}{\numberline {3}An overview of our subbrains}{26}
+\contentsline {section}{\numberline {4}Shared components}{26}
+\contentsline {subsection}{\numberline {4.1}Heuristic game-state evaluation}{28}
+\contentsline {chapter}{\numberline {5}Negotiation}{30}
+\contentsline {section}{\numberline {1}Cooperation models}{30}
+\contentsline {section}{\numberline {2}Human modelling}{30}
+\contentsline {subsection}{\numberline {2.1}Character traits}{30}
+\contentsline {subsection}{\numberline {2.2}Emotion database}{30}
+\contentsline {section}{\numberline {3}Agreements database}{30}
+\contentsline {section}{\numberline {4}Emotion database}{30}
+\contentsline {chapter}{\numberline {6}GUI}{31}
+\contentsline {section}{\numberline {1}Features}{31}
+\contentsline {section}{\numberline {2}GUI design}{32}
+\contentsline {paragraph}{Choice of language}{32}
+\contentsline {section}{\numberline {3}File formats}{32}
+\contentsline {subsection}{\numberline {3.1}Graphic description -- SVG}{32}
+\contentsline {subsection}{\numberline {3.2}Localization}{33}
+\contentsline {subsection}{\numberline {3.3}Texture data}{33}
+\contentsline {section}{\numberline {4}Technical Issues}{33}
+\contentsline {paragraph}{Design}{33}
+\contentsline {paragraph}{Main thread}{34}
+\contentsline {chapter}{\numberline {7}Software engineering}{36}
+\contentsline {section}{\numberline {1}Change management / Risk mitigation}{36}
+\contentsline {section}{\numberline {2}Planning / task estimation}{36}
+\contentsline {section}{\numberline {3}Progress metrics}{37}
+\contentsline {subsection}{\numberline {3.1}Detailed AI metrics}{38}
+\contentsline {subsubsection}{Games won/lost}{38}
+\contentsline {subsubsection}{Supply centres controlled}{38}
+\contentsline {subsubsection}{Units lost during the game}{38}
+\contentsline {subsubsection}{Provinces conceded during the game}{38}
+\contentsline {subsubsection}{Negotiation 'strength'}{39}
+\contentsline {subsection}{\numberline {3.2}Team velocity / Milestones}{39}
+\contentsline {section}{\numberline {4}Description of iterations per subsystem}{39}
+\contentsline {subsection}{\numberline {4.1}Framework and Server}{39}
+\contentsline {subsection}{\numberline {4.2}AI framework / bots}{40}
+\contentsline {section}{\numberline {5}Validation}{41}
+\contentsline {subsection}{\numberline {5.1}Server testing}{41}
+\contentsline {subsection}{\numberline {5.2}AI client testing}{42}
+\contentsline {subsection}{\numberline {5.3}GUI client testing}{42}
+\contentsline {subsection}{\numberline {5.4}Examples of bugs discovered during testing}{43}
+\contentsline {subsection}{\numberline {5.5}Static code checking / tools}{43}
+\contentsline {subsection}{\numberline {5.6}Code documentation}{43}
+\contentsline {subsubsection}{Developer documention}{43}
+\contentsline {subsubsection}{User documention}{44}
+\contentsline {subsection}{\numberline {5.7}Code inspection / Refactoring}{44}
+\contentsline {subsection}{\numberline {5.8}Acceptance tests}{44}
+\contentsline {subsection}{\numberline {5.9}Stress testing}{44}
+\contentsline {subsubsection}{Server loading}{44}
+\contentsline {subsubsection}{AI / GUI client loading}{45}
+\contentsline {section}{\numberline {6}Project evaluation / experiments}{45}
+\contentsline {section}{\numberline {7}Managerial Documentation}{45}
+\contentsline {subsection}{\numberline {7.1}Collaboration tools}{45}
+\contentsline {subsection}{\numberline {7.2}Terms of collaboration}{45}
+\contentsline {subsubsection}{Working hours / patterns}{45}
+\contentsline {subsubsection}{Group meeting conditions}{46}
+\contentsline {subsubsection}{Group meeting structure}{46}
+\contentsline {subsection}{\numberline {7.3}Version control}{47}
+\contentsline {subsection}{\numberline {7.4}Automated build}{47}
+\contentsline {subsection}{\numberline {7.5}Management / Organisational policies}{47}
+\contentsline {subsection}{\numberline {7.6}Knowledge transfer within the group}{47}
+\contentsline {chapter}{\numberline {8}Conclusion}{49}
+\contentsline {section}{\numberline {1}Self reflection}{49}
+\contentsline {subsection}{\numberline {1.1}Goals vs. available time}{49}
+\contentsline {subsection}{\numberline {1.2}Group coordination}{49}
+\contentsline {section}{\numberline {2}Time estimation}{49}
+\contentsline {section}{\numberline {3}Knowledge transfer}{50}
+\contentsline {subsection}{\numberline {3.1}Choice of implementation language}{50}
+\contentsline {section}{\numberline {4}Conclusions}{51}
+\contentsline {section}{\numberline {5}Future work}{52}
+\contentsline {section}{\numberline {6}Appendix}{53}

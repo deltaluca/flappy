@@ -25,6 +25,10 @@ Calhammer.
 \newblock {\em Rules of Diplomacy}.
 \newblock The Avalon Hill Company, 4 edition, 2000.
 
+\bibitem{Fabregues11}
+Angela Fabregues and Carles Sierra.
+\newblock Negotiating with humans using the diplomacy game, 2011.
+
 \bibitem{Grosz96}
 Grosz.
 \newblock Collaborative plans for complex group activities.
@@ -50,6 +54,12 @@ Kraus.
 Kraus and Lehmann.
 \newblock Designing and building a negotiating automated agent.
 \newblock {\em Computational Intelligence}, 11:132--171, 1995.
+
+\bibitem{Kraus89}
+Kraus, Lehmann, and Ephrati.
+\newblock An automated diplomacy player.
+\newblock {\em Heuristic Programming in Artificial Intelligence}, pages
+  134--153, 1989.
 
 \bibitem{Levinson94}
 Robert Levinson and Gil Fuchs.

@@ -33,9 +33,9 @@
   timestamp = {2012.01.09}
 }
 
-@ARTICLE{,
+@ARTICLE{Deltodesco10,
   author = {Luca Deltodesco},
-  title = {Hllr Libraries},
+  title = {Hllr / Hlex libraries},
   year = {2010},
   owner = {matthias},
   timestamp = {2012.01.09}

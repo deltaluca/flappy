@@ -29,14 +29,14 @@
 In this project we created a negotiation-capable AI framework for the
 game of 'Diplomacy'. On the tactics-side a pattern-weight learning
 algorithm \cite{Shapiro02} coupled with a best-first search strategy
-finder is used. In addition a DAIDE-conforming \cite{DaideWeb} subsystem
-comprising GUI client and server was implemented. To our knowledge our server
-is the first implementation using the functional language Haskell. Finally
-we conducted various games of humans against AI bots to estimate the playing
-strength of our bot. We are optimistic that our findings can be related to
-the general research field of \textit{Automated negotiation}. Our GUI client is
-novel in the way that it can be deployed as a native application, web and 
-smart-phone.
+finder is used. In addition a DAIDE-conforming \cite{DaideWeb}
+subsystem comprising GUI client and server was implemented. To our
+knowledge our server is the first implementation using the functional
+language Haskell. Finally we conducted various games of humans against
+AI bots to estimate the playing strength of our bot. We are optimistic
+that our findings can be related to the general research field of
+\textit{Automated negotiation}. Our GUI client is novel in the way
+that it can be deployed as a native application, web and smart-phone.
 
 \end{abstract}
 
@@ -89,86 +89,114 @@ Cliff Sun chs09@doc.ic.ac.uk \\
 \section{Automated negotiation}
 
 Automated negotiation is a field of increasing interest in political
-strategy, psychology and economics. At the small scale each human 
-is concerned with negotiation: from families to businesses one can always
-discern the common pattern of autonomous agents trying to reach some joint goal. 
-Another instance of \textit{cooperating agents} have been studied recently
-in the field of \textit{Distributed artificial intelligence}: Grosz et al
-looked at ``Collaborative plans for complex group activities'' \cite{Grosz96}
-whereas issues of consensus-finding has been a focus of \textit{Distributed computing}
+strategy, psychology and economics. At the small scale each human is
+concerned with negotiation: from families to businesses one can always
+discern the common pattern of autonomous agents trying to reach some
+joint goal.  Another instance of \textit{cooperating agents} have been
+studied recently in the field of \textit{Distributed artificial
+  intelligence}: Grosz et al looked at ``Collaborative plans for
+complex group activities'' \cite{Grosz96} whereas issues of
+consensus-finding has been a focus of \textit{Distributed computing}
 for a long time. \\
 
-The military applications of ``Automated negotiation'' generally assume a number
-of \textit{non-cooperating} agents playing an \textit{adversial game}. The field
-of classical game-theory grew out of the need to analyze such situations.
-While successful it is doubted whether its premise of purely rational entities
-can be justified in reality. It is universally accepted that a lot of actions
-are driven by irrational instincts rather than deliberate planning. The question
-remains whether ``Automated negotiation'' theory should try to imitate humans
-or overcome their alleged ``weaknesses''. If the first approach is taken issues
-of \textit{Emotion modelling} and \textit{Relationship inference} need to 
+The military applications of ``Automated negotiation'' generally
+assume a number of \textit{non-cooperating} agents playing an
+\textit{adversial game}. The field of classical game-theory grew out
+of the need to analyze such situations.  While successful it is
+doubted whether its premise of purely rational entities can be
+justified in reality. It is universally accepted that a lot of actions
+are driven by irrational instincts rather than deliberate
+planning. The question remains whether ``Automated negotiation''
+theory should try to imitate humans or overcome their alleged
+``weaknesses''. If the first approach is taken issues of
+\textit{Emotion modelling} and \textit{Relationship inference} need to
 be addressed and a proper representation found. \\
+
+Interesting questions we would like to answer with our project are:
+
+\begin{itemize}
+
+\item Is a negotiating bot imitating human strategies or does 
+      learning bring new techniques to the surface?
+
+\item What is the merit of negotiating?
+
+\todo{Contd...}
+
+\end{itemize}
 
 \section{Diplomacy and negotiation}
 
-In this context the \textit{Game of Diplomacy} is an ideal test-bed 
-to explore various paradigms of ``Automated negotiation''. This is because
-a number of its features can be directly related to the complex, unpredictable
-domains encountered in reality: 
+In this context the \textit{Game of Diplomacy} is an ideal test-bed to
+explore various paradigms of ``Automated negotiation''. This is
+because a number of its features can be directly related to the
+complex, unpredictable domains encountered in reality:
 
 \paragraph{Zero-sum property}
-A game is said to be \textit{zero-sum} if one's player gains are another
-player's losses. This is clearly the case in Diplomacy where an advance
-into a favourable board position inevitably results in a another power's
-unit being dislodged from this position. In reality resource- or
-military conflicts behave in the same way.
+A game is said to be \textit{zero-sum} if one's player gains are
+another player's losses. This is clearly the case in Diplomacy where
+an advance into a favourable board position inevitably results in a
+another power's unit being dislodged from this position. In reality
+resource- or military conflicts behave in the same way.
 
 \paragraph{Imperfect information}
-There are two levels of uncertainty in Diplomacy: On the one hand all move
-orders are written down secretly and then revealed simultaneously during
-the move resolution phase. So a power has no way to plan with the moves 
-of its opponents but instead has to resort to ``move prediction''. It
-is obvious that almost every adversial game encountered in reality
-shares this property. Negotiation itself is another
-layer of uncertainty in Diplomacy: messages are normally not 
+There are two levels of uncertainty in Diplomacy: On the one hand all
+move orders are written down secretly and then revealed simultaneously
+during the move resolution phase. So a power has no way to plan with
+the moves of its opponents but instead has to resort to ``move
+prediction''. It is obvious that almost every adversial game
+encountered in reality shares this property. Negotiation itself is
+another layer of uncertainty in Diplomacy: messages are normally not
 posted publicly and hence no player can know in advance which
 strategies its opponents discussing.
 
+\paragraph{Free-form negotiation}
+In the original board-game human players are allowed to exchanged
+arbitrary messages during the negotiation period. These typically
+include: move-suggestions, mid-term strategies, alliance / war
+declarations, accusations and rumours. Since general negotiation
+in natural language requires language parsing, early 
+bots \cite{Kraus92} restricted the set of possible messages to 
+a formal languages. DAIDE categorizes negotation messages 
+into press levels \cite{DAIDEsyntax10} from 0 (no-press) to 120.
+Some examples are given in the section on DAIDE.
+
 \paragraph{Simultaneous movements} 
 Simultaneous moves are an important element of Diplomacy's game-play
-and contrast with classical turn-based games like Chess or 
-Backgammon. They give the game a dynamic, real-time flavour -- 
-in reality actions happen -- if not all at once but certainly
-not in a pre-determined turn order.
+and contrast with classical turn-based games like Chess or
+Backgammon. They give the game a dynamic, real-time flavour -- in
+reality actions happen -- if not all at once but certainly not in a
+pre-determined turn order.
 
 \paragraph{Deterministic operators}
-Apart from the initial assignments of players to powers there
-is no element of chance in Diplomacy. In reality many domains
-can be modelled in this way once a bot has compiled its ground
-rules in a knowledge base.
+Apart from the initial assignments of players to powers there is no
+element of chance in Diplomacy. In reality many domains can be
+modelled in this way once a bot has compiled its ground rules in a
+knowledge base.
 
 \subsection{Rationale of negotiation}
 
-Besides the necessity to create effective long-term strategies
-negotiation is integral to the game-experience of Diplomacy.
-Consider a solitary power trying to open several war-fronts
-at the same time. This strategy is bound for doom because 
-the other negotiating agents will quickly forge a coalition
-against the loner. Negotiation is also advantageous in that
+Negotiation is integral to the game-experience of Diplomacy. Consider
+a solitary power trying to open several war-fronts at the same
+time. This strategy is bound for doom because the other negotiating
+agents will quickly forge a coalition against the loner. One of the
+first negotiation bot for Diplomacy, the Israeli diplomat \cite{Kraus89}
+reportedly fared very well against human players and is still a 
+benchmark today.
 
 \pagebreak
 
 \section{DAIDE framework}
 
 There is a thriving internet-based community around the Game of
-Diplomacy \cite{DipArchive04} \cite{DipPouch04}. A welcome effect
-is that amateur players have access to a rich body of strategic
-knowledge which forms the basis of many existing bots. Until the
-90s bot development has been ad-hoc and it has been difficult
-to find a common platform to validate their playing strength. To remedy
-this the DAIDE framework \cite{Daide04} has been created. It comprises
-a language specification for client-server interaction \cite{DAIDEsyntax10}
- \& negotiation and various useful tools: 
+Diplomacy \cite{DipArchive04} \cite{DipPouch04}. A welcome effect is
+that amateur players have access to a rich body of strategic knowledge
+which forms the basis of many existing bots. Until the 90s bot
+development has been ad-hoc and it has been difficult to find a common
+platform to validate their playing strength. To remedy this the DAIDE
+framework \cite{Daide04} has been created. It comprises a language
+specification for client-server interaction \cite{DAIDEsyntax10} \&
+negotiation and various useful tools:
 
 \begin{itemize}
 
@@ -183,7 +211,7 @@ a language specification for client-server interaction \cite{DAIDEsyntax10}
 
 \todo{Find a screenshot of the DAIDE mapper}
 
-% \includegraphics[width=0.60\textwidth]{./images/DAIDEMapper.png}
+
 
 \end{itemize}
 
@@ -417,6 +445,11 @@ player can select which units should be removed from the board.
 
 \subsection{Existing negotiation bots}
 
+There exist both open-course and closed-source
+bots for Diplomacy. For our experiments we used only DAIDE
+compatible bots but want to present some of the paradigms
+used in the past:
+
 \paragraph{Diplomat by Kraus et al}
 
 Kraus et al used the multi-agent paradigm to implement the first
@@ -433,6 +466,10 @@ a so-called Knowledge and Belief base is used. For details refer to
 
 \paragraph{DipGame testbed by Fabregues}
 
+Fabregues approach inspired us as they also tried to unify negotiation
+and a robust strategy / tactics component \cite{Fabregues11}. Different
+from other bots they do not use DAIDE but the newer DipServer. 
+
 \paragraph{SeaNail by Lorber}
 
 The SeaNail AI \cite{Lorber98} uses a Dynamic Programming approach to
@@ -446,6 +483,15 @@ be selected. For every combination of
 In a previous group project at Imperial College \cite{Huff05}
 
 \subsection{Strategy-only bots}
+
+\paragraph{Original Hasbro AI}
+The AI distributed with the Windows version is commonly 
+acknowledged as having poor playing strength. Besides it is not
+compatible with the DAIDE framework so we could not use it for
+our experiments.
+
+ so we did not use
+it 
 
 There have been various earlier efforts to create a Diplomacy bot
 limited to DAIDE press level 0 \cite{DAIDEsyntax10}. While early
@@ -642,19 +688,131 @@ To store
 
 \pagebreak
 
+
+\chapter{Software architecture}
+
+\begin{figure}
+
+\includegraphics{./report4_onion.png}
+
+
+
+\end{figure}
+
+\section{Multi-agent approach}
+
+As Kraus et al \cite{Kraus95} we employ a Multi-Agent approach with a 
+central controller internally. The idea is that in each game situation
+a different strategy will give the best payoff. When move selection starts
+all sub-brains run concurrently and submit a \textit{move set proposition} to
+the controller. 
+
+\section{Machine learning}
+
+There are many instances where model parameters are not known a-priori and
+are best learned. An alternative solution is to provide expert knowledge 
+explicitly, but this has two problems:
+
+\begin{itemize}
+
+\item A diplomacy expert is not available for most AI bot efforts, in 
+      particular not for a student project
+
+\item Using compiled strategic knowledge from the Diplomacy archive
+      \cite{DipArchive04} was out of the question. Normally there
+      is no one-to-one mapping from a particular game heuristic and
+      the model parameters. 
+
+\end{itemize}
+
+\section{An overview of our subbrains}
+
+
+
+
+
+\section{Shared components}
+
+A number of components all shared among all sub-brains. We think this is a 
+good idea because functions like game state or move metric are so fundamental 
+that many (future) are bound to use them. We reap the additional benefit of
+better comparability during experiments if some bots share components.
+
+\subsection{Heuristic game-state evaluation}
+
+To get an idea of the Haskell implementation we include the code
+for evaluating the state metrics. In this example we measure the
+utility of the game state as the number of supply centers owned
+and the nature of adjacent provinces around our supply centers. Obviously
+supply centres that are close to capturable provinces are worth more:
+
+\begin{verbatim}
+
+State specific metrics
+
+-- given a power returns the number of supply centers owned and non-supply centers occupied
+getProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Power -> m (Integer, Integer)
+getProvOcc power = do
+   suppC <- getSupplies power
+   units <- getUnits power
+   let occupied_prov = map (provNodeToProv . unitPositionLoc) units
+   return (lengthI suppC, lengthI (occupied_prov \\ suppC))
+
+-- returns a three-tuple of supply center control, (you, enemy, no-one)
+
+getSuppControl :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m (Integer, Integer, Integer)
+getSuppControl = do
+  mapDef <- asksGameInfo gameInfoMapDef
+  let provinces = mapDefProvinces mapDef
+  let numSupplies = lengthI . filter provinceIsSupply $ provinces
+  powerSupplies <- mapM getSupplies (mapDefPowers mapDef)
+  let allSupplies = sum $ map lengthI powerSupplies
+  mySupplies <- return . lengthI =<< getMySupplies
+  return (mySupplies, allSupplies - mySupplies, numSupplies - mySupplies - allSupplies)
+
+-- returns a three-tuple of province occupation around adjacent provinces only
+getAdjProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => UnitPosition -> m (Integer, Integer, Integer)
+getAdjProvOcc unit = do
+  provNodes <- getAdjacentNodes unit
+  let provs = map provNodeToProv provNodes
+  unitPoss <- (getAdjacentUnits.provNodeToProv.unitPositionLoc) unit
+  myPower <- getMyPower
+  let ourOcc = lengthI . filter ((myPower ==) . unitPositionP) $ unitPoss
+  let enemyOcc = lengthI unitPoss - ourOcc
+  let noOcc = lengthI provs - lengthI unitPoss
+  return (noOcc, ourOcc, enemyOcc)
+
+\end{verbatim}
+
+
+%--------------------------------------------------------------------------------
 \chapter{Negotiation} 
+
+\section{Cooperation models}
+
+\section{Human modelling}
 
 \subsection{Character traits}
 
 \subsection{Emotion database}
 
+\section{Agreements database}
+
+\todo{Info from Kraus paper}
+
+\section{Emotion database}
+
 %--------------------------------------------------------------------------------
+
+\chapter{GUI}
+
+\input{./report4_gui.tex}
 
 \pagebreak
 
 \chapter{Software engineering}
 
-\subsection{Change management / Risk mitigation}
+\section{Change management / Risk mitigation}
 We recognized that change is inevitable in such an ambitious and
 multi-faceted project. Therefore we took great care in defining our
 contracts carefully to split up work. Actually this was helped
@@ -675,7 +833,7 @@ these tasks without worrying about how they are implemented. Turning
 this into a reality required defining a layered design in Weeks 3-5
 which all future work respected.  \\
 
-\subsection{Planning / task estimation}
+\section{Planning / task estimation}
 All planning took place in the weekly group meetings (for the
 structure of a meeting see example at the bottom of document ). A
 general rule for new user-stories was that they relate to the global
@@ -698,7 +856,7 @@ was less creative and controlled by the need to conform to the DAIDE
 protocol. Conversely planning was easier because the process of
 creating a parser is understood by all team members.
 
-\subsection{Progress metrics}
+\section{Progress metrics}
 There are multiple ways in which we can measure the progress of our
 AI.  We adopted an aspect-oriented approach in measuring, recognizing
 that some requirements are fulfilled qualitatively and others can be
@@ -791,9 +949,9 @@ create the AI framework and the server, and then proceed to iterate a
 build of an AI, progressively increasing its abilities and making it
 better.
 
-\subsection{Description of iterations per subsystem}
+\section{Description of iterations per subsystem}
 
-\subsubsection{Framework and Server}
+\subsection{Framework and Server}
 
 For the server we can define some functionality 'chunks' which are
 strictly independent from others, these guided how we allocated user
@@ -819,7 +977,7 @@ stories to the 3 iterations outlined below:
   fixing remaining bugs.
 \end{itemize}
 
-\subsubsection{AI framework / bots}
+\subsection{AI framework / bots}
 
 These iterations have run concurrently with server developments (3
 iterations detailed above):
@@ -857,16 +1015,6 @@ treat as given for the next iteration.
   model of the other players intentions and reason about which is
   friend or foe.
 \end{itemize}
-
-\subsection{Progress report for Week 10/11}
-Unfortunately we suffered some setbacks in the beginning with planning
-and evaluation of how long it would actually take us to complete the
-server and framework. These miscalculations have now been addressed
-and we are progressing with the AI creation while improving server /
-framework as appropriate.  \\ On the AI-side HoldBot and RandomBot are
-released (to the current specification of the AI framework). The
-current iteration focusses on implementing the features of
-StrategyBot.
 
 %--------------------------------------------------------------------------------
 
@@ -1219,9 +1367,7 @@ terms.
 
 \pagebreak
 
-%--------------------------------------------------------------------------------
-
-\pagebreak
+\chapter{Conclusion}
 
 \section{Self reflection}
 
@@ -1245,7 +1391,7 @@ of bots.
 
 \section{Time estimation}
 We had to re-plan halfway through the project -- unfortunately
-building the server was taking more time than expected and
+building the server took more time than expected and
 we had to avoid running out of time for the main aim: 
 negotiation. Using the DAIDE server for bot testing provided
 us with a plan B in case delays on the server would accumulate.
@@ -1257,10 +1403,10 @@ experience with monadic programming in Haskell while another excelled.
 Nonetheless our group sticked with Haskell as this provides a 
 powerful combinatory parsing library \cite{ParsecLib} for the server.
 Given that the project focus shifted towards the AI at the end we 
-would consider using Java in a similar project.
+would consider using Java in a similar future project.
 
 \subsection{Choice of implementation language}
-In retrospect Haskell was not an optimal choice when it comes to
+In retrospect Haskell was not an optimal choice when i t comes to
 collaboration between team members as the skill-set of team members
 was different. In addition many aspects of design are naturally
 expressed using UML which is easier to translate into the

@@ -9,51 +9,52 @@ Warning--entry type for "DipArchive04" isn't style-file defined
 Warning--entry type for "DipPouch04" isn't style-file defined
 --line 418 of file report4.bib
 Warning--I didn't find a database entry for "DaideWeb"
+Warning--I didn't find a database entry for "Kraus92"
+Warning--to sort, need author or key in DAIDEsyntax10
 Warning--to sort, need author or key in DipArchive04
 Warning--to sort, need author or key in DipPouch04
 Warning--to sort, need author or key in Daide04
-Warning--to sort, need author or key in DAIDEsyntax10
 Warning--to sort, need author or key in ParsecLib
 Warning--empty note in Kemmerling00
-You've used 14 entries,
+You've used 16 entries,
             2118 wiz_defined-function locations,
-            573 strings with 5390 characters,
-and the built_in function-call counts, 3179 in all, are:
-= -- 307
-> -- 123
-< -- 0
-+ -- 55
-- -- 38
-* -- 176
-:= -- 523
-add.period$ -- 37
-call.type$ -- 14
-change.case$ -- 61
+            587 strings with 5644 characters,
+and the built_in function-call counts, 3869 in all, are:
+= -- 376
+> -- 154
+< -- 1
++ -- 68
+- -- 48
+* -- 214
+:= -- 628
+add.period$ -- 42
+call.type$ -- 16
+change.case$ -- 72
 chr.to.int$ -- 0
-cite$ -- 20
-duplicate$ -- 120
-empty$ -- 293
-format.name$ -- 38
-if$ -- 676
+cite$ -- 22
+duplicate$ -- 147
+empty$ -- 347
+format.name$ -- 48
+if$ -- 828
 int.to.chr$ -- 0
-int.to.str$ -- 14
-missing$ -- 4
-newline$ -- 68
-num.names$ -- 18
-pop$ -- 87
+int.to.str$ -- 16
+missing$ -- 5
+newline$ -- 77
+num.names$ -- 22
+pop$ -- 103
 preamble$ -- 1
-purify$ -- 47
+purify$ -- 56
 quote$ -- 0
-skip$ -- 92
+skip$ -- 120
 stack$ -- 0
-substring$ -- 119
-swap$ -- 14
-text.length$ -- 0
+substring$ -- 162
+swap$ -- 25
+text.length$ -- 1
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 56
+type$ -- 64
 warning$ -- 6
-while$ -- 21
-width$ -- 16
-write$ -- 135
-(There were 10 warnings)
+while$ -- 28
+width$ -- 18
+write$ -- 154
+(There were 11 warnings)
