@@ -467,3 +467,31 @@ Let me know what you guys think, or ideas on how to implement the
 little bits,
 
 Luke
+
+=========================================================================
+
+
+Hallo,
+
+So some development on inference ideas...
+
+So I'm in the process of writing some functions and stuff based off of
+what we spoke about yesterday via email, specifically on the stuff to
+do with passive inference of other enemies alliances, and then
+hopefully the part that determines if a proposed order set from
+another enemy is a worthwhile move.
+
+Hopefully if we can create enough of these negotiation tools, we'll
+have lots to talk about in the presentation and report even if they're
+not implemented in a functional AI. They can be put in as the 'future
+developments' section, possibly. Then during the presentations we
+could perhaps show how the 'trust' values change throughout play and
+discuss how it would influence negotiation in gameplay.
+
+The informal spec and the skeleton/partial implementation of the first
+half is sitting in the Bots folder because I couldn't think of a good
+place to put it.
+
+Let me know if you have any questions/improvements,
+
+Luke

@@ -4,7 +4,9 @@ import gui.Gui;
 import gui.MipMap;
 
 import nme.display.Sprite;
+import nme.geom.Matrix;
 import nme.display.Bitmap;
+import nme.display.GradientType;
 import nme.Assets;
 
 import nme.events.MouseEvent;
@@ -45,32 +47,72 @@ class Button extends GuiElem {
 class RoundButton extends Button {
 	
 	override function mouseOver() {
-		up.visible = down.visible = false;
+		alpha = 0.8;
+		/*up.visible =*/ down.visible = false;
 		over.visible = true;
 	}
 	override function mouseDown() {
-		up.visible = over.visible = false;
+		alpha = 1.0;
+		/*up.visible =*/ over.visible = false;
 		down.visible = true;
 	}
 	override function mouseUp() {
+		alpha = 1.0;
 		down.visible = over.visible = false;
-		up.visible = true;
+		//up.visible = true;
 	}
 
-	var up  :MipMap;
-	var over:MipMap;
-	var down:MipMap;
+	var up  :Sprite;
+	var over:Sprite;
+	var down:Sprite;
 
-	var radius:Int;
+	var xwidth:Int;
 
-	public function new(radius:Int) {
+	public function new(width:Int) {
 		super();
-		up   = new MipMap([Assets.getBitmapData("Assets/round_but_up.png")]);
-		over = new MipMap([Assets.getBitmapData("Assets/round_but_over.png")]);
-		down = new MipMap([Assets.getBitmapData("Assets/round_but_down.png")]);	
+		up = new Sprite();
+		over = new Sprite();
+		down = new Sprite();
 
-		this.radius = radius;
-		display(radius);
+		var m = new Matrix();
+
+		//---------------------
+		var g = up.graphics;
+		m.createGradientBox(width,width);
+		g.beginGradientFill(GradientType.LINEAR,[0,0],[0.35,0],[0,0x80],m);
+		g.drawCircle(width/2,width/2,width/2);
+		g.endFill();
+
+		m.createGradientBox(width,width);
+		g.beginGradientFill(GradientType.LINEAR,[0,0],[0,0.35],[0x80,0xff],m);
+		g.drawCircle(width/2,width/2,width/2);
+		g.endFill();
+		//---------------------
+		var g = over.graphics;
+		m.createGradientBox(width,width,Math.PI/2);
+		g.beginGradientFill(GradientType.LINEAR,[0xffffff,0xffffff],[0.5,0],[0,0x80],m);
+		g.drawCircle(width/2,width/2,width/2);
+		g.endFill();
+
+		m.createGradientBox(width,width,Math.PI/2);
+		g.beginGradientFill(GradientType.LINEAR,[0xffffff,0xffffff],[0,0.5],[0x80,0xff],m);
+		g.drawCircle(width/2,width/2,width/2);
+		g.endFill();
+		//---------------------
+		var g = down.graphics;
+		m.createGradientBox(width,width,Math.PI/2);
+		g.beginGradientFill(GradientType.LINEAR,[0,0],[0.25,0],[0,0x80],m);
+		g.drawCircle(width/2,width/2,width/2);
+		g.endFill();
+
+		m.createGradientBox(width,width,Math.PI/2);
+		g.beginGradientFill(GradientType.LINEAR,[0,0],[0,0.25],[0x80,0xff],m);
+		g.drawCircle(width/2,width/2,width/2);
+		g.endFill();
+		//---------------------
+
+		xwidth = width;
+		display(width);
 
 		addChild(up);
 		addChild(over);
@@ -79,14 +121,13 @@ class RoundButton extends Button {
 		over.visible = down.visible = false;
 	}
 
-	function display(radius:Int) {
-		up.resize(radius,radius);
-		over.resize(radius,radius);
-		down.resize(radius,radius);
+	function display(width:Int) {
+		up.width = down.width = over.width = width;
+		up.height = down.height = over.height = width;
 	}
 
 	override public function resize(w:Int,h:Int,scale:ScaleMode) {
-		var sx = Std.int(radius*Match.match(scale, sSmall = 0.5, sDefault = 1.0, sLarge = 2.0));
+		var sx = Std.int(xwidth*Match.match(scale, sSmall = 0.5, sDefault = 1.0, sLarge = 2.0));
 		display(sx);
 
 		super.resize(sx,sx,scale);
