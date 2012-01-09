@@ -1,9 +1,21 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
 
 \bibitem{ParsecLib}
 Parsec library haskellwiki.
 \newblock http://www.haskell.org/haskellwiki/Parsec.
 \newblock COMPILED IN NOTES.
+
+\bibitem{Daide04}
+Daide webpage.
+\newblock Web, December 2004.
+
+\bibitem{DipArchive04}
+The diplomacy archive.
+\newblock Web, December 2004.
+
+\bibitem{DipPouch04}
+The diplomatic pouch.
+\newblock Web, December 2004.
 
 \bibitem{DAIDEsyntax10}
 Daide language syntax specification.
@@ -13,6 +25,11 @@ Daide language syntax specification.
 Calhammer.
 \newblock {\em Rules of Diplomacy}.
 \newblock The Avalon Hill Company, 4 edition, 2000.
+
+\bibitem{Grosz96}
+Grosz.
+\newblock Collaborative plans for complex group activities.
+\newblock {\em Artificial Intelligence Journal}, 86:269--357, 1996.
 
 \bibitem{Huff05}
 Andrew Huff, Vincent Chan, Laurence Tondelier, Damian Bundred, and Colm Egan.

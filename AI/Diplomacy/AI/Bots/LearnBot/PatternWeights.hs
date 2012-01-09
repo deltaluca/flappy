@@ -16,6 +16,7 @@ module Diplomacy.AI.Bots.LearnBot.PatternWeights  (weighOrderSets
                                                   ,randWeightedElem
                                                   ,applyTDiffEnd
                                                   ,applyTDiffTurn
+                                                  ,_noOfSCNeededToWin
                                                   ) where
 
 import Diplomacy.AI.Bots.LearnBot.Monad
@@ -57,7 +58,6 @@ _lowK :: Double
 _lowK = 1.0
 _highK :: Double
 _highK = 5.0
-
 
 -- no of supply centres needed to win
 _noOfSCNeededToWin :: Int

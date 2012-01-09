@@ -156,6 +156,7 @@ at the same time. This strategy is bound for doom because
 the other negotiating agents will quickly forge a coalition
 against the loner. Negotiation is also advantageous in that
 
+\pagebreak
 
 \section{DAIDE framework}
 
@@ -174,7 +175,7 @@ a language specification for client-server interaction \cite{DAIDEsyntax10}
 \item The \textit{DAIDE Server} enables both human and AI players to
       compete in a game. A screenshot of the Main GUI is given below:
 
-\includegraphics[width=0.60\textwidth]{./images/DAIDEServer.png}
+\includegraphics{./images/DAIDEServer.png}
 
 \item \textit{DAIDE Mapper} is a server hook-in to visualize
       the game state.
@@ -182,7 +183,7 @@ a language specification for client-server interaction \cite{DAIDEsyntax10}
 
 \todo{Find a screenshot of the DAIDE mapper}
 
-\includegraphics[width=0.60\textwidth]{./images/DAIDEMapper.png}
+% \includegraphics[width=0.60\textwidth]{./images/DAIDEMapper.png}
 
 \end{itemize}
 
@@ -216,45 +217,57 @@ explain the concepts of \textit{press levels} in a specific section on
 
 \pagebreak
 
-\section{The game of diplomacy}
+\chapter{The game of Diplomacy}
 
 Only the concepts of the game necessary to understand the 
 algorithms of the AI / negotiation are described here. For a
 definitive reference of the game rules refer to \cite{DiploRules00}.
 
-\subsection{Overview}
+\section{Overview}
 
 The Game of Diplomacy is a round-based multiplayer strategy-game set
-in WWI Europe. Each player controls a power which initially
-operates from a set of supply centers. The objective of the game is
-to control the majority of supply-centers on the map, using army
-movements to conquer new bases and extend the sphere of influence.
-There are no random events in Diplomacy so all state changes are
-deterministic given the game rules and the collection of orders.  \\ 
+in WWI Europe. It was conceived by Alan Callhamer in 1954. Besides
+the joy it has brought to players he designed it to see how 
+secret negotiations affect strategy games. Each player controls a 
+European power which initially operates from a set of supply centers.
+The objective of the game is to control the majority of supply-centers
+on the map, using army movements to conquer new bases and ultimately
+eliminate all opponents from the map. There are alternative winning
+and draw conditions -- such as a simple majority after a time limit -- 
+but we have not considered them in our project.
 
-\subsection{Game elements}
+\paragraph{Game elements}
 
-The game board consists of 73 provinces. Half of them are supply centres, 
+The game board consists of 73 provinces. Half of them are 
+called \textit{supply centres}.
 
-\subsubsection{Provinces}
+\paragraph{Provinces}
 
 There are three type of provinces: Water, land and coastal 
-provinces. In general the adjacencies are obvious from the map; 
-in some cases the rulebook needs to be consulted.
+provinces. In general the adjacencies of provinces are obvious
+from the game map; in some intricate cases the rulebook needs to
+be consulted. Each province can optionally be occupied by one
+unit of the correct type.
 
-\subsubsection{Supply centres}
+\paragraph{Supply centres}
 
 A subset of the land provinces are supply centres which can be 
-occupied by a power. At any point in the game the number of units
-a power has at its disposal is proportional to the number of 
-supply centres the power currently controls.
+occupied by a power's unit. At the end of the season each power
+can build additional units in its non-occupied supply-centres.
+This happens in the context of an important constraint: A power 
+can never more units than supply centres controlled at the end
+of each year. Both are reconciled in the build / retreat phases
+at the end of each year: If there is an overhead of units they
+have to be dislodged.
 
-\subsubsection{Units}
+\paragraph{Units}
 
-There are two type of units -- Armies and fleets -- which can move on 
-water and land provinces respectively.
+There are two type of units -- Armies and fleets -- controlled
+by a power. Each can only move to provinces of the correct type.
+Fleets can occupy water and coastal provinces, whereas armies 
+move on land.
 
-\subsubsection{Game turns / phases}
+\section{Game turns / phases}
 
 A game is divived into a number of turns, which is either a
 \textit{fall turn} or a \textit{spring turn}. Each turn contains a
@@ -263,9 +276,7 @@ their orders and submit them to the server. The order of action in
 fall and spring terms are the same, except that only the fall term
 has a \textit{gaining-and-losing} phase.
 
-\begin{itemize}
-
-\item Diplomacy phase \\
+\paragraph{Diplomacy phase}
 In this phase players jointly devise strategies, forge alliances and
 suggest move orders for the next round. Conversations can be 
 one-to-one or in groups. None of the agreements
@@ -273,12 +284,12 @@ reached are binding and can even be used to deliberately
 mislead another player and prepare a back-stab. Lastly it is possible
 to broadcast announcements to all players.
 
-\item Order writing phase \\
+\paragraph{Order writing phase}
 Afterwards each player writes down orders for its units and prepares
 them for submission for the game server. There is no communication 
 between players in this phase. 
 
-\item Order resolution phase \\
+\paragraph{Order resolution phase}
 At this stage all orders are simultaneously revealed to the server,
 who announces them publicly. Now the effects of the moves on the
 map state are determined, resolving them according to the game rules.
@@ -286,7 +297,7 @@ In simple cases only standoffs between different move orders need
 to be considered but the complex game rules result in many special
 cases that need to be considered by the server. 
 
-\item Retreat and Disbanding phase \\
+\paragraph{Retreat and Disbanding phase}
 The effects of the submitted orders might make it necessary to retreat
 some units from its current provinces. The only choice given to a
 players is the destination province of a retreat which needs to
@@ -298,13 +309,13 @@ such a standoff is immediately \textit{disbanded} from the map. The
 same happens if a player does not give a destination for a unit that
 has to retreat.
 
-\item Gaining and Losing phase \\
+\paragraph{Gaining and Losing phase}
 As mentioned initially this phase only occurs in a \textit{fall turn}.
 The purpose of this phase is to adjust the number of units of a power
 to the number of supply centres it controls, reflecting its current
 strength.. 
 
-\end{itemize}
+\section{Order submission}
 
 The submission of orders happens \textit{simultaneously}; the game
 rules stipulate that all orders are publicly announced. The diplomacy
@@ -314,42 +325,66 @@ orders powers can also forge alliances and devise strategies
 collectively. Ultimately there is no limit to the scope of negotation
 messages.
 
-\subsubsection{Order types}
+\section{Order types}
 
 In the \textit{order writing} phase each power can optionally submit
 an order for each unit controlled. Not specifying an order for a 
 unit is interpreted as a \textit{hold order}. 
 
-\begin{itemize}
-
-\item Hold order
-
+\paragraph{Hold order}
 A unit receiving a hold order does nothing and keeps a unit on its 
 current location. 
 
-\item Move or attack order 
-
+\paragraph{Move or attack order} 
 Move orders shift units from their original position to one of its
 adjacent provinces.
 
-\item Support order
+\includegraphics{./screenshots/Move0.png} % OK Move
+The red arrows indicate that the move order succeeded and the units
+will be moved to the destination.
 
-Support order provide assist another unit's move or hold order. Hence
-it can be used protect a province against an attack order or increase
-the chances of another unit conquering a province. 
+\includegraphics{./screenshots/BouncedMove.png} % Standoff
+The dark-red arrows indicate that the move bounced and the units will
+remain in the same place. This is because both units are attempting 
+to move to the same location and they have the same strength. [none being
+supported by another unit].
 
-\item Convoy order
+\paragraph{Support order}
+Support order assist another unit's move or hold order. It can either be
+used defensively to protect a province against an attack order or increase
+the odds of another unit conquering a province. When determining the result
+of  
 
+\includegraphics{./screenshots/DefRetreat0.png}
+Here the French unit at Marseille is supporting the move of it's comrade at
+Gascony to Burgundy. The German unit at Burgundy was attempting to support
+the move of it's ally at Parise to Gascony. In the end  it's support was
+cut by a dislodgement from the French unit. After the moves are resolved, 
+the Burgundy unit will be dislodged at the white marker and forced to 
+attempt a retreat in the next phase.
+
+\paragraph{Convoy order}
 This order type is restricted to fleet units. They allow to transport
 an allied army between two coastal provinces across the water. In general
 such convoys can be chained: If an army tries to move along a path of
 several water provinces all of those need to be \textit{convoyed} 
 by a fleet.
 
-\end{itemize}
+\paragraph{Retreat order}
+A retreat order normally only occurs in the retreat / disband phases of the
+fall and spring terms. If a unit is overpowered by an attack on its
+province it needs to move to an adjacent province. The exact destination
+is specified by the player in a retreat order.
 
-\todo{Put screenshots from the game, using arrows to indicate standoff
-      etc..}
+\includegraphics{./screenshots/DefRetreat2.png}
+Here the German unit previously dislodged from Burgundy has succesfully retreated to Picardy. 
+It is possible although quite rare for a retreat order to fail (Perhaps due to two dislodged
+units attempting to retreat to the same space) and in such case the unit would be removed from the map.
+
+\paragraph{Disband order}
+If a unit cannot attempt a retreat then the unit is removed from the map by a disband order.
+
+\includegraphics{./screenshots/ImmRetreat0.png}
 
 %--------------------------------------------------------------------------------
 
@@ -359,7 +394,7 @@ by a fleet.
 
 \subsection{Existing negotiation bots}
 
-\subsubsection{Diplomat by Kraus et al}
+\paragraph{Diplomat by Kraus et al}
 
 Kraus et al used the multi-agent paradigm to implement the first
 Diplomacy bot capable of negotiation \cite{Kraus95}. Their bot
@@ -373,9 +408,9 @@ bot. To maintain information about other players and their intentions
 a so-called Knowledge and Belief base is used. For details refer to
 \cite{Kraus88}
 
-\subsubsection{DipGame testbed by Fabregues}
+\paragraph{DipGame testbed by Fabregues}
 
-\subsubsection{SeaNail by Lorber}
+\paragraph{SeaNail by Lorber}
 
 The SeaNail AI \cite{Lorber98} uses a Dynamic Programming approach to
 maximize the number of campaigns matching the current aims of the
@@ -383,7 +418,7 @@ bot. For instance if a supply centre is selected for capture and a
 certain defense strength is estimated units that overcome this have to
 be selected. For every combination of
 
-\subsubsection{Previous project by Huff et al}
+\paragraph{Previous project by Huff et al}
 
 In a previous group project at Imperial College \cite{Huff05}
 
@@ -402,26 +437,28 @@ valuation of provinces \cite{Huff05} to create a strong AI player.
 
 \pagebreak
 
-\section{Requirements}
+\section{Project aims}
+
 High-level requirements were discussed in the initial phase of the
-project (weeks 1/2) with our project supervisor -- Iain Philipps --
-who is our customer in Software Engineering terms. The terms of the
+project (weeks 1/2) with our project supervisor. The terms of the
 collaboration were such that only certain high-level goals were
-defined and decisions about which AI techniques to use were left with
-the team-members.
+defined and decisions about which AI techniques to use were decided once
+related research has been explored.
 
 \begin{itemize}
 
 \item The over-arching goal and hence the most critical requirement is
   to design and implement a negotiation bot for Diplomacy whose
   performance is then compared to existing bots in an experimental
-  setting.
-\item A collection of other bots which are not capable of commuication
+  setting. 
+
+\item A collection of other bots which are not capable of communication
   should be created for purposes of comparison. These should use
   proven techniques from the fields of Game Theory and Multi-Agent
   systems, including learning, tactics and long-term strategies. All
   bots should support the DAIDE protocol to compete against existing
   bots on the DAIDE windows server.
+
 \item To facilitate experimentation an open-source framework
   conforming to the existing DAIDE protocol should be created. This
   framework comprises a server which hosts games for automated and
@@ -429,6 +466,7 @@ the team-members.
   behind this is to feed-back into the Diplomacy community as a whole,
   providing a multi-platform server (Windows DAIDE server exists) for
   the first time.
+
 \item In addition a framework for simple generation of Diplomacy bots
   is envisioned: Right now a player needs to re-invent the wheel by
   implementing well-established game-tree search techniques or certain
@@ -442,8 +480,9 @@ the team-members.
   convenience extensions are written in the high-level language
   Haskell which is more expressive than C++ and natural to
   practitioners in the field of Artificial Intelligence / Game Theory.
+
 \item Finally to test our server and provide a visually pleasing user
-  interface we will deliver a DAIDE-conforming GUI client for the Game
+  interface we deliver a DAIDE-conforming GUI client for the Game
   of Diplomacy.  Rather than forcing the player to use a particular
   device all back-ends of the HaXe platform are supported, including
   HTML5/JS, Flash and C++.
@@ -453,7 +492,7 @@ the team-members.
 In the above listing the requirements are decreasing in
 importance. Some of the above look indivisible in nature but we have
 still managed to extract user-stories to support time-boxed
-iterations. Requirements management in Weeks 3-11 was two-fold: Each
+iterations. Requirements management was two-fold: Each
 team-member kept in mind the overall contract with our supervisor (see
 above) which defines the direction of the project.  Based on this
 User-Stories were defined which guide the primary development focus

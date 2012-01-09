@@ -19,7 +19,7 @@ clean:
 
 # Final report
 
-report_4: report4.tex report4.bib
+report_4: clean_r4 report4.tex report4.bib
 	pdflatex report4 ; bibtex report4 ; pdflatex report4 ; pdflatex report4
 
 clean_r4: 
