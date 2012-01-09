@@ -1,0 +1,54 @@
+---TO STICK IN TEMPORAL DIFFERENCE LEARNING BIT---
+-----DELETE THE STUFF ON V (LAST PARAGRAPH) AND REPLACE IT WITH THIS---
+Pattern weights start with an initial value of 0.5 (indicates pattern/move is neither good or bad) and ranges from 0 to 1. Patterns weights also use an age field that 
+indicates the frequency that this pattern has been updated. The age however is not 
+used for learning, but rather provides a bias for evaluating pattern-weights during 
+game play.
+v is 1 when winning conditions are met (we have majority of supply centres) and 
+0 otherwise. With a larger k, the system values the latest experience more than 
+previous ones.
+
+-----------------------------------------------------------------------
+
+In LearnBot we use Shapiro's research on Pattern Weights to implement an AI which 
+learns how to play the game by updating a pattern weight database after each game. 
+We implement the Temporal Difference Learning which is described above and use the 
+formula to calculate the weight of the next turn using the previous turn's weight. 
+Weights are increased when we have won (v = 1) and decrease when we have lost 
+(v = 0). We update our database when the game has ended and update the 
+weighting on all the patterns (i.e. orders) with the weighting that we calculated 
+for that turn.
+When we choose patterns/moves during a turn, we use randomisation which the weight 
+and age of the pattern/move as a bias, this ensures that we can continue learning 
+and reinforcing (positively and negatively) by allowing other moves to be chosen. 
+
+HEADER - IMPROVEMENTS
+
+But as you can see from the formula, changes in weightings may not necessarily 
+reflect how effective certain moves were and therefore may not be as accurate in 
+learning how effective certain moves are.
+Our LearnBot makes improvements to this by first calculating a state value for 
+each turn, i.e. it looks at the game state after a turn and calculates a metric 
+value. The most simple one being 
+(number of supply centres owned)/(number of supply centres needed to win). We pair 
+these values with each turn and then after each turn we see the difference between 
+the value for this turn and the previous turn. We can use this difference to 
+calculate a variable double v from 0 to 1, which reflects our difference between the 2 
+turn values. We can then apply this our own function which calculates the new 
+weight for a move which we then store in the database:
+
+\\
+$Weight_{new} := \frac{Weight_{old}*c+k*v}{c+k}$ \\
+
+Here we calculate the new weighting for each move (though the c, k and v will 
+stay the same for each turn like the evolution formula above). 
+k is the same learning rate / global temperature that is described in Shapiro's 
+evolution formula. 
+c is the a constant that determines how strong the weights are affected by,
+so a larger c means a smaller change. We can tweak this as we go along to find an 
+optimal value.
+v is described above and is a value ranging from 0 to 1 which is mapped by the 
+difference between state values (which can be between -1 to 1) with state values 
+themselves ranging between 0 to 1. 
+
+
