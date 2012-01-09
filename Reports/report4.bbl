@@ -3,7 +3,6 @@
 \bibitem{ParsecLib}
 Parsec library haskellwiki.
 \newblock http://www.haskell.org/haskellwiki/Parsec.
-\newblock COMPILED IN NOTES.
 
 \bibitem{Daide04}
 Daide webpage.
@@ -35,7 +34,11 @@ Grosz.
 Andrew Huff, Vincent Chan, Laurence Tondelier, Damian Bundred, and Colm Egan.
 \newblock Automated negotiation in the game of diplomacy.
 \newblock {\em Imperial College Project Report}, 2005.
-\newblock COMPILED IN NOTES.
+
+\bibitem{Kemmerling00}
+Markus Kemmerling, Niels Ackermann, and Mike Preuss.
+\newblock Nested look-ahead evolutionary algorithm based planning for a
+  believable diplomacy bot.
 
 \bibitem{Kraus88}
 Kraus.
@@ -47,25 +50,21 @@ Kraus.
 Kraus and Lehmann.
 \newblock Designing and building a negotiating automated agent.
 \newblock {\em Computational Intelligence}, 11:132--171, 1995.
-\newblock COMPILED IN NOTES.
 
 \bibitem{Levinson94}
 Robert Levinson and Gil Fuchs.
 \newblock A pattern-weight formulation of search knowledge.
 \newblock Technical report, Computational Intelligence, 1994.
-\newblock COMPILED IN NOTES.
 
 \bibitem{Lorber98}
 Sean Lorber.
 \newblock Seanail diplomacy ai.
 \newblock Website, 1998.
-\newblock COMPILED IN NOTES.
 
 \bibitem{Shapiro02}
 Ari Shapiro, Gil Fuchs, and Robert Levinson.
 \newblock Learning a game strategy using patternweights and self-play.
 \newblock In {\em In Proc. of the Third International Conference on Computers
   and Games}, 2002.
-\newblock COMPILED IN NOTES.
 
 \end{thebibliography}
