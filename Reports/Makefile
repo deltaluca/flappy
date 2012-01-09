@@ -25,4 +25,6 @@ report_4: clean_r4 report4.tex report4.bib
 clean_r4: 
 	rm -f report4.pdf report4.aux report4.log report4.bbl report4.toc report4.dvi report4.blg
 
+reportgui:
+	pdflatex reportgui
 
