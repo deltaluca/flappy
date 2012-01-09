@@ -119,7 +119,12 @@ Interesting questions we would like to answer with our project are:
 \item Is a negotiating bot imitating human strategies or does 
       learning bring new techniques to the surface?
 
-\item What is the merit of negotiating?
+\item What is the merit of negotiating? In other words what 
+      are the relative utilities of the rational and emotional
+      component of our bot?
+
+\item What relationships between negotiation bots will ensue 
+      if they are left to themselves? Does chaos set in?
 
 \todo{Contd...}
 
@@ -573,7 +578,14 @@ during the iterations.
 
 \pagebreak
 
-\chapter{Strategy and tactics}
+\chapter{Strategy and tactics (Rational system)}
+
+A \textit{Strategy and tactics component} is seen as an important
+foundation for every negotiation agent. On top of that we are 
+convinced that \textit{Negotiation} and \text{Strategy} are not
+really issues that can be cleanly separated; even though previous
+literature suggests this. The fact that negotiation is really
+joint problem solving in disguise illustrates this nicely.
 
 \section{Challenges in Diplomacy}
 
@@ -594,7 +606,12 @@ It has been estimated that the number of possible moves from
 an average Diplomacy position is roughly $4.09 * 10^{27}$ 
 \cite{Kemmerling00}, rendering a game-tree search unrealistic. The root
 of the problem is that our power has \textit{incomplete information} 
-about the other power's intentions.
+about the other power's intentions. Other bounds on the branching factor
+of one turn are roughly $6^{n}$ where n is the number of units controlled by a
+player. Considering the combinations of moves of all players we get
+$2^{91}$ possibilities \cite{Shapiro02}. Thus we did not follow this
+path but focussed on \textit{learning} and heuristic move-evaluation
+that is aware of mid-term goals.
 
 \paragraph{Deceit}
 One of the most fascinating aspects of Diplomacy but also its great
@@ -606,24 +623,19 @@ sub-component.
 As a result our bot needs to predict a move 
 
 
+\section{The StrategyFinder subsystem}
+
 As listed in the \textit{Introduction} section there were previous
 attempts of creating a strong AI for Diplomacy: Kraus \cite{Kraus95}
 put emphasis on negotiation whereas \cite{Shapiro02} used
 \textit{Temporal difference learning} to guide move selections. For
 our AI we augment Shapiro's technique with state utility functions
-that should lead to more realistic pattern-weights. It is a
-common-place in the Diplomacy AI community that game-tree based search
-techniques are intractable; The branching factor of one turn
-is roughly $6^{n}$ where n is the number of units controlled by a
-player. Considering the combinations of moves of all players we get
-$2^{91}$ possibilities \cite{Shapiro02}. Thus we did not follow this
-path but focussed on \textit{learning} and ad-hoc goal-directed move
-formulation. \\
+that should lead to more realistic pattern-weights.
 
 Subsequently we describe the concepts of \textit{move patterns},
 \textit{pattern weights} and present our state evaluation functions.
 
-\subsubsection{Move patterns}
+\subsection{Move patterns}
 
 A primitive pattern is a property of a move; Examples are its type,
 features of its origin \& destination provinces or estimated support
@@ -649,7 +661,7 @@ Diplomacy strategies; these are learned through self-play (against
 random variations of itself) and games against other players. While 
 Shapiro \cite{Shapiro02} updates the pattern-weights after each game \\
 
-\subsubsection{Evolution rule}
+\subsection{Pattern learning rule}
 
 After each turn the values of all patterns are updated
 according to the following formula. This is derived from
@@ -679,10 +691,21 @@ to our player. The formula is described in a later section. \\
 cooperative multi-Agent system. In Diplomacy we usually develop
 strategies, select attack targets with our allies.  
 
-\subsection{Objective queue}
+\subsection{Goal queue}
+The goal queue holds the current offensive / defensive
+goals ordered by priority. Notice that these are abstract
+targets and not yet bound to any units.
 
-To store
-
+\subsection{Goal expansion and unit assignment}
+This is related to planning algorithms like STRIPS but is
+greatly simplified to suit our student project: Basically
+the first item of the goal queue is removed and bound to
+a set of candidate units that fulfill the goal in some 
+number of turns. We chose the simple heuristic of minimizing
+the number of unit-timesteps bound by the goal, but it 
+is suggested that in an extension of the project proper
+Operations-Research techniques like the Aircrew-Scheduling
+algorithm are investigated.
 
 %--------------------------------------------------------------------------------
 
@@ -694,8 +717,6 @@ To store
 \begin{figure}
 
 \includegraphics{./report4_onion.png}
-
-
 
 \end{figure}
 
@@ -727,7 +748,15 @@ explicitly, but this has two problems:
 
 \section{An overview of our subbrains}
 
+\subsection{RandomBot}
 
+\subsection{HoldBot}
+
+\subsection{DumbBot}
+
+\subsection{LearnBot}
+
+\subsection{NegoBot}
 
 
 
@@ -784,23 +813,86 @@ getAdjProvOcc unit = do
 
 \end{verbatim}
 
+\subsection{Province valuation}
+During goal selection a bot needs to calculate its future strategy
+preferences. Hereby we take into account the strategic position of 
+provinces. We can have two type of goals:
+
+\paragraph{Province or zone defense}
+A supply centre defense goal is selected according to its value
+determined by \textit{province valuation} and its risk-factor. The
+risk factor is proportional to the number of adversary units that 
+can reach the supply centre in the upcoming moves. This also determines
+the required strength of the defense.
+
+\paragraph{Supply centre conquer or zone advance}
+This offensive goal selects a province that has relatively weak 
+defense compared to its value. Again the \textit{province valuation}
+component is used.
+
+
 
 %--------------------------------------------------------------------------------
-\chapter{Negotiation} 
 
-\section{Cooperation models}
+\chapter{Negotiation Bot}
 
-\section{Human modelling}
+As for the overall bot architecture we have chosen a multi-agent 
+approach. There are clearly sub-tasks which a negotiator needs to
+provide:
+
+\paragraph{External communication}
+The \textit{External communication} has interfaces to the agreement 
+and relationship database and can be seen as our connection to the
+environment of allies of foes. One of its functions is to propose
+joint strategies deemed good by the \textit{Strategy finder} to its
+allies (which it looks up from the \textit{Relation database}. Seen
+functionally the communication component creates concrete DAIDE
+messages from abstract sub-goals. Current sub-goals are provided
+by the tactical component including LearnBot and CoverBot. Speaking
+with the government analogy of Kraus \cite{Kraus89} these are the
+\textit{Ambassadors}. Different from the Israel Diplomat we do not
+have one \textit{Ambassador} per power but created one such 
+component. This simplified testing considerably. 
+
+\paragraph{Suggestion dispatch}
+It is a well-known problem in \textit{Automated negotiation} how 
+to react to move or strategy suggestions. At the highest level there
+are three possibilities:
+
+\begin{itemize}
+
+\item The move can be internalized and treated as if our own 
+      Strategy component came up with it. 
+
+\item The move or strategy can be adopted with the reservation 
+      that future evidence might invalidate this decision. This 
+      requires an \textit{Agreement table} to keep track of such
+      item.
+
+\item The move can be cross-checked by our own brain and only 
+      adopted if it is in line with our current goal-queue. 
+
+\end{itemize}
+
+The \textit{Suggestion dispatch} has access to the Knowledge and
+Belief base of our bot. For obvious reasons suggestions by
+adversaries or bots that are believed to have poor judgement 
+should be cross-checked while those of allies receive fewer
+scrutiny . \\
+
+\section{Emotional subsystem}
+
+
 
 \subsection{Character traits}
 
 \subsection{Emotion database}
 
+
 \section{Agreements database}
 
 \todo{Info from Kraus paper}
 
-\section{Emotion database}
 
 %--------------------------------------------------------------------------------
 
@@ -1424,6 +1516,27 @@ which is why it was chosen in the first place.
 \pagebreak
 
 \section{Future work}
+
+Due to time constraints in testing we have not been able to explore as
+many routes as we would have liked. To name just a few of them: 
+\\
+\begin{enumerate}
+
+\item Improvements to pattern weights (and LearnBot) as described in 
+Ari Shapiro's paper on pattern weights. For example future patterns should take 
+into account specific locations of other pieces.
+
+\item Perform temporal difference learning of games played by humans and store 
+that knowledge in a pattern-weight database. We could not do this as we do not have 
+support for human players on our user client.
+
+\item Extend the user client to allow a human user to play Diplomacy with a 
+tutorial to aid new players and create a well designed UI.
+\item To be able to optimise negotiation features, like when the best time to 
+backstab is, this is one of the most important aspects of the game and makes 
+the difference between winning or losing.
+\end{enumerate}
+
 
 %--------------------------------------------------------------------------------
 
