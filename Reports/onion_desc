@@ -1,0 +1,25 @@
+the diagram here (which we have nicknamed our onion) describes our approach 
+towards building our AI bots, the layers represent more functionality as we 
+go outwards, but not necessarily representing encapsulation of features of 
+inner layers. In addition our SkelBot (Skeleton for all bots which handles 
+communication between server and bot) is not shown here as it is used throughout 
+and provides functionality for all the bots 
+HoldBot is the most basic of bots, in that it only holds for all orders. 
+RandomBot builds upon this by generating all possible and valid moves 
+(including supports) and chooses one randomly.
+DumbBot is designed as a bot with fairly good strategy which uses a proximity 
+algorithm to calculate a value for each province, ranks the provinces and using 
+a combination of other heuristics picks a suggested move.
+CoverBot and LearnBot are within the same layer as they do not add functionality 
+to one another but rather explores two different ways to improving Diplomacy AI.
+CoverBot uses a shortest path algorithm (using the Floyd Warshall 
+algorithm) to implement a search tree which finds a shortest path in a weighted 
+graph to find a good move.
+LearnBot uses a database of Pattern Weights which learns during and after a game 
+which moves lead to good results and stores their weightings in a database, 
+therefore this bot 'learns' to play the game better as it goes along.
+NegotiationBot is our final bot which adds on negotiation functionality on 
+another bot. Specifically this negotiation consists of storing values in a 
+database which try to mimick human-like qualities of character traits, 
+emotion and relationships between other bots. 
+
