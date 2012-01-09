@@ -40,7 +40,7 @@ data Dummy o m = Dummy (m o)
 
 -- Number of orders left after trimming (speeds up evaluation)
 _trimNum :: Int
-_trimNum = 2
+_trimNum = 3
 
 -- database name
 _dbname :: String
@@ -187,14 +187,11 @@ sortGT (d1,_) (d2,_)
     | d1 < d2 = GT
     | d1 >= d2 = LT
 
-weighOrder :: forall o m. (MonadIO m, OrderClass o) => OrderMovement -> LearnBrainT o m (Double,[(Int,Int)])
-weighOrder order = do
+weighOrder :: forall o m. (MonadIO m, OrderClass o) => Connection -> OrderMovement -> LearnBrainT o m (Double,[(Int,Int)])
+weighOrder conn order = do
   keyVals <- sequence [applyPattern p order | p <- _patterns (undefined :: Dummy o m)]
-  conn <- liftIO $ connectSqlite3 _dbname
   weightAgeSizes <- liftIO (sequence $ map (updatePatternsGetWeightAge conn) keyVals)
   
-  liftIO $ commit conn
-  liftIO $ disconnect conn
  
   -- weights are linearly biased by their ages and pattern size
   let weights =  map (\(weight,age,patSize) -> (weight*(fromIntegral patSize)) + (fromIntegral age)) weightAgeSizes
@@ -203,9 +200,9 @@ weighOrder order = do
       peelR :: [(a,a,a)] -> [(a,a)]
       peelR  = (\(x,y,z) -> zip x y) . unzip3 
 
-weighOrderSet :: (MonadIO m, OrderClass o) => [OrderMovement] -> LearnBrainT o m ((Double, [OrderMovement]),[(Int,Int)])
-weighOrderSet orders = do
-  orderKeys <- mapM weighOrder orders
+weighOrderSet :: (MonadIO m, OrderClass o) => Connection -> [OrderMovement] -> LearnBrainT o m ((Double, [OrderMovement]),[(Int,Int)])
+weighOrderSet conn orders = do
+  orderKeys <- mapM (weighOrder conn) orders
   let (weights, keys) = unzip orderKeys
   return ((average weights, orders),concat keys)
 
@@ -213,12 +210,15 @@ weighOrderSet orders = do
 weighOrderSets :: (MonadIO m, OrderClass o) => [[OrderMovement]] -> LearnBrainT o m [(Double, [OrderMovement])]
 weighOrderSets orderSets = do
   hist <- getHistory
-
-  weightKeys <- mapM weighOrderSet orderSets
+  conn <- liftIO $ connectSqlite3 _dbname
+  weightKeys <- mapM (weighOrderSet conn) orderSets 
   let (weights, keys) = unzip weightKeys
   stateValue <- getStateValue
 
-  putHistory (hist ++ [(stateValue, concat keys)])
+  liftIO $ commit conn
+  liftIO $ disconnect conn
+  liftIO $ if (length hist) >= 10 then applyTDiffTurn hist else return ()
+  putHistory $ if (length hist) < 10 then (hist ++ [(stateValue, concat keys)]) else []
   (return . (sortBy sortGT)) weights
 
 
@@ -271,24 +271,26 @@ getSupplyCentresValue = do
 -- takes [(stateValue,[Keys])] 
 applyTDiffTurn :: [(Double,[(Int,Int)])] -> IO ()
 applyTDiffTurn turnValKeys = do
+  putStrLn "Applying turn temporal difference..."
   let l = length turnValKeys 
   let (stateValues,turnKeyVals) = unzip turnValKeys
   let weightCoeffs = evaluateChangeStates stateValues
-  sequence $ zipWith (updateDBTurns l) (zip [1..] (init turnKeyVals)) weightCoeffs
+  conn <- connectSqlite3 _dbname
+  sequence $ zipWith (updateDBTurns conn l) (zip [1..] (init turnKeyVals)) weightCoeffs
+  commit conn
+  disconnect conn
   return ()
 
-updateDBTurns :: Int -> (Int,[(Int,Int)])-> (Double -> Double -> Double -> Double) -> IO ()
-updateDBTurns l (n,turnKeys) weightFu = do
-   conn <- connectSqlite3 _dbname
+updateDBTurns :: Connection -> Int -> (Int,[(Int,Int)])-> (Double -> Double -> Double -> Double) -> IO ()
+updateDBTurns conn l (n,turnKeys) weightFu = do
    sequence $ map (updateDBTurns' conn n l weightFu) turnKeys
-   commit conn
-   disconnect conn
+   return ()
 
 updateDBTurns' :: Connection -> Int -> Int -> (Double -> Double -> Double -> Double) -> (Int,Int) -> IO ()
 updateDBTurns' conn n l weightFu (pid,pval) = do
   weight <- (return .fromSql . head . head) =<< quickQuery' conn "SELECT weight FROM test WHERE pid = ? AND pval = ?" [toSql pid, toSql pval]
   let newWeight = weightFu (getK n l) _c weight
-  run conn "UPDATE test SET weight = weight WHERE pid = ? AND pval = ?" [toSql newWeight, toSql pid, toSql pval]
+  run conn "UPDATE test SET weight = ? WHERE pid = ? AND pval = ?" [toSql newWeight, toSql pid, toSql pval]
   return ()
   
 evaluateChangeStates :: [Double] -> [(Double -> Double -> Double -> Double)]
