@@ -10,6 +10,7 @@
  - ie. (Int, Int) -> (Double, Int)
  -}
 
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Diplomacy.AI.Bots.LearnBot.PatternWeights  (weighOrderSets
                                                   ,randWeightedElem
@@ -55,11 +56,11 @@ instance Eq Pattern where
 
 applyPattern :: (OrderClass o, MonadIO m) => Pattern -> OrderMovement -> LearnBrainT o m (Int,Int)
 applyPattern patt order = do
-  mVals <- sequence [(metrics !! (i-1)) order | i <- getMetrics patt]
+  mVals <- sequence [(metrics undefined !! (i-1)) order | i <- getMetrics patt]
   return (getID patt, ncant mVals)
 
-generatePatterns :: [Int] -> [Int -> Pattern]
-generatePatterns ns = concat [[(Pattern ms n) | ms <- combN n metricIDs] | n <- ns]
+generatePatterns :: (OrderClass o, MonadIO m) => Dummy o m -> [Int] -> [Int -> Pattern]
+generatePatterns d ns = concat [[(Pattern ms n) | ms <- combN n (metricIDs d)] | n <- ns]
 
 cantor :: Int -> Int -> Int
 cantor a b = floor (fromIntegral ((a + b)*(a + b + 1)) /2) + b
@@ -103,22 +104,24 @@ bool2Int b = if b then 1 else 0
 -- Pattern generation
 
 -- ordering is important!
-metrics :: (OrderClass o, MonadIO m) => [OrderMovement -> LearnBrainT o m Int]
-metrics = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv x)
-          ,(\x -> return . bool2Int =<< targNodeOccupied =<< moveOrderToTargProv x)
-          ,(\x -> return . bool2Int =<< targNodeIsSupply =<< moveOrderToTargProv x)
-          ,(\x -> targNodeAdjUnits            =<< moveOrderToTargProv x)
-          ,(\x -> targNodeAdjUnits            =<< moveOrderToOwnProv x)
-          ,(\x -> return . mOT2Int                     =<< moveOrderToType x)]
+metrics :: (OrderClass o, MonadIO m) => Dummy o m -> [OrderMovement -> LearnBrainT o m Int]
+metrics _ = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv x)
+            ,(\x -> return . bool2Int =<< targNodeOccupied =<< moveOrderToTargProv x)
+            ,(\x -> return . bool2Int =<< targNodeIsSupply =<< moveOrderToTargProv x)
+            ,(\x -> targNodeAdjUnits            =<< moveOrderToTargProv x)
+            ,(\x -> targNodeAdjUnits            =<< moveOrderToOwnProv x)
+            ,(\x -> return . mOT2Int                     =<< moveOrderToType x)]
 
--- HACKED, fix later
-metricIDs = [1..6] --take (length metrics) [1..]
+data Dummy o m = Dummy (m o)
+
+metricIDs :: (OrderClass o, MonadIO m) => Dummy o m -> [Int]
+metricIDs d = take (length (metrics d)) [1..]
 
 zipApply :: [a -> b] -> [a] -> [b]
 zipApply fs xs = map (\(f,x) -> f x) $ zip fs xs
 
-patterns :: [Pattern]
-patterns    = zipApply (generatePatterns [1,2]) [1..]
+patterns :: (OrderClass o, MonadIO m) => Dummy o m -> [Pattern]
+patterns d  = zipApply (generatePatterns d [1,2]) [1..]
 
 moveOrderToOwnProv :: (OrderClass o, MonadIO m) => OrderMovement -> LearnBrainT o m Province
 moveOrderToOwnProv = 
@@ -151,9 +154,9 @@ sortGT (d1,_) (d2,_)
     | d1 < d2 = GT
     | d1 >= d2 = LT
 
-weighOrder :: (MonadIO m, OrderClass o) => OrderMovement -> LearnBrainT o m (Double,[(Int,Int)])
+weighOrder :: forall o m. (MonadIO m, OrderClass o) => OrderMovement -> LearnBrainT o m (Double,[(Int,Int)])
 weighOrder order = do
-  keyVals <- sequence [applyPattern p order | p <- patterns]
+  keyVals <- sequence [applyPattern p order | p <- patterns (undefined :: Dummy o m)]
  
   conn <- liftIO $ connectSqlite3 "test.db"--hardcoded for now
   
@@ -176,11 +179,11 @@ weighOrderSet orders = do
 
 weighOrderSets :: (MonadIO m, OrderClass o) => [[OrderMovement]] -> LearnBrainT o m [(Double, [OrderMovement])]
 weighOrderSets orderSets = do
-  --hist <- getHistory
+  hist <- getHistory
   weightKeys <- mapM weighOrderSet orderSets
   let (weights, keys) = unzip weightKeys
   let stateValue :: Double; stateValue = undefined
-  --putHistory (hist ++ [(stateValue, concat keys)])
+  putHistory (hist ++ [(stateValue, concat keys)])
   (return . (sortBy sortGT)) weights
 
 randWeightedElem :: (MonadIO m, OrderClass o) => [(Double, [a])] -> LearnBrainT o m [a]
@@ -227,21 +230,55 @@ targNodeAdjUnits prov = do
 -- takes the list of ordermovements metrics and the return values that resulted in a successful streak, and applies temporal difference learning over the entire database
 
 applyTDiffTurn :: [(Double,[(Int,Int)])] -> IO ()
-applyTDiffTurn turnValMetrics = undefined
+applyTDiffTurn turnValKeys = do
+  
+  let (stateValues,turnKeyVals) = unzip turnValKeys
+  let weightCoeffs = evaluateChangeStates stateValues
+  sequence $ zipWith updateDBTurns (init turnKeyVals) weightCoeffs
+  return ()
+
+updateDBTurns :: [(Int,Int)] -> (Double -> Double -> Double -> Double) -> IO ()
+updateDBTurns turnKeys weightFu = do
+   conn <- connectSqlite3 "test.db"
+   sequence $ map (updateDBTurns' conn weightFu) turnKeys
+   commit conn
+   disconnect conn
+
+_c :: Double
+_c = undefined
+_k :: Double
+_k = undefined
+
+updateDBTurns' :: Connection -> (Double -> Double -> Double -> Double) -> (Int,Int) -> IO ()
+updateDBTurns' conn weightFu (pid,pval) = do
+  weight <- (return .fromSql . head . head) =<< quickQuery' conn "SELECT weight FROM test WHERE pid = ? AND pval = ?" [toSql pid, toSql pval]
+  let newWeight = weightFu _k _c weight
+  run conn "UPDATE test SET weight = weight WHERE pid = ? AND pval = ?" [toSql newWeight, toSql pid, toSql pval]
+  return ()
   
 
+evaluateChangeStates :: [Double] -> [(Double -> Double -> Double -> Double)]
+evaluateChangeStates [x] = []
+evaluateChangeStates (x:x':xs) =
+  evaluateChangeState x x' : evaluateChangeStates (x':xs)
+
+-- generates function f :: K -> C -> old_weight -> Double
+evaluateChangeState :: Double -> Double -> (Double -> Double -> Double -> Double)  
+evaluateChangeState w1 w2 = (\k c ow -> ((ow*c) + k*(vfromD (w2 - w1)))/(c+k))
+
+-- helper function, maps -1 -> 1 to 0 -> 1
+vfromD :: Double -> Double
+vfromD d
+  | d <= 0  = undefined
+  | d > 0   = undefined
 
 applyTDiffEnd :: [[(Int,Int)]] -> IO ()
 applyTDiffEnd succTurnKeys = do
   -- keys should be a subset of dbkeys, as new entries should be added as they're not found whilst the game is being played
   let l = length succTurnKeys
-  putStrLn "Getting all keys!"
   dbKeyVals <- getAllDBValues
   let (_,dbKeyFinalVals) = foldl (updateWeights l) (1,dbKeyVals) succTurnKeys
-  putStrLn "Updating new values"
   updateDB dbKeyFinalVals 
-  putStrLn "Done."
-  return ()
 
 getAllDBValues :: IO [((Int,Int),Double)]
 getAllDBValues = do
