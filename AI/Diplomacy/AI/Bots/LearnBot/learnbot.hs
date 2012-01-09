@@ -63,11 +63,10 @@ learnBrainMove = do
   --obtain all legal moves
   legalUnitMoves <- foldM genLegalOrders Map.empty myUnits
 	
-  trimmedOrders <- mapM ((randElems 2) . (legalUnitMoves Map.!)) myUnits
+  trimmedOrders <- mapM ((randElems _trimNum) . (legalUnitMoves Map.!)) myUnits
   let possibleOrderSets = Traversable.sequenceA trimmedOrders
   highestWeightedOrders <- weighOrderSets possibleOrderSets
   orders <- randWeightedElem $ take 5 highestWeightedOrders
-  liftIO $ putStrLn (show orders)
   putOrders $ Just orders
 
 learnBrainEnd :: (MonadIO m, MonadGameKnowledge h m, MonadBrain o m) => m Bool

@@ -22,6 +22,12 @@ viewerr:
 dumb:
 	cd AI/dist/build/dumbbot && zsh -c './dumbbot localhost 16713  &> outp &'
 
+learn7:
+	cd AI/dist/build/learnbot && zsh -c 'for i in {1..7} ; do ./learnbot localhost 16713 &> outp.$$i & ; done'
+
+learn:
+	cd AI/dist/build/learnbot && zsh -c './learnbot localhost 16713  &> outp &'
+
 
 debug:
 	cd AI/Diplomacy/AI/Bots/DumbBot && ghci dumbbot.hs -fbreak-on-exception
