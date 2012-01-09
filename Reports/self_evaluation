@@ -1,0 +1,34 @@
+On reflection of the past few months that have been used for the project, 
+the goals we had set may have been too ambitious, i.e. building a diplomacy 
+platform from the ground up including the server, the user client and the
+AI and negotiation. However during this period we have still achieve a lot, but 
+not with difficulties in coordinating the group and using the decided tools and 
+languages. Working in a group is always a difficult task when there isn't an 
+experienced project manager to watch over you and can be made more difficult 
+by differences in personalities, abilities and in prioritising the group 
+project over other work. 
+Our first problem was that we had set out to do more than previous groups had 
+ever done with this project. This included building our own server to run 
+with the DAIDE protocol and our own user client which also runs on the same 
+protocol. On top of this we also set out to build our own AI in Haskell and 
+implement automated negotiation as well. Halfway through the project we found 
+that building the server was taking far too much time and we made the decision 
+to start working on the AI before we would run out of time. As there exists a 
+windows DAIDE server we decided that we would run our AI bots for testing on 
+there. In addition the user client also runs on top of the DAIDE server so this 
+meant we could continue with the project and completing the main aims.
+One of the main difficulties was getting the group up to a reasonable level 
+with Haskell. Most members of the group didn't have much experience with 
+Haskell and functional programming whereas one member was much more familiar 
+with Haskell than the others. However the group decided that using Haskell 
+would make writing the AI much easier and it was for this reason that we 
+decided to use it as our main implementation language. 
+Group/project management and prioritising work was also an issue, but this was 
+mainly attributed to the lack of a project manager (only really available in a 
+real working environment) and the amount of other work we had going on during 
+term time including applications towards internships/placements.
+Overall however, the group generally thought that there was an excellent 
+amount of work that was put into the project and this is reflected by how big 
+the code base is. In the future, it may have been a better idea to properly and 
+realistically plan out the project timeline and carefully consider the team's 
+abilities and skills before deciding which tools and technologies to use.
