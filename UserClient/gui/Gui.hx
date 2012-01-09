@@ -71,6 +71,7 @@ class Gui extends GuiElem {
 
 	//mapg is placed on display list by default so that initial map load can swap it's place.
 	public var map:Map; var mapg:Sprite;
+	var title:Bitmap; var titleb:Sprite;
 
 	var statmenu:Menu; //status
 	var mainmenu:Menu; //main
@@ -86,6 +87,13 @@ class Gui extends GuiElem {
 	var warnings:Array<nme.text.TextField>;
 	function build() {
 		addChild(mapg = new Sprite());
+		titleb = new Sprite();
+		titleb.graphics.beginFill(0x231f20,1);
+		titleb.graphics.drawRect(0,0,50,50);
+		mapg.addChild(titleb);
+
+		title = new Bitmap(Assets.getBitmapData("Assets/TitleScreen.jpg"));
+		mapg.addChild(title);
 		
 		topbar = new Sprite();
 		var m = new nme.geom.Matrix();
@@ -288,6 +296,11 @@ class Gui extends GuiElem {
 		if(map!=null) {
 			map.y = 25;
 			map.resize(width,height-25,scale);
+		}else {
+			title.x = (width-title.width)/2;
+			title.y = 25 + (height-25-title.height)/2;
+			titleb.width = width;
+			titleb.height = height;
 		}
 
 		statmenu.resize(-1,-1,scale);
