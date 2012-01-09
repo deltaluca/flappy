@@ -199,9 +199,10 @@ that amateur players have access to a rich body of strategic knowledge
 which forms the basis of many existing bots. Until the 90s bot
 development has been ad-hoc and it has been difficult to find a common
 platform to validate their playing strength. To remedy this the DAIDE
-framework \cite{Daide04} has been created. It comprises a language
+framework \cite{Daide04} has been created: It comprises a language
 specification for client-server interaction \cite{DAIDEsyntax10} \&
-negotiation and various useful tools:
+negotiation and various useful too. For detailed explanation of the 
+DAIDE presslevels refer to the reference above.
 
 \begin{itemize}
 
@@ -213,38 +214,8 @@ negotiation and various useful tools:
 \item \textit{DAIDE Mapper} is a server hook-in to visualize
       the game state.
 
-
-\todo{Find a screenshot of the DAIDE mapper}
-
-
-
 \end{itemize}
 
-
- and many AI
-players, so called bots, have been created in the past. Most of the
-existing AI players are quite effective decision-makers in general but
-few of them support negotiation or reasoning about the relationship of
-the powers in the game. Our project aims to create a framework for
-Diplomacy, including a GUI client, a game server and a collection of
-bots. The highest evolution of our series of bots should be able to
-analyze and act upon messages of human / AI players and issue messages
-to other players. In particular we aim to unify negotiation and
-general strategy, given that negotiation is simply 
-cooperative decision-making and only a layer of communication and
-trust models have to be added. \\
-
-Finally experiments are conducted to determine whether there is a
-reward associated with negotation capabilities. This required careful
-study and implementation of automated negotiation techniques from
-other domains in AI / Game Theory. Thus the project gave us ample
-opportunity to be creative and test different approaches using the
-DAIDE-conforming game framework also produced for the project. DAIDE
-is a standard client-server protocol \cite{DaideWeb} which serves as a
-'common language' for different Diplomacy bot implementations,
-enabling them to play a game together on a conforming server. We
-explain the concepts of \textit{press levels} in a specific section on
-\textit{DAIDE}.
 
 %--------------------------------------------------------------------------------
 
@@ -495,9 +466,6 @@ acknowledged as having poor playing strength. Besides it is not
 compatible with the DAIDE framework so we could not use it for
 our experiments.
 
- so we did not use
-it 
-
 There have been various earlier efforts to create a Diplomacy bot
 limited to DAIDE press level 0 \cite{DAIDEsyntax10}. While early
 approaches used classical AI techniques like Best-First-Search there
@@ -510,6 +478,26 @@ valuation of provinces \cite{Huff05} to create a strong AI player.
 %--------------------------------------------------------------------------------
 
 \pagebreak
+
+\section{Motivation}
+
+Many of the aforementioned bots are quite effective decision-makers in
+general but few of them support negotiation or reasoning about the relationship of
+the powers in the game. Our project aims to create a framework for
+Diplomacy, including a GUI client, a game server and a collection of
+bots. The highest evolution of our series of bots should be able to
+analyze and act upon messages of human / AI players and issue messages
+to other players. In particular we aim to unify negotiation and
+general strategy, given that negotiation is simply cooperative 
+decision-making and only a layer of communication and trust models have
+to be added. \\
+
+Finally experiments shall be conducted to determine whether there is a
+reward associated with negotation capabilities. This requires careful
+study and implementation of automated negotiation techniques from
+other domains in AI / Game Theory. Thus the project giving us ample
+opportunity to be creative and test different approaches using the
+DAIDE-conforming game framework also produced for the project.
 
 \section{Project aims}
 
@@ -582,7 +570,7 @@ during the iterations.
 
 A \textit{Strategy and tactics component} is seen as an important
 foundation for every negotiation agent. On top of that we are 
-convinced that \textit{Negotiation} and \text{Strategy} are not
+convinced that \textit{Negotiation} and \textit{Strategy} are not
 really issues that can be cleanly separated; even though previous
 literature suggests this. The fact that negotiation is really
 joint problem solving in disguise illustrates this nicely.
@@ -622,8 +610,7 @@ sub-component.
 \paragraph{Move prediction}
 As a result our bot needs to predict a move 
 
-
-\section{The StrategyFinder subsystem}
+\section{The Strategy Finder subsystem}
 
 As listed in the \textit{Introduction} section there were previous
 attempts of creating a strong AI for Diplomacy: Kraus \cite{Kraus95}
@@ -838,9 +825,9 @@ component is used.
 
 As for the overall bot architecture we have chosen a multi-agent 
 approach. There are clearly sub-tasks which a negotiator needs to
-provide:
+provide. Each of them is mapped to another thread.
 
-\paragraph{External communication}
+\paragraph{External communication (Message dispatcher)}
 The \textit{External communication} has interfaces to the agreement 
 and relationship database and can be seen as our connection to the
 environment of allies of foes. One of its functions is to propose
@@ -882,16 +869,54 @@ scrutiny . \\
 
 \section{Emotional subsystem}
 
+The emotional subsystem serves three purposes:
 
+\begin{itemize}
 
-\subsection{Character traits}
+\item Although not strictly necessary it is handy to model
+      human-like attribute with the bot. We propose a
+      \textit{static character traits record} that is 
+      initialized upon personalization of the bot. In an 
+      extension we hope to provide dynamic behaviour by
+      varying this from game to game.
 
-\subsection{Emotion database}
+\item The bot needs to infer \textit{Relationships} of the
+      other powers. This is primarily driven by stochastic rules.
+      For example if Turkey attacks Germany we can be reasonably 
+      sure (it might be bluff with small probability) that these
+      powers are adversaries. The corresponding triple in the
+      relationship table is ([at war],[Turkey],[Germany]). In the  
+      same manner other relations between powers can be inferred. 
+      Note that the rules are hard-coded and there is currently
+      no way of of \textit{learning} them in any way.
 
+\item Lastly we want to infer a character profile from a powers actions.
+      These include objective measures like Risk-averseness or 
+      hoarding-tendency but also subjective ones like our own 
+      liking or trust of the respective power(s). As the relationship table this
+      is updated via pattern-matching on the other power's moves and
+      evaluation of several game-statistics (like the change in 
+      state metrics from the perspective of other powers, where positive
+      changes indicate high playing strength). The limits to what can
+      be measured abound and we left it deliberately open-ended. A good
+      inspiration are the feeling models by Weiner and Graham or 
+      Parrot, although initially we only include coarse-grained primitives
+      like  'Fear', 'Happiness', 'Sadness' and 'Anger'. Notice lastly that
+      we commit to sentiments we have inferred and remove them only 
+      when evidence to the contrary has been established. Hence we cannot
+      partially revise beliefs or determine partial happiness etc..
+
+\end{itemize}
 
 \section{Agreements database}
 
-\todo{Info from Kraus paper}
+The agreements database holds commitments of our bot with 
+other powers. It is populated by the \textit{Message dispatcher}
+component explained above. \\
+
+An example triple is ([Turkey],[Germany],[AttackProvA]),
+notice that the last part is a goal that can be processed by the
+\textit{Goal expansion} unit of the \textit{Strategy subsystem}.
 
 
 %--------------------------------------------------------------------------------
