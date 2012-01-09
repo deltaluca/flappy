@@ -58,4 +58,25 @@ Additionally, there is no existing .svg library for HaXe. A reader for the subse
 
 The NME library itself was also forked onto github for the purposes of providing an extension to it's features used in the GUI.
 
+\paragraph{Design}
+The GUI was seperated into 3 packages seperating concerns of the DAIDE protocol, SVG and other map data, and the GUI itself.\\[0.5cm]
+\includegraphics[scale=0.5]{./gui/UML.png}\\[0.5cm]
+\begin{itemize}
+\item{The gui package encloses all parts of the real GUI including it's interface to the DAIDE socket.}
+\item{The daide package encloses everything to do with lexing/parsing/serialisation of the DAIDE messages together with a wrapper around an Asynchronous TCP socket handling the low-level DAIDE protocol dispatching messages to the GUI interface and receiving any messages to be sent to the server.}
+\item{The map package encloses everything to do with reading .svg files and other related files for maps, together with a struct for enclosing all map information for rendering and though no unsued, a fast aabb tree for quickly selecting which polygons reprsenting regions are to be tested in mouse selection.}
+\item{The toplevel package includes the very small Main class instantiating the GUI, CLI and Terminal and binding them together, the Terminal being a simple gui in its own right providing textual input for the CLI used by both the Terminal and the GUI interface.}\\[1cm]
+\end{itemize}
+\includegraphics[scale=0.5]{./gui/Activity.png}\\[0.5cm]
+The entire GUI operates on 2 threads.
+
+The Main thread which deals with most of the work, specifically all GUI related work as demanded by the NME library which is not thread safe.
+
+The DAIDE socket thread deals with receiving messages from the server and can reply to basic low-level DAIDE protocol, sending any complex messages to the GUI Interface to be processed and entered into one of two areas:
+\begin{itemize}
+\item{A queue for any non-turn related messages which are processed whenever possible by the Timer Event handler forming part of the GUI Interface}
+\item{A queue for completed turn records, with any message forming part of an on-going turn being accumulated into a record before being pushed onto the queue. The handling of this queue in the GUI Interface Timer Event handler deals with being in a paused/playing state and any delays necessary to keep the speed set by the UI}
+\end{itemize}
+
+
 \end{document}
