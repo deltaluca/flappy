@@ -267,10 +267,10 @@ evaluateChangeState :: Double -> Double -> (Double -> Double -> Double -> Double
 evaluateChangeState w1 w2 = (\k c ow -> ((ow*c) + k*(vfromD (w2 - w1)))/(c+k))
 
 -- helper function, maps -1 -> 1 to 0 -> 1
-vfromD :: Double -> Double
-vfromD d
-  | d <= 0  = undefined
-  | d > 0   = undefined
+vfromD :: Double -> Double -> Double
+vfromD d w
+  | d <= 0  = (d+1)*w
+  | d > 0   = d*(1-w)+w
 
 applyTDiffEnd :: [[(Int,Int)]] -> IO ()
 applyTDiffEnd succTurnKeys = do
