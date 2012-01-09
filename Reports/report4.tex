@@ -270,8 +270,9 @@ move on land.
 \section{Game turns / phases}
 
 A game is divived into a number of turns, which is either a
-\textit{fall turn} or a \textit{spring turn}. Each turn contains a
-number of \textit{phases} in which the players negotiate, formulate
+\textit{fall turn} or a \textit{spring turn}. Two turns comprise
+a year, the first one being 1901. Each turn contains a number of 
+\textit{phases} in which the players negotiate, formulate
 their orders and submit them to the server. The order of action in
 fall and spring terms are the same, except that only the fall term
 has a \textit{gaining-and-losing} phase.
@@ -313,12 +314,13 @@ has to retreat.
 As mentioned initially this phase only occurs in a \textit{fall turn}.
 The purpose of this phase is to adjust the number of units of a power
 to the number of supply centres it controls, reflecting its current
-strength.. 
+strength. Players can submit build and disband orders as explained
+below. 
 
 \section{Order submission}
 
 The submission of orders happens \textit{simultaneously}; the game
-rules stipulate that all orders are publicly announced. The diplomacy
+rules also stipulate that all orders are publicly announced. The diplomacy
 phase of a game turn allows powers to signal their actual intention or
 mislead other powers about them. In addition to revealing their move
 orders powers can also forge alliances and devise strategies
@@ -337,25 +339,33 @@ current location.
 
 \paragraph{Move or attack order} 
 Move orders shift units from their original position to one of its
-adjacent provinces.
+adjacent provinces. A move can either be successful, result in a
+standoff or fail because of insufficient strength. 
 
+[1cm]
 \includegraphics{./screenshots/Move0.png} % OK Move
+[1cm]
 The red arrows indicate that the move order succeeded and the units
-will be moved to the destination.
+will be moved to the destination. In general a move order succeeds
+if the attacking party has higher strength than the defense. Each 
+support order increases the strength of offense / defense by 1.
 
+[1cm]
 \includegraphics{./screenshots/BouncedMove.png} % Standoff
+[1cm]
 The dark-red arrows indicate that the move bounced and the units will
 remain in the same place. This is because both units are attempting 
-to move to the same location and they have the same strength. [none being
-supported by another unit].
+to move to the same location and have the same strength, none being
+supported by another unit.
 
 \paragraph{Support order}
-Support order assist another unit's move or hold order. It can either be
+A support order assists another unit's move or hold order. It can either be
 used defensively to protect a province against an attack order or increase
-the odds of another unit conquering a province. When determining the result
-of  
+the odds of another unit conquering a province. 
 
+[1cm]
 \includegraphics{./screenshots/DefRetreat0.png}
+[1cm]
 Here the French unit at Marseille is supporting the move of it's comrade at
 Gascony to Burgundy. The German unit at Burgundy was attempting to support
 the move of it's ally at Parise to Gascony. In the end  it's support was
@@ -376,15 +386,33 @@ fall and spring terms. If a unit is overpowered by an attack on its
 province it needs to move to an adjacent province. The exact destination
 is specified by the player in a retreat order.
 
+[1cm]
 \includegraphics{./screenshots/DefRetreat2.png}
+[1cm]
 Here the German unit previously dislodged from Burgundy has succesfully retreated to Picardy. 
 It is possible although quite rare for a retreat order to fail (Perhaps due to two dislodged
 units attempting to retreat to the same space) and in such case the unit would be removed from the map.
 
 \paragraph{Disband order}
-If a unit cannot attempt a retreat then the unit is removed from the map by a disband order.
+If a unit cannot perform a retreat then the unit is removed from the map automatically.
 
+[1cm]
 \includegraphics{./screenshots/ImmRetreat0.png}
+[1cm]
+
+\paragraph{Build order}
+This order is limited to the \textit{Gaining and losing phase} where unit numbers
+are reconciled with supply centre control. At the end of each year the
+server signals the maximum number of units a player can have in the following
+turn. Empty supply centres can now be used to build any surplus units.
+
+\paragraph{Remove order}
+Any surplus units that do not have a ``supporting supply centre have to be removed
+at the end of the year. With \textit{Remove orders} the player can select which
+units should be removed from the board.
+
+\paragraph{Remove / dislodge order}
+
 
 %--------------------------------------------------------------------------------
 
