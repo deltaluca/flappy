@@ -642,7 +642,7 @@ To store
 
 \pagebreak
 
-\section{Negotiation} 
+\chapter{Negotiation} 
 
 \subsection{Character traits}
 
@@ -652,7 +652,7 @@ To store
 
 \pagebreak
 
-\section{Software engineering}
+\chapter{Software engineering}
 
 \subsection{Change management / Risk mitigation}
 We recognized that change is inevitable in such an ambitious and
@@ -1219,43 +1219,55 @@ terms.
 
 \pagebreak
 
-\section{Contribution of team members}
-
 %--------------------------------------------------------------------------------
 
 \pagebreak
 
-\section{Self evaluation / reflection}
+\section{Self reflection}
 
-\subsection{Project scoping}
+\subsection{Goals vs. available time}
+In hindsight the goals we had set at the beginning (see first section
+on ``Project goals'') may have been too ambitious: Building a
+Diplomacy platform from the ground up including the server, the user
+client and the AI and negotiation took a lot of coordination effort
+and work at all fronts. Regardless during a period of roughly 2 months
+we have achieved a lot both in terms of experimental results and size
+of the created software (GUI, Server and bot framework). In summary we 
+learned that it pays off to channel the energy of the team members 
+rather than working on totally separate products.
 
-An important lesson from the project was that it pays off to channel
-the energy of the team members towards a very specific problem rather
-than being overly ambitious at the outset. Looking back it would have
-been a good decision to drop the server aspect earlier giving us more
-time to implement negotiation.
+\subsection{Group coordination} 
+We learned that working a group requires an experienced project
+manager and one person steering the overall design / interfaces
+between components. This was especially important in our project 
+because we set out to build a framework and not just a collection
+of bots.
+
+\section{Time estimation}
+We had to re-plan halfway through the project -- unfortunately
+building the server was taking more time than expected and
+we had to avoid running out of time for the main aim: 
+negotiation. Using the DAIDE server for bot testing provided
+us with a plan B in case delays on the server would accumulate.
+
+\section{Knowledge transfer}
+One of the main difficulties was getting the group up to a reasonable
+level in monadic Haskell. Most members of the group did not have much
+experience with monadic programming in Haskell while another excelled.
+Nonetheless our group sticked with Haskell as this provides a 
+powerful combinatory parsing library \cite{ParsecLib} for the server.
+Given that the project focus shifted towards the AI at the end we 
+would consider using Java in a similar project.
 
 \subsection{Choice of implementation language}
-
 In retrospect Haskell was not an optimal choice when it comes to
 collaboration between team members as the skill-set of team members
 was different. In addition many aspects of design are naturally
 expressed using UML which is easier to translate into the
-``Object-oriented paradigm'' supported by Java or Python.  Having said
-that Haskell had its merits when it comes to implement DAIDE message
-parsing on the server (Parsec library \cite{ParsecLib}) which is why
-it was chosen in the first place.
-
-
-\subsection{Specification vs. final result}
-
-\subsection{Group collaboration}
-
-\subsection{Technical challenges}
-
-\subsection{Learning}
-
-%--------------------------------------------------------------------------------
+``Object-oriented paradigm'' supported by Java or Python.
+Having said that Haskell had its merits when it comes to implement
+DAIDE message parsing on the server (Parsec library \cite{ParsecLib}) 
+which is why it was chosen in the first place.
 
 \pagebreak
 
