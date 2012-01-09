@@ -94,17 +94,6 @@ Executable learnbot
     HDBC,
     HDBC-sqlite3
 
-
---Executable coverbot
---  Main-is:           Diplomacy/AI/Bots/CoverBot/coverbot.hs
-  -- Packages needed in order to build this package.
---  Build-depends:       
---    base >= 4,
---    cmdargs,
---    hslogger,
---    mtl,
---    DiplomacyCommon <= 1
-
 --   -- Modules not exported by this package.
 --   -- Other-modules:       
   
@@ -171,3 +160,13 @@ Executable dumbbot
 --   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
 --   -- Build-tools:     
 
+Executable coverbot
+  Main-is:           Diplomacy/AI/Bots/CoverBot/coverbot.hs
+  -- Packages needed in order to build this package.
+  Build-depends:       
+    base >= 4,
+    cmdargs,
+    hslogger,
+    mtl,
+    DiplomacyCommon <= 1,
+    array

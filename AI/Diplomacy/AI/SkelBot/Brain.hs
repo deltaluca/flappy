@@ -14,6 +14,7 @@ module Diplomacy.AI.SkelBot.Brain ( Brain, BrainT
                                   , runBrainT
                                   , runBrain
                                   , liftBrain
+                                  , pureBrain
                                   , runBrainCommT
                                   , runGameKnowledgeT
                                   , flushOrders
@@ -161,6 +162,9 @@ runBrain = mapBrain return
 
 liftBrain :: (Monad m, OrderClass o) => BrainT o h m a -> BrainCommT o h m a
 liftBrain = BrainComm . lift . lift
+
+pureBrain :: (Monad m, OrderClass o) => Brain o h a -> BrainCommT o h m a
+pureBrain = liftBrain . runBrain
 
 instance (MonadSTM m, OrderClass o) => MonadComm InMessage OutMessage (BrainCommT o h m) where
   popMsg = BrainComm . lift $ popMsg

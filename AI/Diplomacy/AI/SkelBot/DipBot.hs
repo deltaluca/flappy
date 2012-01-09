@@ -21,4 +21,7 @@ data DipBot m h = DipBot
                     -- |bot's name
                   , dipBotName :: String
                     -- |bot's version
-                  , dipBotVersion :: Double }
+                  , dipBotVersion :: Double
+                    -- |game over hook
+                  , dipBotGameOver :: GameKnowledgeT h m ()
+                  }

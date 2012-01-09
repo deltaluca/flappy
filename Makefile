@@ -31,3 +31,6 @@ learn:
 
 debug:
 	cd AI/Diplomacy/AI/Bots/DumbBot && ghci dumbbot.hs -fbreak-on-exception
+
+cover:
+	cd AI/dist/build/coverbot && zsh -c './coverbot localhost 16713  &> outp &'
