@@ -3,56 +3,57 @@ The top-level auxiliary file: report4.aux
 The style file: plain.bst
 Database file #1: report4.bib
 Warning--entry type for "Daide04" isn't style-file defined
---line 394 of file report4.bib
+--line 395 of file report4.bib
 Warning--entry type for "DipArchive04" isn't style-file defined
---line 404 of file report4.bib
+--line 405 of file report4.bib
 Warning--entry type for "DipPouch04" isn't style-file defined
---line 414 of file report4.bib
+--line 415 of file report4.bib
 Warning--I didn't find a database entry for "DaideWeb"
 Warning--to sort, need author or key in DipArchive04
 Warning--to sort, need author or key in DipPouch04
 Warning--to sort, need author or key in Daide04
 Warning--to sort, need author or key in DAIDEsyntax10
 Warning--to sort, need author or key in ParsecLib
-You've used 13 entries,
+Warning--empty note in Kemmerling00
+You've used 14 entries,
             2118 wiz_defined-function locations,
-            569 strings with 5227 characters,
-and the built_in function-call counts, 3000 in all, are:
-= -- 298
-> -- 105
+            573 strings with 5390 characters,
+and the built_in function-call counts, 3179 in all, are:
+= -- 307
+> -- 123
 < -- 0
-+ -- 48
-- -- 32
-* -- 159
-:= -- 489
-add.period$ -- 41
-call.type$ -- 13
-change.case$ -- 55
++ -- 55
+- -- 38
+* -- 176
+:= -- 523
+add.period$ -- 37
+call.type$ -- 14
+change.case$ -- 61
 chr.to.int$ -- 0
-cite$ -- 18
-duplicate$ -- 114
-empty$ -- 282
-format.name$ -- 32
-if$ -- 646
+cite$ -- 20
+duplicate$ -- 120
+empty$ -- 293
+format.name$ -- 38
+if$ -- 676
 int.to.chr$ -- 0
-int.to.str$ -- 13
+int.to.str$ -- 14
 missing$ -- 4
-newline$ -- 70
-num.names$ -- 16
-pop$ -- 79
+newline$ -- 68
+num.names$ -- 18
+pop$ -- 87
 preamble$ -- 1
-purify$ -- 42
+purify$ -- 47
 quote$ -- 0
-skip$ -- 84
+skip$ -- 92
 stack$ -- 0
-substring$ -- 114
+substring$ -- 119
 swap$ -- 14
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 52
-warning$ -- 5
-while$ -- 19
-width$ -- 15
-write$ -- 140
-(There were 9 warnings)
+type$ -- 56
+warning$ -- 6
+while$ -- 21
+width$ -- 16
+write$ -- 135
+(There were 10 warnings)

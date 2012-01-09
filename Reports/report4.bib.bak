@@ -33,6 +33,14 @@
   timestamp = {2012.01.09}
 }
 
+@ARTICLE{,
+  author = {Luca Deltodesco},
+  title = {Hllr Libraries},
+  year = {2010},
+  owner = {matthias},
+  timestamp = {2012.01.09}
+}
+
 @INPROCEEDINGS{Fabregues10_01,
   author = {Fabregues and Navarro and Serrano and Sierra},
   title = {DipGame: A test-bed for mult-agent systems},
@@ -64,8 +72,7 @@
 @MISC{Fabregues11,
   author = {Angela Fabregues and Carles Sierra},
   title = {Negotiating with humans using the Diplomacy game},
-  year = {2011},
-  note = {COMPILED IN NOTES}
+  year = {2011}
 }
 
 @MASTERSTHESIS{Fransson03,
@@ -113,7 +120,6 @@
   title = {Automated Negotiation in the Game of Diplomacy},
   journal = {Imperial College Project Report},
   year = {2005},
-  note = {COMPILED IN NOTES},
   owner = {mh2308},
   timestamp = {2012.01.05}
 }
@@ -124,7 +130,6 @@
   booktitle = {AAMAS '05 Proceedings of the fourth international joint conference
 	on Autonomous agents and multiagent systems},
   year = {2005},
-  note = {COMPILED IN NOTES},
   abstract = {While there is a broad theoretic foundation for creating
 	
 	computational players for two-player games, such as Chess,
@@ -155,6 +160,14 @@
   timestamp = {2012.01.09}
 }
 
+@UNPUBLISHED{Kemmerling00,
+  author = {Markus Kemmerling and Niels Ackermann and Mike Preuss},
+  title = {Nested Look-Ahead Evolutionary Algorithm Based Planning for a Believable
+	Diplomacy Bot},
+  owner = {matthias},
+  timestamp = {2012.01.09}
+}
+
 @ARTICLE{Kraus96,
   author = {Kraus},
   title = {Beliefs, time and incomplete information in multiple-encounter negotiations
@@ -181,8 +194,7 @@
   journal = {Computational Intelligence},
   year = {1995},
   volume = {11},
-  pages = {132--171},
-  note = {COMPILED IN NOTES}
+  pages = {132--171}
 }
 
 @ARTICLE{Kraus89,
@@ -191,7 +203,6 @@
   journal = {Heuristic Programming in Artificial Intelligence},
   year = {1989},
   pages = {134--153},
-  note = {SAME AS THIRD PAPER},
   owner = {mh2308},
   timestamp = {2012.01.04}
 }
@@ -219,7 +230,6 @@
   title = {A Pattern-Weight Formulation of Search Knowledge},
   institution = {Computational Intelligence},
   year = {1994},
-  note = {COMPILED IN NOTES},
   abstract = {\5}
 }
 
@@ -228,7 +238,6 @@
   title = {Automated Negotiation in the Game of Diplomacy},
   school = {Imperial College London},
   year = {2009},
-  note = {COMPILED IN NOTES},
   owner = {mh2308},
   timestamp = {2012.01.05}
 }
@@ -258,7 +267,6 @@
   title = {SeaNail Diplomacy AI},
   howpublished = {Website},
   year = {1998},
-  note = {COMPILED IN NOTES},
   owner = {mh2308},
   timestamp = {2012.01.05}
 }
@@ -269,7 +277,6 @@
   booktitle = {Proc. Federated Conf. Computer Science and Information Systems (FedCSIS)},
   year = {2011},
   pages = {589--596},
-  note = {COMPILED IN NOTES},
   __markedentry = {[mh2308]},
   owner = {mh2308},
   timestamp = {2012.01.04}
@@ -298,8 +305,7 @@
   author = {Ari Shapiro and Gil Fuchs and Robert Levinson},
   title = {Learning a game strategy using patternweights and self-play},
   booktitle = {In Proc. of the Third International Conference on Computers and Games},
-  year = {2002},
-  note = {COMPILED IN NOTES}
+  year = {2002}
 }
 
 @ARTICLE{Smith77,
@@ -316,7 +322,6 @@
 @MISC{Tesauro,
   author = {Tesauro},
   title = {Temporal Difference Learning and TD Gammon},
-  note = {COMPILED IN NOTES},
   owner = {mh2308},
   timestamp = {2012.01.04}
 }
@@ -339,7 +344,7 @@
   timestamp = {2012.01.07}
 }
 
-@ARTICLE{,
+@ARTICLE{Walsh02,
   author = {Walsh and Das and Tesauro and Kephart},
   title = {Analyzing complex strategic interactions in multi-agent systems},
   journal = {Proceedings of the AAAI Spring symposium on Game Theoretic and Decision
@@ -377,7 +382,6 @@
 @MISC{ParsecLib,
   title = {Parsec Library HaskellWiki},
   howpublished = {http://www.haskell.org/haskellwiki/Parsec},
-  note = {COMPILED IN NOTES},
   owner = {mh2308},
   timestamp = {2012.01.05}
 }
