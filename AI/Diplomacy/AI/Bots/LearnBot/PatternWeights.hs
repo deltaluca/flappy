@@ -58,6 +58,11 @@ _lowK = 1.0
 _highK :: Double
 _highK = 5.0
 
+
+-- no of supply centres needed to win
+_noOfSCNeededToWin :: Int
+_noOfSCNeededToWin = 18
+
 -- ordering is important!
 metrics :: (OrderClass o, MonadIO m) => Dummy o m -> [OrderMovement -> LearnBrainT o m Int]
 metrics _ = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv x)
@@ -205,7 +210,7 @@ weighOrderSets orderSets = do
   hist <- getHistory
   weightKeys <- mapM weighOrderSet orderSets
   let (weights, keys) = unzip weightKeys
-  let stateValue :: Double; stateValue = undefined
+  stateValue <- getStateValue
   putHistory (hist ++ [(stateValue, concat keys)])
   (return . (sortBy sortGT)) weights
 
@@ -246,6 +251,21 @@ targNodeIsSupply prov = do
 targNodeAdjUnits :: (MonadIO m, OrderClass o) => Province -> LearnBrainT o m Int
 targNodeAdjUnits prov = do
   return.length =<< getAdjacentUnits prov
+
+
+--metrics for calculating state value
+
+getStateValue :: (MonadIO m, OrderClass o) => LearnBrainT o m Double
+getStateValue = do
+   getSupplyCentresValue
+  
+getSupplyCentresValue ::  (MonadIO m, OrderClass o) => LearnBrainT o m Double
+getSupplyCentresValue = do
+  myPower <- getMyPower
+  (sc, nonsc) <- getProvOcc myPower
+  return $ (fromIntegral sc)/(fromIntegral _noOfSCNeededToWin)
+
+
 
 -----------------------------------------------------------------------
 -- temporal learning
