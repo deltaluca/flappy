@@ -1,0 +1,61 @@
+\documentclass[pdftex,12pt,a4paper]{report} 
+
+% Document settings
+
+\usepackage{fullpage}
+\usepackage{cite}
+\usepackage{datetime} 
+\usepackage{geometry}
+\usepackage[pdftex]{graphicx}
+\usepackage{verbatim}
+\usepackage{todonotes}
+
+\geometry{verbose,lmargin=3cm,rmargin=3cm}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\begin{document}
+
+\section{GUI}
+
+\paragraph{Choice of Language}
+For the GUI the HaXe programming language (together with the NME library) was chosen so as to be able to build a cross-platform GUI capable of use on Windows/Mac/Linux desktops as well as Android and OSX mobile devices without worrying about each individual plaform and it's capabilities.
+
+\paragraph{Capabilities}
+The GUI is fully DAIDE compliant and able to observe a Diplomacy game played on any DAIDE compliant server.
+
+Unit locations, supply centre ownerships and moves are all displayed to the user on a scrolling/zoomable map with the whole GUI resizable to any reasonable dimension.
+
+Game view is controlled by playback buttons with the ability to step through turns individually or view the game at a controllable pace. These are placed in the title bar together with the connection interface. \\[0.5cm]
+\includegraphics[scale=0.5]{./screenshots/Titlebar.png} \\[0.5cm]
+This titlebar also displays the current turn/phase of the game being viewed.
+
+\paragraph{CLI}
+The GUI includes a command line interface which can be overlayed on the map providing resources for debugging moves and inputting moves manually as a human-player (Ontop of which like the GUI itself, a human-player GUI can be implemented).
+
+\paragraph{Flexibility}
+The GUI is capable of playing/observing a game on any Map, and is preloaded with the required resources for playing the standard DAIDE map.
+
+Each map to be used in the GUI requires:
+\begin{itemize}
+\item{An .svg vector graphic file which provides graphic paths for clickable regions of the map (Selection of regions is implemented in the GUI but disabled once it was decided there was insufficient time to implement a human player GUI). Together with a set of named graphics to encode the locations that units may occupy and supply centre locations.
+
+SVG is a widely-deployed, royalty-free graphics format with an open specification based on .xml files and can be created by many graphics editors.
+
+\includegraphics[scale=0.5]{./gui/SVG.png}
+Note that colours and shape/size of location markers are arbitrary. Information to be mapped to the real DAIDE map is supplied in metadata.}
+\item{A simple text file mapping province names used in the SVG file metadata, to DAIDE protocol IDs}
+\item{A set of graphics to be used with trilinear filtering to provide crisp display of the map at any zoom level with little performance loss compared to runtime rendering of a detailed and complex vector graphic for instance.}
+
+\end{itemize}
+
+\paragraph{Technical Issues}
+As with the Haskell AI, it was necessary to implement a full implementation of the DAIDE protocol including serialisation/deserialisation of DAIDE tokens, and parseing/unparsing of language constructs. As the GUI was first started with the CLI it was necessary also to build a lexer for DAIDE tokens from their textual representations and for debug purposes in communicating with the server.
+
+For these tasks existing open-source HaXe libraries (hlex,hllr) were used (And extended to provide more type safety in the parser to help with a grammar as large as that of DAIDE).
+
+Additionally, there is no existing .svg library for HaXe. A reader for the subset of the SVG format required for the GUI was thus written, including the transformation of graphic paths into a more suitable format for mouse selection.
+
+The NME library itself was also forked onto github for the purposes of providing an extension to it's features used in the GUI.
+
+\end{document}
