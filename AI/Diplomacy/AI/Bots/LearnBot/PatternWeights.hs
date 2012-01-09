@@ -16,6 +16,7 @@ module Diplomacy.AI.Bots.LearnBot.PatternWeights  (weighOrderSets
                                                   ,randWeightedElem
                                                   ,applyTDiffEnd
                                                   ,applyTDiffTurn
+                                                  ,_noOfSCNeededToWin
                                                   ) where
 
 import Diplomacy.AI.Bots.LearnBot.Monad
@@ -37,6 +38,41 @@ import Database.HDBC
 import Database.HDBC.Sqlite3
 
 import qualified Data.Map as Map
+
+-----------------------------------------------------------------------
+-- Bot-specific variables
+-- Metrics, nPatterns, Database name, Weighting of applyTDiffTurn, Variance of K
+
+_dbname :: String
+_dbname = "test.db"
+
+_npats :: [Int]
+_npats = [1,2]
+
+-- _c defines the constant that determines how 'strong' the weights are affected
+-- Larger _c corresponds to smaller change
+_c :: Double
+_c = 10.0
+
+_lowK :: Double
+_lowK = 1.0
+_highK :: Double
+_highK = 5.0
+
+-- no of supply centres needed to win
+_noOfSCNeededToWin :: Int
+_noOfSCNeededToWin = 18
+
+-- ordering is important!
+metrics :: (OrderClass o, MonadIO m) => Dummy o m -> [OrderMovement -> LearnBrainT o m Int]
+metrics _ = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv x)
+            ,(\x -> return . bool2Int =<< targNodeOccupied =<< moveOrderToTargProv x)
+            ,(\x -> return . bool2Int =<< targNodeIsSupply =<< moveOrderToTargProv x)
+            ,(\x -> targNodeAdjUnits            =<< moveOrderToTargProv x)
+            ,(\x -> targNodeAdjUnits            =<< moveOrderToOwnProv x)
+            ,(\x -> return . mOT2Int                     =<< moveOrderToType x)]
+
+-----------------------------------------------------------------------
 
 -- arbitrary numberings for the various types of move orders
 data MOrderType = THold
@@ -103,14 +139,6 @@ bool2Int b = if b then 1 else 0
 -----------------------------------------------------------------
 -- Pattern generation
 
--- ordering is important!
-metrics :: (OrderClass o, MonadIO m) => Dummy o m -> [OrderMovement -> LearnBrainT o m Int]
-metrics _ = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv x)
-            ,(\x -> return . bool2Int =<< targNodeOccupied =<< moveOrderToTargProv x)
-            ,(\x -> return . bool2Int =<< targNodeIsSupply =<< moveOrderToTargProv x)
-            ,(\x -> targNodeAdjUnits            =<< moveOrderToTargProv x)
-            ,(\x -> targNodeAdjUnits            =<< moveOrderToOwnProv x)
-            ,(\x -> return . mOT2Int                     =<< moveOrderToType x)]
 
 data Dummy o m = Dummy (m o)
 
@@ -121,7 +149,7 @@ zipApply :: [a -> b] -> [a] -> [b]
 zipApply fs xs = map (\(f,x) -> f x) $ zip fs xs
 
 patterns :: (OrderClass o, MonadIO m) => Dummy o m -> [Pattern]
-patterns d  = zipApply (generatePatterns d [1,2]) [1..]
+patterns d  = zipApply (generatePatterns d _npats) [1..]
 
 moveOrderToOwnProv :: (OrderClass o, MonadIO m) => OrderMovement -> LearnBrainT o m Province
 moveOrderToOwnProv = 
@@ -141,12 +169,12 @@ average l = (sum l) / ((fromIntegral.length) l)
 --WTF HASKELL WTF I HATE YOU
 
 updatePatternsGetWeightAge :: Connection -> (Int,Int) -> IO (Double,Int)
-updatePatternsGetWeightAge conn (mid, mval) = do 
-  result <- quickQuery' conn "SELECT mid, mval FROM test WHERE mid = ?" [toSql mid] 
+updatePatternsGetWeightAge conn (pid, pval) = do 
+  result <- quickQuery' conn "SELECT pid, pval FROM test WHERE pid = ?" [toSql pid] 
   if (length result == 0) 
-    then run conn "INSERT INTO test VALUES (?,?,0.5,1)" [toSql mid, toSql mval]
-    else run conn "UPDATE test SET age = (age + 1) WHERE mid = ?" [toSql mid]
-  weightsResult <- quickQuery' conn "SELECT weight, age FROM test WHERE mid = ? AND mval = ?" [toSql mid, toSql mval]
+    then run conn "INSERT INTO test VALUES (?,?,0.5,1)" [toSql pid, toSql pval]
+    else run conn "UPDATE test SET age = (age + 1) WHERE pid = ?" [toSql pid]
+  weightsResult <- quickQuery' conn "SELECT weight, age FROM test WHERE pid = ? AND pval = ?" [toSql pid, toSql pval]
   return $ (\[x,y] -> (fromSql x, fromSql y)::(Double,Int)) $ head weightsResult
 
 sortGT :: (Double, a) -> (Double, a) ->  Ordering
@@ -158,7 +186,7 @@ weighOrder :: forall o m. (MonadIO m, OrderClass o) => OrderMovement -> LearnBra
 weighOrder order = do
   keyVals <- sequence [applyPattern p order | p <- patterns (undefined :: Dummy o m)]
  
-  conn <- liftIO $ connectSqlite3 "test.db"--hardcoded for now
+  conn <- liftIO $ connectSqlite3 _dbname--hardcoded for now
   
   weightAges <- liftIO (sequence $ map (updatePatternsGetWeightAge conn) keyVals)
   
@@ -182,7 +210,7 @@ weighOrderSets orderSets = do
   hist <- getHistory
   weightKeys <- mapM weighOrderSet orderSets
   let (weights, keys) = unzip weightKeys
-  let stateValue :: Double; stateValue = undefined
+  stateValue <- getStateValue
   putHistory (hist ++ [(stateValue, concat keys)])
   (return . (sortBy sortGT)) weights
 
@@ -224,6 +252,21 @@ targNodeAdjUnits :: (MonadIO m, OrderClass o) => Province -> LearnBrainT o m Int
 targNodeAdjUnits prov = do
   return.length =<< getAdjacentUnits prov
 
+
+--metrics for calculating state value
+
+getStateValue :: (MonadIO m, OrderClass o) => LearnBrainT o m Double
+getStateValue = do
+   getSupplyCentresValue
+  
+getSupplyCentresValue ::  (MonadIO m, OrderClass o) => LearnBrainT o m Double
+getSupplyCentresValue = do
+  myPower <- getMyPower
+  (sc, nonsc) <- getProvOcc myPower
+  return $ (fromIntegral sc)/(fromIntegral _noOfSCNeededToWin)
+
+
+
 -----------------------------------------------------------------------
 -- temporal learning
 
@@ -231,28 +274,24 @@ targNodeAdjUnits prov = do
 
 applyTDiffTurn :: [(Double,[(Int,Int)])] -> IO ()
 applyTDiffTurn turnValKeys = do
-  
+  let l = length turnValKeys 
   let (stateValues,turnKeyVals) = unzip turnValKeys
   let weightCoeffs = evaluateChangeStates stateValues
-  sequence $ zipWith updateDBTurns (init turnKeyVals) weightCoeffs
+  sequence $ zipWith (updateDBTurns l) (zip [1..] (init turnKeyVals)) weightCoeffs
   return ()
 
-updateDBTurns :: [(Int,Int)] -> (Double -> Double -> Double -> Double) -> IO ()
-updateDBTurns turnKeys weightFu = do
-   conn <- connectSqlite3 "test.db"
-   sequence $ map (updateDBTurns' conn weightFu) turnKeys
+updateDBTurns :: Int -> (Int,[(Int,Int)])-> (Double -> Double -> Double -> Double) -> IO ()
+updateDBTurns l (n,turnKeys) weightFu = do
+   conn <- connectSqlite3 _dbname
+   sequence $ map (updateDBTurns' conn n l weightFu) turnKeys
    commit conn
    disconnect conn
 
-_c :: Double
-_c = undefined
-_k :: Double
-_k = undefined
 
-updateDBTurns' :: Connection -> (Double -> Double -> Double -> Double) -> (Int,Int) -> IO ()
-updateDBTurns' conn weightFu (pid,pval) = do
+updateDBTurns' :: Connection -> Int -> Int -> (Double -> Double -> Double -> Double) -> (Int,Int) -> IO ()
+updateDBTurns' conn n l weightFu (pid,pval) = do
   weight <- (return .fromSql . head . head) =<< quickQuery' conn "SELECT weight FROM test WHERE pid = ? AND pval = ?" [toSql pid, toSql pval]
-  let newWeight = weightFu _k _c weight
+  let newWeight = weightFu (getK n l) _c weight
   run conn "UPDATE test SET weight = weight WHERE pid = ? AND pval = ?" [toSql newWeight, toSql pid, toSql pval]
   return ()
   
@@ -264,13 +303,13 @@ evaluateChangeStates (x:x':xs) =
 
 -- generates function f :: K -> C -> old_weight -> Double
 evaluateChangeState :: Double -> Double -> (Double -> Double -> Double -> Double)  
-evaluateChangeState w1 w2 = (\k c ow -> ((ow*c) + k*(vfromD (w2 - w1)))/(c+k))
+evaluateChangeState w1 w2 = (\k c ow -> ((ow*c) + k*(vfromD (w2 - w1) ow))/(c+k))
 
 -- helper function, maps -1 -> 1 to 0 -> 1
-vfromD :: Double -> Double
-vfromD d
-  | d <= 0  = undefined
-  | d > 0   = undefined
+vfromD :: Double -> Double -> Double
+vfromD d w
+  | d <= 0  = (d+1)*w
+  | d > 0   = d*(1-w)+w
 
 applyTDiffEnd :: [[(Int,Int)]] -> IO ()
 applyTDiffEnd succTurnKeys = do
@@ -282,8 +321,8 @@ applyTDiffEnd succTurnKeys = do
 
 getAllDBValues :: IO [((Int,Int),Double)]
 getAllDBValues = do
-  conn <- connectSqlite3 "test.db"
-  results <- quickQuery' conn "SELECT mid, mval, weight FROM test" []
+  conn <- connectSqlite3 _dbname
+  results <- quickQuery' conn "SELECT pid, pval, weight FROM test" []
   commit conn
   disconnect conn
   return $ map convListToTuple results
@@ -296,9 +335,9 @@ updateWeights l (n,keyVals) succKeys = (n+1 , map (\(key,prev) -> (key, getNextW
 
 updateDB :: [((Int,Int),Double)] -> IO ()
 updateDB finalVals = do
-    conn <- connectSqlite3 "test.db"
-    sequence $ map (\((mid,mval),weight) -> 
-                         run conn "UPDATE test SET weight = ? WHERE mid = ? AND mval = ?" [toSql weight, toSql mid, toSql mval])
+    conn <- connectSqlite3 _dbname
+    sequence $ map (\((pid,pval),weight) -> 
+                         run conn "UPDATE test SET weight = ? WHERE pid = ? AND pval = ?" [toSql weight, toSql pid, toSql pval])
                finalVals
     commit conn
     disconnect conn
@@ -306,9 +345,9 @@ updateDB finalVals = do
 -- given the current turn and number of turns, returns a new k to simulate annealing
 -- for now just increases linearly as the turns gets closer to the end
 -- arbitrary values (from paper), ranges from 1 - 5
-getK :: Int -> Int -> Int
-getK n l = 1 + (floor (4 * ((fromIntegral n)/(fromIntegral l))))
+getK :: Int -> Int -> Double
+getK n l = _lowK + ((_highK - _lowK) * ((fromIntegral n)/(fromIntegral l)))
 
-getNextWeight :: Double -> Int -> Int -> Bool -> Double
-getNextWeight prev n k win = (prev*(fromIntegral (n-1)) + (fromIntegral (k*v)))/(fromIntegral (n+k-1))
+getNextWeight :: Double -> Int -> Double -> Bool -> Double
+getNextWeight prev n k win = (prev*(fromIntegral (n-1)) + k*(fromIntegral v))/(k + fromIntegral (n-1))
   where v = bool2Int win

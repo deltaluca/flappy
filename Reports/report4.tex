@@ -2,7 +2,6 @@
 
 % Document settings
 
-\usepackage{algorithm} 
 \usepackage{fullpage}
 \usepackage{cite}
 \usepackage{datetime} 
@@ -30,20 +29,22 @@
 In this project we created a negotiation-capable AI framework for the
 game of 'Diplomacy'. On the tactics-side a pattern-weight learning
 algorithm \cite{Shapiro02} coupled with a best-first search strategy
-is used.  In addition a DAIDE-conforming \cite{DaideWeb} subsystem
-comprising GUI client and server was implemented. Taking both together
-enabled us to conduct various games of humans against AI bots to
-validate the playing strength of our bot. We are optimistic that our
-findings can be related to negotiation beyond the scope of the game.
+finder is used. In addition a DAIDE-conforming \cite{DaideWeb} subsystem
+comprising GUI client and server was implemented. To our knowledge our server
+is the first implementation using the functional language Haskell. Finally
+we conducted various games of humans against AI bots to estimate the playing
+strength of our bot. We are optimistic that our findings can be related to
+the general research field of \textit{Automated negotiation}. Our GUI client is
+novel in the way that it can be deployed as a native application, web and 
+smart-phone.
 
 \end{abstract}
 
 \setcounter{tocdepth}{2} % Set the depth of toc indexing
 
 \tableofcontents
-\listoffigures
-\listoftables
-\listofalgorithms
+
+\pagebreak
 
 %--------------------------------------------------------------------------------
 
@@ -57,10 +58,18 @@ We thank our supervisor Dr. Iain Philipps (iccp@doc.ic.ac.uk) for his
 support and guidance throughout the duration of the project. For the
 software engineering aspects of the project Robert Chatley's course
 'Software Engineering Methods' was very instructive, improving our
-process and team collaboration.
+process and team collaboration. \\
 
 Also we would like to direct our thanks at the whole DAIDE community
-which gave as a second alternative to test our bots.
+giving us an environment to test our AI bots. \\
+
+The programming languages that were used for server and GUI client
+have come a long way in recent years. Without the dedication of the
+\textit{Haskell} and \textit{HaXe} communities to provide easy-to-use
+libraries it would not have been possible to make progress on 
+several fronts at the same time.
+
+\pagebreak
 
 %--------------------------------------------------------------------------------
 
@@ -75,23 +84,111 @@ Cliff Sun chs09@doc.ic.ac.uk \\
 
 \pagebreak
 
-\section{Motivation}
+\chapter{Introduction}
+
+\section{Automated negotiation}
 
 Automated negotiation is a field of increasing interest in political
-strategy, psychology and decision-making. Historically
-such situations were modelled using classical game theory treating
-each party as a purely rational entity. There is widespread doubt
-whether this premise is realistic: it is suggested that such a model
-should be augmented with a notion of emotions and irrational behaviour. \\
+strategy, psychology and economics. At the small scale each human 
+is concerned with negotiation: from families to businesses one can always
+discern the common pattern of autonomous agents trying to reach some joint goal. 
+Another instance of \textit{cooperating agents} have been studied recently
+in the field of \textit{Distributed artificial intelligence}: Grosz et al
+looked at ``Collaborative plans for complex group activities'' \cite{Grosz96}
+whereas issues of consensus-finding has been a focus of \textit{Distributed computing}
+for a long time. \\
 
-The game of Diplomacy is an effective test-bed to try new  
-paradigms and measuring their playing strength against 
-human players. It is a game of imperfect information akin
-to situations encountered in reality. \\
+The military applications of ``Automated negotiation'' generally assume a number
+of \textit{non-cooperating} agents playing an \textit{adversial game}. The field
+of classical game-theory grew out of the need to analyze such situations.
+While successful it is doubted whether its premise of purely rational entities
+can be justified in reality. It is universally accepted that a lot of actions
+are driven by irrational instincts rather than deliberate planning. The question
+remains whether ``Automated negotiation'' theory should try to imitate humans
+or overcome their alleged ``weaknesses''. If the first approach is taken issues
+of \textit{Emotion modelling} and \textit{Relationship inference} need to 
+be addressed and a proper representation found. \\
+
+\section{Diplomacy and negotiation}
+
+In this context the \textit{Game of Diplomacy} is an ideal test-bed 
+to explore various paradigms of ``Automated negotiation''. This is because
+a number of its features can be directly related to the complex, unpredictable
+domains encountered in reality: 
+
+\paragraph{Zero-sum property}
+A game is said to be \textit{zero-sum} if one's player gains are another
+player's losses. This is clearly the case in Diplomacy where an advance
+into a favourable board position inevitably results in a another power's
+unit being dislodged from this position. In reality resource- or
+military conflicts behave in the same way.
+
+\paragraph{Imperfect information}
+There are two levels of uncertainty in Diplomacy: On the one hand all move
+orders are written down secretly and then revealed simultaneously during
+the move resolution phase. So a power has no way to plan with the moves 
+of its opponents but instead has to resort to ``move prediction''. It
+is obvious that almost every adversial game encountered in reality
+shares this property. Negotiation itself is another
+layer of uncertainty in Diplomacy: messages are normally not 
+posted publicly and hence no player can know in advance which
+strategies its opponents discussing.
+
+\paragraph{Simultaneous movements} 
+Simultaneous moves are an important element of Diplomacy's game-play
+and contrast with classical turn-based games like Chess or 
+Backgammon. They give the game a dynamic, real-time flavour -- 
+in reality actions happen -- if not all at once but certainly
+not in a pre-determined turn order.
+
+\paragraph{Deterministic operators}
+Apart from the initial assignments of players to powers there
+is no element of chance in Diplomacy. In reality many domains
+can be modelled in this way once a bot has compiled its ground
+rules in a knowledge base.
+
+\subsection{Rationale of negotiation}
 
 Besides the necessity to create effective long-term strategies
-negotiation is integral to the game-experience.  There is a thriving
-internet-based community around the Game of Diplomacy and many AI
+negotiation is integral to the game-experience of Diplomacy.
+Consider a solitary power trying to open several war-fronts
+at the same time. This strategy is bound for doom because 
+the other negotiating agents will quickly forge a coalition
+against the loner. Negotiation is also advantageous in that
+
+\pagebreak
+
+\section{DAIDE framework}
+
+There is a thriving internet-based community around the Game of
+Diplomacy \cite{DipArchive04} \cite{DipPouch04}. A welcome effect
+is that amateur players have access to a rich body of strategic
+knowledge which forms the basis of many existing bots. Until the
+90s bot development has been ad-hoc and it has been difficult
+to find a common platform to validate their playing strength. To remedy
+this the DAIDE framework \cite{Daide04} has been created. It comprises
+a language specification for client-server interaction \cite{DAIDEsyntax10}
+ \& negotiation and various useful tools: 
+
+\begin{itemize}
+
+\item The \textit{DAIDE Server} enables both human and AI players to
+      compete in a game. A screenshot of the Main GUI is given below:
+
+\includegraphics{./images/DAIDEServer.png}
+
+\item \textit{DAIDE Mapper} is a server hook-in to visualize
+      the game state.
+
+
+\todo{Find a screenshot of the DAIDE mapper}
+
+% \includegraphics[width=0.60\textwidth]{./images/DAIDEMapper.png}
+
+\end{itemize}
+
+
+ and many AI
 players, so called bots, have been created in the past. Most of the
 existing AI players are quite effective decision-makers in general but
 few of them support negotiation or reasoning about the relationship of
@@ -120,56 +217,67 @@ explain the concepts of \textit{press levels} in a specific section on
 
 \pagebreak
 
-\section{The game of diplomacy}
+\chapter{The game of Diplomacy}
 
 Only the concepts of the game necessary to understand the 
 algorithms of the AI / negotiation are described here. For a
 definitive reference of the game rules refer to \cite{DiploRules00}.
 
-\subsection{Overview}
+\section{Overview}
 
 The Game of Diplomacy is a round-based multiplayer strategy-game set
-in WWI Europe. Each player controls a power which initially
-operates from a set of supply centers. The objective of the game is
-to control the majority of supply-centers on the map, using army
-movements to conquer new bases and extend the sphere of influence.
-There are no random events in Diplomacy so all state changes are
-deterministic given the game rules and the collection of orders.  \\ 
+in WWI Europe. It was conceived by Alan Callhamer in 1954. Besides
+the joy it has brought to players he designed it to see how 
+secret negotiations affect strategy games. Each player controls a 
+European power which initially operates from a set of supply centers.
+The objective of the game is to control the majority of supply-centers
+on the map, using army movements to conquer new bases and ultimately
+eliminate all opponents from the map. There are alternative winning
+and draw conditions -- such as a simple majority after a time limit -- 
+but we have not considered them in our project.
 
-\subsection{Game elements}
+\paragraph{Game elements}
 
-The game board consists of 73 provinces. Half of them are supply centres, 
+The game board consists of 73 provinces. Half of them are 
+called \textit{supply centres}.
 
-\subsubsection{Provinces}
+\paragraph{Provinces}
 
 There are three type of provinces: Water, land and coastal 
-provinces. In general the adjacencies are obvious from the map; 
-in some cases the rulebook needs to be consulted.
+provinces. In general the adjacencies of provinces are obvious
+from the game map; in some intricate cases the rulebook needs to
+be consulted. Each province can optionally be occupied by one
+unit of the correct type.
 
-\subsubsection{Supply centres}
+\paragraph{Supply centres}
 
 A subset of the land provinces are supply centres which can be 
-occupied by a power. At any point in the game the number of units
-a power has at its disposal is proportional to the number of 
-supply centres the power currently controls.
+occupied by a power's unit. At the end of the season each power
+can build additional units in its non-occupied supply-centres.
+This happens in the context of an important constraint: A power 
+can never more units than supply centres controlled at the end
+of each year. Both are reconciled in the build / retreat phases
+at the end of each year: If there is an overhead of units they
+have to be dislodged.
 
-\subsubsection{Units}
+\paragraph{Units}
 
-There are two type of units -- Armies and fleets -- which can move on 
-water and land provinces respectively.
+There are two type of units -- Armies and fleets -- controlled
+by a power. Each can only move to provinces of the correct type.
+Fleets can occupy water and coastal provinces, whereas armies 
+move on land.
 
-\subsubsection{Game turns / phases}
+\section{Game turns / phases}
 
 A game is divived into a number of turns, which is either a
-\textit{fall turn} or a \textit{spring turn}. Each turn contains a
-number of \textit{phases} in which the players negotiate, formulate
+\textit{fall turn} or a \textit{spring turn}. Two turns comprise
+a year, the first one being 1901. Each turn contains a number of 
+\textit{phases} in which the players negotiate, formulate
 their orders and submit them to the server. The order of action in
 fall and spring terms are the same, except that only the fall term
 has a \textit{gaining-and-losing} phase.
 
-\begin{itemize}
-
-\item Diplomacy phase \\
+\paragraph{Diplomacy phase}
 In this phase players jointly devise strategies, forge alliances and
 suggest move orders for the next round. Conversations can be 
 one-to-one or in groups. None of the agreements
@@ -177,12 +285,12 @@ reached are binding and can even be used to deliberately
 mislead another player and prepare a back-stab. Lastly it is possible
 to broadcast announcements to all players.
 
-\item Order writing phase \\
+\paragraph{Order writing phase}
 Afterwards each player writes down orders for its units and prepares
 them for submission for the game server. There is no communication 
 between players in this phase. 
 
-\item Order resolution phase \\
+\paragraph{Order resolution phase}
 At this stage all orders are simultaneously revealed to the server,
 who announces them publicly. Now the effects of the moves on the
 map state are determined, resolving them according to the game rules.
@@ -190,7 +298,7 @@ In simple cases only standoffs between different move orders need
 to be considered but the complex game rules result in many special
 cases that need to be considered by the server. 
 
-\item Retreat and Disbanding phase \\
+\paragraph{Retreat and Disbanding phase}
 The effects of the submitted orders might make it necessary to retreat
 some units from its current provinces. The only choice given to a
 players is the destination province of a retreat which needs to
@@ -202,58 +310,109 @@ such a standoff is immediately \textit{disbanded} from the map. The
 same happens if a player does not give a destination for a unit that
 has to retreat.
 
-\item Gaining and Losing phase \\
+\paragraph{Gaining and Losing phase}
 As mentioned initially this phase only occurs in a \textit{fall turn}.
 The purpose of this phase is to adjust the number of units of a power
 to the number of supply centres it controls, reflecting its current
-strength.. 
+strength. Players can submit build and disband orders as explained
+below. 
 
-\end{itemize}
+\section{Order submission}
 
 The submission of orders happens \textit{simultaneously}; the game
-rules stipulate that all orders are publicly announced. The diplomacy
+rules also stipulate that all orders are publicly announced. The diplomacy
 phase of a game turn allows powers to signal their actual intention or
 mislead other powers about them. In addition to revealing their move
 orders powers can also forge alliances and devise strategies
 collectively. Ultimately there is no limit to the scope of negotation
 messages.
 
-\subsubsection{Order types}
+\section{Order types}
 
 In the \textit{order writing} phase each power can optionally submit
 an order for each unit controlled. Not specifying an order for a 
 unit is interpreted as a \textit{hold order}. 
 
-\begin{itemize}
-
-\item Hold order
-
+\paragraph{Hold order}
 A unit receiving a hold order does nothing and keeps a unit on its 
 current location. 
 
-\item Move or attack order 
-
+\paragraph{Move or attack order} 
 Move orders shift units from their original position to one of its
-adjacent provinces.
+adjacent provinces. A move can either be successful, result in a
+standoff or fail because of insufficient strength. 
 
-\item Support order
+[1cm]
+\includegraphics{./screenshots/Move0.png} % OK Move
+[1cm]
+The red arrows indicate that the move order succeeded and the units
+will be moved to the destination. In general a move order succeeds
+if the attacking party has higher strength than the defense. Each 
+support order increases the strength of offense / defense by 1.
 
-Support order provide assist another unit's move or hold order. Hence
-it can be used protect a province against an attack order or increase
-the chances of another unit conquering a province. 
+[1cm]
+\includegraphics{./screenshots/BouncedMove.png} % Standoff
+[1cm]
+The dark-red arrows indicate that the move bounced and the units will
+remain in the same place. This is because both units are attempting 
+to move to the same location and have the same strength, none being
+supported by another unit.
 
-\item Convoy order
+\paragraph{Support order}
+A support order assists another unit's move or hold order. It can either be
+used defensively to protect a province against an attack order or increase
+the odds of another unit conquering a province. 
 
+[1cm]
+\includegraphics{./screenshots/DefRetreat0.png}
+[1cm]
+Here the French unit at Marseille is supporting the move of it's comrade at
+Gascony to Burgundy. The German unit at Burgundy was attempting to support
+the move of it's ally at Parise to Gascony. In the end  it's support was
+cut by a dislodgement from the French unit. After the moves are resolved, 
+the Burgundy unit will be dislodged at the white marker and forced to 
+attempt a retreat in the next phase.
+
+\paragraph{Convoy order}
 This order type is restricted to fleet units. They allow to transport
 an allied army between two coastal provinces across the water. In general
 such convoys can be chained: If an army tries to move along a path of
 several water provinces all of those need to be \textit{convoyed} 
 by a fleet.
 
-\end{itemize}
+\paragraph{Retreat order}
+A retreat order normally only occurs in the retreat / disband phases of the
+fall and spring terms. If a unit is overpowered by an attack on its
+province it needs to move to an adjacent province. The exact destination
+is specified by the player in a retreat order.
 
-\todo{Put screenshots from the game, using arrows to indicate standoff
-      etc..}
+[1cm]
+\includegraphics{./screenshots/DefRetreat2.png}
+[1cm]
+Here the German unit previously dislodged from Burgundy has succesfully retreated to Picardy. 
+It is possible although quite rare for a retreat order to fail (Perhaps due to two dislodged
+units attempting to retreat to the same space) and in such case the unit would be removed from the map.
+
+\paragraph{Disband order}
+If a unit cannot perform a retreat then the unit is removed from the map automatically.
+
+[1cm]
+\includegraphics{./screenshots/ImmRetreat0.png}
+[1cm]
+
+\paragraph{Build order}
+This order is limited to the \textit{Gaining and losing phase} where unit numbers
+are reconciled with supply centre control. At the end of each year the
+server signals the maximum number of units a player can have in the following
+turn. Empty supply centres can now be used to build any surplus units.
+
+\paragraph{Remove order}
+Any surplus units that do not have a ``supporting supply centre have to be removed
+at the end of the year. With \textit{Remove orders} the player can select which
+units should be removed from the board.
+
+\paragraph{Remove / dislodge order}
+
 
 %--------------------------------------------------------------------------------
 
@@ -263,7 +422,7 @@ by a fleet.
 
 \subsection{Existing negotiation bots}
 
-\subsubsection{Diplomat by Kraus et al}
+\paragraph{Diplomat by Kraus et al}
 
 Kraus et al used the multi-agent paradigm to implement the first
 Diplomacy bot capable of negotiation \cite{Kraus95}. Their bot
@@ -277,9 +436,9 @@ bot. To maintain information about other players and their intentions
 a so-called Knowledge and Belief base is used. For details refer to
 \cite{Kraus88}
 
-\subsubsection{DipGame testbed by Fabregues}
+\paragraph{DipGame testbed by Fabregues}
 
-\subsubsection{SeaNail by Lorber}
+\paragraph{SeaNail by Lorber}
 
 The SeaNail AI \cite{Lorber98} uses a Dynamic Programming approach to
 maximize the number of campaigns matching the current aims of the
@@ -287,7 +446,7 @@ bot. For instance if a supply centre is selected for capture and a
 certain defense strength is estimated units that overcome this have to
 be selected. For every combination of
 
-\subsubsection{Previous project by Huff et al}
+\paragraph{Previous project by Huff et al}
 
 In a previous group project at Imperial College \cite{Huff05}
 
@@ -306,26 +465,28 @@ valuation of provinces \cite{Huff05} to create a strong AI player.
 
 \pagebreak
 
-\section{Requirements}
+\section{Project aims}
+
 High-level requirements were discussed in the initial phase of the
-project (weeks 1/2) with our project supervisor -- Iain Philipps --
-who is our customer in Software Engineering terms. The terms of the
+project (weeks 1/2) with our project supervisor. The terms of the
 collaboration were such that only certain high-level goals were
-defined and decisions about which AI techniques to use were left with
-the team-members.
+defined and decisions about which AI techniques to use were decided once
+related research has been explored.
 
 \begin{itemize}
 
 \item The over-arching goal and hence the most critical requirement is
   to design and implement a negotiation bot for Diplomacy whose
   performance is then compared to existing bots in an experimental
-  setting.
-\item A collection of other bots which are not capable of commuication
+  setting. 
+
+\item A collection of other bots which are not capable of communication
   should be created for purposes of comparison. These should use
   proven techniques from the fields of Game Theory and Multi-Agent
   systems, including learning, tactics and long-term strategies. All
   bots should support the DAIDE protocol to compete against existing
   bots on the DAIDE windows server.
+
 \item To facilitate experimentation an open-source framework
   conforming to the existing DAIDE protocol should be created. This
   framework comprises a server which hosts games for automated and
@@ -333,6 +494,7 @@ the team-members.
   behind this is to feed-back into the Diplomacy community as a whole,
   providing a multi-platform server (Windows DAIDE server exists) for
   the first time.
+
 \item In addition a framework for simple generation of Diplomacy bots
   is envisioned: Right now a player needs to re-invent the wheel by
   implementing well-established game-tree search techniques or certain
@@ -346,8 +508,9 @@ the team-members.
   convenience extensions are written in the high-level language
   Haskell which is more expressive than C++ and natural to
   practitioners in the field of Artificial Intelligence / Game Theory.
+
 \item Finally to test our server and provide a visually pleasing user
-  interface we will deliver a DAIDE-conforming GUI client for the Game
+  interface we deliver a DAIDE-conforming GUI client for the Game
   of Diplomacy.  Rather than forcing the player to use a particular
   device all back-ends of the HaXe platform are supported, including
   HTML5/JS, Flash and C++.
@@ -357,7 +520,7 @@ the team-members.
 In the above listing the requirements are decreasing in
 importance. Some of the above look indivisible in nature but we have
 still managed to extract user-stories to support time-boxed
-iterations. Requirements management in Weeks 3-11 was two-fold: Each
+iterations. Requirements management was two-fold: Each
 team-member kept in mind the overall contract with our supervisor (see
 above) which defines the direction of the project.  Based on this
 User-Stories were defined which guide the primary development focus

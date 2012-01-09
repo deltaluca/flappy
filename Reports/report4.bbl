@@ -1,50 +1,71 @@
 \begin{thebibliography}{10}
 
-\bibitem{DaideWeb}
-Daide protocol for the game of diplomacy.
-\newblock Web.
-
 \bibitem{ParsecLib}
 Parsec library haskellwiki.
 \newblock http://www.haskell.org/haskellwiki/Parsec.
+\newblock COMPILED IN NOTES.
+
+\bibitem{Daide04}
+Daide webpage.
+\newblock Web, December 2004.
+
+\bibitem{DipArchive04}
+The diplomacy archive.
+\newblock Web, December 2004.
+
+\bibitem{DipPouch04}
+The diplomatic pouch.
+\newblock Web, December 2004.
 
 \bibitem{DAIDEsyntax10}
 Daide language syntax specification.
 \newblock Website, March 2010.
 
 \bibitem{DiploRules00}
-Avalon Hill Company.
-\newblock {\em Rules of Diplomacy}, 4 edition, 2000.
+Calhammer.
+\newblock {\em Rules of Diplomacy}.
+\newblock The Avalon Hill Company, 4 edition, 2000.
+
+\bibitem{Grosz96}
+Grosz.
+\newblock Collaborative plans for complex group activities.
+\newblock {\em Artificial Intelligence Journal}, 86:269--357, 1996.
 
 \bibitem{Huff05}
 Andrew Huff, Vincent Chan, Laurence Tondelier, Damian Bundred, and Colm Egan.
 \newblock Automated negotiation in the game of diplomacy.
 \newblock {\em Imperial College Project Report}, 2005.
+\newblock COMPILED IN NOTES.
 
 \bibitem{Kraus88}
 Kraus.
-\newblock {\em Planning and Communicating in a Mult-Agent environment}.
+\newblock {\em Planning and Communicating in a Multi-Agent environment}.
 \newblock PhD thesis, Hebrew University, 1988.
+\newblock COMPILED IN NOTES.
 
 \bibitem{Kraus95}
-Sarit Kraus.
+Kraus and Lehmann.
 \newblock Designing and building a negotiating automated agent.
 \newblock {\em Computational Intelligence}, 11:132--171, 1995.
+\newblock COMPILED IN NOTES.
 
 \bibitem{Levinson94}
 Robert Levinson and Gil Fuchs.
 \newblock A pattern-weight formulation of search knowledge.
 \newblock Technical report, Computational Intelligence, 1994.
+\newblock COMPILED IN NOTES.
 
 \bibitem{Lorber98}
 Sean Lorber.
 \newblock Seanail diplomacy ai.
 \newblock Website, 1998.
+\newblock COMPILED IN NOTES.
 
 \bibitem{Shapiro02}
 Ari Shapiro, Gil Fuchs, and Robert Levinson.
 \newblock Learning a game strategy using patternweights and self-play.
 \newblock In {\em In Proc. of the Third International Conference on Computers
   and Games}, 2002.
+\newblock COMPILED IN NOTES.
 
 \end{thebibliography}

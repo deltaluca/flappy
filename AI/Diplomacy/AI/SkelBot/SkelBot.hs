@@ -313,7 +313,7 @@ checkLost supplies (UnitPositions up) = do
   when (isNothing (Map.lookup myPower supplies) &&
         isNothing (Map.lookup myPower up))
     . lift . lift . liftMaster $ do
-    lift . note $ "i lost i guess?"
+    lift . note $ "I lost I guess? :C"
     pushMsg FM >> shutdownMaster
 checkLost _ _ = return ()
 
