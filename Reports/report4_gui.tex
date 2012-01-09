@@ -83,18 +83,16 @@ crisp display of the map at any zoom level with little
 performance loss compared to runtime rendering of a detailed and
 complex vector graphic for instance.
 
-\section{Technical Issues}
+\section{Technical issues and solutions}
 As with the Haskell server, it was necessary to implement a full
-implementation of the DAIDE protocol including
-serialisation / deserialisation of DAIDE tokens, and parsing / unparsing
+implementation of the DAIDE protocol including serialisation / 
+deserialisation of DAIDE tokens, and parsing / unparsing
 of language constructs. As the GUI was first started with the CLI it
 was necessary also to build a lexer for DAIDE tokens from their
-textual representations and for debug purposes in communicating with
-the server.
+textual representations.
 
 For these tasks existing open-source HaXe libraries (hlex,hllr) were
-used (And extended to provide more type safety in the parser to help
-with a grammar as large as that of DAIDE).
+used \cite{Deltodesco10}
 
 Additionally, there is no existing .svg library for HaXe. A reader for
 the subset of the SVG format required for the GUI was thus written,
@@ -162,5 +160,13 @@ two areas:
       the UI.
 
 \end{itemize}
+
+\begin{figure}
+
+\includegraphics[scale=0.4]{./screenshots/TitleScreen.png}
+
+View of the GUI client during a game.
+
+\end{figure}
 
 

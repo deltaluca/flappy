@@ -25,6 +25,11 @@ Calhammer.
 \newblock {\em Rules of Diplomacy}.
 \newblock The Avalon Hill Company, 4 edition, 2000.
 
+\bibitem{Deltodesco10}
+Luca Deltodesco.
+\newblock Hllr / hlex libraries.
+\newblock 2010.
+
 \bibitem{Fabregues11}
 Angela Fabregues and Carles Sierra.
 \newblock Negotiating with humans using the diplomacy game, 2011.
@@ -48,7 +53,6 @@ Markus Kemmerling, Niels Ackermann, and Mike Preuss.
 Kraus.
 \newblock {\em Planning and Communicating in a Multi-Agent environment}.
 \newblock PhD thesis, Hebrew University, 1988.
-\newblock COMPILED IN NOTES.
 
 \bibitem{Kraus95}
 Kraus and Lehmann.

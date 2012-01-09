@@ -3,58 +3,57 @@ The top-level auxiliary file: report4.aux
 The style file: plain.bst
 Database file #1: report4.bib
 Warning--entry type for "Daide04" isn't style-file defined
---line 398 of file report4.bib
+--line 397 of file report4.bib
 Warning--entry type for "DipArchive04" isn't style-file defined
---line 408 of file report4.bib
+--line 407 of file report4.bib
 Warning--entry type for "DipPouch04" isn't style-file defined
---line 418 of file report4.bib
-Warning--I didn't find a database entry for "DaideWeb"
-Warning--I didn't find a database entry for "Kraus92"
+--line 417 of file report4.bib
+Warning--to sort, need author or key in Daide04
+Warning--to sort, need author or key in ParsecLib
 Warning--to sort, need author or key in DAIDEsyntax10
 Warning--to sort, need author or key in DipArchive04
 Warning--to sort, need author or key in DipPouch04
-Warning--to sort, need author or key in Daide04
-Warning--to sort, need author or key in ParsecLib
+Warning--empty journal in Deltodesco10
 Warning--empty note in Kemmerling00
-You've used 16 entries,
+You've used 17 entries,
             2118 wiz_defined-function locations,
-            587 strings with 5644 characters,
-and the built_in function-call counts, 3869 in all, are:
-= -- 376
-> -- 154
+            586 strings with 5657 characters,
+and the built_in function-call counts, 4063 in all, are:
+= -- 393
+> -- 161
 < -- 1
-+ -- 68
-- -- 48
-* -- 214
-:= -- 628
-add.period$ -- 42
-call.type$ -- 16
-change.case$ -- 72
++ -- 71
+- -- 50
+* -- 222
+:= -- 664
+add.period$ -- 44
+call.type$ -- 17
+change.case$ -- 76
 chr.to.int$ -- 0
-cite$ -- 22
-duplicate$ -- 147
-empty$ -- 347
-format.name$ -- 48
-if$ -- 828
+cite$ -- 24
+duplicate$ -- 157
+empty$ -- 364
+format.name$ -- 50
+if$ -- 866
 int.to.chr$ -- 0
-int.to.str$ -- 16
-missing$ -- 5
-newline$ -- 77
-num.names$ -- 22
-pop$ -- 103
+int.to.str$ -- 17
+missing$ -- 6
+newline$ -- 81
+num.names$ -- 24
+pop$ -- 110
 preamble$ -- 1
-purify$ -- 56
+purify$ -- 59
 quote$ -- 0
-skip$ -- 120
+skip$ -- 127
 stack$ -- 0
-substring$ -- 162
+substring$ -- 167
 swap$ -- 25
 text.length$ -- 1
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 64
-warning$ -- 6
-while$ -- 28
-width$ -- 18
-write$ -- 154
-(There were 11 warnings)
+type$ -- 68
+warning$ -- 7
+while$ -- 30
+width$ -- 19
+write$ -- 161
+(There were 10 warnings)

@@ -28,15 +28,17 @@
 
 In this project we created a negotiation-capable AI framework for the
 game of 'Diplomacy'. On the tactics-side a pattern-weight learning
-algorithm \cite{Shapiro02} coupled with a best-first search strategy
-finder is used. In addition a DAIDE-conforming \cite{DaideWeb}
-subsystem comprising GUI client and server was implemented. To our
-knowledge our server is the first implementation using the functional
-language Haskell. Finally we conducted various games of humans against
-AI bots to estimate the playing strength of our bot. We are optimistic
-that our findings can be related to the general research field of
-\textit{Automated negotiation}. Our GUI client is novel in the way
-that it can be deployed as a native application, web and smart-phone.
+algorithm \cite{Shapiro02} coupled with a strategy-finder is used. It 
+supports: goal-directed planning, province valuation. In addition a 
+DAIDE-conforming \cite{Daide04} subsystem comprising GUI client and
+server was implemented. To our knowledge our server is the first implementation
+using the functional language Haskell. Our GUI client is novel in the way
+that it can be deployed as a native application as well as for web and smart-phone.
+Finally we conducted various games of humans against AI bots to estimate
+the playing strength of our bot. The results are included in  a supplementary
+paper submitted with the project presentation. On the whole we are optimistic
+that our findings can be related to the general research field of \textit{Automated negotiation}
+and that our software advances the Diplomacy / DAIDE community on the whole.
 
 \end{abstract}
 
@@ -60,19 +62,20 @@ software engineering aspects of the project Robert Chatley's course
 'Software Engineering Methods' was very instructive, improving our
 process and team collaboration. \\
 
-Also we would like to direct our thanks at the whole DAIDE community
-giving us an environment to test our AI bots. \\
+We would also like to direct our thanks at the whole DAIDE community
+that gave us an environment to test our AI bots when our server did
+not make the expected progress. \\
 
 The programming languages that were used for server and GUI client
 have come a long way in recent years. Without the dedication of the
 \textit{Haskell} and \textit{HaXe} communities to provide easy-to-use
-libraries it would not have been possible to make progress on 
-several fronts at the same time.
+libraries -- in particular Parsec \cite{ParsecLib} -- it would not have
+been possible to make progress on several fronts at the same time.
 
 %--------------------------------------------------------------------------------
 
 \section{Group members} 
-Luke Tomlin (Team leader) \\ 
+Luke Tomlin (Team leader) lt609@doc.ic.ac.uk \\ 
 Luca Deltodesco ld509@doc.ic.ac.uk \\ 
 Matthias Hueser mh2308@doc.ic.ac.uk \\
 Andras Slemmer as13609@doc.ic.ac.uk \\
@@ -90,19 +93,19 @@ Automated negotiation is a field of increasing interest in political
 strategy, psychology and economics. At the small scale each human is
 concerned with negotiation: from families to businesses one can always
 discern the common pattern of autonomous agents trying to reach some
-joint goal.  Another instance of \textit{cooperating agents} have been
+joint goal. Another instance of \textit{cooperating agents} have been
 studied recently in the field of \textit{Distributed artificial
   intelligence}: Grosz et al looked at ``Collaborative plans for
 complex group activities'' \cite{Grosz96} whereas issues of
-consensus-finding has been a focus of \textit{Distributed computing}
+consensus-finding have been a focus of \textit{Distributed computing}
 for a long time. \\
 
-The military applications of ``Automated negotiation'' generally
+The political and economics applications of ``Automated negotiation'' generally
 assume a number of \textit{non-cooperating} agents playing an
 \textit{adversial game}. The field of classical game-theory grew out
-of the need to analyze such situations.  While successful it is
-doubted whether its premise of purely rational entities can be
-justified in reality. It is universally accepted that a lot of actions
+of the need to analyze such situations.  While being a fruitful technique 
+it is doubted whether its premise of purely rational entities can be
+justified in reality. It is well known that many human actions
 are driven by irrational instincts rather than deliberate
 planning. The question remains whether ``Automated negotiation''
 theory should try to imitate humans or overcome their alleged
@@ -126,19 +129,22 @@ Interesting questions we would like to answer with our project are:
 
 \end{itemize}
 
+The answers to these questions shall be provided in the 
+supplementary sheet with experimental results or as an 
+extension of the project.
+
 \section{Diplomacy and negotiation}
 
-In this context the \textit{Game of Diplomacy} is an ideal test-bed to
-explore various paradigms of ``Automated negotiation''. This is
-because a number of its features can be directly related to the
-complex, unpredictable domains encountered in reality:
+In the outlined research context the \textit{Game of Diplomacy} is an ideal test-bed to
+explore various paradigms of ``Automated negotiation''. A number of its features
+can be directly related to the complex, unpredictable domains encountered in reality:
 
 \paragraph{Zero-sum property}
 A game is said to be \textit{zero-sum} if one's player gains are
 another player's losses. This is clearly the case in Diplomacy where
-an advance into a favourable board position inevitably results in a
+an advance into a favourable board position inevitably results in
 another power's unit being dislodged from this position. In reality
-resource- or military conflicts behave in the same way.
+resource- or military conflicts follow the same principle.
 
 \paragraph{Imperfect information}
 There are two levels of uncertainty in Diplomacy: On the one hand all
@@ -149,7 +155,7 @@ prediction''. It is obvious that almost every adversial game
 encountered in reality shares this property. Negotiation itself is
 another layer of uncertainty in Diplomacy: messages are normally not
 posted publicly and hence no player can know in advance which
-strategies its opponents discussing.
+strategies are discussed by its opponents.
 
 \paragraph{Free-form negotiation}
 In the original board-game human players are allowed to exchanged
@@ -157,7 +163,7 @@ arbitrary messages during the negotiation period. These typically
 include: move-suggestions, mid-term strategies, alliance / war
 declarations, accusations and rumours. Since general negotiation
 in natural language requires language parsing, early 
-bots \cite{Kraus92} restricted the set of possible messages to 
+bots \cite{Kraus89} restricted the set of possible messages to 
 a formal languages. DAIDE categorizes negotation messages 
 into press levels \cite{DAIDEsyntax10} from 0 (no-press) to 120.
 Some examples are given in the section on DAIDE.
@@ -165,25 +171,34 @@ Some examples are given in the section on DAIDE.
 \paragraph{Simultaneous movements} 
 Simultaneous moves are an important element of Diplomacy's game-play
 and contrast with classical turn-based games like Chess or
-Backgammon. They give the game a dynamic, real-time flavour -- in
-reality actions happen -- if not all at once but certainly not in a
+Backgammon. They give the game a dynamic, real-time flavour. In
+reality actions happen -- if not all at once -- but certainly not in a
 pre-determined turn order.
 
 \paragraph{Deterministic operators}
 Apart from the initial assignments of players to powers there is no
 element of chance in Diplomacy. In reality many domains can be
-modelled in this way once a bot has compiled its ground rules in a
-knowledge base.
+modelled in this way once a bot has a robust way of knowing how it 
+can affect the world. As an example consider an industrial robot.
 
 \subsection{Rationale of negotiation}
 
-Negotiation is integral to the game-experience of Diplomacy. Consider
-a solitary power trying to open several war-fronts at the same
+Negotiation is integral to the game-experience of Diplomacy. To see 
+this consider a solitary power trying to open several war-fronts at the same
 time. This strategy is bound for doom because the other negotiating
-agents will quickly forge a coalition against the loner. One of the
-first negotiation bot for Diplomacy, the Israeli diplomat \cite{Kraus89}
+agents will quickly forge a coalition against this power. One of the
+first negotiating bot for Diplomacy, the Israeli diplomat \cite{Kraus89}
 reportedly fared very well against human players and is still a 
-benchmark today.
+benchmark today. Hence our intuition and previous results suggest there
+is a payoff of negotiation.
+
+\begin{figure}
+
+\includegraphics[scale=0.75]{./images/DAIDEServer.png}
+
+View of the DAIDE server (corresponding text section next page)
+
+\end{figure}
 
 \pagebreak
 
@@ -196,19 +211,43 @@ which forms the basis of many existing bots. Until the 90s bot
 development has been ad-hoc and it has been difficult to find a common
 platform to validate their playing strength. To remedy this the DAIDE
 framework \cite{Daide04} has been created: It comprises a language
-specification for client-server interaction \cite{DAIDEsyntax10} \&
-negotiation and various useful too. For detailed explanation of the 
-DAIDE presslevels refer to the reference above.
+specification for client-server interaction \cite{DAIDEsyntax10},
+negotiation and various useful tools:
 
 \begin{itemize}
 
 \item The \textit{DAIDE Server} enables both human and AI players to
-      compete in a game. A screenshot of the Main GUI is given below:
+      compete in a game. A screenshot of the Main GUI was included above.
 
 \item \textit{DAIDE Mapper} is a server hook-in to visualize
       the game state.
 
 \end{itemize}
+
+\subsection{Press levels}
+
+These are the press levels supported by DAIDE. For our project 
+we set out to support Levels 10-20 but our negotiator can be 
+extended to support 20-120.
+
+\begin{verbatim}
+
+Level 0 : No Press
+Level 10 : Peace and Alliances
+Level 20 : Order proposals
+Level 30 : Multipart Arrangements
+Level 40 : Sharing out the Supply Centres
+Level 50 : Nested Multipart Arrangements
+Level 60 : Queries and Insistences
+Level 70 : Requests for suggestions
+Level 80 : Accusations
+Level 90 : Future discussions
+Level 100 : Conditionals
+Level 110 : Puppets and Favours
+Level 120 : Forwarding Press
+Level 130 : Explanations
+
+\end{verbatim}
 
 
 %--------------------------------------------------------------------------------
@@ -252,18 +291,18 @@ otherwise weak position.
 \paragraph{Supply centres}
 
 A subset of the land provinces are supply centres which can be 
-occupied by a power's unit. At the end of the season each power
+occupied by an army or fleet unit. At the end of the season each power
 can build additional units in its non-occupied supply-centres.
-This happens in the context of an important constraint: A power 
-can never more units than supply centres controlled at the end
+However an important constraint applies: A power 
+can never have more units than supply centres controlled at the end
 of each year. Both are reconciled in the build / retreat phases
-at the end of each year: If there is an overhead of units they
-have to be dislodged.
+at the end of each year: If there is a surplus of units not accounted
+for by supply centres they need to be dislodged.
 
 \paragraph{Units}
 
-There are two type of units -- Armies and fleets -- controlled
-by a power. Each can only move to provinces of the correct type.
+There are two type of units -- Armies and fleets.
+Each of them can only move to provinces of the correct type:
 Fleets can occupy water and coastal provinces, whereas armies 
 move on land.
 
@@ -273,7 +312,7 @@ A game is divived into a number of turns, which is either a
 \textit{fall turn} or a \textit{spring turn}. Two turns comprise
 a year, the first one being 1901. Each turn contains a number of 
 \textit{phases} in which the players negotiate, formulate
-their orders and submit them to the server. The order of action in
+their orders and submit them to the server. The order of actions in
 fall and spring terms are the same, except that only the fall term
 has a \textit{gaining-and-losing} phase.
 
@@ -287,7 +326,7 @@ to broadcast announcements to all players.
 
 \paragraph{2. Order writing phase}
 Afterwards each player writes down orders for its units and prepares
-them for submission for the game server. There is no communication 
+them for submission to the game server. There is no communication 
 between players in this phase. 
 
 \paragraph{3. Order resolution phase}
@@ -295,19 +334,19 @@ At this stage all orders are simultaneously revealed to the server,
 who announces them publicly. Now the effects of the moves on the
 map state are determined, resolving them according to the game rules.
 In simple cases only standoffs between different move orders need
-to be considered but the complex game rules result in many special
-cases that need to be considered by the server. 
+to be considered but the complex game rules can lead to many special
+cases (chained stand-offs) that need to be resolved by the server. 
 
 \paragraph{4. Retreat and Disbanding phase}
 The effects of the submitted orders might make it necessary to retreat
 some units from its current provinces. The only choice given to a
-players is the destination province of a retreat which needs to
+player is the destination province of a retreat which needs to
 adjacent to the province from which the unit has been dislodged. Once
 these are selected a set of \textit{retreat} orders is created and
-resolved immediately by the server. As for ordinary moves standoffs
+resolved immediately by the server. As in ordinary moves stand-offs
 between retreat orders can occur; in this case each unit involved in
 such a standoff is immediately \textit{disbanded} from the map. The
-same happens if a player does not give a destination for a unit that
+same happens if a player does not specify a destination for a unit that
 has to retreat.
 
 \paragraph{5. Gaining and Losing phase (Winter)}
@@ -315,7 +354,7 @@ As mentioned initially this phase only occurs in a \textit{fall turn}.
 The purpose of this phase is to adjust the number of units of a power
 to the number of supply centres it controls, reflecting its current
 strength. Players can submit build and disband orders as explained
-below. 
+below:
 
 \section{Order submission}
 
@@ -325,7 +364,7 @@ phase of a game turn allows powers to signal their actual intention or
 mislead other powers about them. In addition to revealing their move
 orders powers can also forge alliances and devise strategies
 collectively. Ultimately there is no limit to the scope of negotation
-messages.
+messages (free form negotiation).
 
 \section{Order types}
 
@@ -334,13 +373,13 @@ an order for each unit controlled. Not specifying an order for a
 unit is interpreted as a \textit{hold order}. 
 
 \paragraph{Hold order}
-A unit receiving a hold order does nothing and keeps a unit on its 
+A unit receiving a hold order does nothing and remains on its 
 current location. 
 
 \paragraph{Move or attack order} 
 Move orders shift units from their original position to one of its
 adjacent provinces. A move can either be successful, result in a
-standoff or fail because of insufficient strength. 
+standoff or fail because of insufficient strength: 
 
 \begin{figure}
 \includegraphics[scale=0.75]{./screenshots/Move0.png} \\[1cm] 
@@ -348,7 +387,7 @@ standoff or fail because of insufficient strength.
 The red arrows indicate that the move order succeeded and the units
 will be moved to the destination. In general a move order succeeds
 if the attacking party has higher strength than the defense. Each 
-support order increases the strength of offense / defense by 1.
+support order increases the strength of offense or defense by 1.
 
 \end{figure}
 
@@ -381,13 +420,15 @@ This order type is restricted to fleet units. They allow to transport
 an allied army between two coastal provinces across the water. In general
 such convoys can be chained: If an army tries to move along a path of
 several water provinces all of those need to be \textit{convoyed} 
-by a fleet.
+by some fleet.
 
 \paragraph{Retreat order}
-A retreat order normally only occurs in the retreat / disband phases of the
+A retreat order only occurs in the retreat / disband phases of the
 fall and spring terms. If a unit is overpowered by an attack on its
 province it needs to move to an adjacent province. The exact destination
-is specified by the player in a retreat order.
+is specified by the player in a retreat order. It is possible that
+a retreat order is not possible because there is no empty adjacent
+province.
 
 \begin{figure}
 \includegraphics[scale=0.75]{./screenshots/DefRetreat2.png} \\[1cm] 
@@ -400,20 +441,22 @@ would be removed from the map.
 
 \paragraph{Disband order}
 If a unit cannot perform a retreat then the unit is removed from the
-map automatically.
+map automatically for this turn. In the next turn a unit can 
+perform a \textit{deferred retreat}, if an empty province is 
+available then.
 
 \includegraphics[scale=0.75]{./screenshots/ImmRetreat0.png} \\[1cm] 
 
 \paragraph{Build order}
-This order is limited to the \textit{Gaining and losing phase} where
+This order only occurs in the \textit{Gaining and losing phase} when
 unit numbers are reconciled with supply centre control. At the end of
 each year the server signals the maximum number of units a player can
 have in the following turn. Empty supply centres can now be used to
-build any surplus units.
+build surplus units.
 
 \paragraph{Remove order}
-Any surplus units that do not have a ``supporting supply centre have
-to be removed at the end of the year. With \textit{Remove orders} the
+Surplus units that do not have a ``supporting supply centre have
+to be removed at the end of the year. Through \textit{Remove orders} a
 player can select which units should be removed from the board.
 
 %--------------------------------------------------------------------------------
@@ -424,14 +467,14 @@ player can select which units should be removed from the board.
 
 \subsection{Existing negotiation bots}
 
-There exist both open-course and closed-source
+There exist both open-source and closed-source
 bots for Diplomacy. For our experiments we used only DAIDE
-compatible bots but want to present some of the paradigms
-used in the past:
+compatible bots but also want to present some other 
+paradigms used in the past:
 
 \paragraph{Diplomat by Kraus et al}
 
-Kraus et al used the multi-agent paradigm to implement the first
+Kraus et al used the multi-agent technique to implement the first
 Diplomacy bot capable of negotiation \cite{Kraus95}. Their bot
 comprises a collection of local agents that are dynamically bound to
 different negotiation modules. In analogy to a government they define
@@ -445,9 +488,9 @@ a so-called Knowledge and Belief base is used. For details refer to
 
 \paragraph{DipGame testbed by Fabregues}
 
-Fabregues approach inspired us as they also tried to unify negotiation
+Fabregues approach inspired us as their aim was to unify negotiation
 and a robust strategy / tactics component \cite{Fabregues11}. Different
-from other bots they do not use DAIDE but the newer DipServer. 
+from other bots they do not use DAIDE but the newer DipServer framework. 
 
 \paragraph{SeaNail by Lorber}
 
@@ -455,13 +498,14 @@ The SeaNail AI \cite{Lorber98} uses a Dynamic Programming approach to
 maximize the number of campaigns matching the current aims of the
 bot. For instance if a supply centre is selected for capture and a
 certain defense strength is estimated units that overcome this have to
-be selected. For every combination of
+be selected. This motivated the \textit{goal expansion} used by 
+our \textit{StrategyFinder}.
 
 \subsection{Strategy-only bots}
 
 \paragraph{Original Hasbro AI}
 The AI distributed with the Windows version is commonly 
-acknowledged as having poor playing strength. Besides it is not
+acknowledged as having poor playing strength. It is also not
 compatible with the DAIDE framework so we could not use it for
 our experiments.
 
@@ -473,7 +517,8 @@ has been a move towards multi-agent designs that assign agents to
 board units or split the problem domain along different tasks. As
 negotiating is the primary goal of the project we are re-using
 concepts like temporal difference learning \cite{Levinson94} and the
-valuation of provinces \cite{Huff05} to create a strong AI player.
+valuation of provinces \cite{Huff05} to create a strong AI player. For 
+more details refer to the \textit{Strategy} section of the report.
 
 %--------------------------------------------------------------------------------
 
@@ -482,22 +527,23 @@ valuation of provinces \cite{Huff05} to create a strong AI player.
 \section{Motivation}
 
 Many of the aforementioned bots are quite effective decision-makers in
-general but few of them support negotiation or reasoning about the relationship of
-the powers in the game. Our project aims to create a framework for
+general but few of them support negotiation or inference of power relationships
+in the game. Our project aims to create a framework for
 Diplomacy, including a GUI client, a game server and a collection of
 bots. The highest evolution of our series of bots should be able to
 analyze and act upon messages of human / AI players and issue messages
 to other players. In particular we aim to unify negotiation and
-general strategy, given that negotiation is simply cooperative 
+general strategy. Given that negotiation is simply cooperative 
 decision-making and only a layer of communication and trust models have
 to be added. \\
 
 Finally experiments shall be conducted to determine whether there is a
-reward associated with negotation capabilities. This requires careful
-study and implementation of automated negotiation techniques from
-other domains in AI / Game Theory. Thus the project giving us ample
-opportunity to be creative and test different approaches using the
-DAIDE-conforming game framework also produced for the project.
+reward associated with negotation capabilities and answer other
+questions (see Introduction) This requires careful study and implementation
+of automated negotiation techniques from other domains in AI / Game Theory.
+Thus the project giving us ample opportunity to be creative and test
+different approaches using the DAIDE-conforming game framework also produced
+for the project.
 
 \section{Project aims}
 
@@ -505,7 +551,7 @@ High-level requirements were discussed in the initial phase of the
 project (weeks 1/2) with our project supervisor. The terms of the
 collaboration were such that only certain high-level goals were
 defined and decisions about which AI techniques to use were decided once
-related research has been explored.
+related research has been explored. The aims were:
 
 \begin{itemize}
 
@@ -566,18 +612,18 @@ during the iterations.
 
 \pagebreak
 
-\chapter{Strategy and tactics (Rational system)}
+\chapter{Strategy and tactics}
 
 A \textit{Strategy and tactics component} is seen as an important
 foundation for every negotiation agent. On top of that we are 
 convinced that \textit{Negotiation} and \textit{Strategy} are not
-really issues that can be cleanly separated; even though previous
+really issues that can be cleanly separated -- even though previous
 literature suggests this. The fact that negotiation is really
 joint problem solving in disguise illustrates this nicely.
 
 \section{Challenges in Diplomacy}
 
-Before even thinking about implementing a strategy we came up with
+Before thinking about implementing a strategy we came up with
 a number of challenges that our bot has to overcome:
 
 \paragraph{Short-term vs. long term payoff}
@@ -588,6 +634,7 @@ relatively strong starting position. Now it is rational for the
 other players to ally against him to prevent him breaking away.
 To avoid getting into this ``one-against-all'' situation a player
 should aim to be the 2nd strongest power or lead by a small margin.
+The question is how this should be formalized.
 
 \paragraph{Tremendous search space}
 It has been estimated that the number of possible moves from
@@ -597,9 +644,9 @@ of the problem is that our power has \textit{incomplete information}
 about the other power's intentions. Other bounds on the branching factor
 of one turn are roughly $6^{n}$ where n is the number of units controlled by a
 player. Considering the combinations of moves of all players we get
-$2^{91}$ possibilities \cite{Shapiro02}. Thus we did not follow this
-path but focussed on \textit{learning} and heuristic move-evaluation
-that is aware of mid-term goals.
+$2^{91}$ possibilities \cite{Shapiro02}. Taking all of this evidence we
+did not follow this path but focussed on \textit{learning} and heuristic move-evaluation
+that maintains the current goals.
 
 \paragraph{Deceit}
 One of the most fascinating aspects of Diplomacy but also its great
@@ -608,7 +655,10 @@ we have to guard against broken promises in our \textit{Strategy finder}
 sub-component. 
 
 \paragraph{Move prediction}
-As a result our bot needs to predict a move 
+As search is intractable the bot needs to predict the moves of 
+opponents. One approach is to apply our \textit{StrategyFinder}
+to their position. Of course this depends on the fact that the
+opponents have similar preferences to us.  
 
 \section{The Strategy Finder subsystem}
 
@@ -620,7 +670,7 @@ our AI we augment Shapiro's technique with state utility functions
 that should lead to more realistic pattern-weights.
 
 Subsequently we describe the concepts of \textit{move patterns},
-\textit{pattern weights} and present our state evaluation functions.
+\textit{pattern weights} and present our state evaluation functions:
 
 \subsection{Move patterns}
 
@@ -631,7 +681,15 @@ number of primitive patterns that a given move matches. Hence as n
 increases a pattern goes from the general to the specific and will
 match fewer and fewer moves. \\
 
-Common 1-patterns used by our bot are:
+Common 2-patterns used by our bot are:
+
+\begin{verbatim}
+
+1. MOVE INTO AN ADJACENT WATER PROVINCE <<AND>> PROVINCE BELONGS TO ALLY
+2. BUILD A FLEET UNIT <<AND>> BUILDING SC IS ADJACENT TO ENEMY PROVINCE
+...
+
+\end{verbatim}
 
 \subsection{Temporal difference learning}
 
@@ -641,7 +699,10 @@ the features of a successful move. All knowledge is maintained across
 games. There is no need to prime the bot with any knowledge about
 Diplomacy strategies; these are learned through self-play (against
 random variations of itself) and games against other players. While 
-Shapiro \cite{Shapiro02} updates the pattern-weights after each game \\
+Shapiro \cite{Shapiro02} updates the pattern-weights after each game
+we adopted a hybrid scheme: Long-term learning (carries higher weight) happens
+according to his formula; whereas fine-grained position improvements during the
+game are also considered and improve the weight of the corresponding move-patterns. \\
 
 \subsection{Pattern learning rule}
 
@@ -660,8 +721,7 @@ Pattern weights also use an age field that indicates the frequency
 of update. The age is not used for learning, but provides a bias
 for evaluating pattern-weights during game play. $v$ is 1 when
 winning conditions are met (i.e. majority of supply centres)
-and 0 otherwise. With a larger k, the system values the latest
-experience more than previous ones.
+and 0 otherwise. \\
 
 The parameter $k$ gives the learning rate; it can be used
 to fine-tune the bias on current learning vs. previously
@@ -680,39 +740,40 @@ decrease when we have lost (v = 0). We update our database when the
 game has ended and update the weighting on all the patterns
 (i.e. orders) with the weighting that we calculated for that turn.
 When we choose patterns/moves during a turn, we use randomisation
-which the weight and age of the pattern/move as a bias, this ensures
+with the weight and age of the pattern/move as a bias. This ensures
 that we can continue learning and reinforcing (positively and
 negatively) by allowing other moves to be chosen.
 
 \subsection{Extensions of TD}
 As is obvious from the formula, changes in weightings may not
-necessarily reflect how effective certain moves were and therefore may
+necessarily reflect how effective certain moves were and may
 not be as accurate in learning. LearnBot improves this by first
 calculating a state value for each turn, (i.e. it looks at the game
 state after a turn and calculates a metric value). The most simple one
 is $\frac{number of supply centres owned}{number of supply centres
-  needed to win}$. These values are paired with each turn and then
-after each turn we project the difference into the unit interval [0,1]
-to update v. This reflects the difference between the 2 state
-values. We can then apply this our own function which calculates the
-new weight for a move which we then store in the database:
+  needed to win}$. Others are presented in a later section. These metrics
+are paired with each turn. After a turn we project the difference into
+the unit interval [0,1] to update v. We then update the database
+with the new pattern-weight according to:
 
 $Weight_{new} := \frac{Weight_{old}*c+k*v}{c+k}$ \\
 
-Here we calculate the new weighting for each move (though the c, k and
+Here we calculate the new weight of each move (though the c, k and
 v will stay the same for each turn like the evolution formula above).
-k is the same learning rate / global temperature that is described in
-Shapiro's evolution formula.  c is the a constant that determines how
-strong the weights are affected by, so a larger c means a smaller
-change. We can tweak this as we go along to find an optimal value.  v
-is described above and is a value ranging from 0 to 1 which is mapped
+$k$ is the same learning rate / global temperature that is described in
+Shapiro's evolution formula. $c$ is a constant that determines how
+strong the weights are affected by the current turn. A larger $c$ means
+a smaller change. We can tweak this as we go along to find an optimal value.
+$v$ is described above and is a value ranging from 0 to 1 which is mapped
 by the difference between state values (which can be between -1 to 1)
 with state values themselves ranging between 0 to 1.
 
 \subsection{Joint group planning}
 \textit{Joint group planning} potentially happens in every
 cooperative multi-Agent system. In Diplomacy we usually develop
-strategies, select attack targets with our allies.  
+strategies and select attack targets with our allies. Move suggestions
+are cross-checked by our own brain as described in the chapter
+on Negotiation.
 
 \subsection{Goal queue}
 The goal queue holds the current offensive / defensive
@@ -721,14 +782,13 @@ targets and not yet bound to any units.
 
 \subsection{Goal expansion and unit assignment}
 This is related to planning algorithms like STRIPS but is
-greatly simplified to suit our student project: Basically
+greatly simplified to suit our student project: In each iteration
 the first item of the goal queue is removed and bound to
 a set of candidate units that fulfill the goal in some 
 number of turns. We chose the simple heuristic of minimizing
-the number of unit-timesteps bound by the goal, but it 
-is suggested that in an extension of the project proper
-Operations-Research techniques like the Aircrew-Scheduling
-algorithm are investigated.
+the number of unit-timesteps bound by the goal. In an  
+extension of the project proper Operations-Research techniques
+like the Aircrew-Scheduling algorithm could be investigated.
 
 %--------------------------------------------------------------------------------
 
@@ -752,19 +812,19 @@ the controller.
 
 \section{Machine learning}
 
-There are many instances where model parameters are not known a-priori and
-are best learned. An alternative solution is to provide expert knowledge 
-explicitly, but this has two problems:
+In the \textit{StrategyFinder} there are many instances where optimal model parameters
+are not known a-priori and have to be learned. An alternative solution is to provide
+expert knowledge explicitly, but this has two problems:
 
 \begin{itemize}
 
-\item A diplomacy expert is not available for most AI bot efforts, in 
+\item A diplomacy expert is not available in most AI teams, in 
       particular not for a student project
 
 \item Using compiled strategic knowledge from the Diplomacy archive
       \cite{DipArchive04} was out of the question. Normally there
-      is no one-to-one mapping from a particular game heuristic and
-      the model parameters. 
+      is no one-to-one mapping from a particular game heuristic expressed
+      in prose to model parameter. 
 
 \end{itemize}
 
@@ -789,10 +849,11 @@ explicitly, but this has two problems:
 
 \section{Shared components}
 
-A number of components all shared among all sub-brains. We think this is a 
+A number of components are shared among all sub-brains. We think this is a 
 good idea because functions like game state or move metric are so fundamental 
-that many (future) are bound to use them. We reap the additional benefit of
-better comparability during experiments if some bots share components.
+that many (future) bots are likely to use them. We reap the additional benefit of
+better comparability during experiments if some bots share components. Lastly
+it fits nicely with our aim to build an extendable framework.
 
 \subsection{Heuristic game-state evaluation}
 
@@ -843,7 +904,10 @@ getAdjProvOcc unit = do
 \subsection{Province valuation}
 During goal selection a bot needs to calculate its future strategy
 preferences. Hereby we take into account the strategic position of 
-provinces. We can have two type of goals:
+provinces. In previous work this has been used under the name
+of \textit{Altitude} or \textit{Mountain metric}. \\
+
+We can have two type of goals:
 
 \paragraph{Province or zone defense}
 A supply centre defense goal is selected according to its value
@@ -855,21 +919,21 @@ the required strength of the defense.
 \paragraph{Supply centre conquer or zone advance}
 This offensive goal selects a province that has relatively weak 
 defense compared to its value. Again the \textit{province valuation}
-component is used.
+algorithm is used.
 
 %--------------------------------------------------------------------------------
 
-\chapter{Negotiation Bot}
+\chapter{Negotiation}
 
 As for the overall bot architecture we have chosen a multi-agent 
 approach. There are clearly sub-tasks which a negotiator needs to
-provide. Each of them is mapped to another thread.
+provide. Each of them is mapped to a different thread.
 
 \paragraph{External communication (Message dispatcher)}
 The \textit{External communication} has interfaces to the agreement 
 and relationship database and can be seen as our connection to the
-environment of allies of foes. One of its functions is to propose
-joint strategies deemed good by the \textit{Strategy finder} to its
+other players. One of its functions is to propose
+joint strategies deemed good by the \textit{Strategy finder} to our 
 allies (which it looks up from the \textit{Relation database}. Seen
 functionally the communication component creates concrete DAIDE
 messages from abstract sub-goals. Current sub-goals are provided
@@ -880,7 +944,7 @@ have one \textit{Ambassador} per power but created one such
 component. This simplified testing considerably. 
 
 \paragraph{Suggestion dispatch}
-It is a well-known problem in \textit{Automated negotiation} how 
+It is a well-known question in \textit{Automated negotiation} how 
 to react to move or strategy suggestions. At the highest level there
 are three possibilities:
 
@@ -892,17 +956,18 @@ are three possibilities:
 \item The move or strategy can be adopted with the reservation 
       that future evidence might invalidate this decision. This 
       requires an \textit{Agreement table} to keep track of such
-      item.
+      knowledge.
 
 \item The move can be cross-checked by our own brain and only 
-      adopted if it is in line with our current goal-queue. 
+      adopted if it is in line with our current goal-queue and 
+      expanded sub-goals. 
 
 \end{itemize}
 
 The \textit{Suggestion dispatch} has access to the Knowledge and
 Belief base of our bot. For obvious reasons suggestions by
 adversaries or bots that are believed to have poor judgement 
-should be cross-checked while those of allies receive fewer
+should be cross-checked while those of strong allies receive fewer
 scrutiny . \\
 
 \section{Emotional subsystem}
@@ -912,7 +977,7 @@ The emotional subsystem serves three purposes:
 \begin{itemize}
 
 \item Although not strictly necessary it is handy to model
-      human-like attribute with the bot. We propose a
+      human-like attribute as part of the bot. We propose a
       \textit{static character traits record} that is 
       initialized upon personalization of the bot. In an 
       extension we hope to provide dynamic behaviour by
@@ -921,38 +986,38 @@ The emotional subsystem serves three purposes:
 \item The bot needs to infer \textit{Relationships} of the
       other powers. This is primarily driven by stochastic rules.
       For example if Turkey attacks Germany we can be reasonably 
-      sure (it might be bluff with small probability) that these
+      sure (it might be a bluff with small probability) that these
       powers are adversaries. The corresponding triple in the
       relationship table is ([at war],[Turkey],[Germany]). In the  
       same manner other relations between powers can be inferred. 
       Note that the rules are hard-coded and there is currently
       no way of of \textit{learning} them in any way.
 
-\item Lastly we want to infer a character profile from a powers actions.
+\item Lastly we want to infer a character profile from a power's actions.
       These include objective measures like Risk-averseness or 
       hoarding-tendency but also subjective ones like our own 
-      liking or trust of the respective power(s). As the relationship table this
+      liking or trust of the respective power(s). In the relationship table this
       is updated via pattern-matching on the other power's moves and
-      evaluation of several game-statistics (like the change in 
+      evaluation of game-statistics (like the change in 
       state metrics from the perspective of other powers, where positive
       changes indicate high playing strength). The limits to what can
       be measured abound and we left it deliberately open-ended. A good
       inspiration are the feeling models by Weiner and Graham or 
       Parrot, although initially we only include coarse-grained primitives
-      like  'Fear', 'Happiness', 'Sadness' and 'Anger'. Notice lastly that
-      we commit to sentiments we have inferred and remove them only 
-      when evidence to the contrary has been established. Hence we cannot
-      partially revise beliefs or determine partial happiness etc..
+      like  'Fear', 'Happiness', 'Sadness' and 'Anger'. Note that
+      we firmly commit to sentiments we have inferred and remove them only 
+      when evidence to the contrary is established (another rule triggers).
+      Hence we cannot partially revise beliefs or determine partial happiness etc..
 
 \end{itemize}
 
 \section{Agreements database}
 
-The agreements database holds commitments of our bot with 
-other powers. It is populated by the \textit{Message dispatcher}
+The agreements database holds commitments of our bot to jointly 
+devised strategies. It is populated by the \textit{Message dispatcher}
 component explained above. \\
 
-An example triple is ([Turkey],[Germany],[AttackProvA]),
+An example triple is ([Turkey],[Germany],[AttackProvA]);
 notice that the last part is a goal that can be processed by the
 \textit{Goal expansion} unit of the \textit{Strategy subsystem}.
 
@@ -1301,10 +1366,6 @@ move generation.
 
 %--------------------------------------------------------------------------------
 
-\section{Project evaluation / experiments}
-
-%--------------------------------------------------------------------------------
-
 \section{Managerial Documentation}
 
 \subsection{Collaboration tools}
@@ -1342,7 +1403,6 @@ dependencies and allow team members to work separately on different
 components. In our judgement a suitable CI server does not exist for
 Haskell and using one would have been overkill.
 
-
 %--------------------------------------------------------------------------------
 
 \pagebreak
@@ -1356,9 +1416,9 @@ In hindsight the goals we had set at the beginning (see first section
 on ``Project goals'') may have been too ambitious: Building a
 Diplomacy platform from the ground up including the server, the user
 client and the AI and negotiation took a lot of coordination effort
-and work at all fronts. Regardless during a period of roughly 2 months
+and work on all fronts. Nevertheless -- during a period of roughly 2 months
 we have achieved a lot both in terms of experimental results and size
-of the created software (GUI, Server and bot framework). In summary we 
+of the created software (GUI, Server and bot framework). Still we 
 learned that it pays off to channel the energy of the team members 
 rather than working on totally separate products.
 
@@ -1380,7 +1440,7 @@ us with a plan B in case delays on the server would accumulate.
 One of the main difficulties was getting the group up to a reasonable
 level in monadic Haskell. Most members of the group did not have much
 experience with monadic programming in Haskell while another excelled.
-Nonetheless our group sticked with Haskell as this provides a 
+Nonetheless our group sticked with Haskell as it provides a 
 powerful combinatory parsing library \cite{ParsecLib} for the server.
 Given that the project focus shifted towards the AI at the end we 
 would consider using Java in a similar future project. \\
@@ -1396,17 +1456,17 @@ members have also been keen to help each other, spending time drawing
 UML diagrams and explaining concepts in detail. The focal points of
 these discussions have usually been the weekly group meetings. Logbook
 allowed us to document what we have learned and avoid introducing bad
-design / bugs more than once.  \\ Last but not least we decided to
-have a ``glossary'' section in the log-book where we explain give
+design / bugs more than once.  \\
+
+Last but not least we decided to have a ``glossary'' section in the log-book where we explain give
 names to the most important concepts of our design. For instance we
 have defined the AI framework in terms of metaphors from the
 Neuroscience domain (Brain etc..). For this to be effective and
 improve communication every team member needed to be aware of the
 terms.
 
-
-\subsection{Choice of implementation language}
-In retrospect Haskell was not an optimal choice when i t comes to
+\section{Choice of implementation language}
+In retrospect Haskell was not an optimal choice when it comes to
 collaboration between team members as the skill-set of team members
 was different. In addition many aspects of design are naturally
 expressed using UML which is easier to translate into the
@@ -1421,16 +1481,16 @@ which is why it was chosen in the first place.
 
 In this project we created a negotiation-capable AI framework for the
 game of 'Diplomacy'. On the tactics-side a pattern-weight learning
-algorithm \cite{Shapiro02} coupled with a best-first search strategy
-and a number of heuristics has been used. We have shown that negotiation
-and strategy are similar and integration was succssful. The
+algorithm \cite{Shapiro02} coupled with a multitude of proven and new
+heuristics has been used. We have shown that negotiation
+and strategy can be unified and eventual integration was succssful. The
 subsystem comprising GUI client and server has been implemented partially.
 While we are quite pleased with the GUI the server needs additional 
 stress-testing to augment DAIDE one day. The experimental results 
-are not yet finished because of issues with server testing. They will 
+are not yet available because of issues with server testing. They will 
 be included in a supplementary section with the presentation.
 On the whole we feel that we have made progress on many fronts and
-profit from this experience in our future careers. 
+profited from this experience tremendously. 
 
 \section{Future work}
 
@@ -1441,23 +1501,24 @@ many routes as we would have liked. To name just a few of them:
 
 \item Improvements to pattern weights (and LearnBot) as described in
   Ari Shapiro's paper on pattern weights. For example future patterns
-  should take into account specific locations of other pieces.
+  should allow both disjunction and conjunctive connection of 1-patterns.
 
 \item Perform temporal difference learning of games played by humans
   and store that knowledge in a pattern-weight database. We could not
-  do this as we do not have support for human players on our user
-  client.
+  achieve this as supports for humans on the GUI client is not 100 \% stable.
 
 \item Extend the user client to allow a human user to play Diplomacy
-  with a tutorial to aid new players and create a well designed UI.
-\item To be able to optimise negotiation features, like when the best
-  time to backstab is, this is one of the most important aspects of
-  the game and makes the difference between winning or losing.
+  with a tutorial to aid new players.
+
+\item Optimise negotiation features, like a heuristic for the best-time
+  of a backstab. Surely a well-placed back-stab can be the difference between
+  winning and losing.
 
 \end{enumerate}
 
 %--------------------------------------------------------------------------------
 
-\bibliographystyle{plain} \bibliography{report4}
+\bibliographystyle{plain}
+\bibliography{report4}
 
 \end{document}

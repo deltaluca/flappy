@@ -207,7 +207,7 @@
   timestamp = {2012.01.04}
 }
 
-@ARTICLE{Kraus:1992:NNE:124206.124207,
+@ARTICLE{Kraus:1992,
   author = {Kraus, Sarit and Ephrati, Eithan and Lehmann, Daniel},
   title = {Negotiation in a non-cooperative environment},
   journal = {J. Exp. Theor. Artif. Intell.},
