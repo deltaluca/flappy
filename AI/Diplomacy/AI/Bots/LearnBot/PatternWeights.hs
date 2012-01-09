@@ -9,6 +9,7 @@ module Diplomacy.AI.Bots.LearnBot.PatternWeights  (weighOrderSets
                                                   ,applyTDiffEnd
                                                   ,applyTDiffTurn
                                                   ,_noOfSCNeededToWin
+                                                  ,_trimNum
                                                   ) where
 
 import Diplomacy.AI.Bots.LearnBot.Monad
@@ -35,7 +36,11 @@ data Dummy o m = Dummy (m o)
 
 -----------------------------------------------------------------------
 -- Bot-specific variables
--- Metrics, nPatterns, Database name, Weighting of applyTDiffTurn, Variance of K
+-- Trimmed orders, Metrics, nPatterns, Database name, Weighting of applyTDiffTurn, Variance of K
+
+-- Number of orders left after trimming (speeds up evaluation)
+_trimNum :: Int
+_trimNum = 2
 
 -- database name
 _dbname :: String
@@ -43,7 +48,7 @@ _dbname = "test.db"
 
 -- n pattern weights to use
 _npats :: [Int]
-_npats = [1,2]
+_npats = [1]
 
 -- _c defines the constant that determines how 'strong' the weights are affected
 -- Larger _c corresponds to smaller change
@@ -170,10 +175,10 @@ average l = (sum l) / ((fromIntegral.length) l)
 -- from database and returns (weight, age, pattern size)
 updatePatternsGetWeightAge :: Connection -> (Int,Int,Int) -> IO (Double,Int,Int)
 updatePatternsGetWeightAge conn (pid, pval, psize) = do 
-  result <- quickQuery' conn "SELECT pid, pval FROM test WHERE pid = ?" [toSql pid] 
+  result <- quickQuery' conn "SELECT pid, pval FROM test WHERE pid = ? AND pval = ? " [toSql pid, toSql pval] 
   if (length result == 0) -- if not in database, use default value
     then run conn "INSERT INTO test VALUES (?,?,0.5,1)" [toSql pid, toSql pval]
-    else run conn "UPDATE test SET age = (age + 1) WHERE pid = ?" [toSql pid]
+    else run conn "UPDATE test SET age = (age + 1) WHERE pid = ? AND pval = ?" [toSql pid, toSql pval]
   weightsResult <- quickQuery' conn "SELECT weight, age FROM test WHERE pid = ? AND pval = ?" [toSql pid, toSql pval]
   return $ (\[x,y] -> (fromSql x, fromSql y, psize)::(Double,Int,Int)) $ head weightsResult
 
