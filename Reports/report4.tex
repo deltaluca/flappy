@@ -247,7 +247,9 @@ There are three type of provinces: Water, land and coastal
 provinces. In general the adjacencies of provinces are obvious
 from the game map; in some intricate cases the rulebook needs to
 be consulted. Each province can optionally be occupied by one
-unit of the correct type.
+unit of the correct type. At the beginning of the game all powers
+control 3 supply centres, Russia controls 4 to offset its
+otherwise weak position.
 
 \paragraph{Supply centres}
 
@@ -277,7 +279,7 @@ their orders and submit them to the server. The order of action in
 fall and spring terms are the same, except that only the fall term
 has a \textit{gaining-and-losing} phase.
 
-\paragraph{Diplomacy phase}
+\paragraph{1. Diplomacy phase}
 In this phase players jointly devise strategies, forge alliances and
 suggest move orders for the next round. Conversations can be 
 one-to-one or in groups. None of the agreements
@@ -285,12 +287,12 @@ reached are binding and can even be used to deliberately
 mislead another player and prepare a back-stab. Lastly it is possible
 to broadcast announcements to all players.
 
-\paragraph{Order writing phase}
+\paragraph{2. Order writing phase}
 Afterwards each player writes down orders for its units and prepares
 them for submission for the game server. There is no communication 
 between players in this phase. 
 
-\paragraph{Order resolution phase}
+\paragraph{3. Order resolution phase}
 At this stage all orders are simultaneously revealed to the server,
 who announces them publicly. Now the effects of the moves on the
 map state are determined, resolving them according to the game rules.
@@ -298,7 +300,7 @@ In simple cases only standoffs between different move orders need
 to be considered but the complex game rules result in many special
 cases that need to be considered by the server. 
 
-\paragraph{Retreat and Disbanding phase}
+\paragraph{4. Retreat and Disbanding phase}
 The effects of the submitted orders might make it necessary to retreat
 some units from its current provinces. The only choice given to a
 players is the destination province of a retreat which needs to
@@ -310,7 +312,7 @@ such a standoff is immediately \textit{disbanded} from the map. The
 same happens if a player does not give a destination for a unit that
 has to retreat.
 
-\paragraph{Gaining and Losing phase}
+\paragraph{5. Gaining and Losing phase (Winter)}
 As mentioned initially this phase only occurs in a \textit{fall turn}.
 The purpose of this phase is to adjust the number of units of a power
 to the number of supply centres it controls, reflecting its current
@@ -342,36 +344,32 @@ Move orders shift units from their original position to one of its
 adjacent provinces. A move can either be successful, result in a
 standoff or fail because of insufficient strength. 
 
-[1cm]
-\includegraphics{./screenshots/Move0.png} % OK Move
-[1cm]
+\includegraphics{./screenshots/Move0.png} \\[1cm]
 The red arrows indicate that the move order succeeded and the units
 will be moved to the destination. In general a move order succeeds
 if the attacking party has higher strength than the defense. Each 
 support order increases the strength of offense / defense by 1.
 
-[1cm]
-\includegraphics{./screenshots/BouncedMove.png} % Standoff
-[1cm]
+
+\includegraphics{./screenshots/BouncedMove.png} \\[1cm]
 The dark-red arrows indicate that the move bounced and the units will
 remain in the same place. This is because both units are attempting 
 to move to the same location and have the same strength, none being
 supported by another unit.
 
 \paragraph{Support order}
-A support order assists another unit's move or hold order. It can either be
-used defensively to protect a province against an attack order or increase
-the odds of another unit conquering a province. 
+A support order assists another unit's move or hold order. It can
+either be used defensively to protect a province against an attack
+order or increase the odds of another unit conquering a province.
 
-[1cm]
-\includegraphics{./screenshots/DefRetreat0.png}
-[1cm]
-Here the French unit at Marseille is supporting the move of it's comrade at
-Gascony to Burgundy. The German unit at Burgundy was attempting to support
-the move of it's ally at Parise to Gascony. In the end  it's support was
-cut by a dislodgement from the French unit. After the moves are resolved, 
-the Burgundy unit will be dislodged at the white marker and forced to 
-attempt a retreat in the next phase.
+\includegraphics{./screenshots/DefRetreat0.png} \\[1cm]
+Here the French unit at Marseille is supporting the move of it's
+comrade at Gascony to Burgundy. The German unit at Burgundy was
+attempting to support the move of it's ally at Parise to Gascony. In
+the end it's support was cut by a dislodgement from the French
+unit. After the moves are resolved, the Burgundy unit will be
+dislodged at the white marker and forced to attempt a retreat in the
+next phase.
 
 \paragraph{Convoy order}
 This order type is restricted to fleet units. They allow to transport
@@ -386,33 +384,30 @@ fall and spring terms. If a unit is overpowered by an attack on its
 province it needs to move to an adjacent province. The exact destination
 is specified by the player in a retreat order.
 
-[1cm]
-\includegraphics{./screenshots/DefRetreat2.png}
-[1cm]
-Here the German unit previously dislodged from Burgundy has succesfully retreated to Picardy. 
-It is possible although quite rare for a retreat order to fail (Perhaps due to two dislodged
-units attempting to retreat to the same space) and in such case the unit would be removed from the map.
+\includegraphics{./screenshots/DefRetreat2.png} \\[1cm]
+Here the German unit previously dislodged from Burgundy has
+succesfully retreated to Picardy.  It is possible although quite rare
+for a retreat order to fail (Perhaps due to two dislodged units
+attempting to retreat to the same space) and in such case the unit
+would be removed from the map.
 
 \paragraph{Disband order}
-If a unit cannot perform a retreat then the unit is removed from the map automatically.
+If a unit cannot perform a retreat then the unit is removed from the
+map automatically.
 
-[1cm]
-\includegraphics{./screenshots/ImmRetreat0.png}
-[1cm]
+\includegraphics{./screenshots/ImmRetreat0.png} \\[1cm]
 
 \paragraph{Build order}
-This order is limited to the \textit{Gaining and losing phase} where unit numbers
-are reconciled with supply centre control. At the end of each year the
-server signals the maximum number of units a player can have in the following
-turn. Empty supply centres can now be used to build any surplus units.
+This order is limited to the \textit{Gaining and losing phase} where
+unit numbers are reconciled with supply centre control. At the end of
+each year the server signals the maximum number of units a player can
+have in the following turn. Empty supply centres can now be used to
+build any surplus units.
 
 \paragraph{Remove order}
-Any surplus units that do not have a ``supporting supply centre have to be removed
-at the end of the year. With \textit{Remove orders} the player can select which
-units should be removed from the board.
-
-\paragraph{Remove / dislodge order}
-
+Any surplus units that do not have a ``supporting supply centre have
+to be removed at the end of the year. With \textit{Remove orders} the
+player can select which units should be removed from the board.
 
 %--------------------------------------------------------------------------------
 
@@ -476,12 +471,14 @@ related research has been explored.
 \begin{itemize}
 
 \item The over-arching goal and hence the most critical requirement is
-  to design and implement a negotiation bot for Diplomacy whose
+  to design and implement a negotiation bot for Diplomacy. Its
   performance is then compared to existing bots in an experimental
-  setting. 
+  setting. Through this we would like to answer the question: Is there
+  a payoff associated with the use of negotiation or does a stronger
+  tactics component always dominate? 
 
-\item A collection of other bots which are not capable of communication
-  should be created for purposes of comparison. These should use
+\item A collection of other bots which are not capable of negotiation
+  shall be created for purposes of comparison. These should use
   proven techniques from the fields of Game Theory and Multi-Agent
   systems, including learning, tactics and long-term strategies. All
   bots should support the DAIDE protocol to compete against existing
@@ -492,8 +489,8 @@ related research has been explored.
   framework comprises a server which hosts games for automated and
   human clients and a tool to gather game statistics. The imperative
   behind this is to feed-back into the Diplomacy community as a whole,
-  providing a multi-platform server (Windows DAIDE server exists) for
-  the first time.
+  providing a multi-platform server (Windows DAIDE server exists) in 
+  Haskell for the first time.
 
 \item In addition a framework for simple generation of Diplomacy bots
   is envisioned: Right now a player needs to re-invent the wheel by
@@ -513,7 +510,7 @@ related research has been explored.
   interface we deliver a DAIDE-conforming GUI client for the Game
   of Diplomacy.  Rather than forcing the player to use a particular
   device all back-ends of the HaXe platform are supported, including
-  HTML5/JS, Flash and C++.
+  HTML5/JS and C++.
 
 \end{itemize}
 
@@ -530,7 +527,38 @@ during the iterations.
 
 \pagebreak
 
-\section{Strategy and tactics}
+\chapter{Strategy and tactics}
+
+\section{Challenges in Diplomacy}
+
+Before even thinking about implementing a strategy we came up with
+a number of challenges that our bot has to overcome:
+
+\paragraph{Short-term vs. long term payoff}
+Pay-offs in Diplomacy are affected by the paradox that short-term
+advantages can turn against the bot because of coalition-building:
+Consider a bot that rapidly conquers supply centres out of a 
+relatively strong starting position. Now it is rational for the
+other players to ally against him to prevent him breaking away.
+To avoid getting into this ``one-against-all'' situation a player
+should aim to be the 2nd strongest power or lead by a small margin.
+
+\paragraph{Tremendous search space}
+It has been estimated that the number of possible moves from
+an average Diplomacy position is roughly $4.09 * 10^{27}$ 
+\cite{Kemmerling00}, rendering a game-tree search unrealistic. The root
+of the problem is that our power has \textit{incomplete information} 
+about the other power's intentions.
+
+\paragraph{Deceit}
+One of the most fascinating aspects of Diplomacy but also its great
+complexity are lies and back-stabbings: As agreements are non-binding
+we have to guard against broken promises in our \textit{Strategy finder}
+sub-component. 
+
+\paragraph{Move prediction}
+As a result our bot needs to predict a move 
+
 
 As listed in the \textit{Introduction} section there were previous
 attempts of creating a strong AI for Diplomacy: Kraus \cite{Kraus95}
@@ -601,10 +629,9 @@ to our player. The formula is described in a later section. \\
 
 
 \subsection{Joint group planning}
-
-\textit{Joint group planning} 
-
-
+\textit{Joint group planning} potentially happens in every
+cooperative multi-Agent system. In Diplomacy we usually develop
+strategies, select attack targets with our allies.  
 
 \subsection{Objective queue}
 
@@ -615,7 +642,7 @@ To store
 
 \pagebreak
 
-\section{Negotiation} 
+\chapter{Negotiation} 
 
 \subsection{Character traits}
 
@@ -625,7 +652,7 @@ To store
 
 \pagebreak
 
-\section{Software engineering}
+\chapter{Software engineering}
 
 \subsection{Change management / Risk mitigation}
 We recognized that change is inevitable in such an ambitious and
@@ -1192,43 +1219,55 @@ terms.
 
 \pagebreak
 
-\section{Contribution of team members}
-
 %--------------------------------------------------------------------------------
 
 \pagebreak
 
-\section{Self evaluation / reflection}
+\section{Self reflection}
 
-\subsection{Project scoping}
+\subsection{Goals vs. available time}
+In hindsight the goals we had set at the beginning (see first section
+on ``Project goals'') may have been too ambitious: Building a
+Diplomacy platform from the ground up including the server, the user
+client and the AI and negotiation took a lot of coordination effort
+and work at all fronts. Regardless during a period of roughly 2 months
+we have achieved a lot both in terms of experimental results and size
+of the created software (GUI, Server and bot framework). In summary we 
+learned that it pays off to channel the energy of the team members 
+rather than working on totally separate products.
 
-An important lesson from the project was that it pays off to channel
-the energy of the team members towards a very specific problem rather
-than being overly ambitious at the outset. Looking back it would have
-been a good decision to drop the server aspect earlier giving us more
-time to implement negotiation.
+\subsection{Group coordination} 
+We learned that working a group requires an experienced project
+manager and one person steering the overall design / interfaces
+between components. This was especially important in our project 
+because we set out to build a framework and not just a collection
+of bots.
+
+\section{Time estimation}
+We had to re-plan halfway through the project -- unfortunately
+building the server was taking more time than expected and
+we had to avoid running out of time for the main aim: 
+negotiation. Using the DAIDE server for bot testing provided
+us with a plan B in case delays on the server would accumulate.
+
+\section{Knowledge transfer}
+One of the main difficulties was getting the group up to a reasonable
+level in monadic Haskell. Most members of the group did not have much
+experience with monadic programming in Haskell while another excelled.
+Nonetheless our group sticked with Haskell as this provides a 
+powerful combinatory parsing library \cite{ParsecLib} for the server.
+Given that the project focus shifted towards the AI at the end we 
+would consider using Java in a similar project.
 
 \subsection{Choice of implementation language}
-
 In retrospect Haskell was not an optimal choice when it comes to
 collaboration between team members as the skill-set of team members
 was different. In addition many aspects of design are naturally
 expressed using UML which is easier to translate into the
-``Object-oriented paradigm'' supported by Java or Python.  Having said
-that Haskell had its merits when it comes to implement DAIDE message
-parsing on the server (Parsec library \cite{ParsecLib}) which is why
-it was chosen in the first place.
-
-
-\subsection{Specification vs. final result}
-
-\subsection{Group collaboration}
-
-\subsection{Technical challenges}
-
-\subsection{Learning}
-
-%--------------------------------------------------------------------------------
+``Object-oriented paradigm'' supported by Java or Python.
+Having said that Haskell had its merits when it comes to implement
+DAIDE message parsing on the server (Parsec library \cite{ParsecLib}) 
+which is why it was chosen in the first place.
 
 \pagebreak
 
