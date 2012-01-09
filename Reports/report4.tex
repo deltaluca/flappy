@@ -1,4 +1,4 @@
-\documentclass[pdftex,12pt,a4paper]{report} 
+\documentclass[pdftex,11pt,a4paper]{report} 
 
 % Document settings
 
@@ -69,8 +69,6 @@ have come a long way in recent years. Without the dedication of the
 libraries it would not have been possible to make progress on 
 several fronts at the same time.
 
-\pagebreak
-
 %--------------------------------------------------------------------------------
 
 \section{Group members} 
@@ -125,8 +123,6 @@ Interesting questions we would like to answer with our project are:
 
 \item What relationships between negotiation bots will ensue 
       if they are left to themselves? Does chaos set in?
-
-\todo{Contd...}
 
 \end{itemize}
 
@@ -208,8 +204,6 @@ DAIDE presslevels refer to the reference above.
 
 \item The \textit{DAIDE Server} enables both human and AI players to
       compete in a game. A screenshot of the Main GUI is given below:
-
-\includegraphics{./images/DAIDEServer.png}
 
 \item \textit{DAIDE Mapper} is a server hook-in to visualize
       the game state.
@@ -348,25 +342,31 @@ Move orders shift units from their original position to one of its
 adjacent provinces. A move can either be successful, result in a
 standoff or fail because of insufficient strength. 
 
-\includegraphics{./screenshots/Move0.png} \\[1cm]
+\begin{figure}
+\includegraphics[scale=0.75]{./screenshots/Move0.png} \\[1cm] 
+
 The red arrows indicate that the move order succeeded and the units
 will be moved to the destination. In general a move order succeeds
 if the attacking party has higher strength than the defense. Each 
 support order increases the strength of offense / defense by 1.
 
+\end{figure}
 
-\includegraphics{./screenshots/BouncedMove.png} \\[1cm]
+\begin{figure}
+\includegraphics[scale=0.75]{./screenshots/BouncedMove.png} \\[1cm] 
 The dark-red arrows indicate that the move bounced and the units will
 remain in the same place. This is because both units are attempting 
 to move to the same location and have the same strength, none being
 supported by another unit.
+\end{figure}
 
 \paragraph{Support order}
 A support order assists another unit's move or hold order. It can
 either be used defensively to protect a province against an attack
 order or increase the odds of another unit conquering a province.
 
-\includegraphics{./screenshots/DefRetreat0.png} \\[1cm]
+\begin{figure}
+\includegraphics[scale=0.75]{./screenshots/DefRetreat0.png} \\[1cm] 
 Here the French unit at Marseille is supporting the move of it's
 comrade at Gascony to Burgundy. The German unit at Burgundy was
 attempting to support the move of it's ally at Parise to Gascony. In
@@ -374,6 +374,7 @@ the end it's support was cut by a dislodgement from the French
 unit. After the moves are resolved, the Burgundy unit will be
 dislodged at the white marker and forced to attempt a retreat in the
 next phase.
+\end{figure}
 
 \paragraph{Convoy order}
 This order type is restricted to fleet units. They allow to transport
@@ -388,18 +389,20 @@ fall and spring terms. If a unit is overpowered by an attack on its
 province it needs to move to an adjacent province. The exact destination
 is specified by the player in a retreat order.
 
-\includegraphics{./screenshots/DefRetreat2.png} \\[1cm]
+\begin{figure}
+\includegraphics[scale=0.75]{./screenshots/DefRetreat2.png} \\[1cm] 
 Here the German unit previously dislodged from Burgundy has
 succesfully retreated to Picardy.  It is possible although quite rare
 for a retreat order to fail (Perhaps due to two dislodged units
 attempting to retreat to the same space) and in such case the unit
 would be removed from the map.
+\end{figure}
 
 \paragraph{Disband order}
 If a unit cannot perform a retreat then the unit is removed from the
 map automatically.
 
-\includegraphics{./screenshots/ImmRetreat0.png} \\[1cm]
+\includegraphics[scale=0.75]{./screenshots/ImmRetreat0.png} \\[1cm] 
 
 \paragraph{Build order}
 This order is limited to the \textit{Gaining and losing phase} where
@@ -454,10 +457,6 @@ bot. For instance if a supply centre is selected for capture and a
 certain defense strength is estimated units that overcome this have to
 be selected. For every combination of
 
-\paragraph{Previous project by Huff et al}
-
-In a previous group project at Imperial College \cite{Huff05}
-
 \subsection{Strategy-only bots}
 
 \paragraph{Original Hasbro AI}
@@ -466,6 +465,7 @@ acknowledged as having poor playing strength. Besides it is not
 compatible with the DAIDE framework so we could not use it for
 our experiments.
 
+\paragraph{Others}
 There have been various earlier efforts to create a Diplomacy bot
 limited to DAIDE press level 0 \cite{DAIDEsyntax10}. While early
 approaches used classical AI techniques like Best-First-Search there
@@ -633,11 +633,6 @@ match fewer and fewer moves. \\
 
 Common 1-patterns used by our bot are:
 
-\todo{Dump a DB-table of the pattern database here, screenshot
-      of SQL CLI}
-
-\todo{If we are using more specific patterns, list some here}
-
 \subsection{Temporal difference learning}
 
 The idea of \textit{Temporal difference learning} is to refine a
@@ -659,19 +654,60 @@ $Weight_{n} := \frac{Weight_{n-1}*(n-1)+k*v}{n+k-1}$ \\
 This is a running average of the pattern-weight determined
 in previous game turns and its effect on the game state. \\
 
+Pattern weights start with an initial value of 0.5 (indicates
+that pattern / move is neither good or bad) and ranges from 0 to 1. 
+Pattern weights also use an age field that indicates the frequency
+of update. The age is not used for learning, but provides a bias
+for evaluating pattern-weights during game play. $v$ is 1 when
+winning conditions are met (i.e. majority of supply centres)
+and 0 otherwise. With a larger k, the system values the latest
+experience more than previous ones.
+
 The parameter $k$ gives the learning rate; it can be used
 to fine-tune the bias on current learning vs. previously
 learned pattern-weights. Ideally it would be changed during
 the game to implement \textit{Simulated Annealing} with
 random restarts. \\
 
-The use of the parameter $v$ is an extension to the model
-of Shapiro. Rather then taking binary values according to
-the winning conditions we vary it continuously between
-$0$ and $1$. The value v is computed by a heuristic 
-evaluation function measuring the value of the position
-to our player. The formula is described in a later section. \\
+\subsection{Use of TD in LearnBot}
+In LearnBot we use Shapiro's research on Pattern Weights
+\cite{Shapiro02} to implement an AI which learns how to play the game
+by updating a pattern weight database after each game.  We implement
+the Temporal Difference Learning which is described above and use the
+formula to calculate the weight of the next turn using the previous
+turn's weight.  Weights are increased when we have won (v = 1) and
+decrease when we have lost (v = 0). We update our database when the
+game has ended and update the weighting on all the patterns
+(i.e. orders) with the weighting that we calculated for that turn.
+When we choose patterns/moves during a turn, we use randomisation
+which the weight and age of the pattern/move as a bias, this ensures
+that we can continue learning and reinforcing (positively and
+negatively) by allowing other moves to be chosen.
 
+\subsection{Extensions of TD}
+As is obvious from the formula, changes in weightings may not
+necessarily reflect how effective certain moves were and therefore may
+not be as accurate in learning. LearnBot improves this by first
+calculating a state value for each turn, (i.e. it looks at the game
+state after a turn and calculates a metric value). The most simple one
+is $\frac{number of supply centres owned}{number of supply centres
+  needed to win}$. These values are paired with each turn and then
+after each turn we project the difference into the unit interval [0,1]
+to update v. This reflects the difference between the 2 state
+values. We can then apply this our own function which calculates the
+new weight for a move which we then store in the database:
+
+$Weight_{new} := \frac{Weight_{old}*c+k*v}{c+k}$ \\
+
+Here we calculate the new weighting for each move (though the c, k and
+v will stay the same for each turn like the evolution formula above).
+k is the same learning rate / global temperature that is described in
+Shapiro's evolution formula.  c is the a constant that determines how
+strong the weights are affected by, so a larger c means a smaller
+change. We can tweak this as we go along to find an optimal value.  v
+is described above and is a value ranging from 0 to 1 which is mapped
+by the difference between state values (which can be between -1 to 1)
+with state values themselves ranging between 0 to 1.
 
 \subsection{Joint group planning}
 \textit{Joint group planning} potentially happens in every
@@ -698,12 +734,11 @@ algorithm are investigated.
 
 \pagebreak
 
-
 \chapter{Software architecture}
 
 \begin{figure}
 
-\includegraphics{./report4_onion.png}
+\includegraphics[scale=0.75]{./report4_onion.png} \\[1cm]
 
 \end{figure}
 
@@ -733,19 +768,24 @@ explicitly, but this has two problems:
 
 \end{itemize}
 
-\section{An overview of our subbrains}
+\section{A brief overview of our subbrains}
 
-\subsection{RandomBot}
+\begin{itemize}
 
-\subsection{HoldBot}
+\item RandomBot: Selects a random move, for comparison
 
-\subsection{DumbBot}
+\item HoldBot: Holds on every turn, the dumbest bot for comparison
 
-\subsection{LearnBot}
+\item DumbBot: A re-implementation of the original DAIDE AI
 
-\subsection{NegoBot}
+\item LearnBot: Using strategy/tactics for the first time
 
+\item CoverBot: The cover bot has a global view of the board and tries to 
+                conquer ``important'' zones.
 
+\item NegoBot: The negotiation bot (including low DAIDE press-levels)
+
+\end{itemize}
 
 \section{Shared components}
 
@@ -816,8 +856,6 @@ the required strength of the defense.
 This offensive goal selects a province that has relatively weak 
 defense compared to its value. Again the \textit{province valuation}
 component is used.
-
-
 
 %--------------------------------------------------------------------------------
 
@@ -1066,73 +1104,6 @@ create the AI framework and the server, and then proceed to iterate a
 build of an AI, progressively increasing its abilities and making it
 better.
 
-\section{Description of iterations per subsystem}
-
-\subsection{Framework and Server}
-
-For the server we can define some functionality 'chunks' which are
-strictly independent from others, these guided how we allocated user
-stories to the 3 iterations outlined below:
-
-\begin{itemize}
-\item First and foremost the server needs to conform to the DAIDE
-  specification which is an issue of setting up a connection between
-  server and client and parsing conforming issues. This is a well
-  understood task from the 2nd years Compilers course and hence it
-  formed our first iteration. At the end of the iteration substantial
-  testing was performed (see section on Testing for details). Notice
-  there is no dependancy on any other component being working.
-\item Secondly the server needs to advance the game state in response
-  to valid DAIDE messages. This was a longer iteration since all
-  special cases treated in the game rules needed to be catered
-  for. Again existing bots and GUI clients could be used to instrument
-  the server and validate correct reaction.
-\item The last iteration of the server consisted of User-Stories which
-  were created during the weekly meetings. They were not strictly
-  necessary but but useful utility features that served to round up
-  the product. Free time was now spent on refactoring the code and
-  fixing remaining bugs.
-\end{itemize}
-
-\subsection{AI framework / bots}
-
-These iterations have run concurrently with server developments (3
-iterations detailed above):
-
-The user stories we have proposed largely correspond to ideas DAIDE
-wiki and research into machine learning / search techniques.  \\ Each
-user story contains an iteratively improved version of our current
-benchmark bot. Hence the overall AI gains functionality and depth on
-each iteration. While there are some components which every bot should
-have (for instance a forward-search in the game state-space) specifics
-are discussed during the group meetings. The idea is that each team
-member involved in the AI has done some research and proposes new AI
-techniques which shall be implemeted in the next time-box.  \\ Then
-once a feature is judged mature we incorporate it into the generic AI
-framework discussed at the beginning. This extends the code-base we
-treat as given for the next iteration.
-
-\begin{itemize}
-\item The first iteration -- HoldBot -- is simply an AI player that
-  does not impede the game progress. It always performs the same move
-  -- it holds.  It can be used as a simple unit test for the server
-  framework.
-\item As a first refinement RandomBot was created, which now
-  considers every move defined in the Diplomacy rules and selects one
-  uniformly at random.  Reflection capability is optional; that is the
-  bot may or not reason about how the random moves affected its
-  standing in the game.
-\item The first bot designed to compete with other bots through the
-  DAIDE protocol is StrategyBot. At a high-level it must use
-  techniques for performing a search in the game tree, formulate
-  general strategies. Also it should be able to improve its
-  performance by analyzing previous strategies or moves.
-\item The last iteration is the NegotiatingBot which additionally
-  exchanges messages with other players. It needs to have an internal
-  model of the other players intentions and reason about which is
-  friend or foe.
-\end{itemize}
-
 %--------------------------------------------------------------------------------
 
 \pagebreak
@@ -1243,17 +1214,6 @@ treat as given for the next iteration.
 
 \end{itemize}
 
-\subsection{Examples of bugs discovered during testing}
-\begin{itemize}
-\item Grave errors when parsing certain DAIDE messages. This had to do
-  with the ambiguity of the DAIDE grammar and a work-around needed to
-  be found (discovered through QuickCheck testing)
-\item Inconsistences on the server-side. This proved a pain to rectify
-  and to avoid such problems in the future we decided to come up with
-  a robust scheme for concurrency in the server code. (discovered
-  through sporadic server stress testing)
-\end{itemize}
-
 \subsection{Static code checking / tools}
 All deliverables, including code and documentation was produced using
 Emacs / Gedit or other similar simple text editors. We have not used
@@ -1362,65 +1322,6 @@ would probably use a more sophisticated tool for resource management,
 enabling us to categorize research papers, coding standards, progress
 reports in a better way.
 
-\subsection{Terms of collaboration}
-
-\subsubsection{Working hours / patterns}
-As suggested in the spec each group member spent the rough equivalent
-of one working day per week on the project. We assured there is a good
-mix of work to be done by each member, so that nobody will become
-bored or disinterested by tedious work. Of course some long coding
-sessions were needed to fix bugs and integrate components. We tried to
-work against such problems though by having regular meetings where the
-design and any bugs are discussed.
-
-\subsubsection{Group meeting conditions}
-Each group meeting was held in the conference room opposite the
-labs. We ensured that each member was free for the day afterwards to
-cater for the fact that meetings sometimes had to overrun the expected
-time. Whiteboards were used to discuss the design with UML / package
-diagrams.
-
-\subsubsection{Group meeting structure}
-Besides discussing user-stories and mini-milestones for the next
-iteration group meetings were used to do the following things
-
-\begin{itemize}
-\item Assessing risks early: For instance we dedicated one
-  half-session to come up with a technique to cope with race
-  conditions occuring on shared data structures in the server. Two
-  team members had alternative solutions to this solution with the
-  group finally agreeing with using Software Transactional Memory,
-  which is natively supported in the Haskell GHC extensions. Another
-  technical risk was using the DAIDE system, which is legacy in nature
-  (ambiguities in the grammar of DAIDE messages etc..). The team had
-  to discuss how to proceed in these cases.
-\item Defining testing strategies: As shown in the testing section we
-  have used different techniques in some are more appropriate in
-  certain cases. Usually the team member working on the code made a
-  suggestion and argued their case.  We reckoned that everybody had a
-  stake in the decision because the code was usually tested / reviewed
-  by a person different from the coder. Issues of code coverage and
-  general confidence into the code / testing suite were also raised
-  here. The overall aim was to make out weak spots that need urgent
-  clean-up and improvement.
-\item At the beginning of each iteration, we plan out the work
-  distribution that needs to be done. If more than one person is
-  writing code we need to raise awareness of dependencies that we may
-  have between these members. These could take the form of overlapping
-  code or module dependencies. Before any coding starts the respective
-  members need to agree on a common strategy to avoid code duplication
-  and factoring common parts out.
-\item Each second meeting we try to do some ``meta-learning'' - that
-  is what went wrong and how can we improve our process in the
-  following week. For instance it was discovered early that different
-  knowledge bases about Haskell / monads could prove an obstacle to
-  collaboration. Hence we agreed on putting relevant research papers
-  on GitHub to educate all team members in these central
-  concepts. These discussion usually provide the basis for what
-  appears in the reports on ``Software Engineering''.
-
-\end{itemize}
-
 \subsection{Version control}
 The distributed source code control system Git was used for all
 deliverables - that is unit tests / documentation, tutorials and
@@ -1441,50 +1342,12 @@ dependencies and allow team members to work separately on different
 components. In our judgement a suitable CI server does not exist for
 Haskell and using one would have been overkill.
 
-\subsection{Management / Organisational policies}
-We tried to keep it lean here: There is a culture of trust within the
-group which can be justified because we have been rigorous about
-commit / coding rules at the outset. Sub-optimal design decisions were
-usually caught in the ``design-check'' sessions explained above. For
-some parts of the codebase exotic techniques like Software
-Transactional Memory were used. This proved problematic because team
-members usually did not have the time to learn these new concepts,
-making code review difficult. In such cases 'research papers'
-presenting the necessary techniques were usually sent to each team
-member involved in the code inspection. We had to take a pragmatic
-approach here -- after all team members sometimes have very different
-backgrounds in programming paradigms / coding techniques. It is a
-necessary side-effect of division of labour that not everybody is an
-expert in everything.
-
-\subsection{Knowledge transfer within the group}
-As previously mentioned, there is a significant amount of knowledge
-variation within members of the group. Some of us are skilled with
-Haskell coding, whilst some of us are merely acquainted with
-it. Similarly, GUI design, AI design, general coding skills and
-practices all varied. We have remedied this somewhat by working in
-pairs or more, allowing the parts of the knowledge to diffuse (in a
-manner similar to osmosis :) ) between group members as problems are
-encountered and solved. Additionally, papers and other learning tools
-have been shared (via GitHub and Gmail) to aid the code writing
-process. Where learning-by-application and reading have failed, group
-members have also been keen to help each other, spending time drawing
-UML diagrams and explaining concepts in detail. The focal points of
-these discussions have usually been the weekly group meetings. Logbook
-allowed us to document what we have learned and avoid introducing bad
-design / bugs more than once.  \\ Last but not least we decided to
-have a ``glossary'' section in the log-book where we explain give
-names to the most important concepts of our design. For instance we
-have defined the AI framework in terms of metaphors from the
-Neuroscience domain (Brain etc..). For this to be effective and
-improve communication every team member needed to be aware of the
-terms.
 
 %--------------------------------------------------------------------------------
 
 \pagebreak
 
-\chapter{Conclusion}
+\chapter{Summary and outlook}
 
 \section{Self reflection}
 
@@ -1520,7 +1383,27 @@ experience with monadic programming in Haskell while another excelled.
 Nonetheless our group sticked with Haskell as this provides a 
 powerful combinatory parsing library \cite{ParsecLib} for the server.
 Given that the project focus shifted towards the AI at the end we 
-would consider using Java in a similar future project.
+would consider using Java in a similar future project. \\
+
+Similarly, GUI design, AI design, general coding skills and practices
+all varied. We have remedied this somewhat by working in pairs or
+more, allowing the parts of the knowledge to diffuse (in a manner
+similar to osmosis :) ) between group members as problems are
+encountered and solved. Additionally, papers and other learning tools
+have been shared (via GitHub and Gmail) to aid the code writing
+process. Where learning-by-application and reading have failed, group
+members have also been keen to help each other, spending time drawing
+UML diagrams and explaining concepts in detail. The focal points of
+these discussions have usually been the weekly group meetings. Logbook
+allowed us to document what we have learned and avoid introducing bad
+design / bugs more than once.  \\ Last but not least we decided to
+have a ``glossary'' section in the log-book where we explain give
+names to the most important concepts of our design. For instance we
+have defined the AI framework in terms of metaphors from the
+Neuroscience domain (Brain etc..). For this to be effective and
+improve communication every team member needed to be aware of the
+terms.
+
 
 \subsection{Choice of implementation language}
 In retrospect Haskell was not an optimal choice when i t comes to
@@ -1534,11 +1417,20 @@ which is why it was chosen in the first place.
 
 \pagebreak
 
-\section{Conclusions}
+\section{Conclusion}
 
-%--------------------------------------------------------------------------------
-
-\pagebreak
+In this project we created a negotiation-capable AI framework for the
+game of 'Diplomacy'. On the tactics-side a pattern-weight learning
+algorithm \cite{Shapiro02} coupled with a best-first search strategy
+and a number of heuristics has been used. We have shown that negotiation
+and strategy are similar and integration was succssful. The
+subsystem comprising GUI client and server has been implemented partially.
+While we are quite pleased with the GUI the server needs additional 
+stress-testing to augment DAIDE one day. The experimental results 
+are not yet finished because of issues with server testing. They will 
+be included in a supplementary section with the presentation.
+On the whole we feel that we have made progress on many fronts and
+profit from this experience in our future careers. 
 
 \section{Future work}
 
@@ -1547,27 +1439,22 @@ many routes as we would have liked. To name just a few of them:
 \\
 \begin{enumerate}
 
-\item Improvements to pattern weights (and LearnBot) as described in 
-Ari Shapiro's paper on pattern weights. For example future patterns should take 
-into account specific locations of other pieces.
+\item Improvements to pattern weights (and LearnBot) as described in
+  Ari Shapiro's paper on pattern weights. For example future patterns
+  should take into account specific locations of other pieces.
 
-\item Perform temporal difference learning of games played by humans and store 
-that knowledge in a pattern-weight database. We could not do this as we do not have 
-support for human players on our user client.
+\item Perform temporal difference learning of games played by humans
+  and store that knowledge in a pattern-weight database. We could not
+  do this as we do not have support for human players on our user
+  client.
 
-\item Extend the user client to allow a human user to play Diplomacy with a 
-tutorial to aid new players and create a well designed UI.
-\item To be able to optimise negotiation features, like when the best time to 
-backstab is, this is one of the most important aspects of the game and makes 
-the difference between winning or losing.
+\item Extend the user client to allow a human user to play Diplomacy
+  with a tutorial to aid new players and create a well designed UI.
+\item To be able to optimise negotiation features, like when the best
+  time to backstab is, this is one of the most important aspects of
+  the game and makes the difference between winning or losing.
+
 \end{enumerate}
-
-
-%--------------------------------------------------------------------------------
-
-\pagebreak
-
-\section{Appendix}
 
 %--------------------------------------------------------------------------------
 
