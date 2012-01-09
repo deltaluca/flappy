@@ -21,6 +21,8 @@ class GameTurn {
 	public var curloc:Message; //mCurrentLocation
 	public var scowners:Message; //mSupplyOwnership
 
+	public var turn:Turn;
+
 	//non-null at end-game
 	public var summary:Message; //mSummary
 	public var winner:Message; //mSolo
@@ -36,9 +38,26 @@ class GuiInterface {
 	public var cli:Cli;
 
 	public var delay:Float;
+	public var paused:Bool;
+	public var stepped:Bool;
 	public function setDelay(delay:Float) {
 		lasttime = cpp.Sys.cpuTime();
 		this.delay = delay;
+	}
+	public function getDelay() return delay
+
+	public function pause() {
+		paused = true;
+		stepped = false;
+	}
+	public function play() {
+		paused = false;
+		stepped = false;
+	}
+	public function step() {
+		if(paused) {
+			stepped = true;
+		}
 	}
 
 	public function log(x:Dynamic) cli.log(x)
@@ -46,6 +65,8 @@ class GuiInterface {
 	public function daidestr(x:String) cli.cmd("daide "+x)
 	
 	public function new(ggui:Gui, cli:Cli) {
+		paused = true;
+
 		this.ggui = ggui;
 		this.cli = cli;
 		cli.bind(this);
@@ -54,7 +75,7 @@ class GuiInterface {
 		msgqueue = new Mut<Array<Message>>([]);
 		turnqueue = new Mut<Array<GameTurn>>([]);
 		lasttime = 0;
-		delay = 0;
+		delay = 1;
 
 		(new haxe.Timer(10)).run = main;
 	}
@@ -115,7 +136,7 @@ class GuiInterface {
 				else {
 					msgqueue.with(function (ms) ms.push(msg));
 				}
-			case mCurrentLocation(_,_):
+			case mCurrentLocation(turn,_):
 				if(ingame && cturn==null) cturn = new GameTurn();
 				if(cturn!=null) {
 					if(cturn.summary==null) {
@@ -123,6 +144,7 @@ class GuiInterface {
 						var nturn = new GameTurn();
 						nturn.scowners = cturn.scowners;
 						cturn.scowners = null;
+						cturn.turn = turn;
 	
 						turnqueue.with(function (ts) ts.push(cturn));
 	
@@ -189,7 +211,8 @@ class GuiInterface {
 						daide(mReject(mMap(name)));
 					}
 				case mCurrentLocation(turn,unitlocs):
-					ggui.inform_locations(turn,unitlocs);
+					ggui.inform_turn(turn);
+					ggui.inform_locations(unitlocs);
 				case mSupplyOwnership(scos):
 					ggui.map.inform_supplyOwnerships(scos);
 				case mOrderResult(_,order,result):
@@ -200,9 +223,13 @@ class GuiInterface {
 		}
 
 		//actully have two GameTurn objects per turn, one for moves, and one for changes to SCO ownerships and locations.
-		while(turnqueue.with(function (ts) return ts.length!=0) && cpp.Sys.cpuTime() >= lasttime + delay/2) {
+		if(paused && !stepped) return;
+
+		while(turnqueue.with(function (ts) return ts.length!=0) && ((!paused && cpp.Sys.cpuTime() >= lasttime + delay/2 ) || stepped)) {
 			var turn = turnqueue.with(function (ts) return ts.shift());
 			lasttime += delay/2;
+
+			if(turn.turn!=null) ggui.inform_turn(turn.turn);
 
 			//clear move information at start of turn/end-game
 			if(turn.curloc==null || turn.summary!=null) {
@@ -230,8 +257,8 @@ class GuiInterface {
 
 			if(turn.curloc!=null) {
 				switch(turn.curloc) {
-				case mCurrentLocation(turn,unitlocs):
-					ggui.inform_locations(turn,unitlocs);
+				case mCurrentLocation(_,unitlocs):
+					ggui.inform_locations(unitlocs);
 				default:
 				}
 			}
@@ -240,7 +267,9 @@ class GuiInterface {
 				//end-game!
 			}
 
+			stepped = false;
 		}
+
 	}
 
 }

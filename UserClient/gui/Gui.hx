@@ -72,12 +72,13 @@ class Gui extends GuiElem {
 	//mapg is placed on display list by default so that initial map load can swap it's place.
 	public var map:Map; var mapg:Sprite;
 
-	var negmenu :Menu; //negotiations
 	var statmenu:Menu; //status
 	var mainmenu:Menu; //main
 
 	var ip:Textual;
 	var port:Textual;
+	var phases:Array<MipMap>;
+	var year:Textual;
 
 	var stageWidth:Int; var stageHeight:Int; var scaleMode:ScaleMode;
 	var topbar:Sprite;
@@ -98,7 +99,6 @@ class Gui extends GuiElem {
 		topbar.graphics.drawRect(0,0,25,27);
 		addChild(topbar);
 
-		addChild(negmenu  = new Menu());
 		addChild(statmenu = new Menu());
 		addChild(mainmenu = new Menu());
 
@@ -126,26 +126,24 @@ class Gui extends GuiElem {
 		}
 		//
 
-		var close = new RoundButton(25);
-		var ex = new MipMap([Assets.getBitmapData("Assets/PowerButton.png")]);
-		close.addChild(ex);
-		close.onResize = function(w,_,_) {
-			var ws = Std.int(w*40/50);
-			ex.resize(ws,ws);
-			ex.x = ex.y = (w-ws)/2;
+		function icon(name:String,small=false) {
+			var but = new RoundButton(25);
+			var ex = new MipMap([Assets.getBitmapData("Assets/"+name+".png")]);
+			but.addChild(ex);
+			but.onResize = function(w,_,_) {
+				var ws = Std.int(w*(small ? 30/50 : 40/50));
+				ex.resize(ws,ws);
+				ex.x = ex.y = (w-ws)/2;
+			}
+			return but;
 		}
+
+		var close = icon("PowerButton");
 		close.onClick = function() {
 			Sys.exit(0);
 		}
 
-		var connect = new RoundButton(25);
-		var ex = new MipMap([Assets.getBitmapData("Assets/ConnectionButton.png")]);
-		connect.addChild(ex);
-		connect.onResize = function(w,_,_) {
-			var ws = Std.int(w*40/50);
-			ex.resize(ws,ws);
-			ex.x = ex.y = (w-ws)/2;
-		}
+		var connect = icon("ConnectionButton");
 		connect.onClick = function() {
 			try {
 				int.observer(ip.txt,Std.parseInt(port.txt));
@@ -175,6 +173,70 @@ class Gui extends GuiElem {
 
 		ip.txt = "172.16.135.128";
 		port.txt = "4444";
+
+		//------------------------------------------------
+
+		var pause = icon("Pause",true);
+		pause.onClick = function() {
+			int.pause();
+		}
+		var step = icon("Step",true);
+		step.onClick = function() {
+			int.step();
+		}
+		var play = icon("Play",true);
+		play.onClick = function() {
+			int.play();
+		}
+		var faster = icon("Faster",true);
+		faster.onClick = function() {
+			int.setDelay(int.getDelay()/1.5);
+		}
+		var slower = icon("Slower",true);
+		slower.onClick = function() {
+			int.setDelay(int.getDelay()*1.5);
+		}
+
+		statmenu.insert(pause);
+		statmenu.insert(step);
+		statmenu.insert(play);
+		statmenu.insert(new Spacer(20));
+		statmenu.insert(faster);
+		statmenu.insert(slower);
+		statmenu.insert(new Spacer(30));
+
+		var phase = new Spacer(25);
+		statmenu.insert(phase);
+
+		phases = [];
+		phases.push(new MipMap([Assets.getBitmapData("Assets/Spring.png")]));
+		phases.push(new MipMap([Assets.getBitmapData("Assets/Summer.png")]));
+		phases.push(new MipMap([Assets.getBitmapData("Assets/Fall.png")]));
+		phases.push(new MipMap([Assets.getBitmapData("Assets/Autumn.png")]));
+		phases.push(new MipMap([Assets.getBitmapData("Assets/Winter.png")]));
+		for(p in phases) {
+			p.resize(23,23);
+			phase.addChild(p);
+			p.visible = false;
+		}
+
+		year = new Textual(4,17,"    ");
+		year.set(63,20);
+		statmenu.insert(year);
+
+	}
+
+	public function inform_turn(turn:Turn) {
+		for(p in phases) p.visible = false;
+
+		year.txt = Std.string(turn.turn);
+		switch(turn.phase) {
+			case pSpring: phases[0].visible = true;
+			case pSummer: phases[1].visible = true;
+			case pFall:   phases[2].visible = true;
+			case pAutumn: phases[3].visible = true;
+			case pWinter: phases[4].visible = true;
+		}	
 	}
 
 	var currentMap:String;
@@ -202,7 +264,7 @@ class Gui extends GuiElem {
 		if(scaleMode!=null) resize(stageWidth,stageHeight,scaleMode);
 	}
 
-	public function inform_locations(turn:Turn, locs:Array<UnitWithLocAndMRT>) {
+	public function inform_locations(locs:Array<UnitWithLocAndMRT>) {
 		map.inform_locations(locs);
 	}
 
@@ -228,19 +290,14 @@ class Gui extends GuiElem {
 			map.resize(width,height-25,scale);
 		}
 
-		negmenu .resize(-1,-1,scale);
 		statmenu.resize(-1,-1,scale);
 		mainmenu.resize(-1,-1,scale);
 
-		var bnds = negmenu.getBounds();
-		negmenu.x = -bnds.x;
-		negmenu.y = height-bnds.height+bnds.y;
-
-		bnds = statmenu.getBounds();
-		statmenu.y = height-bnds.height+bnds.y;
-		statmenu.x = width-bnds.width+bnds.x;
+		var bnds = statmenu.getBounds();
+		statmenu.y += -bnds.y;
+		statmenu.x += -bnds.x;
 		
-		bnds = mainmenu.getBounds();
+		var bnds = mainmenu.getBounds();
 		mainmenu.x += width-bnds.width-bnds.x;
 		mainmenu.y += -bnds.y;
 		
