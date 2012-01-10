@@ -10,6 +10,9 @@ module Diplomacy.AI.Bots.LearnBot.PatternWeights  (weighOrderSets
                                                   ,applyTDiffTurn
                                                   ,_noOfSCNeededToWin
                                                   ,_trimNum
+                                                  ,_dbname
+                                                  ,commitPureDB
+                                                  ,makeAndFillPureDB
                                                   ) where
 
 import Diplomacy.AI.Bots.LearnBot.Monad
@@ -168,31 +171,53 @@ _patterns d  = zipApply (generatePatterns d _npats) [1..]
 --------------------------------------------------------------------
 -- Order weighing and relevant database functions
 
+commitPureDB :: Connection -> PureDB -> IO ()
+commitPureDB conn db = do
+  run conn "DELETE FROM test" []
+  sequence $ map (\(_,(pid,pval,weight,age)) -> addVal pid pval weight age ) $ Map.toList db
+  return ()
+  where 
+    addVal pid pval weight age = 
+      run conn "INSERT INTO test VALUES (?,?,?,?)" [toSql pid, toSql pval, toSql weight, toSql age]
+
+makeAndFillPureDB :: Connection -> IO PureDB
+makeAndFillPureDB conn = do
+  dbVals <- dumpDBValues conn
+  return $ Map.fromList $ zip (map (\(x,y,_,_) -> (x,y)) dbVals) dbVals
+ 
+dumpDBValues :: Connection -> IO [(Int,Int,Double,Int)]
+dumpDBValues conn = do
+  results <- quickQuery' conn "SELECT pid, pval, weight, age FROM test" []
+  return $ map (\[a,b,c,d] -> (fromSql a, fromSql b, fromSql c, fromSql d)) results
+
 average :: [Double] -> Double
 average l = (sum l) / ((fromIntegral.length) l)
 
 -- given a connection, (pattern ID, pattern value, pattern size), pulls weight
 -- from database and returns (weight, age, pattern size)
-updatePatternsGetWeightAge :: Connection -> (Int,Int,Int) -> IO (Double,Int,Int)
-updatePatternsGetWeightAge conn (pid, pval, psize) = do 
-  result <- quickQuery' conn "SELECT pid, pval, weight, age FROM test WHERE pid = ? AND pval = ? " [toSql pid, toSql pval] 
-  if (length result == 0) -- if not in database, use default value
-    then do
-      run conn "INSERT INTO test VALUES (?,?,0.5,1)" [toSql pid, toSql pval]
+updatePatternsGetWeightAge :: (MonadIO m, OrderClass o) => (Int,Int,Int) -> LearnBrainT o m (Double,Int,Int)
+updatePatternsGetWeightAge (pid, pval, psize) = do 
+  hist <- getHistory
+  let pureDB = getPureDB hist
+
+  let result = Map.lookup (pid, pval) pureDB
+  case result of  -- if not in database, use default value
+    Nothing -> do
+      putHistory $ LearnHistory (Map.insert (pid,pval) (pid,pval,0.5,1) pureDB) (getHist hist) 
       return (0.5,1,psize)
-    else do
-      run conn "UPDATE test SET age = (age + 1) WHERE pid = ? AND pval = ?" [toSql pid, toSql pval]
-      return $ (\[_,_,w,a] -> (fromSql w, fromSql a, psize)::(Double,Int,Int)) $ head result 
+    Just (_,_,weight,age) -> do
+      putHistory $ LearnHistory (Map.insert (pid,pval) (pid,pval,weight,age+1) pureDB) (getHist hist)
+      return $ (weight,age,psize)
 
 sortGT :: (Double, a) -> (Double, a) ->  Ordering
 sortGT (d1,_) (d2,_)
     | d1 < d2 = GT
     | d1 >= d2 = LT
 
-weighOrder :: forall o m. (MonadIO m, OrderClass o) => Connection -> OrderMovement -> LearnBrainT o m (Double,[(Int,Int)])
-weighOrder conn order = do
+weighOrder :: forall o m. (MonadIO m, OrderClass o) => OrderMovement -> LearnBrainT o m (Double,[(Int,Int)])
+weighOrder order = do
   keyVals <- sequence [applyPattern p order | p <- _patterns (undefined :: Dummy o m)]
-  weightAgeSizes <- liftIO (sequence $ map (updatePatternsGetWeightAge conn) keyVals)
+  weightAgeSizes <- mapM updatePatternsGetWeightAge keyVals
   
   -- weights are linearly biased by their ages and pattern size
   let weights =  map (\(weight,age,patSize) -> (weight*(fromIntegral patSize)) + (fromIntegral age)) weightAgeSizes
@@ -201,26 +226,21 @@ weighOrder conn order = do
       peelR :: [(a,a,a)] -> [(a,a)]
       peelR  = (\(x,y,z) -> zip x y) . unzip3 
 
-weighOrderSet :: (MonadIO m, OrderClass o) => Connection -> [OrderMovement] -> LearnBrainT o m ((Double, [OrderMovement]),[(Int,Int)])
-weighOrderSet conn orders = do
-  orderKeys <- mapM (weighOrder conn) orders
+weighOrderSet :: (MonadIO m, OrderClass o) => [OrderMovement] -> LearnBrainT o m ((Double, [OrderMovement]),[(Int,Int)])
+weighOrderSet orders = do
+  orderKeys <- mapM weighOrder orders
   let (weights, keys) = unzip orderKeys
   return ((average weights, orders),concat keys)
 
 -- the all in one "calc weights and do all turn specific pattern stuff" function
 weighOrderSets :: (MonadIO m, OrderClass o) => [[OrderMovement]] -> LearnBrainT o m [(Double, [OrderMovement])]
 weighOrderSets orderSets = do
-  hist <- getHistory
-  conn <- liftIO $ connectSqlite3 _dbname
-  weightKeys <- mapM (weighOrderSet conn) orderSets 
+  weightKeys <- mapM weighOrderSet orderSets 
   let (weights, keys) = unzip weightKeys
   stateValue <- getStateValue
 
-  liftIO $ commit conn
-  liftIO $ disconnect conn
-  --liftIO $ if (length hist) >= 10 then applyTDiffTurn hist else return ()
-  --putHistory $ if (length hist) < 10 then (hist ++ [(stateValue, concat keys)]) else []
-  putHistory $ hist ++ [(stateValue, concat keys)]
+  hist <- getHistory
+  putHistory $ LearnHistory (getPureDB hist) (getHist hist ++ [(stateValue, concat keys)])
   (return . (sortBy sortGT)) weights
 
 
@@ -271,16 +291,13 @@ getSupplyCentresValue = do
 
 -- apply TDL for turn-by-turn patterns (ie. change in state value observed by those patterns)
 -- takes [(stateValue,[Keys])] 
-applyTDiffTurn :: [(Double,[(Int,Int)])] -> IO ()
-applyTDiffTurn turnValKeys = do
+applyTDiffTurn :: Connection -> [(Double,[(Int,Int)])] -> IO ()
+applyTDiffTurn conn turnValKeys = do
   putStrLn "Applying turn temporal difference..."
   let l = length turnValKeys 
   let (stateValues,turnKeyVals) = unzip turnValKeys
   let weightCoeffs = evaluateChangeStates stateValues
-  conn <- connectSqlite3 _dbname
   sequence $ zipWith (updateDBTurns conn l) (zip [1..] (init turnKeyVals)) weightCoeffs
-  commit conn
-  disconnect conn
   return ()
 
 updateDBTurns :: Connection -> Int -> (Int,[(Int,Int)])-> (Double -> Double -> Double -> Double) -> IO ()
@@ -313,20 +330,17 @@ vfromD d w
 -------------------------------------------------
 
 -- apply TDL for endgame patterns (ie. based on whether pattern led to successful game)
-applyTDiffEnd :: [[(Int,Int)]] -> IO ()
-applyTDiffEnd succTurnKeys = do
+applyTDiffEnd :: Connection -> [[(Int,Int)]] -> IO ()
+applyTDiffEnd conn succTurnKeys = do
   -- keys should be a subset of dbkeys, as new entries should be added as they're not found whilst the game is being played
   let l = length succTurnKeys
-  dbKeyVals <- getAllDBValues
+  dbKeyVals <- getAllDBValues conn
   let (_,dbKeyFinalVals) = foldl (updateWeights l) (1,dbKeyVals) succTurnKeys
-  updateDB dbKeyFinalVals 
+  updateDB conn dbKeyFinalVals 
 
-getAllDBValues :: IO [((Int,Int),Double)]
-getAllDBValues = do
-  conn <- connectSqlite3 _dbname
+getAllDBValues :: Connection -> IO [((Int,Int),Double)]
+getAllDBValues conn = do
   results <- quickQuery' conn "SELECT pid, pval, weight FROM test" []
-  commit conn
-  disconnect conn
   return $ map convListToTuple results
   
 convListToTuple :: [SqlValue] -> ((Int,Int),Double)
@@ -335,14 +349,12 @@ convListToTuple [s1,s2,s3] = ((fromSql s1, fromSql s2),fromSql s3)
 updateWeights :: Int -> (Int,[((Int,Int),Double)]) -> [(Int,Int)]  -> (Int,[((Int,Int),Double)])
 updateWeights l (n,keyVals) succKeys = (n+1 , map (\(key,prev) -> (key, getNextWeight prev (n+1) (getK n l) (key `elem` succKeys))) keyVals)
 
-updateDB :: [((Int,Int),Double)] -> IO ()
-updateDB finalVals = do
-    conn <- connectSqlite3 _dbname
-    sequence $ map (\((pid,pval),weight) -> 
+updateDB :: Connection -> [((Int,Int),Double)] -> IO ()
+updateDB conn finalVals = do
+  sequence $ map (\((pid,pval),weight) -> 
                          run conn "UPDATE test SET weight = ? WHERE pid = ? AND pval = ?" [toSql weight, toSql pid, toSql pval])
                finalVals
-    commit conn
-    disconnect conn
+  return ()
 
 -- generate temperature based on placement in game
 getK :: Int -> Int -> Double

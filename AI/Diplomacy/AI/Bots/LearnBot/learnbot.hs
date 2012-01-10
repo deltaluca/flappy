@@ -29,7 +29,10 @@ import qualified Data.Map as Map
 import qualified Data.Traversable as Traversable
 
 import Debug.Trace
-  
+
+import Database.HDBC
+import Database.HDBC.Sqlite3
+ 
 main = skelBot learnBot
 
 learnBot :: (MonadIO m) => DipBot m LearnHistory
@@ -73,8 +76,12 @@ learnBrainMove = do
 learnGameOver :: (MonadIO m) => GameKnowledgeT LearnHistory m ()
 learnGameOver = do
   hist <- getHistory
-  liftIO $ applyTDiffEnd $ (\(x, y) -> y) $ unzip hist
-  liftIO $ applyTDiffTurn hist
+  conn <- liftIO $ connectSqlite3 _dbname
+  liftIO $ commitPureDB conn (getPureDB hist)
+  liftIO $ applyTDiffEnd conn $ (\(x, y) -> y) $ unzip (getHist hist)
+  liftIO $ applyTDiffTurn conn (getHist hist)
+  liftIO $ commit conn
+  liftIO $ disconnect conn
   return ()
 
 learnBrainEnd :: (MonadIO m, MonadGameKnowledge h m, MonadBrain o m) => m Bool
@@ -90,7 +97,12 @@ learnBrainEnd = do
 learnProcessResults _ = id
 
 learnInitHistory :: (MonadIO m) => GameInfo -> GameState -> m LearnHistory
-learnInitHistory _ _ = return []
+learnInitHistory _ _ = do
+  conn <- liftIO $ connectSqlite3 _dbname
+  pureDB <- liftIO $ makeAndFillPureDB conn
+  liftIO $ commit conn
+  liftIO $ disconnect conn
+  return $ LearnHistory pureDB []
 
 learnBrainRetreat :: (MonadIO m) => LearnBrainRetreatT m ()
 learnBrainRetreat = do
