@@ -34,3 +34,6 @@ debug:
 
 cover:
 	cd AI/dist/build/coverbot && zsh -c './coverbot localhost 16713  &> outp &'
+
+noredir:
+	cd AI/dist/build/holdbot && zsh -c 'for i in {1..6} ; do ./holdbot localhost 16713 &> outp.$$i & ; done' && ./holdbot localhost 16713

@@ -301,19 +301,21 @@ protocol = do
 -- one might wonder what these are for
 liftT :: (Monad m, MonadTrans t, Monad (t m)) =>
          (m a -> m b) -> t m a -> t m b
-liftT f a = lift . f =<< liftM return a
+liftT f a = do
+  g <- return . f =<< liftM return a
+  lift g
 
 liftT2 :: (Monad m, MonadTrans t, Monad (t m)) =>
           (m a -> m b -> m c) -> t m a -> t m b -> t m c
 liftT2 f a b = do
-  g <- (return . f =<< liftM return a)
+  g <- return . f =<< liftM return a
   liftT g b
 
   -- we actually don't use this just wanted to see tah pattern
 liftT3 :: (Monad m, MonadTrans t, Monad (t m)) =>
           (m a -> m b -> m c -> m d) -> t m a -> t m b -> t m c -> t m d
 liftT3 f a b c = do
-  g <- (return . f =<< liftM return a)
+  g <- return . f =<< liftM return a
   liftT2 g b c
 
 -- lifts be here. dont be scared just be confident
