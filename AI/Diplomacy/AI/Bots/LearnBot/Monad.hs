@@ -7,9 +7,15 @@ import Diplomacy.AI.SkelBot.Brain
 import Control.Monad.Random
 import Control.Monad.Trans
 
+import Data.Map as Map
+
 -- no pure brains blah
 
-type LearnHistory = [(Double, [(Int, Int)])]
+data LearnHistory = LearnHistory { getPureDB :: PureDB 
+                                 , getHist :: [(Double, [(Int, Int)])] }
+
+                                      
+type PureDB =  Map.Map (Int,Int) (Int,Int,Double,Int)
 
 -- impure brains
 type LearnBrainT o m = RandT StdGen (BrainCommT o LearnHistory m)

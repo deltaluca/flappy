@@ -65,6 +65,7 @@ _lowK = 1.0
 _highK :: Double
 _highK = 5.0
 
+-- NOT IMPLEMENTED
 -- no of supply centres needed to win
 _noOfSCNeededToWin :: Int
 _noOfSCNeededToWin = 18
@@ -208,6 +209,7 @@ updatePatternsGetWeightAge (pid, pval, psize) = do
     Just (_,_,weight,age) -> do
       putHistory $ LearnHistory (Map.insert (pid,pval) (pid,pval,weight,age+1) pureDB) (getHist hist)
       return $ (weight,age,psize)
+
 
 sortGT :: (Double, a) -> (Double, a) ->  Ordering
 sortGT (d1,_) (d2,_)
