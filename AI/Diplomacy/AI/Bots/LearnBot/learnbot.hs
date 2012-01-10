@@ -79,8 +79,8 @@ learnGameOver = do
   hist <- getHistory
   conn <- liftIO $ connectSqlite3 _dbname
   liftIO $ commitPureDB conn (getPureDB hist)
-  liftIO $ applyTDiffEnd conn $ (\(x, y) -> y) $ unzip (getHist hist)
   liftIO $ applyTDiffTurn conn (getHist hist)
+  liftIO $ applyTDiffEnd conn $ (\(x, y) -> y) $ unzip (getHist hist)
   liftIO $ commit conn
   liftIO $ disconnect conn
   return ()

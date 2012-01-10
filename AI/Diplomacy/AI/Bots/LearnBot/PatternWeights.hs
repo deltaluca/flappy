@@ -51,7 +51,7 @@ _dbname = "test.db"
 
 -- n pattern weights to use
 _npats :: [Int]
-_npats = [1,2]
+_npats = [1]
 
 -- _c defines the constant that determines how 'strong' the weights are affected
 -- Larger _c corresponds to smaller change
@@ -174,7 +174,9 @@ _patterns d  = zipApply (generatePatterns d _npats) [1..]
 
 commitPureDB :: Connection -> PureDB -> IO ()
 commitPureDB conn db = do
+  putStrLn "Commiting pure db, deleting table!"
   run conn "DELETE FROM test" []
+  putStrLn "Inserting values!"
   sequence $ map (\(_,(pid,pval,weight,age)) -> addVal pid pval weight age ) $ Map.toList db
   return ()
   where 
@@ -300,7 +302,7 @@ applyTDiffTurn conn turnValKeys = do
   let (stateValues,turnKeyVals) = unzip turnValKeys
   let weightCoeffs = evaluateChangeStates stateValues
   sequence $ zipWith (updateDBTurns conn l) (zip [1..] (init turnKeyVals)) weightCoeffs
-  return ()
+  putStrLn "FINISHED TURN"
 
 updateDBTurns :: Connection -> Int -> (Int,[(Int,Int)])-> (Double -> Double -> Double -> Double) -> IO ()
 updateDBTurns conn l (n,turnKeys) weightFu = do
@@ -338,7 +340,8 @@ applyTDiffEnd conn succTurnKeys = do
   let l = length succTurnKeys
   dbKeyVals <- getAllDBValues conn
   let (_,dbKeyFinalVals) = foldl (updateWeights l) (1,dbKeyVals) succTurnKeys
-  updateDB conn dbKeyFinalVals 
+  updateDB conn dbKeyFinalVals
+  putStrLn "FINISHED END"
 
 getAllDBValues :: Connection -> IO [((Int,Int),Double)]
 getAllDBValues conn = do
