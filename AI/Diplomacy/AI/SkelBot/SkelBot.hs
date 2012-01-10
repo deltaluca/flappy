@@ -463,7 +463,7 @@ dispatcher masterOut brainOut = forever $ do
          `orElse`
          (return . Right =<< readTSeq brainOut)
   -- note ("(DISPATCHING) " ++ show msg)
-   tellDaide . either id (DM . SendPress Nothing) $ msg
+  tellDaide . either id (DM . SendPress Nothing) $ msg
 
 receiver :: TSeq DaideMessage -> TSeq InMessage -> DaideAsk ()
 receiver masterIn brainIn = forever $ do
