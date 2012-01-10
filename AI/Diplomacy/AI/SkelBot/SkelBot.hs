@@ -352,13 +352,9 @@ gameLoop tout = do
     -- dont submit empty order list
     when (moveOrders /= []) . pushDip $ SubmitOrder (Just turn) moveOrders
 
-    liftMaster . lift . note $
-      "Moves submitted"
     respOrders <- manyTry $
                   [ (order, ordNote)
                   | AckOrder order ordNote <- nextDip ]
-    liftMaster . lift . note $
-      "Acknowledging orders received"
   
     let sortedRespOrders = sortBy (\(o1, _) (o2, _) -> compare o1 o2) respOrders
         
@@ -466,8 +462,8 @@ dispatcher masterOut brainOut = forever $ do
          (return . Left =<< readTSeq masterOut)
          `orElse`
          (return . Right =<< readTSeq brainOut)
-  note ("(DISPATCHING) " ++ show msg)
-  tellDaide . either id (DM . SendPress Nothing) $ msg
+  -- note ("(DISPATCHING) " ++ show msg)
+   tellDaide . either id (DM . SendPress Nothing) $ msg
 
 receiver :: TSeq DaideMessage -> TSeq InMessage -> DaideAsk ()
 receiver masterIn brainIn = forever $ do
