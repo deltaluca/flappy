@@ -81,8 +81,11 @@ randomBot = DipBot { dipBotName = "FlappyRandomBot"
                    , dipBotBrainRetreat = randomBrainRetreatComm
                    , dipBotBrainBuild = randomBrainBuildComm
                    , dipBotProcessResults = randomProcessResults
-                   , dipBotInitHistory = randomInitHistory }
+                   , dipBotInitHistory = randomInitHistory
+                   , dipBotGameOver = randomGameOver }
 
+randomGameOver :: (MonadIO m) => GameKnowledgeT () m ()
+randomGameOver = return ()
 
 randomBrainComm :: (MonadIO m, OrderClass o) => RandomBrain o () -> RandomBrainCommT o m ()
 randomBrainComm pureBrain = do
