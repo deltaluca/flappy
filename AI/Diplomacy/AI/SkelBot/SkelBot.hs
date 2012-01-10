@@ -1,5 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleInstances, DeriveDataTypeable, MultiParamTypeClasses, FunctionalDependencies, TypeSynonymInstances, MonadComprehensions #-}
 
+-- |SkelBot is the skeleton bot that all bots build on top of. tread lightly
+
 module Diplomacy.AI.SkelBot.SkelBot (skelBot, Master) where
 
 import Diplomacy.Common.DaideHandle
@@ -43,47 +45,49 @@ import qualified Text.Parsec.Prim as Parsec
 import qualified Data.Map as Map
 
   -- Master thread's monad
-newtype MasterT m a = Master { unMaster :: (ReaderT (ThreadId, ThreadId) -- for shutting down
-                                            (ReaderT (TSeq InMessage, TSeq OutMessage)
-                                             (CommT DaideMessage DaideMessage m)) a)}
-                    deriving (Functor, Monad, MonadIO, MonadReader (ThreadId, ThreadId))
+newtype MasterT h m a = Master { unMaster :: ReaderT (ThreadId, ThreadId) -- for shutting down
+                                             (ReaderT (TSeq InMessage, TSeq OutMessage)
+                                              (CommT DaideMessage DaideMessage
+                                               (ReaderT (DipBot (Master h) h) m))) a }
+                      deriving (Functor, Monad, MonadIO, MonadReader (ThreadId, ThreadId))
 
-type Master = MasterT DaideHandle
+type Master h = MasterT h DaideHandle
 
-instance MonadTrans MasterT where
-  lift = Master . lift . lift . lift
+instance MonadTrans (MasterT h) where
+  lift = Master . lift . lift . lift . lift
 
-instance (Monad m) => MonadComm DaideMessage DaideMessage (MasterT m) where
+instance (Monad m) => MonadComm DaideMessage DaideMessage (MasterT h m) where
   pushMsg = Master . lift . lift . pushMsg
   popMsg = Master . lift . lift $ popMsg
   peekMsg = Master . lift . lift $ peekMsg
   pushBackMsg = Master . lift . lift . pushBackMsg
 
-instance DaideErrorClass (MasterT DaideHandle) where
-  throwEM = Master . lift . lift . lift . throwEM
+instance DaideErrorClass (MasterT h DaideHandle) where
+  throwEM = lift . throwEM
 
-newtype Protocol a = Protocol { unProtocol :: Parsec.ParsecT (TStream DaideMessage) () Master a }
+newtype Protocol h a = Protocol { unProtocol :: Parsec.ParsecT (TStream DaideMessage) ()
+                                                (Master h) a }
                    deriving (Functor, MonadIO)
 
-instance Monad Protocol where
+instance Monad (Protocol h) where
   return = Protocol . return
   ma >>= f = Protocol $ unProtocol ma >>= unProtocol . f
   fail = Protocol . Parsec.parserFail
 
-instance MonadComm DaideMessage DaideMessage Protocol where
+instance MonadComm DaideMessage DaideMessage (Protocol h) where
   pushMsg = Protocol . lift . pushMsg
   popMsg = Protocol . lift $ popMsg
   peekMsg = Protocol . lift $ peekMsg
   pushBackMsg = Protocol . lift . pushBackMsg
   
-instance DaideErrorClass Protocol where
+instance DaideErrorClass (Protocol h) where
   throwEM = liftMaster . throwEM
 
-liftMaster :: Master a -> Protocol a
+liftMaster :: Master h a -> Protocol h a
 liftMaster = Protocol . lift
 
-runMaster :: Master a -> DaideHandle a
-runMaster master = do
+runMaster :: DipBot (Master h) h -> Master h a -> DaideHandle a
+runMaster bot master = do
   -- Create messaging queues that interface with the Brain
   brainIn <- liftIO (newTSeqIO :: IO (TSeq InMessage))
   brainOut <- liftIO (newTSeqIO :: IO (TSeq OutMessage))
@@ -99,19 +103,26 @@ runMaster master = do
 
   note "Starting master"
   -- run master
-  runCommT (runReaderT (runReaderT (unMaster master)
-                        (t1, t2))
-            (brainIn, brainOut))
-    masterIn masterOut  
+  runReaderT (runCommT (runReaderT (runReaderT (unMaster master)
+                                    (t1, t2))
+                        (brainIn, brainOut))
+              masterIn masterOut)
+    bot
 
-shutdownMaster :: Master a
+shutdownMaster :: Master h a
 shutdownMaster = do
   (t1, t2) <- Master ask
   liftIO $ killThread t1
   liftIO $ killThread t2
   lift shutdownDaide
   
-skelBot :: DipBot Master h -> IO ()
+askBot :: Master h (DipBot (Master h) h)
+askBot = Master . lift . lift . lift $ ask
+
+asksBot :: (DipBot (Master h) h -> a) -> Master h a
+asksBot f = liftM f askBot
+
+skelBot :: DipBot (Master h) h -> IO ()
 skelBot bot = do
   updateGlobalLogger "Main" (setLevel NOTICE)
   opts <- getCmdlineOpts
@@ -128,7 +139,7 @@ connectToServer server port = do
   hostNam <- getHostName
   return (Handle hndle hostNam port)
 
-communicate :: DipBot Master h -> DaideHandle ()
+communicate :: DipBot (Master h) h -> DaideHandle ()
 communicate bot = do
   note "Connection established, sending initial message"
   runDaideTell $ tellDaide (IM (fromIntegral _DAIDE_VERSION))
@@ -137,11 +148,11 @@ communicate bot = do
     RM -> return ()
     _ -> throwEM RMNotFirst
 
-  runMaster (runProtocol (protocol bot))
+  runMaster bot (runProtocol protocol)
 
   return ()
 
-runProtocol :: Protocol a -> Master a
+runProtocol :: Protocol h a -> Master h a
 runProtocol (Protocol prot) = do
   stmPop <- popMsg
   e <- Parsec.runParserT prot () "" =<< newTStream stmPop
@@ -154,11 +165,12 @@ parserFail = Protocol . Parsec.parserFail
 try = Protocol . Parsec.try . unProtocol
 a <|> b = Protocol $ unProtocol a Parsec.<|> unProtocol b
 
-manyTry :: Protocol a -> Protocol [a]
+manyTry :: Protocol h a -> Protocol h [a]
 manyTry p = unfoldM ((try p >>= return . Just) <|> return Nothing)
 
-dipMsg :: (DipMessage -> Protocol (Maybe a)) -> Protocol a
-dipMsg f = do
+-- dipMsg for Protocol
+dipMsgPlain :: (DipMessage -> Protocol h (Maybe a)) -> Protocol h a
+dipMsgPlain f = do
   daide <- tokenPrim show (const . const) Just
   case daide of
     IM _ -> throwEM IMFromServer
@@ -173,11 +185,11 @@ dipMsg f = do
       ExitClient -> liftMaster $ pushMsg FM >> shutdownMaster
       SoloWinGame pow -> do
         liftMaster . lift . note $ "Solo win: " ++ show pow
-        dipMsg f
+        dipMsgPlain f
       DrawGame mPowers -> do
         liftMaster . lift . note $ "Draw" ++ maybe "" ((": " ++) . show) mPowers
-        dipMsg f
-      DipError (CivilDisorder _) -> dipMsg f -- it dont make no difference to me baby
+        dipMsgPlain f
+      DipError (CivilDisorder _) -> dipMsgPlain f -- it dont make no difference to me baby
       DipError err -> liftMaster $ do
         lift . note $ "DipError: " ++ show err
         pushMsg FM >> shutdownMaster
@@ -186,36 +198,82 @@ dipMsg f = do
         pushMsg FM >> shutdownMaster
       otherMsg -> maybe parserZero return =<< f otherMsg
 
-dipMsg1 :: DipMessage -> Protocol DipMessage
-dipMsg1 msg = dipMsg (\rmsg -> return $ if rmsg == msg
-                                        then Just msg
-                                        else Nothing)
+-- dipMsg for when we have gameknowledge context. only difference is it calls gameover hook
+dipMsg :: (DipMessage -> GameKnowledgeT h (StateT GameState (Protocol h)) (Maybe a)) ->
+          GameKnowledgeT h (StateT GameState (Protocol h)) a
+dipMsg f = do
+  hist <- getHistory
+  info <- askGameInfo
+  daide <- lift . lift $ tokenPrim show (const . const) Just
+  let gameOver = liftMaster $ do
+        go <- asksBot dipBotGameOver
+        _ <- runGameKnowledgeT go info hist
+        return ()
+  case daide of
+    IM _ -> lift . lift $ throwEM IMFromServer
+    RM -> lift . lift $ throwEM ManyRMs
+    FM -> lift . lift $ liftMaster shutdownMaster
+    EM err -> lift . lift $ liftMaster $ do
+      lift . note $ "EM : " ++ show err
+      shutdownMaster
+  -- put here anything that can be received at an arbitrary point in time!
+             -- RESUME HERE implement shutdownMaster for shutting down queues safely
+    DM dm -> case dm of
+      ExitClient -> do
+        lift . lift $ liftMaster $ pushMsg FM >> shutdownMaster
+      SoloWinGame pow -> do
+        lift . lift $ liftMaster . lift . note $ "Solo win: " ++ show pow
+        dipMsg f
+      DrawGame mPowers -> do
+        lift . lift $ liftMaster . lift . note $ "Draw" ++ maybe "" ((": " ++) . show) mPowers
+        dipMsg f
+      DipError (CivilDisorder _) -> dipMsg f -- it dont make no difference to me baby
+      DipError err -> lift . lift $ liftMaster $ do
+        lift . note $ "DipError: " ++ show err
+        pushMsg FM >> shutdownMaster
+      EndGameStats turn stats -> lift . lift $ do
+        gameOver
+        liftMaster $ do
+          lift . note $ "End Game Statistics (" ++ show turn ++ "):\n" ++ show stats
+          pushMsg FM >> shutdownMaster
+      otherMsg -> maybe (lift . lift $ parserZero) return =<< f otherMsg
 
-nextDip :: Protocol DipMessage
+dipMsgPlain1 :: DipMessage -> Protocol h DipMessage
+dipMsgPlain1 msg = dipMsgPlain (\rmsg -> return $ if rmsg == msg
+                                                  then Just msg
+                                                  else Nothing)
+
+nextDip :: GameKnowledgeT h (StateT GameState (Protocol h)) DipMessage
 nextDip = dipMsg (return . Just)
 
-pushDip :: DipMessage -> Protocol ()
+nextDipPlain :: Protocol h DipMessage
+nextDipPlain = dipMsgPlain (return . Just)
+
+pushDip :: DipMessage -> Protocol h ()
 pushDip msg = liftIO . atomically =<< pushMsg (DM msg)
 
 
-protocol :: DipBot Master h -> Protocol ()
-protocol bot = do
-  let nameMsg = Name (dipBotName bot) (show $ dipBotVersion bot)
+protocol :: Protocol h ()
+protocol = do
+  nameMsg <- liftMaster $ liftM2 Name
+             (asksBot dipBotName)
+             (liftM show $
+              asksBot dipBotVersion)
   pushDip nameMsg  
-  dipMsg1 (Accept nameMsg)
+  dipMsgPlain1 (Accept nameMsg)
 
-  MapName mapName <- nextDip
+  MapName mapName <- nextDipPlain
 
   -- BOTTLENECK (?) always request mapdefinition
   pushDip MapDefReq
-  MapDef mapDefinition <- nextDip
+  MapDef mapDefinition <- nextDipPlain
 
   pushDip (Accept (MapName mapName))
     
-  Start power _ _ _ <- nextDip
+  Start power _ _ _ <- nextDipPlain
   
-  CurrentPosition scos <- nextDip
-  CurrentUnitPosition turn unitPoss <- nextDip
+  CurrentPosition scos <- nextDipPlain
+  CurrentUnitPosition turn unitPoss <- nextDipPlain
   
   let gameInfo = GameInfo { gameInfoMapDef = mapDefinition
                           , gameInfoTimeout = 6 * 1000
@@ -228,24 +286,46 @@ protocol bot = do
   let tout = gameInfoTimeout gameInfo  
       
   -- initialise history
-  initHist <- liftMaster $ dipBotInitHistory bot gameInfo initState
+  initHist <- liftMaster $ do
+    f <- asksBot dipBotInitHistory
+    f gameInfo initState
 
   liftMaster . lift . note $ "Starting main game loop"
   -- Run the main game loop
-  _ <- runStateT (runGameKnowledgeT (forever (gameLoop bot tout))
+  _ <- runStateT (runGameKnowledgeT (forever (gameLoop tout))
                   gameInfo initHist
                  )
        initState
   return ()  
 
-gameLoop :: DipBot Master h -> Int -> GameKnowledgeT h (StateT GameState Protocol) ()
-gameLoop bot tout = do
+-- one might wonder what these are for
+liftT :: (Monad m, MonadTrans t, Monad (t m)) =>
+         (m a -> m b) -> t m a -> t m b
+liftT f a = lift . f =<< liftM return a
+
+liftT2 :: (Monad m, MonadTrans t, Monad (t m)) =>
+          (m a -> m b -> m c) -> t m a -> t m b -> t m c
+liftT2 f a b = do
+  g <- (return . f =<< liftM return a)
+  liftT g b
+
+  -- we actually don't use this just wanted to see tah pattern
+liftT3 :: (Monad m, MonadTrans t, Monad (t m)) =>
+          (m a -> m b -> m c -> m d) -> t m a -> t m b -> t m c -> t m d
+liftT3 f a b c = do
+  g <- (return . f =<< liftM return a)
+  liftT2 g b c
+
+-- lifts be here. dont be scared just be confident
+gameLoop :: Int -> GameKnowledgeT h (StateT GameState (Protocol h)) ()
+gameLoop tout = do
+  bot <- lift . lift . liftMaster $ askBot
   let brainMap = Map.fromList
-                 [ (Spring, execBrain (dipBotBrainMovement bot) tout)
-                 , (Summer, execBrain (dipBotBrainRetreat bot) tout)
-                 , (Fall,   execBrain (dipBotBrainMovement bot) tout)
-                 , (Autumn, execBrain (dipBotBrainRetreat bot) tout)
-                 , (Winter, execBrain (dipBotBrainBuild bot) tout) ]  
+                 [ (Spring, execBrain dipBotBrainMovement tout)
+                 , (Summer, execBrain dipBotBrainRetreat tout)
+                 , (Fall,   execBrain dipBotBrainMovement tout)
+                 , (Autumn, execBrain dipBotBrainRetreat tout)
+                 , (Winter, execBrain dipBotBrainBuild tout) ]  
   
   (GameState (MapState scos _) turn) <- lift get
   let ebrain = brainMap Map.! turnPhase turn
@@ -257,18 +337,22 @@ gameLoop bot tout = do
   lift . lift . liftMaster . lift . note $
     "Brain finished with " ++ show (length moveOrders) ++ " moves"
   
-  lift . lift $ do            -- not concerned with history/gamestate yet
+  lift . lift $
     -- dont submit empty order list
     when (moveOrders /= []) . pushDip $ SubmitOrder (Just turn) moveOrders
       
-    respOrders <- manyTry [ (order, ordNote)
-                          | AckOrder order ordNote <- nextDip ]
-    let sortedRespOrders = sortBy (\(o1, _) (o2, _) -> compare o1 o2) respOrders
-        
-    when (length moveOrders /= length sortedRespOrders) $ do
-      lastMsg <- nextDip
-      parserFail $ "Acknowledging messages missing, last message: " ++ show lastMsg
+  respOrders <- (liftT . liftT) manyTry $
+                [ (order, ordNote)
+                | AckOrder order ordNote <- nextDip ]
   
+  let sortedRespOrders = sortBy (\(o1, _) (o2, _) -> compare o1 o2) respOrders
+        
+  when (length moveOrders /= length sortedRespOrders) $ do
+    lastMsg <- nextDip
+    lift . lift . parserFail $
+      "Acknowledging messages missing, last message: " ++ show lastMsg
+  
+  lift . lift $
     zipWithM_ (\o1 (o2, oNote) -> do
                   when (o1 /= o2) $
                     parserFail $ "Acknowledging messages don't match orders"
@@ -277,25 +361,27 @@ gameLoop bot tout = do
                     "\" for order \"" ++ show o1 ++ "\""
               ) moveOrders sortedRespOrders
 
-    join $ (try $ do
-               Missing missing <- nextDip
-               return $ do
-                 liftMaster . lift . note $ show missing
-                 parserFail $ "Missing orders, can't handle for now"
-           ) <|>
-      return (return ())
+  let missOrders = (liftT . liftT) try $ do
+        Missing missing <- nextDip
+        lift . lift . return . lift . lift $ do
+          liftMaster . lift . note $ show missing
+          parserFail $ "Missing orders, can't handle for now"
+  join $ (liftT2 . liftT2) (<|>) missOrders undefined -- (return (return ()))
       
-  resultOrders <- lift . lift . manyTry $
+  resultOrders <- (liftT . liftT) manyTry $
                   [ (order, result)
                   | OrderResult trn order result <- nextDip
-                  , _ <- when (turn /= trn) . parserFail $
+                  , _ <- when (turn /= trn) . lift . lift . parserFail $
                     "OrderResults for wrong turn (Got " ++ show trn ++
                     ", expected " ++ show turn ++ ")" ]
   
-  modifyHistory (dipBotProcessResults bot resultOrders)  
+  modifyHistory $ dipBotProcessResults bot resultOrders
       
-  newScos <- lift . lift $ try [ newScos | CurrentPosition newScos <- nextDip ] <|> return scos
-  CurrentUnitPosition newTurn newUnitPoss <- lift . lift $ nextDip
+  newScos <- (liftT2 . liftT2) (<|>) -- sweeeet emooootioooon
+             ((liftT . liftT) try $
+              [ newScos | CurrentPosition newScos <- nextDip ])
+             (return scos)
+  CurrentUnitPosition newTurn newUnitPoss <- nextDip
   
   checkLost newScos newUnitPoss
 
@@ -307,12 +393,17 @@ gameLoop bot tout = do
     
 -- |check whether we've lost
 checkLost :: SupplyCOwnerships -> UnitPositions ->
-             GameKnowledgeT h (StateT GameState Protocol) ()
+             GameKnowledgeT h (StateT GameState (Protocol h)) ()
 checkLost supplies (UnitPositions up) = do
   myPower <- getMyPower
+  hist <- getHistory
+  info <- askGameInfo
   when (isNothing (Map.lookup myPower supplies) &&
         isNothing (Map.lookup myPower up))
     . lift . lift . liftMaster $ do
+    _ <- do
+      gameOver <- asksBot dipBotGameOver
+      runGameKnowledgeT gameOver info hist
     lift . note $ "I lost I guess? :C"
     pushMsg FM >> shutdownMaster
 checkLost _ _ = return ()
@@ -328,11 +419,12 @@ checkLost _ _ = return ()
 --   return orders
 
 -- dont mind the lifts
-execBrain :: (OrderClass o) => BrainCommT o h Master () -> Int ->
-             GameKnowledgeT h (StateT GameState Protocol) [Order]
-execBrain botBrain tout = do
+execBrain :: (OrderClass o) => (DipBot (Master h) h -> BrainCommT o h (Master h) ()) -> Int ->
+             GameKnowledgeT h (StateT GameState (Protocol h)) [Order]
+execBrain botBrainFun tout = do
   gameState <- lift get
   (brainIn, brainOut) <- lift . lift . liftMaster . Master . lift $ ask -- wat
+  botBrain <- lift . lift . liftMaster $ asksBot botBrainFun
   ordVar <- liftIO $ newTVarIO Nothing
   let gameKnowledge = liftM snd . flip runBrainT gameState
                       . mapBrainT (lift . liftMaster)
