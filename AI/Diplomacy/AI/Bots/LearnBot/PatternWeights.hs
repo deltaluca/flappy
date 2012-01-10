@@ -48,12 +48,12 @@ _dbname = "test.db"
 
 -- n pattern weights to use
 _npats :: [Int]
-_npats = [1]
+_npats = [1,2]
 
 -- _c defines the constant that determines how 'strong' the weights are affected
 -- Larger _c corresponds to smaller change
 _c :: Double
-_c = 10.0
+_c = 20.0
 
 -- sets the low (starting) and high (ending) values of k, which varies linearly over the 
 -- game period from low to high. k is used as a 'learning temperature'
@@ -175,12 +175,14 @@ average l = (sum l) / ((fromIntegral.length) l)
 -- from database and returns (weight, age, pattern size)
 updatePatternsGetWeightAge :: Connection -> (Int,Int,Int) -> IO (Double,Int,Int)
 updatePatternsGetWeightAge conn (pid, pval, psize) = do 
-  result <- quickQuery' conn "SELECT pid, pval FROM test WHERE pid = ? AND pval = ? " [toSql pid, toSql pval] 
+  result <- quickQuery' conn "SELECT pid, pval, weight, age FROM test WHERE pid = ? AND pval = ? " [toSql pid, toSql pval] 
   if (length result == 0) -- if not in database, use default value
-    then run conn "INSERT INTO test VALUES (?,?,0.5,1)" [toSql pid, toSql pval]
-    else run conn "UPDATE test SET age = (age + 1) WHERE pid = ? AND pval = ?" [toSql pid, toSql pval]
-  weightsResult <- quickQuery' conn "SELECT weight, age FROM test WHERE pid = ? AND pval = ?" [toSql pid, toSql pval]
-  return $ (\[x,y] -> (fromSql x, fromSql y, psize)::(Double,Int,Int)) $ head weightsResult
+    then do
+      run conn "INSERT INTO test VALUES (?,?,0.5,1)" [toSql pid, toSql pval]
+      return (0.5,1,psize)
+    else do
+      run conn "UPDATE test SET age = (age + 1) WHERE pid = ? AND pval = ?" [toSql pid, toSql pval]
+      return $ (\[_,_,w,a] -> (fromSql w, fromSql a, psize)::(Double,Int,Int)) $ head result 
 
 sortGT :: (Double, a) -> (Double, a) ->  Ordering
 sortGT (d1,_) (d2,_)
@@ -192,7 +194,6 @@ weighOrder conn order = do
   keyVals <- sequence [applyPattern p order | p <- _patterns (undefined :: Dummy o m)]
   weightAgeSizes <- liftIO (sequence $ map (updatePatternsGetWeightAge conn) keyVals)
   
- 
   -- weights are linearly biased by their ages and pattern size
   let weights =  map (\(weight,age,patSize) -> (weight*(fromIntegral patSize)) + (fromIntegral age)) weightAgeSizes
   return $ (average weights, peelR keyVals) --remove patSize because it is no longer required
