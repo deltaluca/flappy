@@ -152,21 +152,10 @@ Executable dumbbot
     containers,
     transformers
 
-  Ghc-Options: -Wall -Werror -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
+  Ghc-Options: -Wall  -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
 
 --   -- Modules not exported by this package.
 --   -- Other-modules:       
   
 --   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
 --   -- Build-tools:     
-
-Executable coverbot
-  Main-is:           Diplomacy/AI/Bots/CoverBot/coverbot.hs
-  -- Packages needed in order to build this package.
-  Build-depends:       
-    base >= 4,
-    cmdargs,
-    hslogger,
-    mtl,
-    DiplomacyCommon <= 1,
-    array
