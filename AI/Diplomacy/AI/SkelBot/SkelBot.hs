@@ -343,9 +343,15 @@ gameLoop tout = do
     -- dont submit empty order list
     when (moveOrders /= []) . pushDip $ SubmitOrder (Just turn) moveOrders
       
+  liftT (const $ return ()) (return ())
+
+  lift . lift . liftMaster . lift . note $
+    "Moves submitted"
   respOrders <- (liftT . liftT) manyTry $
                 [ (order, ordNote)
                 | AckOrder order ordNote <- nextDip ]
+  lift . lift . liftMaster . lift . note $
+    "Acknowledging orders received"
   
   let sortedRespOrders = sortBy (\(o1, _) (o2, _) -> compare o1 o2) respOrders
         
