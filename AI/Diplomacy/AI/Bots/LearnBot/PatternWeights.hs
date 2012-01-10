@@ -217,8 +217,9 @@ weighOrderSets orderSets = do
 
   liftIO $ commit conn
   liftIO $ disconnect conn
-  liftIO $ if (length hist) >= 10 then applyTDiffTurn hist else return ()
-  putHistory $ if (length hist) < 10 then (hist ++ [(stateValue, concat keys)]) else []
+  --liftIO $ if (length hist) >= 10 then applyTDiffTurn hist else return ()
+  --putHistory $ if (length hist) < 10 then (hist ++ [(stateValue, concat keys)]) else []
+  putHistory $ hist ++ [(stateValue, concat keys)]
   (return . (sortBy sortGT)) weights
 
 

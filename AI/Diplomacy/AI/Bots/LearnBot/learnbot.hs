@@ -39,7 +39,8 @@ learnBot = DipBot { dipBotName = "FlappyLearningBot"
                   , dipBotBrainRetreat = learnBrainRetreatComm
                   , dipBotBrainBuild = learnBrainBuildComm
                   , dipBotProcessResults = learnProcessResults
-                  , dipBotInitHistory = learnInitHistory }
+                  , dipBotInitHistory = learnInitHistory
+                  , dipBotGameOver = learnGameOver }
 
 
 withStdGen :: (MonadIO m, OrderClass o) => LearnBrainT o m () -> BrainCommT o LearnHistory m ()
@@ -68,6 +69,13 @@ learnBrainMove = do
   highestWeightedOrders <- weighOrderSets possibleOrderSets
   orders <- randWeightedElem $ take 5 highestWeightedOrders
   putOrders $ Just orders
+
+learnGameOver :: (MonadIO m) => GameKnowledgeT LearnHistory m ()
+learnGameOver = do
+  hist <- getHistory
+  liftIO $ applyTDiffEnd $ (\(x, y) -> y) $ unzip hist
+  liftIO $ applyTDiffTurn hist
+  return ()
 
 learnBrainEnd :: (MonadIO m, MonadGameKnowledge h m, MonadBrain o m) => m Bool
 learnBrainEnd = do
