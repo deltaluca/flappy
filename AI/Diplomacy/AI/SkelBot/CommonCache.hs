@@ -19,6 +19,7 @@ import qualified Data.Map as Map
 
 data BrainCache = BrainCache { brainCacheProvNodeUnitMap :: Map.Map ProvinceNode UnitPosition
                              , brainCacheProvUnitMap :: Map.Map Province UnitPosition
+                             , brainCacheAllAdjacentNodes :: Map.Map Province [ProvinceNode]
                              }
 
 newtype BrainCacheT m a = BrainCacheT { unBrainCache :: (ReaderT BrainCache m) a }
@@ -81,3 +82,21 @@ getProvUnitMap = do
 provNodeToProv :: ProvinceNode -> Province
 provNodeToProv (ProvNode prov) = prov
 provNodeToProv (ProvCoastNode prov _) = prov
+
+getAllAdjacentNodesMap :: (MonadGameKnowledge h m) => m (Map.Map Province [ProvinceNode])
+
+-- gets all adjacent nodes to a given province
+getAllAdjacentNodes :: (MonadGameKnowledge h m) => Province -> m [ProvinceNode]
+getAllAdjacentNodes prov = do
+  mapDef <- asksGameInfo gameInfoMapDef
+  let adjMap = mapDefAdjacencies mapDef
+      provNodes = mapDefProvNodes mapDef ! prov
+      nodeUnits = liftM2 (,) provNodes [Army, Fleet]
+  return $ foldl1 union . map (adjMap !) $ nodeUnits
+
+-- gets all adjacent nodes to a given provinceNode
+getAllAdjacentNodes2 :: (MonadGameKnowledge h m) => ProvinceNode -> m [ProvinceNode]
+getAllAdjacentNodes2 provNode = do
+  mapDef <- asksGameInfo gameInfoMapDef
+  let adjMap = mapDefAdjacencies mapDef
+  return $ (adjMap ! (provNode, Army)) `union` (adjMap ! (provNode, Fleet))
