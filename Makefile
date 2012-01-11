@@ -25,6 +25,9 @@ viewerr:
 dumb:
 	cd AI/dist/build/dumbbot && zsh -c './dumbbot localhost 16713 +RTS -p &'
 
+dumb6:
+	cd AI/dist/build/dumbbot && zsh -c 'for i in {1..6} ; do ./dumbbot localhost 16713 +RTS -p &> outp.$$i & ; done'
+
 learn7:
 	cd AI/dist/build/learnbot && zsh -c 'for i in {1..7} ; do ./learnbot localhost 16713 &> outp.$$i & ; done'
 
