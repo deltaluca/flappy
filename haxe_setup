@@ -8,7 +8,7 @@ else
 	INSTDIR=$HOME/.haxenekoflash
 fi
 
-rm -rf $INSTDIR
+#rm -rf $INSTDIR
 
 mkdir $INSTDIR
 cd $INSTDIR
@@ -140,6 +140,5 @@ svn checkout http://sdl-static.googlecode.com/svn/trunk/ sdl-static
 
 cd $INSTDIR
 cd nmefork/project
-haxelib run hxcpp Build.xml
 haxelib run hxcpp Build.xml -DHXCPP_M64
 

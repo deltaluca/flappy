@@ -6,6 +6,9 @@ ser:
 obs:
 	cd UserClient && make run &
 
+random6:
+	cd AI/dist/build/randombot && zsh -c 'for i in {1..6} ; do ./randombot localhost 16713 &> outp.$$i & ; done'
+
 random7:
 	cd AI/dist/build/randombot && zsh -c 'for i in {1..7} ; do ./randombot localhost 16713 &> outp.$$i & ; done'
 
@@ -26,7 +29,7 @@ learn7:
 	cd AI/dist/build/learnbot && zsh -c 'for i in {1..7} ; do ./learnbot localhost 16713 &> outp.$$i & ; done'
 
 learn:
-	cd AI/dist/build/learnbot && zsh -c './learnbot localhost 16713  &> outp &'
+	cd AI/dist/build/learnbot && zsh -c './learnbot localhost 16713 +RTS -p &'
 
 
 debug:
