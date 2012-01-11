@@ -24,9 +24,7 @@ import Diplomacy.AI.SkelBot.Common
 import Control.Monad
 import Control.Monad.Random
 import Control.Monad.Trans
-import Control.Applicative
 
-import System.Random
 
 import Data.List
 import Database.HDBC
@@ -228,7 +226,7 @@ weighOrder order = do
   return $ (average weights, peelR keyVals) --remove patSize because it is no longer required
     where
       peelR :: [(a,a,a)] -> [(a,a)]
-      peelR  = (\(x,y,z) -> zip x y) . unzip3 
+      peelR  = (\(x,y,_) -> zip x y) . unzip3 
 
 weighOrderSet :: (MonadIO m, OrderClass o) => [OrderMovement] -> LearnBrainT o m ((Double, [OrderMovement]),[(Int,Int)])
 weighOrderSet orders = do
@@ -286,7 +284,7 @@ getStateValue = do
 getSupplyCentresValue ::  (MonadIO m, OrderClass o) => LearnBrainT o m Double
 getSupplyCentresValue = do
   myPower <- getMyPower
-  (sc, nonsc) <- getProvOcc myPower
+  (sc, _) <- getProvOcc myPower
   return $ (fromIntegral sc)/(fromIntegral _noOfSCNeededToWin)
 
 --------------------------------------------------------------------
@@ -317,7 +315,7 @@ updateDBTurns' conn n l weightFu (pid,pval) = do
   return ()
   
 evaluateChangeStates :: [Double] -> [(Double -> Double -> Double -> Double)]
-evaluateChangeStates [x] = []
+evaluateChangeStates [_] = []
 evaluateChangeStates (x:x':xs) =
   evaluateChangeState x x' : evaluateChangeStates (x':xs)
 
@@ -350,6 +348,7 @@ getAllDBValues conn = do
   
 convListToTuple :: [SqlValue] -> ((Int,Int),Double)
 convListToTuple [s1,s2,s3] = ((fromSql s1, fromSql s2),fromSql s3)
+convListToTuple _ = undefined
 
 updateWeights :: Int -> (Int,[((Int,Int),Double)]) -> [(Int,Int)]  -> (Int,[((Int,Int),Double)])
 updateWeights l (n,keyVals) succKeys = (n+1 , map (\(key,prev) -> (key, getNextWeight prev (n+1) (getK n l) (key `elem` succKeys))) keyVals)
