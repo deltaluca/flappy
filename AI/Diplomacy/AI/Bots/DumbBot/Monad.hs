@@ -1,10 +1,14 @@
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
 module Diplomacy.AI.Bots.DumbBot.Monad where
 
-import Diplomacy.AI.SkelBot.SkelBot
+import Diplomacy.Common.Data
 import Diplomacy.AI.SkelBot.Brain
-import Diplomacy.AI.SkelBot.DipBot
-import Diplomacy.AI.SkelBot.Common
 import Diplomacy.AI.SkelBot.CommonCache
+
+import System.Random
+import Control.Monad.Random
+import Control.Monad.Trans
+--import Control.DeepSeq
 
 -- pure brains
 

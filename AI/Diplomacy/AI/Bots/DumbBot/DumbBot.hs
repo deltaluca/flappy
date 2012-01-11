@@ -4,12 +4,22 @@ module Diplomacy.AI.Bots.DumbBot.DumbBot ( dumbBrainMoveComm
                                          ) where
 
 import Diplomacy.AI.Bots.DumbBot.Monad
+import Diplomacy.AI.SkelBot.Scoring
 
-import Diplomacy.AI.SkelBot.SkelBot
 import Diplomacy.AI.SkelBot.Brain
-import Diplomacy.AI.SkelBot.DipBot
 import Diplomacy.AI.SkelBot.Common
 import Diplomacy.AI.SkelBot.CommonCache
+import Diplomacy.Common.Data
+
+import Data.Maybe
+import Data.List
+import System.Random
+import Control.Monad.IO.Class
+import Control.Monad.Random
+import Control.Monad.Trans
+import Control.Monad
+
+import qualified Data.Map as Map
 
 withStdGen :: (MonadIO m, OrderClass o) => DumbBrain o () -> DumbBrainCommT o m ()
 withStdGen brain = do

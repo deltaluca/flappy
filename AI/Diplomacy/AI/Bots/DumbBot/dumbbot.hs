@@ -5,32 +5,19 @@
 -- the only functional difference between this bot and the original is
 -- the sampling method used when generating moves
 
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
 module Main where
 
 import Diplomacy.AI.Bots.DumbBot.DumbBot
-import Diplomacy.AI.SkelBot.Scoring
 
 import Diplomacy.AI.SkelBot.SkelBot
-import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.DipBot
-import Diplomacy.AI.SkelBot.Common
-import Diplomacy.AI.SkelBot.CommonCache
-
 import Diplomacy.Common.Data
 
-import Data.Maybe
-import Data.List
-import System.Random
 import Control.Monad.IO.Class
-import Control.Monad.Random
-import Control.Monad.Trans
 import Control.Monad
 --import Control.DeepSeq
 
 --import Debug.Trace
-
-import qualified Data.Map as Map
 
 _SEED = 0 :: Int
 

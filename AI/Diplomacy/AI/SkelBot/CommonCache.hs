@@ -7,6 +7,7 @@ module Diplomacy.AI.SkelBot.CommonCache ( BrainCache(..)
                                         , MonadBrainCache(..)
                                         , runBrainCache
                                         , provNodeToProv
+                                        , (!)
                                         ) where
 
 import Diplomacy.Common.Data
@@ -14,13 +15,16 @@ import Diplomacy.AI.SkelBot.Brain
 
 import Control.Applicative
 import Control.Monad.Reader
+import Data.List
 
 import qualified Data.Map as Map
 
-data BrainCache = BrainCache { brainCacheProvNodeUnitMap :: Map.Map ProvinceNode UnitPosition
-                             , brainCacheProvUnitMap :: Map.Map Province UnitPosition
-                             , brainCacheAllAdjacentNodes :: Map.Map Province [ProvinceNode]
-                             }
+data BrainCache = BrainCache
+                  { brainCacheProvNodeUnitMap :: Map.Map ProvinceNode UnitPosition
+                  , brainCacheProvUnitMap :: Map.Map Province UnitPosition
+                  , brainCacheAllAdjacentNodes :: Map.Map Province [ProvinceNode]
+                  , brainCacheAllAdjacentNodes2 :: Map.Map ProvinceNode [ProvinceNode]
+                  }
 
 newtype BrainCacheT m a = BrainCacheT { unBrainCache :: (ReaderT BrainCache m) a }
                         deriving (Applicative, Monad, MonadIO, MonadTrans, Functor)
@@ -39,6 +43,8 @@ runBrainCache :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m, Applicat
 runBrainCache bc = runReaderT (unBrainCache bc) =<< BrainCache
                    <$> getProvNodeUnitMap
                    <*> getProvUnitMap
+                   <*> getAllAdjacentNodesMap
+                   <*> getAllAdjacentNodes2Map
 
 -- returns a mapping from provinceNodes to units
 getProvNodeUnitMap :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) =>
@@ -84,6 +90,16 @@ provNodeToProv (ProvNode prov) = prov
 provNodeToProv (ProvCoastNode prov _) = prov
 
 getAllAdjacentNodesMap :: (MonadGameKnowledge h m) => m (Map.Map Province [ProvinceNode])
+getAllAdjacentNodesMap = do
+  provs <- asksGameInfo (mapDefProvinces . gameInfoMapDef)
+  return . Map.fromList =<< mapM (\p -> return . ((,) p) =<< getAllAdjacentNodes p) provs
+
+getAllAdjacentNodes2Map :: (MonadGameKnowledge h m) => m (Map.Map ProvinceNode [ProvinceNode])
+getAllAdjacentNodes2Map = do
+  provs <- asksGameInfo (mapDefProvinces . gameInfoMapDef)
+  p2pn <- asksGameInfo (mapDefProvNodes . gameInfoMapDef)
+  let pnodes = concatMap (p2pn Map.!) provs
+  return . Map.fromList =<< mapM (\p -> return . ((,) p) =<< getAllAdjacentNodes2 p) pnodes
 
 -- gets all adjacent nodes to a given province
 getAllAdjacentNodes :: (MonadGameKnowledge h m) => Province -> m [ProvinceNode]
@@ -100,3 +116,6 @@ getAllAdjacentNodes2 provNode = do
   mapDef <- asksGameInfo gameInfoMapDef
   let adjMap = mapDefAdjacencies mapDef
   return $ (adjMap ! (provNode, Army)) `union` (adjMap ! (provNode, Fleet))
+
+(!) :: (Ord a) => Map.Map a [b] -> a -> [b]
+mp ! i = maybe [] id (Map.lookup i mp)

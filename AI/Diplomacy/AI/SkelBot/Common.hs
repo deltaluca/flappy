@@ -29,7 +29,6 @@ module Diplomacy.AI.SkelBot.Common( getMyPower
                                   , genLegalOrders
                                   , getOMTargetUnit
                                   , getOMSubjectUnit
-                                  , (!)
                                   -- Metrics
                                   , getProvOcc
                                   , getSuppControl
@@ -59,9 +58,6 @@ import qualified Data.Map as Map
   -- for hslogger bug
 import Control.Exception
 import Control.DeepSeq
-
-(!) :: (Ord a) => Map.Map a [b] -> a -> [b]
-mp ! i = maybe [] id (Map.lookup i mp)
 
 -- get own power token
 getMyPower :: (MonadGameKnowledge h m) => m Power
@@ -130,20 +126,16 @@ getAdjacentNodes (UnitPosition _ unitType provNode) = do
   return $ adjMap ! (provNode, unitType)
 
 -- gets all adjacent nodes to a given province
-getAllAdjacentNodes :: (MonadGameKnowledge h m) => Province -> m [ProvinceNode]
-getAllAdjacentNodes prov = do
-  mapDef <- asksGameInfo gameInfoMapDef
-  let adjMap = mapDefAdjacencies mapDef
-      provNodes = mapDefProvNodes mapDef ! prov
-      nodeUnits = liftM2 (,) provNodes [Army, Fleet]
-  return $ foldl1 union . map (adjMap !) $ nodeUnits
+getAllAdjacentNodes :: (MonadGameKnowledge h m, MonadBrainCache m) =>
+                       Province -> m [ProvinceNode]
+getAllAdjacentNodes prov = return . (Map.! prov)
+                           =<< asksCache brainCacheAllAdjacentNodes
 
 -- gets all adjacent nodes to a given provinceNode
-getAllAdjacentNodes2 :: (MonadGameKnowledge h m) => ProvinceNode -> m [ProvinceNode]
-getAllAdjacentNodes2 provNode = do
-  mapDef <- asksGameInfo gameInfoMapDef
-  let adjMap = mapDefAdjacencies mapDef
-  return $ (adjMap ! (provNode, Army)) `union` (adjMap ! (provNode, Fleet))
+getAllAdjacentNodes2 :: (MonadGameKnowledge h m, MonadBrainCache m) =>
+                        ProvinceNode -> m [ProvinceNode]
+getAllAdjacentNodes2 provNode = return . (Map.! provNode)
+                                =<< asksCache brainCacheAllAdjacentNodes2
 
 -- pick a random element from a list
 randElem :: (MonadRandom m) => [a] -> m a
