@@ -45,3 +45,6 @@ cover:
 
 noredir:
 	cd AI/dist/build/holdbot && zsh -c 'for i in {1..6} ; do ./holdbot $(SERVER) $(PORT) &> outp.$$i & ; done' && ./holdbot $(SERVER) $(PORT)
+
+dumb7:
+	cd AI/dist/build/dumbbot && zsh -c 'for i in {1..7} ; do ./dumbbot $(SERVER) $(PORT) +RTS -p &> outp.$$i & ; done'
