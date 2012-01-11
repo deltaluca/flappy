@@ -293,26 +293,24 @@ getSupplyCentresValue = do
 
 -- apply TDL for turn-by-turn patterns (ie. change in state value observed by those patterns)
 -- takes [(stateValue,[Keys])] 
-applyTDiffTurn :: Connection -> [(Double,[(Int,Int)])] -> IO ()
-applyTDiffTurn conn turnValKeys = do
-  putStrLn "Applying turn temporal difference..."
-  let l = length turnValKeys 
-  let (stateValues,turnKeyVals) = unzip turnValKeys
-  let weightCoeffs = evaluateChangeStates stateValues
-  sequence $ zipWith (updateDBTurns conn l) (zip [1..] (init turnKeyVals)) weightCoeffs
-  putStrLn "FINISHED TURN"
+applyTDiffTurn :: PureDB -> [(Double,[(Int,Int)])] -> PureDB
+applyTDiffTurn pdb turnValKeys  = 
+  foldl (updateDBTurns l) pdb (zip (zip [1..] (init turnKeyVals)) weightCoeffs)
+    where
+      l = length turnValKeys 
+      (stateValues,turnKeyVals) = unzip turnValKeys
+      weightCoeffs = evaluateChangeStates stateValues
 
-updateDBTurns :: Connection -> Int -> (Int,[(Int,Int)])-> (Double -> Double -> Double -> Double) -> IO ()
-updateDBTurns conn l (n,turnKeys) weightFu = do
-   sequence $ map (updateDBTurns' conn n l weightFu) turnKeys
-   return ()
+updateDBTurns :: Int -> PureDB -> ((Int,[(Int,Int)]),(Double -> Double -> Double -> Double)) -> PureDB
+updateDBTurns l pdb ((n,turnKeys),weightFu) = foldl (updateDBTurns' n l weightFu) pdb turnKeys
 
-updateDBTurns' :: Connection -> Int -> Int -> (Double -> Double -> Double -> Double) -> (Int,Int) -> IO ()
-updateDBTurns' conn n l weightFu (pid,pval) = do
-  weight <- (return .fromSql . head . head) =<< quickQuery' conn "SELECT weight FROM test WHERE pid = ? AND pval = ?" [toSql pid, toSql pval]
-  let newWeight = weightFu (getK n l) _c weight
-  run conn "UPDATE test SET weight = ? WHERE pid = ? AND pval = ?" [toSql newWeight, toSql pid, toSql pval]
-  return ()
+updateDBTurns' :: Int -> Int -> (Double -> Double -> Double -> Double) -> PureDB -> (Int,Int) -> PureDB
+updateDBTurns' n l weightFu pdb (pid,pval) = 
+    Map.insert (pid,pval) (pid,pval,newWeight,age) pdb
+      where
+        (_,_,weight,age) = (Map.!) pdb (pid,pval)
+        newWeight = weightFu (getK n l) _c weight
+  
   
 evaluateChangeStates :: [Double] -> [(Double -> Double -> Double -> Double)]
 evaluateChangeStates [_] = []
@@ -332,33 +330,17 @@ vfromD d w
 -------------------------------------------------
 
 -- apply TDL for endgame patterns (ie. based on whether pattern led to successful game)
-applyTDiffEnd :: Connection -> [[(Int,Int)]] -> IO ()
-applyTDiffEnd conn succTurnKeys = do
+applyTDiffEnd :: PureDB -> [[(Int,Int)]] -> PureDB
+applyTDiffEnd pdb succTurnKeys =   
+  Map.fromList $ map (\(pid,pval,weight,age) -> ((pid,pval),(pid,pval,weight,age))) dbKeyFinalVals
+    where 
   -- keys should be a subset of dbkeys, as new entries should be added as they're not found whilst the game is being played
-  let l = length succTurnKeys
-  dbKeyVals <- getAllDBValues conn
-  let (_,dbKeyFinalVals) = foldl (updateWeights l) (1,dbKeyVals) succTurnKeys
-  updateDB conn dbKeyFinalVals
-  putStrLn "FINISHED END"
+      l = length succTurnKeys
+      dbKeyVals = Map.elems pdb 
+      (_,dbKeyFinalVals) = foldl (updateWeights l) (1,dbKeyVals) succTurnKeys
 
-getAllDBValues :: Connection -> IO [((Int,Int),Double)]
-getAllDBValues conn = do
-  results <- quickQuery' conn "SELECT pid, pval, weight FROM test" []
-  return $ map convListToTuple results
-  
-convListToTuple :: [SqlValue] -> ((Int,Int),Double)
-convListToTuple [s1,s2,s3] = ((fromSql s1, fromSql s2),fromSql s3)
-convListToTuple _ = undefined
-
-updateWeights :: Int -> (Int,[((Int,Int),Double)]) -> [(Int,Int)]  -> (Int,[((Int,Int),Double)])
-updateWeights l (n,keyVals) succKeys = (n+1 , map (\(key,prev) -> (key, getNextWeight prev (n+1) (getK n l) (key `elem` succKeys))) keyVals)
-
-updateDB :: Connection -> [((Int,Int),Double)] -> IO ()
-updateDB conn finalVals = do
-  sequence $ map (\((pid,pval),weight) -> 
-                         run conn "UPDATE test SET weight = ? WHERE pid = ? AND pval = ?" [toSql weight, toSql pid, toSql pval])
-               finalVals
-  return ()
+updateWeights :: Int -> (Int,[(Int,Int,Double,Int)]) -> [(Int,Int)]  -> (Int,[(Int,Int,Double,Int)])
+updateWeights l (n,keyVals) succKeys = (n+1 , map (\(pid,pval,prev,age) -> (pid, pval, getNextWeight prev (n+1) (getK n l) ((pid,pval) `elem` succKeys), age)) keyVals)
 
 -- generate temperature based on placement in game
 getK :: Int -> Int -> Double
