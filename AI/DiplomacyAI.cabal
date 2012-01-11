@@ -97,8 +97,7 @@ Executable learnbot
     HDBC,
     HDBC-sqlite3
 
-  Ghc-Options: -auto-all -Wall -rtsopts -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
-
+  Ghc-Options: -rtsopts -prof -auto-all -Wall -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
 --   -- Modules not exported by this package.
 --   -- Other-modules:       
   
@@ -159,7 +158,7 @@ Executable dumbbot
     containers,
     transformers
 
-  Ghc-Options: -auto-all -Wall -rtsopts -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
+  Ghc-Options: -auto-all -prof -Wall -rtsopts -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
 
 --   -- Modules not exported by this package.
 --   -- Other-modules:       

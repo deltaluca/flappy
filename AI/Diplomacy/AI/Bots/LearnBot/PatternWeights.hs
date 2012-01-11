@@ -51,12 +51,12 @@ _dbname = "test.db"
 
 -- n pattern weights to use
 _npats :: [Int]
-_npats = [1]
+_npats = [1,2]
 
 -- _c defines the constant that determines how 'strong' the weights are affected
 -- Larger _c corresponds to smaller change
 _c :: Double
-_c = 20.0
+_c = 50.0
 
 -- sets the low (starting) and high (ending) values of k, which varies linearly over the 
 -- game period from low to high. k is used as a 'learning temperature'
