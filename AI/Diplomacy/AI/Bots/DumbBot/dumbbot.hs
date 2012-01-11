@@ -6,7 +6,7 @@
 -- the sampling method used when generating moves
 
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
-module Main where
+module Main(main) where
 
 import Diplomacy.AI.SkelBot.Scoring
 
@@ -35,9 +35,9 @@ import qualified Data.Map as Map
 
 type DumbBrain o = RandT StdGen (BrainCacheT (Brain o ()))
 
-type DumbBrainMove = DumbBrain OrderMovement
-type DumbBrainRetreat = DumbBrain OrderRetreat
-type DumbBrainBuild = DumbBrain OrderBuild
+-- type DumbBrainMove = DumbBrain OrderMovement
+-- type DumbBrainRetreat = DumbBrain OrderRetreat
+-- type DumbBrainBuild = DumbBrain OrderBuild
 
 -- impure brains
 type DumbBrainCommT o = BrainCommT o ()
@@ -62,7 +62,9 @@ dumbBot = DipBot { dipBotName = "FlappyDumbBot"
                  , dipBotBrainRetreat = dumbBrainRetreatComm
                  , dipBotBrainBuild = dumbBrainBuildComm
                  , dipBotProcessResults = dumbProcessResults
-                 , dipBotInitHistory = dumbInitHistory }
+                 , dipBotInitHistory = dumbInitHistory 
+                 , dipBotGameOver = return ()
+                 }
 
 withStdGen :: (MonadIO m, OrderClass o) => DumbBrain o () -> DumbBrainCommT o m ()
 withStdGen brain = do
@@ -100,7 +102,8 @@ dumbBrainMoveComm = withStdGen $ do
             Nothing ->          -- if noone's choosing it
               return $ Map.insert prov [(unit, chosenNode)] movementMap
             Just moveList ->    -- if there are peeps choosing it
-              if competition Map.! prov > 1 || unitPositionLoc unit == chosenNode -- if support is needed or holding
+              if competition Map.! prov >= lengthI moveList ||
+                 unitPositionLoc unit == chosenNode -- if support is needed or holding
               then
                 return $ Map.insert prov ((unit, chosenNode) : moveList) movementMap
               else
@@ -144,21 +147,22 @@ dumbBrainMoveComm = withStdGen $ do
   --     makeMove (unitPositionLoc unit : adjNodes)
 
   -- DEBUG should this be in Common.hs?
-move :: UnitPosition -> ProvinceNode -> OrderMovement
-move unit node =
-  if unitPositionLoc unit == node
-  then Hold unit
-  else Move unit node
+-- move :: UnitPosition -> ProvinceNode -> OrderMovement
+-- move unit node =
+--   if unitPositionLoc unit == node
+--   then Hold unit
+--   else Move unit node
 
-support :: UnitPosition -> UnitPosition -> ProvinceNode -> OrderMovement
-support unit otherUnit node =
-  if unitPositionLoc otherUnit == node
-  then SupportHold unit otherUnit
-  else SupportMove unit otherUnit (provNodeToProv node)
+-- support :: UnitPosition -> UnitPosition -> ProvinceNode -> OrderMovement
+-- support unit otherUnit node =
+--   if unitPositionLoc otherUnit == node
+--   then SupportHold unit otherUnit
+--   else SupportMove unit otherUnit (provNodeToProv node)
 
 chooseNode destMap nodes = do
   -- square the weights
-  let weights = map (\x -> x * x) . normalise . map (destMap Map.!) $ nodes
+  let weights = map (\x -> if x > 0 then x * x else 0) .
+                normalise . map (destMap Map.!) $ nodes
       weightsSum = sum weights
   x <- getRandomR (0.0, weightsSum)
   return $ pickNode (zip weights nodes) x
