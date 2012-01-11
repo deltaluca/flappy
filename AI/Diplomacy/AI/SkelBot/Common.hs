@@ -162,8 +162,8 @@ getSupplyPowerMap :: (OrderClass o, MonadBrain o m,
 getSupplyPowerMap = do
   curMapState <- asksGameState gameStateMap
   let supplies = supplyOwnerships curMapState
-  return . Map.foldlWithKey
-    (\mp pow prs -> foldl (\m pr -> Map.insert pr pow m) mp prs) Map.empty $ supplies
+  return . Map.fromList .
+    concatMap (\(p, ps) -> zip ps (repeat p)) . Map.toList $ supplies
 
 getSupplyPowerMapNoUno :: (OrderClass o, MonadBrain o m,
                            MonadGameKnowledge h m) => m (Map.Map Province Power)

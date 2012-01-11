@@ -11,8 +11,11 @@ import Control.Monad
 --import Control.Monad.IO.Class
 import Control.Applicative
 
+import Data.Tuple
 import Data.Maybe
 import Data.List
+
+--import Control.DeepSeq
 
 import qualified Data.Map as Map
 
@@ -110,9 +113,11 @@ calculateDefenceValue :: ( Functor m, Monad m, OrderClass o
                          , MonadBrainCache m ) => Province -> m Integer
 calculateDefenceValue prov = do
   --brainLog "Entering calculateDefenceValue"
+  myPower <- getMyPower
   adjUnits <- getAdjacentUnits2 prov
   --brainLog $ "adjUnits: " ++ show adjUnits
-  maximum . (0 :) <$> mapM (powerSize . unitPositionP) adjUnits
+  maximum . (0 :) <$> mapM
+    ((\p -> if p == myPower then return 0 else powerSize p) . unitPositionP) adjUnits
 
 calculateProxs :: ( Functor m, Monad m, OrderClass o, MonadBrain o m
                   , MonadGameKnowledge h m, MonadBrainCache m) =>
@@ -122,7 +127,7 @@ calculateProxs = do
   p2pn <- mapDefProvNodes <$> asksGameInfo gameInfoMapDef
   let allProvNodes = concat (Map.elems p2pn)
   myPower <- getMyPower
-  supplyPowerMap <- getSupplyPowerMapNoUno
+  supplyPowerMap <- getSupplyPowerMap
 
   (attackWeight, defenceWeight) <- getAtkDefWeights
 
@@ -158,11 +163,14 @@ calculateProvPowStr :: ( Functor m, Monad m, OrderClass o, MonadBrain o m
                        , MonadGameKnowledge h m, MonadBrainCache m) =>
                        m (Map.Map Province (Integer, Power))
 calculateProvPowStr = do
+  provUnitMap <- getProvUnitMap
   let oneProv prov = do
         adjUnits <- getAdjacentUnits prov
-        let grp = groupBy (\u1 u2 -> unitPositionP u1 == unitPositionP u2) adjUnits
-        let powStrs = map (\us@(u : _) -> (lengthI us, unitPositionP u)) grp
-        return (maximum ((0, Neutral) : powStrs))
+        let allUnits = maybeToList (prov `Map.lookup` provUnitMap) ++ adjUnits
+            unitNums = (\f -> foldl f (Map.singleton Neutral 0) allUnits) $
+                       (\m u -> Map.alter (Just . maybe 1 succ) (unitPositionP u) m)
+        return . maximum . map swap $ (Map.toList unitNums)
+        
   allProvs <- getAllProvs
   Map.fromList <$> mapM (\p -> (,) p <$> oneProv p) allProvs
 
