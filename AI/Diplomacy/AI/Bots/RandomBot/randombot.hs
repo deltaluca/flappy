@@ -27,6 +27,7 @@ import Diplomacy.AI.SkelBot.SkelBot
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.DipBot
 import Diplomacy.AI.SkelBot.Common
+import Diplomacy.AI.SkelBot.CommonCache
 
 import Diplomacy.Common.DipMessage
 import Diplomacy.Common.Data
@@ -44,7 +45,7 @@ import qualified Data.Map as Map
 import Debug.Trace
 
 -- pure brains
-type RandomBrain o = RandT StdGen (Brain o ())
+type RandomBrain o = RandT StdGen (BrainCacheT (Brain o ()))
 
 type RandomBrainMove = RandomBrain OrderMovement
 type RandomBrainRetreat = RandomBrain OrderRetreat
@@ -57,6 +58,8 @@ type RandomBrainMoveCommT = BrainCommT OrderMovement ()
 type RandomBrainRetreatCommT = BrainCommT OrderRetreat ()
 type RandomBrainBuildCommT = BrainCommT OrderBuild ()
 
+instance (OrderClass o) => MonadBrainCache (RandomBrain o) where
+  askCache = lift askCache
 
 instance (OrderClass o) => MonadBrain o (RandomBrain o) where
   asksGameState = lift . asksGameState
@@ -91,11 +94,12 @@ randomBrainComm :: (MonadIO m, OrderClass o) => RandomBrain o () -> RandomBrainC
 randomBrainComm pureBrain = do
   stdGen <- liftIO getStdGen
   
-  (_, newStdGen) <- liftBrain   -- lift pure brain
+  (_, nextStdGen) <- liftBrain   -- lift pure brain
     . runBrain                  -- no underlying monad
+    . runBrainCache
     . runRandT pureBrain $ stdGen
   
-  liftIO $ setStdGen newStdGen  -- set new stdgen
+  liftIO $ setStdGen nextStdGen  -- set new stdgen
 
 randomBrainMoveComm :: (MonadIO m) => RandomBrainMoveCommT m ()
 randomBrainMoveComm = randomBrainComm randomBrainMove

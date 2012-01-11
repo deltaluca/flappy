@@ -5,6 +5,7 @@ module Diplomacy.AI.SkelBot.Scoring ( calculateDestValue
 import Diplomacy.Common.Data
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.Common
+import Diplomacy.AI.SkelBot.CommonCache
 
 import Control.Monad
 --import Control.Monad.IO.Class
@@ -105,7 +106,8 @@ powerSize pow = fromMaybe 0 <$> (Map.lookup pow) <$> powerSizeMap
 
 calculateDefenceValue :: ( Functor m, Monad m, OrderClass o
                          , MonadBrain o m
-                         , MonadGameKnowledge h m ) => Province -> m Integer
+                         , MonadGameKnowledge h m
+                         , MonadBrainCache m ) => Province -> m Integer
 calculateDefenceValue prov = do
   --brainLog "Entering calculateDefenceValue"
   adjUnits <- getAdjacentUnits2 prov
@@ -113,7 +115,8 @@ calculateDefenceValue prov = do
   maximum . (0 :) <$> mapM (powerSize . unitPositionP) adjUnits
 
 calculateProxs :: ( Functor m, Monad m, OrderClass o, MonadBrain o m
-                  , MonadGameKnowledge h m ) => m [Map.Map ProvinceNode Integer]
+                  , MonadGameKnowledge h m, MonadBrainCache m) =>
+                  m [Map.Map ProvinceNode Integer]
 calculateProxs = do
   allProvs <- getAllProvs
   p2pn <- mapDefProvNodes <$> asksGameInfo gameInfoMapDef
@@ -152,7 +155,8 @@ calculateProxs = do
 
 -- strength, competition
 calculateProvPowStr :: ( Functor m, Monad m, OrderClass o, MonadBrain o m
-                       , MonadGameKnowledge h m ) => m (Map.Map Province (Integer, Power))
+                       , MonadGameKnowledge h m, MonadBrainCache m) =>
+                       m (Map.Map Province (Integer, Power))
 calculateProvPowStr = do
   let oneProv prov = do
         adjUnits <- getAdjacentUnits prov
@@ -163,14 +167,16 @@ calculateProvPowStr = do
   Map.fromList <$> mapM (\p -> (,) p <$> oneProv p) allProvs
 
 calculateComp :: ( Functor m, Monad m, OrderClass o, MonadBrain o m
-                 , MonadGameKnowledge h m ) => m (Map.Map Province Integer)
+                 , MonadGameKnowledge h m, MonadBrainCache m) =>
+                 m (Map.Map Province Integer)
 calculateComp = do
   provPowStr <- calculateProvPowStr
   myPower <- getMyPower
   return (Map.map (\(i, p) -> if p == myPower then 0 else i) provPowStr)
 
 calculateAddedProxs :: ( Functor m, Monad m, OrderClass o, MonadBrain o m
-                       , MonadGameKnowledge h m ) => m (Map.Map ProvinceNode Integer)
+                       , MonadGameKnowledge h m, MonadBrainCache m) =>
+                       m (Map.Map ProvinceNode Integer)
 calculateAddedProxs = do
   --brainLog "Entering calculateAddedProxs"
   proxs <- calculateProxs
@@ -190,7 +196,8 @@ calculateAddedProxs = do
   return addedProxs
 
 calculateDestValue :: ( Functor m, Monad m, OrderClass o, MonadBrain o m
-                      , MonadGameKnowledge h m ) => m (Map.Map ProvinceNode Integer)
+                      , MonadGameKnowledge h m, MonadBrainCache m) =>
+                      m (Map.Map ProvinceNode Integer)
 calculateDestValue = do
   --brainLog "Entering calculateDestValue"
   addedProxs <- calculateAddedProxs
@@ -212,7 +219,8 @@ calculateDestValue = do
   return destMap
 
 calculateWinterDestValue :: ( Functor m, Monad m, OrderClass o, MonadBrain o m
-                            , MonadGameKnowledge h m ) => m (Map.Map ProvinceNode Integer)
+                            , MonadGameKnowledge h m, MonadBrainCache m) =>
+                            m (Map.Map ProvinceNode Integer)
 calculateWinterDestValue = do
   --brainLog $ "Entering calculateWinterDestValue"
   addedProxs <- calculateAddedProxs

@@ -6,12 +6,13 @@ module Diplomacy.AI.SkelBot.Comm( CommT, runCommT
 import Diplomacy.Common.TSeq
 import Diplomacy.Common.MonadSTM
 
+import Control.Applicative
 import Control.Monad.Reader
 import Control.Concurrent.STM
 
                        -- (receiver, dispatcher)
 newtype CommT i o m a = CommT (ReaderT (TSeq i, TSeq o) m a)
-                  deriving (Functor, Monad, MonadIO, MonadTrans
+                  deriving (Applicative, Functor, Monad, MonadIO, MonadTrans
                            , MonadReader (TSeq i, TSeq o))
 
 instance (MonadSTM m) => MonadSTM (CommT i o m) where

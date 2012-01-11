@@ -53,6 +53,7 @@ Library
                    Diplomacy.AI.SkelBot.DipBot
                    Diplomacy.AI.SkelBot.Comm
                    Diplomacy.AI.SkelBot.Common
+                   Diplomacy.AI.SkelBot.CommonCache
                    Diplomacy.AI.SkelBot.Scoring
   
   -- Packages needed in order to build this package.
@@ -71,6 +72,8 @@ Library
     parsec,
     deepseq,
     time
+
+  Ghc-Options: -auto-all -Wall -rtsopts -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
     
   -- Modules not exported by this package.
   -- Other-modules:       
@@ -93,6 +96,8 @@ Executable learnbot
     transformers,
     HDBC,
     HDBC-sqlite3
+
+  Ghc-Options: -auto-all -Wall -rtsopts -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
 
 --   -- Modules not exported by this package.
 --   -- Other-modules:       
@@ -131,6 +136,8 @@ Executable randombot
     containers,
     transformers
 
+  Ghc-Options: -auto-all -Wall -rtsopts -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
+
 --   -- Modules not exported by this package.
 --   -- Other-modules:       
   
@@ -152,7 +159,7 @@ Executable dumbbot
     containers,
     transformers
 
-  Ghc-Options: -Wall  -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
+  Ghc-Options: -auto-all -Wall -rtsopts -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
 
 --   -- Modules not exported by this package.
 --   -- Other-modules:       

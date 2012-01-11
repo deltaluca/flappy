@@ -20,7 +20,7 @@ viewerr:
 	cd AI/dist/build/randombot && emacs outp.*
 
 dumb:
-	cd AI/dist/build/dumbbot && zsh -c './dumbbot localhost 16713  &> outp &'
+	cd AI/dist/build/dumbbot && zsh -c './dumbbot localhost 16713 +RTS -p &'
 
 learn7:
 	cd AI/dist/build/learnbot && zsh -c 'for i in {1..7} ; do ./learnbot localhost 16713 &> outp.$$i & ; done'

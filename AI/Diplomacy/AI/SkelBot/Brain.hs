@@ -29,13 +29,14 @@ import Diplomacy.Common.MonadSTM
 import Diplomacy.AI.SkelBot.Comm
 
 import Data.Functor
+import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Identity
 import Control.Concurrent.STM
 
 newtype GameKnowledgeT h m a = GameKnowledge (StateT h (ReaderT GameInfo m) a)
-                             deriving (Monad, MonadReader GameInfo, MonadState h)
+                             deriving (Applicative, Monad, MonadReader GameInfo, MonadState h)
 
 instance MonadTrans (GameKnowledgeT h) where
   lift = GameKnowledge . lift . lift
@@ -63,12 +64,12 @@ instance (Monad m) => MonadGameKnowledge h (GameKnowledgeT h m) where
 
   -- |h = history type, o = order type
 newtype BrainT o h m a = Brain (ReaderT GameState (StateT (Maybe [o]) (GameKnowledgeT h m)) a)
-                       deriving (Monad, MonadReader GameState, MonadState (Maybe [o]))
+                       deriving (Applicative, Monad, MonadReader GameState, MonadState (Maybe [o]))
 
 type OrderVar o = TVar (Maybe [o])
 
 newtype BrainCommT o h m a = BrainComm (ReaderT (OrderVar o) (CommT InMessage OutMessage (BrainT o h m)) a)
-                           deriving (Monad)
+                           deriving (Applicative, Monad)
 
 instance (OrderClass o) => MonadTrans (BrainT o h) where
   lift = Brain . lift . lift . lift

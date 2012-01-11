@@ -12,6 +12,7 @@ import Diplomacy.AI.SkelBot.SkelBot
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.DipBot
 import Diplomacy.AI.SkelBot.Common
+import Diplomacy.AI.SkelBot.CommonCache
 
 import Diplomacy.Common.DipMessage
 import Diplomacy.Common.Data
@@ -24,6 +25,7 @@ import Control.Monad.IO.Class
 import Control.Monad.Random
 import Control.Monad.Trans
 import Control.Monad
+import Control.Monad.Reader
 
 import qualified Data.Map as Map
 import qualified Data.Traversable as Traversable
@@ -49,7 +51,7 @@ learnBot = DipBot { dipBotName = "FlappyLearningBot"
 withStdGen :: (MonadIO m, OrderClass o) => LearnBrainT o m () -> BrainCommT o LearnHistory m ()
 withStdGen brain = do
   stdGen <- liftIO getStdGen
-  ((), nextStdGen) <- runRandT brain $ stdGen
+  ((), nextStdGen) <- runBrainCache $ runRandT brain stdGen
   liftIO $ setStdGen nextStdGen  -- set new stdgen
 
 learnBrainMoveComm :: (MonadIO m) => BrainCommT OrderMovement LearnHistory m ()

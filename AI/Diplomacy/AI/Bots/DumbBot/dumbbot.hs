@@ -14,6 +14,7 @@ import Diplomacy.AI.SkelBot.SkelBot
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.AI.SkelBot.DipBot
 import Diplomacy.AI.SkelBot.Common
+import Diplomacy.AI.SkelBot.CommonCache
 
 import Diplomacy.Common.Data
 
@@ -32,7 +33,7 @@ import qualified Data.Map as Map
 
 -- pure brains
 
-type DumbBrain o = RandT StdGen (Brain o ())
+type DumbBrain o = RandT StdGen (BrainCacheT (Brain o ()))
 
 type DumbBrainMove = DumbBrain OrderMovement
 type DumbBrainRetreat = DumbBrain OrderRetreat
@@ -44,6 +45,9 @@ type DumbBrainCommT o = BrainCommT o ()
 type DumbBrainMoveCommT = BrainCommT OrderMovement ()
 type DumbBrainRetreatCommT = BrainCommT OrderRetreat ()
 type DumbBrainBuildCommT = BrainCommT OrderBuild ()
+
+instance (OrderClass o) => MonadBrainCache (DumbBrain o) where
+  askCache = lift askCache
 
 _SEED = 0 :: Int
 
@@ -60,9 +64,15 @@ dumbBot = DipBot { dipBotName = "FlappyDumbBot"
                  , dipBotProcessResults = dumbProcessResults
                  , dipBotInitHistory = dumbInitHistory }
 
-withStdGen :: (MonadIO m, OrderClass o) => RandT StdGen (DumbBrainCommT o m) () -> DumbBrainCommT o m ()
-withStdGen rand = do
-  (_, nextStdGen) <- runRandT rand =<< liftIO getStdGen
+withStdGen :: (MonadIO m, OrderClass o) => DumbBrain o () -> DumbBrainCommT o m ()
+withStdGen brain = do
+  stdGen <- liftIO getStdGen
+  
+  (_, nextStdGen) <- liftBrain   -- lift pure brain
+    . runBrain                  -- no underlying monad
+    . runBrainCache
+    . runRandT brain $ stdGen
+  
   liftIO $ setStdGen nextStdGen  -- set new stdgen
 
 dumbBrainMoveComm :: (Functor m, MonadIO m) => DumbBrainMoveCommT m ()
@@ -204,7 +214,7 @@ dumbBrainBuildComm = withStdGen $ do
   --brainLog $ "myUnits: " ++ show myUnits
   mySupplies <- getMySupplies
   --brainLog $ "mySupplies: " ++ show mySupplies
-  provUnitMap <- getProvUnitMap
+  puMap <- getProvUnitMap
   --brainLog $ "provUnitMap: " ++ show provUnitMap
   destMap <- calculateWinterDestValue
   --brainLog $ "destMap: " ++ show destMap
@@ -218,7 +228,7 @@ dumbBrainBuildComm = withStdGen $ do
       allHomes <- getMyHomeSupplies
       let homes = filter (`elem` mySupplies) allHomes
           unoccHomes = filter (\h -> maybe True (const False)
-                                     (h `Map.lookup` provUnitMap)) homes
+                                     (h `Map.lookup` puMap)) homes
           sortedHomes = map snd $
                         reverse . sort $
                         (`zip` unoccHomes) $

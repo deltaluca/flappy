@@ -11,13 +11,13 @@ module Diplomacy.AI.SkelBot.Common( getMyPower
                                   , getUnits
                                   , getMyUnits
                                   , getMyRetreats
+                                  , getProvNodeUnitMap
+                                  , getProvUnitMap
                                   , getAdjacentNodes
                                   , getAdjacentUnits
                                   , getAdjacentUnits2
                                   , getAllAdjacentNodes
                                   , getAllAdjacentNodes2
-                                  , getProvUnitMap
-                                  , getProvNodeUnitMap
                                   , getSupplyPowerMap
                                   , getSupplyPowerMapNoUno
                                   , getAllProvs
@@ -40,6 +40,7 @@ module Diplomacy.AI.SkelBot.Common( getMyPower
                                   , shuff
                                   ) where
 
+import Diplomacy.AI.SkelBot.CommonCache
 import Diplomacy.AI.SkelBot.Brain
 import Diplomacy.Common.Data
 
@@ -156,49 +157,6 @@ randElem l = do
 randElems :: (MonadRandom m) => Int -> [a] -> m [a]
 randElems n l = return . take n =<< shuff l
 
--- abstracts a province to just its name (ie. disregarding coasts etc.)
-provNodeToProv :: ProvinceNode -> Province
-provNodeToProv (ProvNode prov) = prov
-provNodeToProv (ProvCoastNode prov _) = prov
-
--- returns a mapping from provinces to units
-getProvUnitMap :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) =>
-                  m (Map.Map Province UnitPosition)
-getProvUnitMap = do
-  (GameState mapState (Turn phase _)) <- askGameState
-  units <- case unitPositions mapState of
-    UnitPositions units -> do
-      if not $ phase `elem` [Spring, Fall, Winter]
-        then error $ "Wrong Phase (Got " ++ show phase ++ ", expected [Spring, Fall, Winter]"
-        else return (concat . Map.elems $ units)
-      
-    UnitPositionsRet units -> do
-      if not $ phase `elem` [Summer, Autumn]
-        then error $ "Wrong Phase (Got " ++ show phase ++ ", expected [Summer, Autumn]"
-        else return (map fst . concat . Map.elems $ units)
-    
-  foldM (\m unitPos -> return $
-                       Map.insert (provNodeToProv $ unitPositionLoc unitPos) unitPos m) Map.empty units
-
--- returns a mapping from provinceNodes to units
-getProvNodeUnitMap :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) =>
-                  m (Map.Map ProvinceNode UnitPosition)
-getProvNodeUnitMap = do
-  (GameState mapState (Turn phase _)) <- askGameState
-  units <- case unitPositions mapState of
-    UnitPositions units -> do
-      if not $ phase `elem` [Spring, Fall, Winter]
-        then error $ "Wrong Phase (Got " ++ show phase ++ ", expected [Spring, Fall, Winter]"
-        else return (concat . Map.elems $ units)
-      
-    UnitPositionsRet units -> do
-      if not $ phase `elem` [Summer, Autumn]
-        then error $ "Wrong Phase (Got " ++ show phase ++ ", expected [Summer, Autumn]"
-        else return (map fst . concat . Map.elems $ units)
-    
-  foldM (\m unitPos -> return $
-                       Map.insert (unitPositionLoc unitPos) unitPos m) Map.empty units
-
 getSupplyPowerMap :: (OrderClass o, MonadBrain o m,
                       MonadGameKnowledge h m) => m (Map.Map Province Power)
 getSupplyPowerMap = do
@@ -215,18 +173,25 @@ getSupplyPowerMapNoUno = do
   return . Map.foldlWithKey
     (\mp pow prs -> foldl (\m pr -> Map.insert pr pow m) mp prs) Map.empty $ supplies
 
-getAdjacentUnits :: (OrderClass o, MonadBrain o m,
-                     MonadGameKnowledge h m) => Province -> m [UnitPosition]
+getAdjacentUnits :: (MonadGameKnowledge h m, MonadBrainCache m) =>
+                    Province -> m [UnitPosition]
 getAdjacentUnits prov = do
-  provNodeUnitMap <- getProvNodeUnitMap
+  pnUnitMap <- getProvNodeUnitMap
   adjNodes <- getAllAdjacentNodes prov
-  return $ mapMaybe (`Map.lookup` provNodeUnitMap) adjNodes
+  return $ mapMaybe (`Map.lookup` pnUnitMap) adjNodes
+
+getProvNodeUnitMap :: (MonadBrainCache m) => m (Map.Map ProvinceNode UnitPosition)
+getProvNodeUnitMap = asksCache brainCacheProvNodeUnitMap
+
+getProvUnitMap :: (MonadBrainCache m) => m (Map.Map Province UnitPosition)
+getProvUnitMap = asksCache brainCacheProvUnitMap
 
 -- same as getAdjacentUnits but only gives units that can move to the province
-getAdjacentUnits2 :: (OrderClass o, MonadBrain o m,
-                      MonadGameKnowledge h m) => Province -> m [UnitPosition]
+getAdjacentUnits2 :: (MonadGameKnowledge h m, MonadBrainCache m) =>
+                     Province -> m [UnitPosition]
 getAdjacentUnits2 prov = do
-  filterM (\u -> return . elem prov . map provNodeToProv =<< getAdjacentNodes u) =<< getAdjacentUnits prov
+  filterM (\u -> return . elem prov . map provNodeToProv =<< getAdjacentNodes u)
+    =<< getAdjacentUnits prov
 
 getAllProvs :: (Functor m, OrderClass o, MonadBrain o m,
                 MonadGameKnowledge h m) => m [Province]
@@ -263,11 +228,13 @@ getOMSubjectUnit order =
     MoveConvoy u _ _  -> u
 
 -- Generates all legal orders only involving own units
-genLegalOrders :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => 
-							(Map.Map UnitPosition [OrderMovement]) -> UnitPosition -> m (Map.Map UnitPosition [OrderMovement])
+genLegalOrders :: (OrderClass o, MonadBrain o m,
+                   MonadGameKnowledge h m, MonadBrainCache m) =>
+                  (Map.Map UnitPosition [OrderMovement]) ->
+                  UnitPosition -> m (Map.Map UnitPosition [OrderMovement])
 genLegalOrders currOrders unitPos = do
   adjacentNodes <- getAdjacentNodes unitPos
-  provUnitMap <- getProvUnitMap
+  pUnitMap <- getProvUnitMap
   myPower <- getMyPower
   friendlies <- return.(filter (/= unitPos)) =<< getMyUnits
    
@@ -280,7 +247,7 @@ genLegalOrders currOrders unitPos = do
   let adjUnits =  [ otherUnit
         	        | otherPos <- adjacentNodes
                   , otherUnit <- maybeToList $
-                    provNodeToProv otherPos `Map.lookup` provUnitMap
+                    provNodeToProv otherPos `Map.lookup` pUnitMap
         	        , unitPositionP otherUnit == myPower ] 
 
   -- possible support holds (ie. just adjacent friendlies)
@@ -332,7 +299,9 @@ getSuppControl = do
 
 
 -- returns a three-tuple of province occupation around adjacent provinces only
-getAdjProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => UnitPosition -> m (Integer, Integer, Integer)
+getAdjProvOcc :: (OrderClass o, MonadBrain o m,
+                  MonadGameKnowledge h m, MonadBrainCache m) =>
+                 UnitPosition -> m (Integer, Integer, Integer)
 getAdjProvOcc unit = do
   provNodes <- getAdjacentNodes unit
   let provs = map provNodeToProv provNodes
