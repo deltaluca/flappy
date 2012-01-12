@@ -1,6 +1,7 @@
 {-# LANGUAGE TypeSynonymInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleInstances, FunctionalDependencies #-}
 module Diplomacy.AI.SkelBot.Comm( CommT, runCommT
                                 , MonadComm(..)
+                                , askChans
                                 ) where
 
 import Diplomacy.Common.TSeq
@@ -33,6 +34,9 @@ askDispatcher = liftM snd ask
 
 askReceiver :: (Monad m) => CommT i o m (TSeq i)
 askReceiver = liftM fst ask
+
+askChans :: (Monad m) => CommT i o m (TSeq i, TSeq o)
+askChans = liftM2 (,) askReceiver askDispatcher
 
 instance Monad m => MonadComm i o (CommT i o m) where
   popMsg = do
