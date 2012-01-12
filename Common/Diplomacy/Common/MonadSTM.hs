@@ -10,16 +10,12 @@ import Control.Concurrent.STM
 
 class (Monad m) => MonadSTM m where
   liftSTM :: STM a -> m a
-  getSTM :: m a -> m (STM a)
 
 instance MonadSTM STM where
   liftSTM = id
-  getSTM = return
 
 instance (MonadSTM m) => MonadSTM (ReaderT r m) where
   liftSTM = lift . liftSTM
-  getSTM = liftM return
 
 instance (MonadSTM m) => MonadSTM (StateT r m) where
   liftSTM = lift . liftSTM
-  getSTM = liftM return

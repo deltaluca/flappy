@@ -18,7 +18,6 @@ newtype CommT i o m a = CommT (ReaderT (TSeq i, TSeq o) m a)
 
 instance (MonadSTM m) => MonadSTM (CommT i o m) where
   liftSTM = lift . liftSTM
-  getSTM = liftM return
 
 class MonadComm i o m | m -> i, m -> o where
   popMsg :: m (STM i)

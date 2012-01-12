@@ -14,7 +14,6 @@ import Diplomacy.AI.SkelBot.DipBot
 import Diplomacy.AI.SkelBot.Common
 import Diplomacy.AI.SkelBot.CommonCache
 
-import Diplomacy.Common.DipMessage
 import Diplomacy.Common.Data
 
 import Data.Maybe
@@ -23,14 +22,10 @@ import Data.List
 import System.Random
 import Control.Monad.IO.Class
 import Control.Monad.Random
-import Control.Monad.Trans
 import Control.Monad
-import Control.Monad.Reader
 
 import qualified Data.Map as Map
 import qualified Data.Traversable as Traversable
-
-import Debug.Trace
 
 import Database.HDBC
 import Database.HDBC.Sqlite3
@@ -80,7 +75,7 @@ learnGameOver :: (MonadIO m) => GameKnowledgeT LearnHistory m ()
 learnGameOver = do
   hist <- getHistory
   conn <- liftIO $ connectSqlite3 _dbname
-  let finalDB = applyTDiffEnd (applyTDiffTurn (getPureDB hist) (getHist hist)) $ (\(x, y) -> y) $ unzip (getHist hist)
+  let finalDB = applyTDiffEnd (applyTDiffTurn (getPureDB hist) (getHist hist)) $ snd $ unzip (getHist hist)
   --liftIO $ applyTDiffEnd conn $ (\(x, y) -> y) $ unzip (getHist hist)
   liftIO $ commitPureDB conn finalDB
   liftIO $ commit conn
@@ -157,7 +152,7 @@ buildLearnUnit prov = do
     Sea -> return $ UnitPosition myPower Fleet (ProvNode prov)
     Coastal -> do
       utyp <- randElem [Army, Fleet]
-      return $ UnitPosition myPower Fleet (ProvNode prov)
+      return $ UnitPosition myPower utyp (ProvNode prov)
     BiCoastal -> do
       provNode <- randElem (provToProvNodes Map.! prov)
       case provNode of

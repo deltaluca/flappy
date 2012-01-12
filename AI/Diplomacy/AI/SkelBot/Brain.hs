@@ -88,7 +88,6 @@ instance (MonadIO m, OrderClass o) => MonadIO (BrainT o h m) where
 
 instance (OrderClass o, MonadSTM m) => MonadSTM (BrainT o h m) where
   liftSTM = lift . liftSTM
-  getSTM = liftM return
 
 instance (MonadIO m, OrderClass o) => MonadIO (BrainCommT o h m) where
   liftIO = BrainComm . lift . lift . lift . liftIO
@@ -180,8 +179,8 @@ unliftBrainCommT (BrainComm br) = do
   return (runCommT (runReaderT br ovar) inp outp)
 
 mapBrainCommT :: (Monad m, Monad n, OrderClass o) =>
-                 ((BrainT o h1 m a) -> (BrainT o h2 n a)) ->
-                 BrainCommT o h1 m a -> BrainCommT o h2 n a
+                 ((BrainT o h1 m a) -> (BrainT o h2 n b)) ->
+                 BrainCommT o h1 m a -> BrainCommT o h2 n b
 mapBrainCommT f bm = unliftBrainCommT bm >>= liftBrain . f
 
 runBrain :: (Monad m, OrderClass o) => Brain o h a -> BrainT o h m a
