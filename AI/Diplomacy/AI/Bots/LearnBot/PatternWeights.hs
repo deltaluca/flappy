@@ -2,7 +2,7 @@
  - PATTERN WEIGHTS DATABASE FUNCTIONS
 -}
 
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, EmptyDataDecls, KindSignatures #-}
 
 module Diplomacy.AI.Bots.LearnBot.PatternWeights  (weighOrderSets
                                                   ,randWeightedElem
@@ -33,7 +33,7 @@ import Database.HDBC.Sqlite3
 import qualified Data.Map as Map
 
 -- Dummy type kludge
-data Dummy o m = Dummy (m o)
+data Dummy o (m :: * -> *)
 
 -----------------------------------------------------------------------
 -- Bot-specific variables
@@ -95,14 +95,15 @@ generatePatterns :: (OrderClass o, MonadIO m) => Dummy o m -> [Int] -> [Int -> P
 generatePatterns d ns = concat [[(Pattern ms n) | ms <- combN n (metricIDs d)] | n <- ns]
 
 cantor :: Int -> Int -> Int
-cantor a b = floor (fromIntegral ((a + b)*(a + b + 1)) /2) + b
+cantor a b = ((a + b)*(a + b + 1)) `div` 2 + b
 
 ncant :: [Int] -> Int
 ncant [x] = x
-ncant l = ncant' (length l) l
+ncant l = ncant' l
   where
-    ncant' 2 [a,b]  = cantor a b
-    ncant' n (x:xs) = cantor x $ ncant' (n-1) xs
+    ncant' []     = error "ncant' []"
+    ncant' [a,b]  = cantor a b
+    ncant' (x:xs) = cantor x $ ncant' xs
 
 combN :: Int -> [a] -> [[a]]
 combN 1 l = [[x] | x <- l]
@@ -210,11 +211,12 @@ updatePatternsGetWeightAge (pid, pval, psize) = do
       putHistory $ LearnHistory (Map.insert (pid,pval) (pid,pval,weight,age+1) pureDB) (getHist hist)
       return $ (weight,age,psize)
 
-
-sortGT :: (Double, a) -> (Double, a) ->  Ordering
-sortGT (d1,_) (d2,_)
-    | d1 < d2 = GT
-    | d1 >= d2 = LT
+sortGT :: (Ord a) => a -> a -> Ordering
+sortGT = flip compare
+-- sortGT :: (Double, a) -> (Double, a) ->  Ordering
+-- sortGT (d1,_) (d2,_)
+--     | d1 < d2 = GT
+--     | d1 >= d2 = LT
 
 weighOrder :: forall o m. (MonadIO m, OrderClass o) => OrderMovement -> LearnBrainT o m (Double,[(Int,Int)])
 weighOrder order = do
@@ -313,6 +315,7 @@ updateDBTurns' n l weightFu pdb (pid,pval) =
   
   
 evaluateChangeStates :: [Double] -> [(Double -> Double -> Double -> Double)]
+evaluateChangeStates [] = error "evaluateChangeStates []"
 evaluateChangeStates [_] = []
 evaluateChangeStates (x:x':xs) =
   evaluateChangeState x x' : evaluateChangeStates (x':xs)
@@ -324,8 +327,8 @@ evaluateChangeState w1 w2 = (\k c ow -> ((ow*c) + k*(vfromD (w2 - w1) ow))/(c+k)
 -- helper function, maps -1 -> 1 to 0 -> 1
 vfromD :: Double -> Double -> Double
 vfromD d w
-  | d <= 0  = (d+1)*w
-  | d > 0   = d*(1-w)+w
+  | d <= 0    = (d+1)*w
+  | otherwise = d*(1-w)+w
 
 -------------------------------------------------
 

@@ -1,7 +1,6 @@
 {-# LANGUAGE 
   MultiParamTypeClasses
 , FlexibleInstances
-, FlexibleContexts
 , UndecidableInstances
 , OverlappingInstances
 , GeneralizedNewtypeDeriving
@@ -15,9 +14,13 @@ module Diplomacy.AI.SkelBot.Brain ( Brain, BrainT
                                   , runBrain
                                   , liftBrain
                                   , pureBrain
+                                  , unliftBrainCommT
+                                  , mapBrainCommT
                                   , runBrainCommT
                                   , runGameKnowledgeT
                                   , flushOrders
+                                  , mapBrainTHist
+                                  , mapBrainCommTHist
                                   , GameKnowledgeT
                                   , MonadGameKnowledge(..)
                                   , MonadBrain(..)) where
@@ -85,7 +88,6 @@ instance (MonadIO m, OrderClass o) => MonadIO (BrainT o h m) where
 
 instance (OrderClass o, MonadSTM m) => MonadSTM (BrainT o h m) where
   liftSTM = lift . liftSTM
-  getSTM = liftM return
 
 instance (MonadIO m, OrderClass o) => MonadIO (BrainCommT o h m) where
   liftIO = BrainComm . lift . lift . lift . liftIO
@@ -151,12 +153,35 @@ mapBrainT f mbrain = do
   putOrders orders
   return ret
 
+mapBrainTHist :: (Monad m, OrderClass o) => (h2 -> h1) -> BrainT o h1 m a -> BrainT o h2 m a
+mapBrainTHist f brain = do
+  a <- askGameState
+  b <- askGameInfo
+  c <- getHistory
+  lift $ return . fst . fst =<< runGameKnowledgeT (runBrainT brain a) b (f c)
+
+mapBrainCommTHist  :: (Monad m, OrderClass o) =>
+                      (h2 -> h1) -> BrainCommT o h1 m a -> BrainCommT o h2 m a
+mapBrainCommTHist f = mapBrainCommT (mapBrainTHist f)
+
 type Brain o h = BrainT o h Identity
 
 mapBrain :: (Monad m, OrderClass o) =>
             (((a, Maybe [o]), h) -> m ((b, Maybe [o]), h)) ->
             Brain o h a -> BrainT o h m b
 mapBrain f = mapBrainT (f . runIdentity)
+
+unliftBrainCommT :: (Monad m, Monad n, OrderClass o) =>
+                    BrainCommT o h1 m a -> BrainCommT o h2 n (BrainT o h1 m a)
+unliftBrainCommT (BrainComm br) = do
+  ovar <- BrainComm ask
+  (inp, outp) <- BrainComm . lift $ askChans
+  return (runCommT (runReaderT br ovar) inp outp)
+
+mapBrainCommT :: (Monad m, Monad n, OrderClass o) =>
+                 ((BrainT o h1 m a) -> (BrainT o h2 n b)) ->
+                 BrainCommT o h1 m a -> BrainCommT o h2 n b
+mapBrainCommT f bm = unliftBrainCommT bm >>= liftBrain . f
 
 runBrain :: (Monad m, OrderClass o) => Brain o h a -> BrainT o h m a
 runBrain = mapBrain return

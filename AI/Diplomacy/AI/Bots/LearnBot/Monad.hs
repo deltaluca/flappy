@@ -7,7 +7,6 @@ import Diplomacy.AI.SkelBot.CommonCache
 
 import Control.Monad.Random
 import Control.Monad.Reader
-import Control.Monad.Trans
 
 import Data.Map as Map
 
