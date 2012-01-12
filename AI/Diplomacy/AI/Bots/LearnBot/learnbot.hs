@@ -14,6 +14,8 @@ import Diplomacy.AI.SkelBot.DipBot
 import Diplomacy.AI.SkelBot.Common
 import Diplomacy.AI.SkelBot.CommonCache
 
+import Diplomacy.AI.Bots.DumbBot.DumbBot
+
 import Diplomacy.Common.Data
 
 import Data.Maybe
@@ -32,7 +34,7 @@ import Database.HDBC.Sqlite3
  
 main = skelBot learnBot
 
-learnBot :: (MonadIO m) => DipBot m LearnHistory
+learnBot :: (MonadIO m, Functor m) => DipBot m LearnHistory
 learnBot = DipBot { dipBotName = "FlappyLearningBot"
                   , dipBotVersion = 0.1
                   , dipBotBrainMovement = learnBrainMoveComm
@@ -49,8 +51,12 @@ withStdGen brain = do
   ((), nextStdGen) <- runBrainCache $ runRandT brain stdGen
   liftIO $ setStdGen nextStdGen  -- set new stdgen
 
-learnBrainMoveComm :: (MonadIO m) => BrainCommT OrderMovement LearnHistory m ()
-learnBrainMoveComm = withStdGen learnBrainMove
+learnBrainMoveComm :: (MonadIO m, Functor m) => BrainCommT OrderMovement LearnHistory m ()
+learnBrainMoveComm =  do
+  mapBrainCommTHist (const ()) dumbBrainMoveComm
+
+  brainLog . show =<< getOrders
+  withStdGen learnBrainMove
 
 learnBrainRetreatComm :: (MonadIO m) => BrainCommT OrderRetreat LearnHistory m ()
 learnBrainRetreatComm = withStdGen learnBrainRetreat
@@ -59,27 +65,49 @@ learnBrainBuildComm :: (MonadIO m) => BrainCommT OrderBuild LearnHistory m ()
 learnBrainBuildComm = withStdGen learnBrainBuild
 
 learnBrainMove :: (MonadIO m) => LearnBrainMoveT m ()
-learnBrainMove = do 
-  myUnits <- getMyUnits
-  --obtain all legal moves
-  legalUnitMoves <- foldM genLegalOrders Map.empty myUnits
-	
-  trimmedOrders <- mapM ((randElems _trimNum) . (legalUnitMoves Map.!)) myUnits
-  let possibleOrderSets = Traversable.sequenceA trimmedOrders
-  brainLog $ show $ length possibleOrderSets
-  highestWeightedOrders <- weighOrderSets possibleOrderSets
-  orders <- randWeightedElem $ take 5 highestWeightedOrders
-  putOrders $ Just orders
+learnBrainMove = do
+  gameEnd <- learnBrainEnd
+  if gameEnd
+    then do
+      brainLog $ show $ "GAME ENDED??"
+      learnGameOverEarly
+      putOrders Nothing
+    else do
+
+      dumbOrders <- getOrders
+      myUnits <- getMyUnits
+      legalUnitMoves <- foldM genLegalOrders Map.empty myUnits
+      trimmedOrders <- mapM ((randElems _trimNum) . (legalUnitMoves Map.!)) myUnits
+  
+      let possibleOrderSets = case dumbOrders of
+                                Just o -> [o]
+                                Nothing -> Traversable.sequenceA trimmedOrders 
+
+      brainLog $ show $ (dumbOrders, length possibleOrderSets)
+      highestWeightedOrders <- weighOrderSets possibleOrderSets
+      orders <- randWeightedElem $ take 5 highestWeightedOrders
+      putOrders $ Just orders
+
+learnGameOverEarly :: (MonadIO m) => LearnBrainMoveT m ()
+learnGameOverEarly = do
+  hist <- getHistory
+  conn <- liftIO $ connectSqlite3 _dbname
+  let finalDB = applyTDiffEnd (applyTDiffTurn (getPureDB hist) (getHist hist)) $ snd $ unzip (getHist hist)
+  liftIO $ commitPureDB conn finalDB
+  liftIO $ commit conn
+  liftIO $ disconnect conn
+  brainLog $ show $ "Commit done early :D"
+  return ()
 
 learnGameOver :: (MonadIO m) => GameKnowledgeT LearnHistory m ()
 learnGameOver = do
   hist <- getHistory
   conn <- liftIO $ connectSqlite3 _dbname
   let finalDB = applyTDiffEnd (applyTDiffTurn (getPureDB hist) (getHist hist)) $ snd $ unzip (getHist hist)
-  --liftIO $ applyTDiffEnd conn $ (\(x, y) -> y) $ unzip (getHist hist)
   liftIO $ commitPureDB conn finalDB
   liftIO $ commit conn
   liftIO $ disconnect conn
+  liftIO $ putStrLn $ "Commit done :)"
   return ()
 
 learnBrainEnd :: (MonadIO m, MonadGameKnowledge h m, MonadBrain o m) => m Bool
