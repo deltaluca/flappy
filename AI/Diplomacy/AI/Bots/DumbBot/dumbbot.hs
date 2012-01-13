@@ -7,7 +7,7 @@
 
 module Main where
 
-import Diplomacy.AI.Bots.DumbBot.DumbBot
+import Diplomacy.AI.Bots.DumbBot.DumbBotInt
 
 import Diplomacy.AI.SkelBot.SkelBot
 import Diplomacy.AI.SkelBot.DipBot
