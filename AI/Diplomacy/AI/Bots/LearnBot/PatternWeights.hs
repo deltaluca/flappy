@@ -49,7 +49,7 @@ _dbname = "test.db"
 
 -- n pattern weights to use
 _npats :: [Int]
-_npats = [1,2,3,4]
+_npats = [1,2,3]
 
 -- _c defines the constant that determines how 'strong' the weights are affected
 -- Larger _c corresponds to smaller change
@@ -66,7 +66,7 @@ _highK = 5.0
 -- NOT IMPLEMENTED
 -- no of supply centres needed to win
 _noOfSCNeededToWin :: Int
-_noOfSCNeededToWin = 18
+_noOfSCNeededToWin = 8
 
 -- _metrics to use
 -- ordering is important!

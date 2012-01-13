@@ -53,9 +53,8 @@ withStdGen brain = do
 
 learnBrainMoveComm :: (MonadIO m, Functor m) => BrainCommT OrderMovement LearnHistory m ()
 learnBrainMoveComm =  do
-  mapBrainCommTHist (const ()) dumbBrainMoveComm
+  --mapBrainCommTHist (const ()) dumbBrainMoveComm
 
-  brainLog . show =<< getOrders
   withStdGen learnBrainMove
 
 learnBrainRetreatComm :: (MonadIO m) => BrainCommT OrderRetreat LearnHistory m ()
@@ -91,6 +90,8 @@ learnBrainMove = do
 learnGameOverEarly :: (MonadIO m) => LearnBrainMoveT m ()
 learnGameOverEarly = do
   hist <- getHistory
+  supplies <- getSupplies =<< getMyPower
+  if (length supplies == _noOfSCNeededToWin) then brainLog (show "I won, YAY!") else brainLog (show "I didn't win :(")
   conn <- liftIO $ connectSqlite3 _dbname
   let finalDB = applyTDiffEnd (applyTDiffTurn (getPureDB hist) (getHist hist)) $ snd $ unzip (getHist hist)
   liftIO $ commitPureDB conn finalDB
