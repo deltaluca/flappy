@@ -29,7 +29,6 @@ import Diplomacy.AI.SkelBot.DipBot
 import Diplomacy.AI.SkelBot.Common
 import Diplomacy.AI.SkelBot.CommonCache
 
-import Diplomacy.Common.DipMessage
 import Diplomacy.Common.Data
 
 import Data.Maybe
@@ -41,8 +40,6 @@ import Control.Monad.Trans
 import Control.Monad
 
 import qualified Data.Map as Map
-
-import Debug.Trace
 
 -- pure brains
 type RandomBrain o = RandT StdGen (BrainCacheT (Brain o ()))
@@ -91,13 +88,13 @@ randomGameOver :: (MonadIO m) => GameKnowledgeT () m ()
 randomGameOver = return ()
 
 randomBrainComm :: (MonadIO m, OrderClass o) => RandomBrain o () -> RandomBrainCommT o m ()
-randomBrainComm pureBrain = do
+randomBrainComm brain = do
   stdGen <- liftIO getStdGen
   
   (_, nextStdGen) <- liftBrain   -- lift pure brain
     . runBrain                  -- no underlying monad
     . runBrainCache
-    . runRandT pureBrain $ stdGen
+    . runRandT brain $ stdGen
   
   liftIO $ setStdGen nextStdGen  -- set new stdgen
 

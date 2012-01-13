@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleInstances, DeriveDataTypeable, MultiParamTypeClasses, FunctionalDependencies, TypeSynonymInstances, MonadComprehensions #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleInstances, DeriveDataTypeable, MultiParamTypeClasses, FunctionalDependencies, TypeSynonymInstances, MonadComprehensions, ScopedTypeVariables #-}
 
 -- |SkelBot is the skeleton bot that all bots build on top of. tread lightly
 
@@ -83,7 +83,16 @@ instance MonadComm DaideMessage DaideMessage (Protocol h) where
 instance DaideErrorClass (Protocol h) where
   throwEM = liftMaster . throwEM
 
+instance DaideNote (Master h) where
+  noteWith s = lift . noteWith s
+
+instance DaideNote (Protocol h) where
+  noteWith s = liftMaster . noteWith s
+
 type SProtocol h = GameKnowledgeT h (StateT GameState (Protocol h))
+
+instance DaideNote (SProtocol h) where
+  noteWith s = lift . lift . noteWith s
 
 liftMaster :: Master h a -> Protocol h a
 liftMaster = Protocol . lift
@@ -185,25 +194,26 @@ dipMsgPlain f = do
     IM _ -> throwEM IMFromServer
     RM -> throwEM ManyRMs
     FM -> liftMaster shutdownMaster
-    EM err -> liftMaster $ do
-      lift . note $ "EM : " ++ show err
-      shutdownMaster
+    EM err -> do
+      liftMaster $ do
+        note $ "EM : " ++ show err
+        shutdownMaster
   -- put here anything that can be received at an arbitrary point in time!
              -- RESUME HERE implement shutdownMaster for shutting down queues safely
     DM dm -> case dm of
       ExitClient -> liftMaster $ pushMsg FM >> shutdownMaster
       SoloWinGame pow -> do
-        liftMaster . lift . note $ "Solo win: " ++ show pow
+        note $ "Solo win: " ++ show pow
         dipMsgPlain f
       DrawGame mPowers -> do
-        liftMaster . lift . note $ "Draw" ++ maybe "" ((": " ++) . show) mPowers
+        note $ "Draw" ++ maybe "" ((": " ++) . show) mPowers
         dipMsgPlain f
       DipError (CivilDisorder _) -> dipMsgPlain f -- it dont make no difference to me baby
       DipError err -> liftMaster $ do
-        lift . note $ "DipError: " ++ show err
+        note $ "DipError: " ++ show err :: Master h ()
         pushMsg FM >> shutdownMaster
       EndGameStats turn stats -> liftMaster $ do
-        lift . note $ "End Game Statistics (" ++ show turn ++ "):\n" ++ show stats
+        note $ "End Game Statistics (" ++ show turn ++ "):\n" ++ show stats :: Master h ()
         pushMsg FM >> shutdownMaster
       otherMsg -> maybe parserZero return =<< f otherMsg
 
@@ -220,7 +230,7 @@ dipMsg hist info f = do
     RM -> throwEM ManyRMs
     FM -> liftMaster shutdownMaster
     EM err -> liftMaster $ do
-      lift . note $ "EM : " ++ show err
+      note $ "EM : " ++ show err
       shutdownMaster
   -- put here anything that can be received at an arbitrary point in time!
              -- RESUME HERE implement shutdownMaster for shutting down queues safely
@@ -228,19 +238,19 @@ dipMsg hist info f = do
       ExitClient -> do
         liftMaster $ pushMsg FM >> shutdownMaster
       SoloWinGame pow -> do
-        liftMaster . lift . note $ "Solo win: " ++ show pow
+        note $ "Solo win: " ++ show pow
         dipMsg hist info f
       DrawGame mPowers -> do
-        liftMaster . lift . note $ "Draw" ++ maybe "" ((": " ++) . show) mPowers
+        note $ "Draw" ++ maybe "" ((": " ++) . show) mPowers
         dipMsg hist info f
       DipError (CivilDisorder _) -> dipMsg hist info f -- it dont make no difference to me baby
       DipError err -> liftMaster $ do
-        lift . note $ "DipError: " ++ show err
+        note $ "DipError: " ++ show err
         pushMsg FM >> shutdownMaster
       EndGameStats turn stats -> do
         gameOver
         liftMaster $ do
-          lift . note $ "End Game Statistics (" ++ show turn ++ "):\n" ++ show stats
+          note $ "End Game Statistics (" ++ show turn ++ "):\n" ++ show stats
           pushMsg FM >> shutdownMaster
       otherMsg -> maybe (parserZero) return =<< f otherMsg
 
@@ -296,7 +306,7 @@ protocol = do
     f <- asksBot dipBotInitHistory
     f gameInfo initState
 
-  liftMaster . lift . note $ "Starting main game loop"
+  note $ "Starting main game loop"
   -- Run the main game loop
   _ <- runStateT (runGameKnowledgeT (forever (gameLoop tout))
                   gameInfo initHist
@@ -323,10 +333,9 @@ gameLoop tout = do
 
   -- sort so that we can do some checks on the responses
   -- TODO sanity checks on orders (all units are taken care of, validity)
-  lift . lift . liftMaster . lift . note $ "Running Brain"
+  note $ "Running Brain"
   moveOrders <- sort <$> ebrain
-  lift . lift . liftMaster . lift . note $
-    "Brain finished with " ++ show (length moveOrders) ++ " moves"
+  note $ "Brain finished with " ++ show (length moveOrders) ++ " moves"
   
   lift . lift $ do
     -- dont submit empty order list
@@ -354,7 +363,7 @@ gameLoop tout = do
     let missOrders = try $ do
           Missing missing <- nextDip
           return $ do
-            liftMaster . lift . note $ show missing
+            note $ show missing
             parserFail $ "Missing orders, can't handle for now"
     join $ missOrders <|> return (return ())
       

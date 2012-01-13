@@ -11,6 +11,7 @@ module Diplomacy.AI.SkelBot.CommonCache ( BrainCache(..)
                                         ) where
 
 import Diplomacy.Common.Data
+import Diplomacy.Common.FloydWarshall
 import Diplomacy.AI.SkelBot.Brain
 
 import Control.Applicative
@@ -24,6 +25,8 @@ data BrainCache = BrainCache
                   , brainCacheProvUnitMap :: Map.Map Province UnitPosition
                   , brainCacheAllAdjacentNodes :: Map.Map Province [ProvinceNode]
                   , brainCacheAllAdjacentNodes2 :: Map.Map ProvinceNode [ProvinceNode]
+                  , brainCacheFloydWarshallArmy :: ProvinceNode -> ProvinceNode -> Maybe Int
+                  , brainCacheFloydWarshallFleet :: ProvinceNode -> ProvinceNode -> Maybe Int
                   }
 
 newtype BrainCacheT m a = BrainCacheT { unBrainCache :: (ReaderT BrainCache m) a }
@@ -45,6 +48,8 @@ runBrainCache bc = runReaderT (unBrainCache bc) =<< BrainCache
                    <*> getProvUnitMap
                    <*> getAllAdjacentNodesMap
                    <*> getAllAdjacentNodes2Map
+                   <*> (getFloydWarshall <*> return Army)
+                   <*> (getFloydWarshall <*> return Fleet)
 
 -- returns a mapping from provinceNodes to units
 getProvNodeUnitMap :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) =>
@@ -119,3 +124,8 @@ getAllAdjacentNodes2 provNode = do
 
 (!) :: (Ord a) => Map.Map a [b] -> a -> [b]
 mp ! i = maybe [] id (Map.lookup i mp)
+
+getFloydWarshall :: (MonadGameKnowledge h m) => m (UnitType -> ProvinceNode -> ProvinceNode -> Maybe Int)
+getFloydWarshall = do
+  mapDef <- asksGameInfo gameInfoMapDef
+  return (floydWarshall mapDef)

@@ -32,7 +32,9 @@ holdBot = DipBot { dipBotName = "FlappyHoldBot"
                  , dipBotBrainRetreat = holdBrainRetreatComm
                  , dipBotBrainBuild = holdBrainBuildComm
                  , dipBotProcessResults = holdProcessResults
-                 , dipBotInitHistory = holdInitHistory }
+                 , dipBotInitHistory = holdInitHistory 
+                 , dipBotGameOver = return ()
+                 }
 
 -- no impure actions, running pure brain
 holdBrainComm :: (MonadIO m, OrderClass o) => HoldBrain o () -> HoldBrainCommT o m ()

@@ -12,7 +12,7 @@ module Diplomacy.Common.DaideHandle(DaideHandleT, DaideHandle,
                                     askDaide,
                                     askDaideTimed,
                                     tellDaide,
-                                    note, noteWith,
+                                    DaideNote(..),
                                     shutdownDaide,
                                     shutdownDaideAsk,
                                     shutdownDaideTell,
@@ -102,17 +102,40 @@ instance (MonadIO m) => DaideErrorClass (DaideTellT m) where
 instance (MonadIO m) => DaideErrorClass (DaideAskT m) where
   throwEM = DaideAsk . throwEM
 
-noteWith :: (MonadIO m, MonadReader DaideHandleInfo m) => (String -> String -> IO ()) -> String -> m ()
-noteWith f msg = do
-  -- we have to "force" (because of lazy strings) AND evaluate (because of lazy usage)
-  toPrint <- liftIO . evaluate . force $ msg
-  name <- asks hostName
-  port <- asks hostPort
-  time <- liftIO getCurrentTime
-  liftIO . f "Main" $  show time ++ " [" ++ name ++ " : " ++ show port ++ "] " ++ toPrint
+class (MonadIO m) => DaideNote m where
+  noteWith :: (String -> String -> IO ()) -> String -> m ()
+  note :: String -> m ()
+  
+  note = noteWith noticeM
 
-note :: (MonadIO m, MonadReader DaideHandleInfo m) => String -> m ()
-note = noteWith noticeM
+instance (MonadIO m) => DaideNote (ReaderT DaideHandleInfo m) where
+  noteWith f msg = do
+    -- we have to "force" (because of lazy strings) AND evaluate (because of lazy usage)
+    toPrint <- liftIO . evaluate . force $ msg
+    name <- asks hostName
+    port <- asks hostPort
+    time <- liftIO getCurrentTime
+    liftIO . f "Main" $  show time ++ " [" ++ name ++ " : " ++ show port ++ "] " ++ toPrint
+
+instance (MonadIO m, DaideNote m) =>
+         DaideNote (State.StateT s m) where
+  noteWith s = lift . noteWith s
+
+instance (MonadIO m, DaideNote m, Error e) =>
+         DaideNote (ErrorT e m) where
+  noteWith s = lift . noteWith s
+
+instance (MonadIO m) =>
+         DaideNote (DaideHandleT m) where
+  noteWith s = DaideHandle . noteWith s
+
+instance (MonadIO m, DaideNote m) =>
+         DaideNote (DaideAskT m) where
+  noteWith s = DaideAsk . noteWith s
+
+instance (MonadIO m, DaideNote m) =>
+         DaideNote (DaideTellT m) where
+  noteWith s = DaideTell . noteWith s
 
 runDaideT :: (MonadIO m) => DaideHandleT m () -> DaideHandleInfo -> m ()
 runDaideT daide info = do
@@ -132,7 +155,8 @@ shutdownDaideAsk = DaideAsk shutdownDaide
 shutdownDaideTell :: (MonadIO m) => DaideTellT m a
 shutdownDaideTell = DaideTell shutdownDaide
 
-handleError :: (MonadIO m, MonadDaideTell m, MonadReader DaideHandleInfo m) => Either (Maybe DaideError) a -> m ()
+handleError :: (MonadIO m) => Either (Maybe DaideError) a ->
+               State.StateT ByteString (ReaderT DaideHandleInfo m) ()
 handleError = flip either (const $ return ()) . maybe (return ()) $  -- if Nothing it was a clean shutdown
               \err -> do        -- otherwise print and signal the other party
                 noteWith errorM $ "An error occured: " ++ (show err)
