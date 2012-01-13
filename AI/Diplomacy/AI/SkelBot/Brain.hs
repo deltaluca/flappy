@@ -153,15 +153,18 @@ mapBrainT f mbrain = do
   putOrders orders
   return ret
 
-mapBrainTHist :: (Monad m, OrderClass o) => (h2 -> h1) -> BrainT o h1 m a -> BrainT o h2 m a
+mapBrainTHist :: (Monad m, OrderClass o) => (h2 -> h1) ->
+                 BrainT o h1 m a -> BrainT o h2 m (a, h1)
 mapBrainTHist f brain = do
   a <- askGameState
   b <- askGameInfo
   c <- getHistory
-  lift $ return . fst . fst =<< runGameKnowledgeT (runBrainT brain a) b (f c)
+  ((ret, orders), newHist) <- lift $ return =<< runGameKnowledgeT (runBrainT brain a) b (f c)
+  putOrders orders
+  return (ret, newHist)
 
-mapBrainCommTHist  :: (Monad m, OrderClass o) =>
-                      (h2 -> h1) -> BrainCommT o h1 m a -> BrainCommT o h2 m a
+mapBrainCommTHist  :: (Monad m, OrderClass o) => (h2 -> h1) ->
+                      BrainCommT o h1 m a -> BrainCommT o h2 m (a, h1)
 mapBrainCommTHist f = mapBrainCommT (mapBrainTHist f)
 
 type Brain o h = BrainT o h Identity
