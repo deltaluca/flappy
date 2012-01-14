@@ -1,7 +1,7 @@
-module Diplomacy.AI.Bots.DumbBot.DumbBot ( dumbBrainMoveComm 
-                                         , dumbBrainRetreatComm 
-                                         , dumbBrainBuildComm 
-                                         ) where
+module Diplomacy.AI.Bots.DumbBot.DumbBotInt ( dumbBrainMoveComm 
+                                            , dumbBrainRetreatComm 
+                                            , dumbBrainBuildComm 
+                                            ) where
 
 import Diplomacy.AI.Bots.DumbBot.Monad
 import Diplomacy.AI.SkelBot.Scoring

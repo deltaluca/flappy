@@ -13,6 +13,7 @@ module Diplomacy.AI.Bots.LearnBot.PatternWeights  (weighOrderSets
                                                   ,_dbname
                                                   ,commitPureDB
                                                   ,makeAndFillPureDB
+                                                  ,putPureDBAnalysis
                                                   ) where
 
 import Diplomacy.AI.Bots.LearnBot.Monad
@@ -49,7 +50,7 @@ _dbname = "test.db"
 
 -- n pattern weights to use
 _npats :: [Int]
-_npats = [1,2,3,4]
+_npats = [1,2,3]
 
 -- _c defines the constant that determines how 'strong' the weights are affected
 -- Larger _c corresponds to smaller change
@@ -66,7 +67,7 @@ _highK = 5.0
 -- NOT IMPLEMENTED
 -- no of supply centres needed to win
 _noOfSCNeededToWin :: Int
-_noOfSCNeededToWin = 18
+_noOfSCNeededToWin = 8
 
 -- _metrics to use
 -- ordering is important!
@@ -77,6 +78,14 @@ _metrics _ = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargP
             ,(\x ->                       targNodeAdjUnits =<< moveOrderToTargProv x)
             ,(\x ->                       targNodeAdjUnits =<< moveOrderToOwnProv x)
             ,(\x -> return . mOT2Int                       =<< moveOrderToType x)]
+
+-- description of each metric
+_metrics_desc =  ["[TN friendly]"
+                ,"[TN occupied]"
+                ,"[TN supply]"
+                ,"[TN adj units]"
+                ,"[ON adj units]"
+                ,"[Own move]"]
 
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
@@ -95,7 +104,7 @@ generatePatterns :: (OrderClass o, MonadIO m) => Dummy o m -> [Int] -> [Int -> P
 generatePatterns d ns = concat [[(Pattern ms n) | ms <- combN n (metricIDs d)] | n <- ns]
 
 cantor :: Int -> Int -> Int
-cantor a b = ((a + b)*(a + b + 1)) `div` 2 + b
+cantor a b = ((a + b - 2)*(a + b - 1)) `div` 2 + a 
 
 ncant :: [Int] -> Int
 ncant [x] = x
@@ -105,6 +114,24 @@ ncant l = ncant' l
     ncant' [a,b]  = cantor a b
     ncant' (x:xs) = cantor x $ ncant' xs
 
+decantor :: Int ->  [Int]
+decantor h = [i, c - i + 2]
+  where
+    i = h - delt c
+    c :: Int
+    c = fromIntegral $ floor $ sqrt (fromIntegral (2*h)) - 0.5
+    delt x = (x * (1 + x)) `div` 2
+    
+de_ncant :: Int -> Int -> [Int]
+de_ncant 1 x = [x]
+de_ncant 2 x = decantor x
+de_ncant n x = de_ncant' n x
+  where
+    de_ncant' 0 _ = error "de_ncant called with 0 dimension"
+    de_ncant' n' x' = a : de_ncant (n'-1) a' 
+      where
+        [a,a'] = decantor x'
+ 
 combN :: Int -> [a] -> [[a]]
 combN 1 l = [[x] | x <- l]
 combN n l
@@ -113,6 +140,9 @@ combN n l
 
 getLists :: Int -> [a] -> [[a]] 
 getLists n l = takeWhile ((>= n).length) $ iterate tail l
+
+genPatternDesc :: Pattern -> String
+genPatternDesc p = foldl1 (\x y -> x ++ " AND " ++ y) [_metrics_desc !! (i-1) | i <- getMetrics p]
 
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
@@ -165,7 +195,7 @@ zipApply :: [a -> b] -> [a] -> [b]
 zipApply fs xs = map (\(f,x) -> f x) $ zip fs xs
 
 _patterns :: (OrderClass o, MonadIO m) => Dummy o m -> [Pattern]
-_patterns d  = zipApply (generatePatterns d _npats) [1..]
+_patterns d = zipApply (generatePatterns d _npats) [1..]
 
 --------------------------------------------------------------------
 --------------------------------------------------------------------
@@ -181,6 +211,10 @@ commitPureDB conn db = do
   where 
     addVal pid pval weight age = 
       run conn "INSERT INTO test VALUES (?,?,?,?)" [toSql pid, toSql pval, toSql weight, toSql age]
+
+printPureDB :: PureDB -> IO ()
+printPureDB pdb = do
+  mapM_ (putStrLn . show) $ Map.elems pdb
 
 makeAndFillPureDB :: Connection -> IO PureDB
 makeAndFillPureDB conn = do
@@ -368,3 +402,12 @@ randWeightedElem elemWeights = do
   if len == 0
     then error "randWeightedElem called with empty list"
     else return $ results !! index
+
+-- Pattern weight database analysis
+putPureDBAnalysis :: (MonadIO m, OrderClass o) => Dummy o m -> PureDB -> LearnBrainT o m ()
+putPureDBAnalysis d pdb = do
+  let pidpvals = map (\(pid, pval, weight, _) -> (pid, pval, weight)) $ Map.elems pdb
+  let analysis = [(\pat -> (genPatternDesc pat, de_ncant (getN pat) pval, weight)) (_patterns d !! (pid-1)) | (pid,pval,weight) <- pidpvals]
+  liftIO $ sequence [(\(desc,val,weight) -> putStrLn (desc ++ " : " ++ (show val) ++ " : " ++ (show weight))) pat | pat <- analysis]
+  return ()
+
