@@ -32,7 +32,7 @@ learn7:
 	cd AI/dist/build/learnbot && zsh -c 'for i in {1..7} ; do ./learnbot $(SERVER) $(PORT) &> outp.$$i & ; done'
 
 learn:
-	cd AI/dist/build/learnbot && zsh -c './learnbot $(SERVER) $(PORT) +RTS -p &> outp &'
+	cd AI/dist/build/learnbot && zsh -c './learnbot $(SERVER) $(PORT) &'
 
 debug:
 	cd AI/Diplomacy/AI/Bots/DumbBot && ghci dumbbot.hs -fbreak-on-exception
