@@ -97,7 +97,7 @@ Executable learnbot
     HDBC,
     HDBC-sqlite3
 
-  Ghc-Options: -rtsopts -prof -auto-all -Wall -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
+  Ghc-Options: -O2 -rtsopts -prof -auto-all -Wall -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
 --   -- Modules not exported by this package.
 --   -- Other-modules:       
   
