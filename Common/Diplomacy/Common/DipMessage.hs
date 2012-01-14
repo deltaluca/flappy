@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, FunctionalDependencies, GeneralizedNewtypeDeriving #-}
+-- |Diplomacy messages, parser and unparser
 module Diplomacy.Common.DipMessage ( DipMessage(..)
                                    , parseDipMessage
                                    , uParseDipMessage
@@ -24,7 +25,7 @@ import qualified Data.Map as Map
 
   -- QUICKCHECK --
 import Test.QuickCheck hiding (Success, Result)
-  -- level and custom error
+-- |press level and custom error
 type DipParserInfo = StateT (Maybe DipParseError) (Reader Int)
 
 -- DipParser is a ReaderT (for the press level) wrapped in StateT (for custom errors) wrapped in  Parsec
@@ -35,7 +36,7 @@ newtype DipParser s a =
 
 type DipParserString = DipParser BS.ByteString
 
--- which is why you should ALWAYS have an accompanying class
+-- |rewriting Parsec primitives. this is why you should ALWAYS have an accompanying class
 parserFail :: DipRep s t => String -> DipParser s a
 parserFail = DipParser . Parsec.parserFail
 getPosition = dipCatchError Parsec.getPosition
@@ -83,7 +84,7 @@ dipCatchError parsr = DipParser parsr <?> SyntaxError
   -- Things to look out for:
   -- ambiguity: StartPing and MissingReq
   -- Cancel (StartProcessing) means dont process until deadline (ignore?)
-  -- |class to abstract away the token and text representation
+-- |class to abstract away the token and text representation
 class Parsec.Stream s DipParserInfo t => DipRep s t | t -> s where
   pChr :: DipParser s Char
   pStr :: DipParser s [Char]
@@ -99,6 +100,7 @@ class Parsec.Stream s DipParserInfo t => DipRep s t | t -> s where
   pStr = many pChr
   tok1 t = tok (mayEq t)
 
+-- |this instance is used to parse the stream from the socket
 instance DipRep [DipToken] DipToken where
   pChr = tok (\t -> case t of {Character c -> Just c ; _ -> Nothing})
   pInt = tok (\t -> case t of {DipInt i -> Just i ; _ -> Nothing})
@@ -110,6 +112,7 @@ instance DipRep [DipToken] DipToken where
   createError (SyntaxError pos) toks = Paren $ DipCmd PRN : listify (uParen (insertAt pos) (DipParam ERR) . (appendListify toks))
   eoi = getInput >>= (\s -> if s /= [] then parserFail "End of input expected" else return ())
 
+-- |this instance is used to parse plain text
 instance DipRep BS.ByteString Char where
   tok f = try $ do
     spaces
@@ -135,7 +138,7 @@ instance DipRep BS.ByteString Char where
   createError (SyntaxError _) _ = Syntax []
   eoi = eof
 
-  -- DESC (SENDING PARTY)
+-- |Diplomacy Messages. CLIENT/SERVER describes who can send that message
 data DipMessage =
 
     -- |first message (CLIENT)
@@ -251,10 +254,12 @@ data DipMessage =
 
   deriving (Eq, Show)
 
+-- |for deepseq
 instance NFData DipMessage
 
+-- |imissing orders
 data Missing =
-  -- |missing movement orders (SERVER)
+    -- |missing movement orders (SERVER)
     MissingMovement [UnitPosition]
 
     -- |missing retreat orders (SERVER)
@@ -264,9 +269,11 @@ data Missing =
   | MissingBuild Int
   deriving (Eq, Show)
 
+-- |statistics sent at the end of games
 data PlayerStat = PlayerStat Power String String Int (Maybe Int)
                 deriving (Eq, Show)
 
+-- |server options
 data VariantOption = Level Int
                    | TimeMovement Int
                    | TimeRetreat Int
@@ -279,9 +286,11 @@ data VariantOption = Level Int
                    | PressTimeTillDeadline Int -- (10)
                    deriving (Eq, Show)
 
+-- |parses a diplomacy message
 parseDipMessage :: (DipRep s t, Show s) => Monad m => Int -> s -> ErrorT DipError m DipMessage
 parseDipMessage = parseDip pMsg
 
+-- |parses with an arbitrary parser
 parseDip :: (Monad m, DipRep s t, Show s) => DipParser s a -> Int -> s -> ErrorT DipError m a
 parseDip pars lvl stream = let parsr = pars >>= (\r -> eoi >> return r) in
   uncurry (handleParseErrors stream)
@@ -290,17 +299,20 @@ parseDip pars lvl stream = let parsr = pars >>= (\r -> eoi >> return r) in
   . Parsec.runParserT (unDipParser parsr) () "DAIDE Message Parser"
   $ stream
 
+-- |handles parse errors (bugged, now it just shows the error)
 handleParseErrors :: (Monad m, DipRep s t, Show s) => s -> Either Parsec.ParseError a -> (Maybe DipParseError) -> ErrorT DipError m a
 handleParseErrors s (Left a) (Just _{-err-}) = error (show a ++ '\n' : show s) -- throwError (createError err stream)
 handleParseErrors s (Left p) Nothing = error (show p ++ '\n' : show s) -- throwError . ParseError . show $ p
 handleParseErrors _ (Right a) _ = return a
 
+-- |very useful operator
 infixr 4 <<
 (<<) :: Monad m => m a -> m b -> m a
 (<<) = flip (>>)
 
 mayEq a b = if a == b then Just a else Nothing
 
+-- |combinator to restrict a parser to a certain press level. niec
 level :: DipRep s t => Int -> DipParser s a -> DipParser s a
 level l p = do
   lvl <- ask
@@ -916,19 +928,25 @@ pSmr = do
   return (EndGameStats turn playerStats)
 
 
--- unparsing
+-- unparsing functions
 
+-- |continuation style strings for O(1) concatenation with (.)
 type AppendList a = [a] -> [a]
 
+-- |unparser type (unparses a to b)
 type UnParser a b = a -> AppendList b
 
+-- |Diplomacy unparser
 type UnDipParser a = UnParser a DipToken
 
+-- |unparses a diplomacy message
 uParseDipMessage :: DipMessage -> [DipToken]
 uParseDipMessage = listify . uMsg
 
+-- |parses, then unparses. useful for QuickCheck
 idParse d = runIdentity (runErrorT (parseDipMessage 10 (uParseDipMessage d)))
 
+-- |pretty print
 stringyDip :: [DipToken] -> String
 stringyDip toks = toks >>= (' ' :) . show
 
@@ -949,6 +967,7 @@ insertAt _ _ [] = undefined
 uParen :: UnDipParser a -> UnDipParser a
 uParen up a = uTok Bra . up a . uTok Ket
 
+-- |ouch
 uMany :: UnDipParser a -> UnDipParser [a]
 uMany up = foldl (.) id . map up
 
@@ -972,6 +991,7 @@ toUnitToProvMap = foldl (\mp ((provNode, typ), nodes) ->
                             ProvCoastNode prov coast ->
                               insertMultiMap prov (CoastalFleetToProv coast nodes) mp) Map.empty
 
+-- |the main unparser method
 uMsg :: UnDipParser DipMessage
 uMsg ms = case ms of
   Accept msg -> ( uTok (DipCmd YES)

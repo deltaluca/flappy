@@ -1,3 +1,4 @@
+-- |Floyd Warshall algorithm for Diplomacy mapdefinitions
 module Diplomacy.Common.FloydWarshall(floydWarshall) where
 
 import Diplomacy.Common.Data
@@ -10,12 +11,7 @@ import Data.Maybe(mapMaybe)
 import Control.Monad (liftM, liftM2)
 import qualified Data.Map as Map
 
---import Debug.Trace
-
-  -- looks obscure but it's all just so that we have a nice interface to a fast access array
-  -- Nothing represents no path
-  -- it is symmetric
-  
+-- |wrapper around floydWarshallArr to hide the underlying array
 floydWarshall :: MapDefinition -> UnitType -> ProvinceNode -> ProvinceNode -> Maybe Int
 floydWarshall mapDef utyp = let
   (cacheThisPleaseArmy, pid) = floydWarshallArr mapDef Army
@@ -25,6 +21,7 @@ floydWarshall mapDef utyp = let
      Army -> cacheThisPleaseArmy ! (pid provFrom, pid provTo)
      Fleet -> cacheThisPleaseFleet ! (pid provFrom, pid provTo)
 
+-- |returns a distance array (Nothing = no path) together with a mapping function
 floydWarshallArr :: MapDefinition -> UnitType -> (Array (Int, Int) (Maybe Int), ProvinceNode -> Int)
 floydWarshallArr mapDef utyp = (runSTArray (floydWarshall'' (map pid provNodes)), pid)
   where
@@ -36,7 +33,7 @@ floydWarshallArr mapDef utyp = (runSTArray (floydWarshall'' (map pid provNodes))
     maxNumCoasts = maximum . Map.elems . Map.map length $ mapDefProvNodes mapDef
     minPid = minProvId
     maxPid = minPid + maxNumCoasts * (maxProvId - minProvId)
-    -- pids identify provinceNODEs, SPEED >> SPACE
+    -- |the ProvinceNode -> Int mapping function. pid = provid + num * coastid where num is the number of provinces
     pid (ProvNode prov) = provinceId prov
     pid (ProvCoastNode prov coast) =
       let sortCoasts = sort . mapMaybe (\p -> case p of
@@ -50,8 +47,8 @@ floydWarshallArr mapDef utyp = (runSTArray (floydWarshall'' (map pid provNodes))
          Just i -> provinceId prov + (maxProvId - minProvId) * i
     arrayRange = ((minPid, minPid), (maxPid, maxPid))
     adj x = mapDefAdjacencies mapDef Map.! (x, utyp)
-    
-    -- the important part
+
+    -- |the important part, uses a mutable ST array
     floydWarshall'' :: [Int] -> ST s (STArray s (Int, Int) (Maybe Int))
     floydWarshall'' [] = do
       narr <- newListArray arrayRange (repeat Nothing)
@@ -67,8 +64,7 @@ floydWarshallArr mapDef utyp = (runSTArray (floydWarshall'' (map pid provNodes))
         writeArray arr (x, y) $ mini xy (xi + iy)
       return arr
 
---trc a = traceShow a a
-
+-- |the default Ord implementation interprets Notthing as smaller than everything
 mini Nothing a = a
 mini a Nothing = a
 mini a b = min a b
@@ -79,4 +75,3 @@ instance (Num a) => Num (Maybe a) where
   abs = liftM abs
   signum = liftM signum
   fromInteger = Just . fromInteger
-  

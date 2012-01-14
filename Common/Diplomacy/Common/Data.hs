@@ -6,6 +6,7 @@
 
 -} 
 
+-- |module for defining commonly used datastructures
 module Diplomacy.Common.Data ( Power(..)
                              , SupplyCOwnerships
                              , Province(..)

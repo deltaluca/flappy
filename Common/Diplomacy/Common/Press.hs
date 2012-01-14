@@ -9,11 +9,13 @@ module Diplomacy.Common.Press ( PressMessage (..)
 import Diplomacy.Common.Data
 import Diplomacy.Common.DipToken
 
+-- |incoming messages
 data InMessage = InMessage { inMessageFrom :: Power
                            , inMessageTo :: [Power]
                            , inMessageMessage :: PressMessage }
                deriving (Eq, Show)
-                        
+
+-- |outgoing messages
 data OutMessage = OutMessage { outMessageTo :: [Power]
                              , outMessageMessage :: PressMessage }
                 deriving (Eq, Show)

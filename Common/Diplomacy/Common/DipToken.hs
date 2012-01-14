@@ -1,4 +1,5 @@
 {-# LANGUAGE EmptyDataDecls #-}
+-- |serialisation/deserialisation of Diplomacy tokens
 module Diplomacy.Common.DipToken where
 
 import Diplomacy.Common.DaideError
@@ -10,8 +11,10 @@ import Control.Exception
 import Data.Bits
 import Data.Char
 import Data.Word
+
 import qualified Data.Map as Map
 
+-- |One diplomacy token
 data DipToken = DipInt Int
               | Bra
               | Ket
@@ -29,8 +32,10 @@ data DipToken = DipInt Int
               | DipProv Province
               deriving (Show, Eq)
 
+-- |Useful if we want to use DeepSeq
 instance NFData DipToken
 
+-- |The Serialize instance
 instance Serialize DipToken where
   put (DipInt int) = put . (.&. 0x3FFF) $ (fromIntegral int :: Word16)
   put (Bra) = put (0x40 :: Word8) >> put (0x00 :: Word8)
@@ -57,10 +62,12 @@ instance Serialize DipToken where
     val <- (get :: Get Word8)
     decodeToken typ val
 
+-- |shortcut for if then else
 infixl 6 ?
 (?) :: Bool -> a -> a -> a
 (?) bool a b = if bool then a else b
 
+-- uncomment if we need pretty printing
 -- instance Show DipToken where
 --   show t = case t of
 --     DipInt i -> show i
@@ -534,6 +541,7 @@ putProv prov = put (fromIntegral prov :: Word8)
 
 type TokenMap = Map.Map [Char] DipToken
 
+-- |maps strings to tokens. Couldn't use Read because of the constructors
 tokenMap :: TokenMap
 tokenMap = foldl (flip $ uncurry Map.insert) Map.empty
                  [ ("CTO", DipOrder CTO)

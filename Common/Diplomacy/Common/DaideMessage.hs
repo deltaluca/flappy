@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleInstances #-}
-
+-- |this module defines the low level daidemessages (diplomacy messages are a subset)
 module Diplomacy.Common.DaideMessage where
 
 import Diplomacy.Common.DaideError

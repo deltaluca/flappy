@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeSynonymInstances, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving #-}
 
+-- |this module defines the low level DaideHandle monad that handles the socket level communication and provides a logging class
 module Diplomacy.Common.DaideHandle(DaideHandleT, DaideHandle,
                                     DaideAskT, DaideAsk,
                                     DaideTellT, DaideTell,
@@ -35,10 +36,10 @@ import Network
 
 import qualified Control.Monad.State as State
 
--- Daide communication holding client info
+-- |Daide communication holding client info
 type DaideCommT m = State.StateT L.ByteString (ReaderT DaideHandleInfo m)
 
--- DaideHandle is a Daide communication with error handling and exiting
+-- |DaideHandle is a Daide communication with error handling and exiting
 newtype DaideHandleT m a = DaideHandle
                            { runDaideHandle :: ErrorT (Maybe DaideError) (DaideCommT m) a }
                          deriving ( Functor, Monad, MonadIO, MonadReader DaideHandleInfo
@@ -47,12 +48,12 @@ newtype DaideHandleT m a = DaideHandle
 instance MonadTrans DaideHandleT where
   lift = DaideHandle . lift . lift . lift
 
--- |wrapper to only allow asking
+-- |wrapper to only allow reading from the stream
 newtype DaideAskT m a = DaideAsk { runDaideAsk :: DaideHandleT m a }
                       deriving ( MonadTrans, Monad, MonadIO, MonadError (Maybe DaideError)
                                , MonadReader DaideHandleInfo, State.MonadState L.ByteString)
 
--- |wrapper to only allow telling
+-- |wrapper to only allow writing to the stream
 newtype DaideTellT m a = DaideTell { runDaideTell :: DaideHandleT m a }
                       deriving ( MonadTrans, Monad, MonadIO, MonadError (Maybe DaideError)
                                , MonadReader DaideHandleInfo, State.MonadState L.ByteString)

@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, FlexibleContexts #-}
 
--- MonadSTM needed for TStream
+-- |MonadSTM, similar to MonadIO
 
 module Diplomacy.Common.MonadSTM(MonadSTM(..)) where
 
