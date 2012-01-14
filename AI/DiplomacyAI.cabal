@@ -71,7 +71,8 @@ Library
     MonadRandom,
     parsec,
     deepseq,
-    time
+    time,
+    array
 
   Ghc-Options: -auto-all -Wall -rtsopts -fno-warn-missing-signatures -fno-warn-unused-do-bind -fwarn-missing-methods -fno-warn-orphans
     
