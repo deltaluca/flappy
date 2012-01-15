@@ -104,7 +104,9 @@ generatePatterns :: (OrderClass o, MonadIO m) => Dummy o m -> [Int] -> [Int -> P
 generatePatterns d ns = concat [[(Pattern ms n) | ms <- combN n (metricIDs d)] | n <- ns]
 
 cantor :: Int -> Int -> Int
-cantor a b = ((a + b - 2)*(a + b - 1)) `div` 2 + a 
+cantor a b = hopUll (a+1) (b+1) - 1
+  where 
+   hopUll a b = ((a + b - 2)*(a + b - 1)) `div` 2 + a 
 
 ncant :: [Int] -> Int
 ncant [x] = x
@@ -115,12 +117,15 @@ ncant l = ncant' l
     ncant' (x:xs) = cantor x $ ncant' xs
 
 decantor :: Int ->  [Int]
-decantor h = [i, c - i + 2]
-  where
-    i = h - delt c
-    c :: Int
-    c = fromIntegral $ floor $ sqrt (fromIntegral (2*h)) - 0.5
-    delt x = (x * (1 + x)) `div` 2
+decantor h = [a - 1, b-1]
+  where 
+    [a,b] = deHopUll (h + 1)
+    deHopUll h = [i, c - i + 2]
+      where
+        i = h - delt c
+        c :: Int
+        c = fromIntegral $ floor $ sqrt (fromIntegral (2*h)) - 0.5
+        delt x = (x * (1 + x)) `div` 2
     
 de_ncant :: Int -> Int -> [Int]
 de_ncant 1 x = [x]
@@ -130,7 +135,7 @@ de_ncant n x = de_ncant' n x
     de_ncant' 0 _ = error "de_ncant called with 0 dimension"
     de_ncant' n' x' = a : de_ncant (n'-1) a' 
       where
-        [a,a'] = decantor x'
+        [a,a'] = decantor x' 
  
 combN :: Int -> [a] -> [[a]]
 combN 1 l = [[x] | x <- l]
@@ -211,10 +216,6 @@ commitPureDB conn db = do
   where 
     addVal pid pval weight age = 
       run conn "INSERT INTO test VALUES (?,?,?,?)" [toSql pid, toSql pval, toSql weight, toSql age]
-
-printPureDB :: PureDB -> IO ()
-printPureDB pdb = do
-  mapM_ (putStrLn . show) $ Map.elems pdb
 
 makeAndFillPureDB :: Connection -> IO PureDB
 makeAndFillPureDB conn = do
