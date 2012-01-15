@@ -1,4 +1,4 @@
--- module to store common functions the results of should be cached
+-- |module to help store common functionresults
 
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 

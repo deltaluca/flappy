@@ -1,3 +1,4 @@
+-- |province scoring module for dumbbot and potentially other bots
 module Diplomacy.AI.SkelBot.Scoring ( calculateDestValue
                                     , calculateWinterDestValue
                                     , calculateComp ) where
@@ -119,6 +120,7 @@ calculateDefenceValue prov = do
   maximum . (0 :) <$> mapM
     ((\p -> if p == myPower then return 0 else powerSize p) . unitPositionP) adjUnits
 
+-- |calculate proximities
 calculateProxs :: ( Functor m, Monad m, OrderClass o, MonadBrain o m
                   , MonadGameKnowledge h m, MonadBrainCache m) =>
                   m [Map.Map ProvinceNode Integer]

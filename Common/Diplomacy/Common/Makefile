@@ -7,7 +7,7 @@ server: DaideError.hs DaideHandle.hs DaideMessage.hs DaideError.hs DipMessage.hs
 	$(GHC) *.hs
 
 clean:
-	rm -f *.o *.hi server
+	cd ../../ && cabal clean
 
 cabal:
 	cd ../../ && cabal install
