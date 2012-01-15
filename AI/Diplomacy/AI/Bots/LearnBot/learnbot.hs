@@ -14,7 +14,7 @@ import Diplomacy.AI.SkelBot.DipBot
 import Diplomacy.AI.SkelBot.Common
 import Diplomacy.AI.SkelBot.CommonCache
 
-import Diplomacy.AI.Bots.DumbBot.DumbBot
+import Diplomacy.AI.Bots.DumbBot.DumbBotInt
 
 import Diplomacy.Common.Data
 
