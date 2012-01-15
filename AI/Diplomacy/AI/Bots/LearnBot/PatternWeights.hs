@@ -14,6 +14,7 @@ module Diplomacy.AI.Bots.LearnBot.PatternWeights  (weighOrderSets
                                                   ,commitPureDB
                                                   ,makeAndFillPureDB
                                                   ,putPureDBAnalysis
+                                                  ,getMyDBTable
                                                   ) where
 
 import Diplomacy.AI.Bots.LearnBot.Monad
@@ -48,6 +49,11 @@ _trimNum = 3
 _dbname :: String
 _dbname = "test.db"
 
+getMyDBTable :: (MonadIO m, OrderClass o) => LearnBrainT o m String
+getMyDBTable = do
+  myPower <- getMyPower
+  return $ ["aus","eng","fra","ger","ita","rus","tur"] !! powerId myPower
+
 -- n pattern weights to use
 _npats :: [Int]
 _npats = [1,2,3]
@@ -55,19 +61,19 @@ _npats = [1,2,3]
 -- _c defines the constant that determines how 'strong' the weights are affected
 -- Larger _c corresponds to smaller change
 _c :: Double
-_c = 50.0
+_c = 10.0
 
 -- sets the low (starting) and high (ending) values of k, which varies linearly over the 
 -- game period from low to high. k is used as a 'learning temperature'
 _lowK :: Double
 _lowK = 1.0
 _highK :: Double
-_highK = 5.0
+_highK = 2.0
 
 -- NOT IMPLEMENTED
 -- no of supply centres needed to win
 _noOfSCNeededToWin :: Int
-_noOfSCNeededToWin = 8
+_noOfSCNeededToWin = 10
 
 -- _metrics to use
 -- ordering is important!
@@ -106,7 +112,7 @@ generatePatterns d ns = concat [[(Pattern ms n) | ms <- combN n (metricIDs d)] |
 cantor :: Int -> Int -> Int
 cantor a b = hopUll (a+1) (b+1) - 1
   where 
-   hopUll a b = ((a + b - 2)*(a + b - 1)) `div` 2 + a 
+   hopUll c d = ((c + d - 2)*(c + d - 1)) `div` 2 + c 
 
 ncant :: [Int] -> Int
 ncant [x] = x
@@ -114,12 +120,12 @@ ncant l = ncant' l
   where
     ncant' []     = error "ncant' []"
     ncant' [a,b]  = cantor a b
-    ncant' (x:xs) = cantor x $ ncant' xs
+    ncant' (y:ys) = cantor y $ ncant' ys
 
 decantor :: Int ->  [Int]
-decantor h = [a - 1, b-1]
+decantor y = [a - 1, b-1]
   where 
-    [a,b] = deHopUll (h + 1)
+    [a,b] = deHopUll (y + 1)
     deHopUll h = [i, c - i + 2]
       where
         i = h - delt c
@@ -206,10 +212,10 @@ _patterns d = zipApply (generatePatterns d _npats) [1..]
 --------------------------------------------------------------------
 -- Order weighing and relevant database functions
 
-commitPureDB :: Connection -> PureDB -> IO ()
-commitPureDB conn db = do
+commitPureDB :: Connection -> PureDB -> String -> IO ()
+commitPureDB conn db table = do
   putStrLn "Commiting pure db, deleting table!"
-  run conn "DELETE FROM test" []
+  run conn ("DELETE FROM " ++ table) []
   putStrLn "Inserting values!"
   sequence $ map (\(_,(pid,pval,weight,age)) -> addVal pid pval weight age ) $ Map.toList db
   return ()
@@ -217,14 +223,14 @@ commitPureDB conn db = do
     addVal pid pval weight age = 
       run conn "INSERT INTO test VALUES (?,?,?,?)" [toSql pid, toSql pval, toSql weight, toSql age]
 
-makeAndFillPureDB :: Connection -> IO PureDB
-makeAndFillPureDB conn = do
-  dbVals <- dumpDBValues conn
+makeAndFillPureDB :: Connection -> String -> IO PureDB
+makeAndFillPureDB conn table = do
+  dbVals <- dumpDBValues conn table
   return $ Map.fromList $ zip (map (\(x,y,_,_) -> (x,y)) dbVals) dbVals
  
-dumpDBValues :: Connection -> IO [(Int,Int,Double,Int)]
-dumpDBValues conn = do
-  results <- quickQuery' conn "SELECT pid, pval, weight, age FROM test" []
+dumpDBValues :: Connection -> String -> IO [(Int,Int,Double,Int)]
+dumpDBValues conn table = do
+  results <- quickQuery' conn ("SELECT pid, pval, weight, age FROM " ++ table) []
   return $ map (\[a,b,c,d] -> (fromSql a, fromSql b, fromSql c, fromSql d)) results
 
 average :: [Double] -> Double

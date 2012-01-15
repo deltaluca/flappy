@@ -53,7 +53,7 @@ withStdGen brain = do
 
 learnBrainMoveComm :: (MonadIO m, Functor m) => BrainCommT OrderMovement LearnHistory m ()
 learnBrainMoveComm =  do
-  mapBrainCommTHist (const ()) dumbBrainMoveComm
+--  mapBrainCommTHist (const ()) dumbBrainMoveComm
 
   withStdGen learnBrainMove
 
@@ -68,7 +68,6 @@ learnBrainMove = do
   gameEnd <- learnBrainEnd
   if gameEnd
     then do
-      brainLog $ show $ "GAME ENDED??"
       learnGameOverEarly
       putOrders Nothing
     else do
@@ -90,12 +89,16 @@ learnBrainMove = do
 learnGameOverEarly :: (MonadIO m) => LearnBrainMoveT m ()
 learnGameOverEarly = do
   hist <- getHistory
-  supplies <- getSupplies =<< getMyPower
+  myPower <- getMyPower
+  supplies <- getSupplies myPower
   if (length supplies == _noOfSCNeededToWin) then brainLog (show "I won, YAY!") else brainLog (show "I didn't win :(")
   conn <- liftIO $ connectSqlite3 _dbname
   let finalDB = applyTDiffEnd (applyTDiffTurn (getPureDB hist) (getHist hist)) $ snd $ unzip (getHist hist)
   putPureDBAnalysis undefined finalDB
-  liftIO $ commitPureDB conn finalDB
+
+  let myTable = undefined
+
+  liftIO $ commitPureDB conn finalDB myTable
   liftIO $ commit conn
   liftIO $ disconnect conn
   brainLog $ show $ "Commit done early :D"
@@ -106,7 +109,10 @@ learnGameOver = do
   hist <- getHistory
   conn <- liftIO $ connectSqlite3 _dbname
   let finalDB = applyTDiffEnd (applyTDiffTurn (getPureDB hist) (getHist hist)) $ snd $ unzip (getHist hist)
-  liftIO $ commitPureDB conn finalDB
+
+  let myTable = undefined
+
+  liftIO $ commitPureDB conn finalDB myTable
   liftIO $ commit conn
   liftIO $ disconnect conn
   liftIO $ putStrLn $ "Commit done :)"
@@ -127,7 +133,10 @@ learnProcessResults _ = id
 learnInitHistory :: (MonadIO m) => GameInfo -> GameState -> m LearnHistory
 learnInitHistory _ _ = do
   conn <- liftIO $ connectSqlite3 _dbname
-  pureDB <- liftIO $ makeAndFillPureDB conn
+
+  myTable <- undefined
+
+  pureDB <- liftIO $ makeAndFillPureDB conn myTable
   liftIO $ commit conn
   liftIO $ disconnect conn
   return $ LearnHistory pureDB []
