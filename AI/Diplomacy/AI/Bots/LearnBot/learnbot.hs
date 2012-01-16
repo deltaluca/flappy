@@ -1,5 +1,9 @@
-{- |
+{-
 -------------------------- LEARNBOT ------------------------------
+  A learning bot using temporal difference learning, based off of the paper
+  Learning a Game Strategy Using Pattern-Weights and Self-Play by Ari Shapiro.
+
+  Extended to include turn-by-turn learning, and made functional.
 
 -}
 
@@ -36,7 +40,7 @@ main = skelBot learnBot
 
 learnBot :: (MonadIO m, Functor m) => DipBot m LearnHistory
 learnBot = DipBot { dipBotName = "FlappyLearningBot"
-                  , dipBotVersion = 0.1
+                  , dipBotVersion = 0.8
                   , dipBotBrainMovement = learnBrainMoveComm
                   , dipBotBrainRetreat = learnBrainRetreatComm
                   , dipBotBrainBuild = learnBrainBuildComm
@@ -53,6 +57,8 @@ withStdGen brain = do
 
 learnBrainMoveComm :: (MonadIO m, Functor m) => BrainCommT OrderMovement LearnHistory m ()
 learnBrainMoveComm =  do
+
+--  uncomment the line below to enable dumbBrain learning reinforcement
 --  mapBrainCommTHist (const ()) dumbBrainMoveComm
 
   withStdGen learnBrainMove
@@ -65,11 +71,13 @@ learnBrainBuildComm = withStdGen learnBrainBuild
 
 learnBrainMove :: (MonadIO m) => LearnBrainMoveT m ()
 learnBrainMove = do
+
+  -- check if game is over early (if early game over is defined in Patternweights
   gameEnd <- learnBrainEnd
   if gameEnd
     then do
       learnGameOverEarly
-      putOrders Nothing
+      putOrders Nothing -- causes an error, so bot disconnects from the server
     else do
 
       dumbOrders <- getOrders
@@ -82,10 +90,12 @@ learnBrainMove = do
                                 Nothing -> Traversable.sequenceA trimmedOrders 
 
       brainLog $ show $ (dumbOrders, length possibleOrderSets)
+
       highestWeightedOrders <- weighOrderSets possibleOrderSets
       orders <- randWeightedElem $ take 5 highestWeightedOrders
       putOrders $ Just orders
 
+-- if game finishes in early-finish state
 learnGameOverEarly :: (MonadIO m) => LearnBrainMoveT m ()
 learnGameOverEarly = do
   hist <- getHistory
@@ -104,6 +114,7 @@ learnGameOverEarly = do
   brainLog $ show $ "Commit done early :D"
   return ()
 
+-- if game finishes normally
 learnGameOver :: (MonadIO m) => GameKnowledgeT LearnHistory m ()
 learnGameOver = do
   hist <- getHistory
@@ -118,6 +129,7 @@ learnGameOver = do
   liftIO $ putStrLn $ "Commit done :)"
   return ()
 
+-- check if game is over
 learnBrainEnd :: (MonadIO m, MonadGameKnowledge h m, MonadBrain o m) => m Bool
 learnBrainEnd = do
   myPower <- getMyPower
