@@ -69,7 +69,7 @@ _cEnd = 10.0
 _lowK :: Double
 _lowK = 1.0
 _highK :: Double
-_highK = 2.0
+_highK = 5.0
 
 -- NOT IMPLEMENTED
 -- no of supply centres needed to win
@@ -414,9 +414,8 @@ randWeightedElem elemWeights = do
     else return $ results !! index
 
 -- get the specific database table to use based on power for this game
-getMyDBTable :: (MonadIO m, OrderClass o) => LearnBrainT o m String
-getMyDBTable = do
-  myPower <- getMyPower
+getMyDBTable :: (MonadIO m) => Power -> m String
+getMyDBTable myPower = do
   return $ _powtablenames !! powerId myPower
 
 -- Pattern weight database analytics

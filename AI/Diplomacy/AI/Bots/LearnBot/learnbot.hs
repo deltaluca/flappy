@@ -106,7 +106,7 @@ learnGameOverEarly = do
   let finalDB = applyTDiffEnd (applyTDiffTurn (getPureDB hist) (getHist hist)) $ snd $ unzip (getHist hist)
   putPureDBAnalysis undefined finalDB
 
-  let myTable = undefined
+  myTable <- getMyDBTable =<< getMyPower
 
   liftIO $ commitPureDB conn finalDB myTable
   liftIO $ commit conn
@@ -121,7 +121,7 @@ learnGameOver = do
   conn <- liftIO $ connectSqlite3 _dbname
   let finalDB = applyTDiffEnd (applyTDiffTurn (getPureDB hist) (getHist hist)) $ snd $ unzip (getHist hist)
 
-  let myTable = undefined
+  myTable <- getMyDBTable =<< getMyPower
 
   liftIO $ commitPureDB conn finalDB myTable
   liftIO $ commit conn
@@ -143,10 +143,10 @@ learnBrainEnd = do
 learnProcessResults _ = id
 
 learnInitHistory :: (MonadIO m) => GameInfo -> GameState -> m LearnHistory
-learnInitHistory _ _ = do
+learnInitHistory gInfo _ = do
   conn <- liftIO $ connectSqlite3 _dbname
 
-  myTable <- undefined
+  myTable <- getMyDBTable $ gameInfoPower gInfo
 
   pureDB <- liftIO $ makeAndFillPureDB conn myTable
   liftIO $ commit conn
