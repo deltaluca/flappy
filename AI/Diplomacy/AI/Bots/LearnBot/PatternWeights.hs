@@ -58,8 +58,11 @@ _npats = [1,2,3]
 
 -- _c defines the constant that determines how 'strong' the weights are affected
 -- Larger _c corresponds to smaller change
-_c :: Double
-_c = 10.0
+_cTurn :: Double
+_cTurn = 50.0
+
+_cEnd :: Double
+_cEnd = 10.0
 
 -- sets the low (starting) and high (ending) values of k, which varies linearly over the 
 -- game period from low to high. k is used as a 'learning temperature'
@@ -350,7 +353,7 @@ updateDBTurns' n l weightFu pdb (pid,pval) =
     Map.insert (pid,pval) (pid,pval,newWeight,age) pdb
       where
         (_,_,weight,age) = (Map.!) pdb (pid,pval)
-        newWeight = weightFu (getK n l) _c weight
+        newWeight = weightFu (getK n l) _cTurn weight
   
   
 evaluateChangeStates :: [Double] -> [(Double -> Double -> Double -> Double)]
@@ -382,14 +385,14 @@ applyTDiffEnd pdb succTurnKeys =
       (_,dbKeyFinalVals) = foldl (updateWeights l) (1,dbKeyVals) succTurnKeys
 
 updateWeights :: Int -> (Int,[(Int,Int,Double,Int)]) -> [(Int,Int)]  -> (Int,[(Int,Int,Double,Int)])
-updateWeights l (n,keyVals) succKeys = (n+1 , map (\(pid,pval,prev,age) -> (pid, pval, getNextWeight prev (n+1) (getK n l) ((pid,pval) `elem` succKeys), age)) keyVals)
+updateWeights l (n,keyVals) succKeys = (n+1 , map (\(pid,pval,prev,age) -> (pid, pval, getNextWeight prev (getK n l) ((pid,pval) `elem` succKeys), age)) keyVals)
 
 -- generate temperature based on placement in game
 getK :: Int -> Int -> Double
 getK n l = _lowK + ((_highK - _lowK) * ((fromIntegral n)/(fromIntegral l)))
 
-getNextWeight :: Double -> Int -> Double -> Bool -> Double
-getNextWeight prev n k win = (prev*(fromIntegral (n-1)) + k*(fromIntegral v))/(k + fromIntegral (n-1))
+getNextWeight :: Double -> Double -> Bool -> Double
+getNextWeight prev k win = (prev*_cEnd + k*(fromIntegral v))/(k + _cEnd)
   where v = bool2Int win
 
 --------------------------------------------------------------------
