@@ -307,7 +307,7 @@ getAdjProvOcc unit = do
 
 shuff :: (MonadRandom m) => [a] -> m [a]
 shuff [] = return []
-shuff l = shuffleM l
+shuff l = shuffleM l (length l - 1)
 
 brainLog :: (MonadIO m, OrderClass o, MonadBrain o m) => String -> m ()
 brainLog msg = do
