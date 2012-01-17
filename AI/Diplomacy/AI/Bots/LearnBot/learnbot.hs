@@ -148,6 +148,7 @@ learnInitHistory gInfo _ = do
 
   myTable <- getMyDBTable $ gameInfoPower gInfo
 
+  liftIO $ putStrLn $ "My table is " ++ myTable
   pureDB <- liftIO $ makeAndFillPureDB conn myTable
   liftIO $ commit conn
   liftIO $ disconnect conn

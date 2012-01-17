@@ -28,6 +28,7 @@ import Control.Monad.Random
 import Control.Monad.Trans
 
 
+import Data.Maybe
 import Data.List
 import Database.HDBC
 import Database.HDBC.Sqlite3
@@ -59,10 +60,10 @@ _npats = [1,2,3]
 -- _c defines the constant that determines how 'strong' the weights are affected
 -- Larger _c corresponds to smaller change
 _cTurn :: Double
-_cTurn = 50.0
+_cTurn = 100.0
 
 _cEnd :: Double
-_cEnd = 10.0
+_cEnd = 20.0
 
 -- sets the low (starting) and high (ending) values of k, which varies linearly over the 
 -- game period from low to high. k is used as a 'learning temperature'
@@ -222,7 +223,7 @@ commitPureDB conn db table = do
   return ()
   where 
     addVal pid pval weight age = 
-      run conn "INSERT INTO test VALUES (?,?,?,?)" [toSql pid, toSql pval, toSql weight, toSql age]
+      run conn ("INSERT INTO " ++ table ++ " VALUES (?,?,?,?)") [toSql pid, toSql pval, toSql weight, toSql age]
 
 makeAndFillPureDB :: Connection -> String -> IO PureDB
 makeAndFillPureDB conn table = do
@@ -255,18 +256,22 @@ updatePatternsGetWeightAge (pid, pval, psize) = do
 
 sortGT :: (Ord a) => a -> a -> Ordering
 sortGT = flip compare
--- sortGT :: (Double, a) -> (Double, a) ->  Ordering
--- sortGT (d1,_) (d2,_)
---     | d1 < d2 = GT
---     | d1 >= d2 = LT
 
 weighOrder :: forall o m. (MonadIO m, OrderClass o) => OrderMovement -> LearnBrainT o m (Double,[(Int,Int)])
 weighOrder order = do
   keyVals <- sequence [applyPattern p order | p <- _patterns (undefined :: Dummy o m)]
   weightAgeSizes <- mapM updatePatternsGetWeightAge keyVals
   
-  -- weights are linearly biased by their ages and pattern size
-  let weights =  map (\(weight,age,patSize) -> (weight*(fromIntegral patSize)) + (fromIntegral age)) weightAgeSizes
+  -- weights are biased based on their pattern size - larger patterns should have a higher precedence
+  -- because they illustrate a more specific example. 
+  -- this is performed by making patternweights less 'sure' relative to their size and the distribution
+  -- of other pattern weights
+  -- currently age is not used
+
+  let nsizetotal :: Int; nsizetotal  = foldl (\cur (_,_,patSize) -> cur + patSize) 0 weightAgeSizes
+  let proportions :: [Double]; proportions = [sum [1.0 |(_,_,p) <- weightAgeSizes, p == psize] / fromIntegral(nsizetotal) | psize <- _npats]
+
+  let weights = map (\(weight,age,patSize) -> if(weight >= 0.5) then 0.5 + (weight - 0.5)*(proportions !! (fromJust (elemIndex patSize _npats))) else 0.5 - (0.5 - weight)*(proportions !! (fromJust (elemIndex patSize _npats)))) weightAgeSizes
   return $ (average weights, peelR keyVals) --remove patSize because it is no longer required
     where
       peelR :: [(a,a,a)] -> [(a,a)]
