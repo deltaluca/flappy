@@ -150,13 +150,14 @@ skelBot bot = do
   noticeM "Main" $ "Connecting to " ++ show (clOptsServer opts) ++
     ':' : show (clOptsPort opts)
   withSocketsDo $ do
-    hndle <- connectToServer (clOptsServer opts) (fromIntegral . clOptsPort $ opts)
-    runDaideT (communicate bot) hndle
+    info <- connectToServer (clOptsServer opts) (fromIntegral . clOptsPort $ opts)
+    runDaideT (communicate bot) info
+    hClose (socketHandle info)
 
 connectToServer :: String -> PortNumber -> IO DaideHandleInfo
 connectToServer server port = do
   hndle <- connectTo server (PortNumber port)
-  hSetBuffering hndle NoBuffering
+  hSetBuffering hndle (BlockBuffering Nothing)
   hostNam <- getHostName
   return (Handle hndle hostNam port)
 
