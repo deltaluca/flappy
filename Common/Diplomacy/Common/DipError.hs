@@ -1,4 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+-- |diplomacy error messages
+
 module Diplomacy.Common.DipError where
 
 import Diplomacy.Common.Data

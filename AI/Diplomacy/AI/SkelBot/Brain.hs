@@ -1,3 +1,4 @@
+-- |The Brain, GameKnowledge and BrainComm monads and transformers
 {-# LANGUAGE 
   MultiParamTypeClasses
 , FlexibleInstances
@@ -65,7 +66,7 @@ instance (Monad m) => MonadGameKnowledge h (GameKnowledgeT h m) where
   getsHistory = GameKnowledge . gets
   putHistory = GameKnowledge . put
 
-  -- |h = history type, o = order type
+  -- |h = history type(bound by brain), o = order type(bound by SkelBot)
 newtype BrainT o h m a = Brain (ReaderT GameState (StateT (Maybe [o]) (GameKnowledgeT h m)) a)
                        deriving (Applicative, Monad, MonadReader GameState, MonadState (Maybe [o]))
 
@@ -135,6 +136,7 @@ instance (Monad m, OrderClass o) => MonadBrain o (BrainT o h m) where
   getsOrders f = maybe (return Nothing) (return . Just . f) =<< Brain get
   putOrders o = Brain (put o)
 
+-- |lifting, unlifting and mapping functions for easy brain composition
 liftGameKnowledge :: (Monad m, OrderClass o) => GameKnowledgeT h m a -> BrainT o h m a
 liftGameKnowledge = Brain . lift . lift
 

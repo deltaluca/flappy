@@ -1,3 +1,4 @@
+-- |The Comm monad that is used to encapsulate messaging
 {-# LANGUAGE TypeSynonymInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleInstances, FunctionalDependencies #-}
 module Diplomacy.AI.SkelBot.Comm( CommT, runCommT
                                 , MonadComm(..)

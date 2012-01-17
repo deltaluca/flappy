@@ -49,10 +49,8 @@ _trimNum = 3
 _dbname :: String
 _dbname = "test.db"
 
-getMyDBTable :: (MonadIO m, OrderClass o) => LearnBrainT o m String
-getMyDBTable = do
-  myPower <- getMyPower
-  return $ ["aus","eng","fra","ger","ita","rus","tur"] !! powerId myPower
+_powtablenames :: [String]
+_powtablenames = ["aus","eng","fra","ger","ita","rus","tur"]
 
 -- n pattern weights to use
 _npats :: [Int]
@@ -60,15 +58,18 @@ _npats = [1,2,3]
 
 -- _c defines the constant that determines how 'strong' the weights are affected
 -- Larger _c corresponds to smaller change
-_c :: Double
-_c = 10.0
+_cTurn :: Double
+_cTurn = 50.0
+
+_cEnd :: Double
+_cEnd = 10.0
 
 -- sets the low (starting) and high (ending) values of k, which varies linearly over the 
 -- game period from low to high. k is used as a 'learning temperature'
 _lowK :: Double
 _lowK = 1.0
 _highK :: Double
-_highK = 2.0
+_highK = 5.0
 
 -- NOT IMPLEMENTED
 -- no of supply centres needed to win
@@ -78,12 +79,12 @@ _noOfSCNeededToWin = 10
 -- _metrics to use
 -- ordering is important!
 _metrics :: (OrderClass o, MonadIO m) => Dummy o m -> [OrderMovement -> LearnBrainT o m Int]
-_metrics _ = [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv x)
-            ,(\x -> return . bool2Int =<< targNodeOccupied =<< moveOrderToTargProv x)
-            ,(\x -> return . bool2Int =<< targNodeIsSupply =<< moveOrderToTargProv x)
-            ,(\x ->                       targNodeAdjUnits =<< moveOrderToTargProv x)
-            ,(\x ->                       targNodeAdjUnits =<< moveOrderToOwnProv x)
-            ,(\x -> return . mOT2Int                       =<< moveOrderToType x)]
+_metrics _ =  [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTargProv x)
+              ,(\x -> return . bool2Int =<< targNodeOccupied =<< moveOrderToTargProv x)
+              ,(\x -> return . bool2Int =<< targNodeIsSupply =<< moveOrderToTargProv x)
+              ,(\x ->                       targNodeAdjUnits =<< moveOrderToTargProv x)
+              ,(\x ->                       targNodeAdjUnits =<< moveOrderToOwnProv x)
+              ,(\x -> return . mOT2Int                       =<< moveOrderToType x)]
 
 -- description of each metric
 _metrics_desc =  ["[TN friendly]"
@@ -352,7 +353,7 @@ updateDBTurns' n l weightFu pdb (pid,pval) =
     Map.insert (pid,pval) (pid,pval,newWeight,age) pdb
       where
         (_,_,weight,age) = (Map.!) pdb (pid,pval)
-        newWeight = weightFu (getK n l) _c weight
+        newWeight = weightFu (getK n l) _cTurn weight
   
   
 evaluateChangeStates :: [Double] -> [(Double -> Double -> Double -> Double)]
@@ -384,20 +385,22 @@ applyTDiffEnd pdb succTurnKeys =
       (_,dbKeyFinalVals) = foldl (updateWeights l) (1,dbKeyVals) succTurnKeys
 
 updateWeights :: Int -> (Int,[(Int,Int,Double,Int)]) -> [(Int,Int)]  -> (Int,[(Int,Int,Double,Int)])
-updateWeights l (n,keyVals) succKeys = (n+1 , map (\(pid,pval,prev,age) -> (pid, pval, getNextWeight prev (n+1) (getK n l) ((pid,pval) `elem` succKeys), age)) keyVals)
+updateWeights l (n,keyVals) succKeys = (n+1 , map (\(pid,pval,prev,age) -> (pid, pval, getNextWeight prev (getK n l) ((pid,pval) `elem` succKeys), age)) keyVals)
 
 -- generate temperature based on placement in game
 getK :: Int -> Int -> Double
 getK n l = _lowK + ((_highK - _lowK) * ((fromIntegral n)/(fromIntegral l)))
 
-getNextWeight :: Double -> Int -> Double -> Bool -> Double
-getNextWeight prev n k win = (prev*(fromIntegral (n-1)) + k*(fromIntegral v))/(k + fromIntegral (n-1))
+getNextWeight :: Double -> Double -> Bool -> Double
+getNextWeight prev k win = (prev*_cEnd + k*(fromIntegral v))/(k + _cEnd)
   where v = bool2Int win
 
 --------------------------------------------------------------------
 --------------------------------------------------------------------
 -- Externally used functions
 
+-- randomly pick an element from a list, except introducing bias based on the weight of
+-- that element
 randWeightedElem :: (MonadIO m, OrderClass o) => [(Double, [a])] -> LearnBrainT o m [a]
 randWeightedElem elemWeights = do
   let (weights, results) = unzip elemWeights
@@ -410,7 +413,12 @@ randWeightedElem elemWeights = do
     then error "randWeightedElem called with empty list"
     else return $ results !! index
 
--- Pattern weight database analysis
+-- get the specific database table to use based on power for this game
+getMyDBTable :: (MonadIO m) => Power -> m String
+getMyDBTable myPower = do
+  return $ _powtablenames !! powerId myPower
+
+-- Pattern weight database analytics
 putPureDBAnalysis :: (MonadIO m, OrderClass o) => Dummy o m -> PureDB -> LearnBrainT o m ()
 putPureDBAnalysis d pdb = do
   let pidpvals = map (\(pid, pval, weight, _) -> (pid, pval, weight)) $ Map.elems pdb

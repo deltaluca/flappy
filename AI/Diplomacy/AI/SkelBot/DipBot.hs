@@ -1,3 +1,4 @@
+-- |The SkelBot - Brain interface object
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Diplomacy.AI.SkelBot.DipBot where

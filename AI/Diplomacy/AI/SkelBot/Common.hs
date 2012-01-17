@@ -55,22 +55,22 @@ import Control.Monad.IO.Class
 
 import qualified Data.Map as Map
 
-  -- for hslogger bug
+-- |for hslogger bug
 import Control.Exception
 import Control.DeepSeq
 
--- get own power token
+-- |get own power token
 getMyPower :: (MonadGameKnowledge h m) => m Power
 getMyPower = asksGameInfo gameInfoPower
 
--- get supplies for a given power
+-- |get supplies for a given power
 getSupplies :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Power -> m [Province]
 getSupplies power = do
   curMapState <- asksGameState gameStateMap
   let supplies = supplyOwnerships curMapState
   return $ maybe [] id (Map.lookup power supplies)
 
--- get own supplies
+-- |get own supplies
 getMySupplies :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m [Province]
 getMySupplies = getSupplies =<< getMyPower
 
@@ -84,7 +84,7 @@ getHomeSupplies power = do
 getMyHomeSupplies :: (MonadGameKnowledge h m) => m [Province]
 getMyHomeSupplies = getHomeSupplies =<< getMyPower
 
--- get units for a given power (special cases depending on regular phase or retreat phase)
+-- |get units for a given power (special cases depending on regular phase or retreat phase)
 getUnits :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Power -> m [UnitPosition]
 getUnits power = do
   (GameState mapState (Turn phase _)) <- askGameState
@@ -100,11 +100,11 @@ getUnits power = do
         then error $ "Wrong Phase (Got " ++ show phase ++ ", expected [Summer, Autumn]"
         else return (map fst $ maybe [] id (Map.lookup power units))
 
--- get own units
+-- |get own units
 getMyUnits :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m [UnitPosition]
 getMyUnits = getUnits =<< getMyPower
 
--- get possible retreats
+-- |get possible retreats
 getMyRetreats :: (MonadBrain OrderRetreat m, MonadGameKnowledge h m) => m [(UnitPosition, [ProvinceNode])]
 getMyRetreats = do
   (GameState mapState (Turn phase _)) <- askGameState
@@ -118,26 +118,26 @@ getMyRetreats = do
         return . mapMaybe (\(a, mb) -> maybe Nothing (\b -> Just (a, b)) mb) $ allElems
     _ -> error $ "getMyRetreats called with UnitPositions"
 
--- get adjacent nodes to a given unit
+-- |get adjacent nodes to a given unit
 getAdjacentNodes :: (MonadGameKnowledge h m) => UnitPosition -> m [ProvinceNode]
 getAdjacentNodes (UnitPosition _ unitType provNode) = do
   mapDef <- asksGameInfo gameInfoMapDef
   let adjMap = mapDefAdjacencies mapDef
   return $ adjMap ! (provNode, unitType)
 
--- gets all adjacent nodes to a given province
+-- |gets all adjacent nodes to a given province
 getAllAdjacentNodes :: (MonadGameKnowledge h m, MonadBrainCache m) =>
                        Province -> m [ProvinceNode]
 getAllAdjacentNodes prov = return . (Map.! prov)
                            =<< asksCache brainCacheAllAdjacentNodes
 
--- gets all adjacent nodes to a given provinceNode
+-- |gets all adjacent nodes to a given provinceNode
 getAllAdjacentNodes2 :: (MonadGameKnowledge h m, MonadBrainCache m) =>
                         ProvinceNode -> m [ProvinceNode]
 getAllAdjacentNodes2 provNode = return . (Map.! provNode)
                                 =<< asksCache brainCacheAllAdjacentNodes2
 
--- pick a random element from a list
+-- |pick a random element from a list
 randElem :: (MonadRandom m) => [a] -> m a
 randElem l = do
   let len = length l
@@ -145,7 +145,7 @@ randElem l = do
     then error "randElem called with empty list"
     else return . (l !!) =<< getRandomR (0, len - 1)
 
--- pick N random elements from a list
+-- |pick N random elements from a list
 randElems :: (MonadRandom m) => Int -> [a] -> m [a]
 randElems n l = return . take n =<< shuff l
 
@@ -178,7 +178,7 @@ getProvNodeUnitMap = asksCache brainCacheProvNodeUnitMap
 getProvUnitMap :: (MonadBrainCache m) => m (Map.Map Province UnitPosition)
 getProvUnitMap = asksCache brainCacheProvUnitMap
 
--- same as getAdjacentUnits but only gives units that can move to the province
+-- |same as getAdjacentUnits but only gives units that can move to the province
 getAdjacentUnits2 :: (MonadGameKnowledge h m, MonadBrainCache m) =>
                      Province -> m [UnitPosition]
 getAdjacentUnits2 prov = do
@@ -219,7 +219,7 @@ getOMSubjectUnit order =
     Convoy u _ _      -> u
     MoveConvoy u _ _  -> u
 
--- Generates all legal orders only involving own units
+-- |Generates all legal orders only involving own units
 genLegalOrders :: (OrderClass o, MonadBrain o m,
                    MonadGameKnowledge h m, MonadBrainCache m) =>
                   (Map.Map UnitPosition [OrderMovement]) ->
@@ -242,20 +242,20 @@ genLegalOrders currOrders unitPos = do
                     provNodeToProv otherPos `Map.lookup` pUnitMap
         	        , unitPositionP otherUnit == myPower ] 
 
-  -- possible support holds (ie. just adjacent friendlies)
+  -- |possible support holds (ie. just adjacent friendlies)
   let supportHolds =  [ SupportHold unitPos otherUnit
         	            | otherUnit <- adjUnits]
 
-  -- possible simple moves
+  -- |possible simple moves
   let moveMoves = map (Move unitPos) adjacentNodes
 
-  -- hold move
+  -- |hold move
   let holdMoves = [Hold unitPos]
 
-  -- TODO: create convoy moves here and add them to allMoves below
-  -- let convoyMoves = ...
+  -- |TODO: create convoy moves here and add them to allMoves below
+  -- |let convoyMoves = ...
   
-  -- add all possible moves for this unit into the map
+  -- |add all possible moves for this unit into the map
   let allMoves = supportMoves ++ moveMoves ++ holdMoves ++ supportHolds
   return $ Map.insert unitPos allMoves currOrders
 
@@ -266,7 +266,7 @@ genLegalOrders currOrders unitPos = do
 
 lengthI = fromIntegral . length
 
--- given a power returns the number of supply centers owned and non-supply centers occupied
+-- |given a power returns the number of supply centers owned and non-supply centers occupied
 getProvOcc :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => Power -> m (Integer, Integer)
 getProvOcc power = do
    suppC <- getSupplies power
@@ -275,7 +275,7 @@ getProvOcc power = do
    return (lengthI suppC, lengthI (occupied_prov \\ suppC)) 
 
 
--- returns a three-tuple of supply center control, (you, enemy, no-one)
+-- |returns a three-tuple of supply center control, (you, enemy, no-one)
 getSuppControl :: (OrderClass o, MonadBrain o m, MonadGameKnowledge h m) => m (Integer, Integer, Integer)
 getSuppControl = do
   mapDef <- asksGameInfo gameInfoMapDef
@@ -290,7 +290,7 @@ getSuppControl = do
   return (mySupplies, allSupplies - mySupplies, numSupplies - mySupplies - allSupplies)
 
 
--- returns a three-tuple of province occupation around adjacent provinces only
+-- |returns a three-tuple of province occupation around adjacent provinces only
 getAdjProvOcc :: (OrderClass o, MonadBrain o m,
                   MonadGameKnowledge h m, MonadBrainCache m) =>
                  UnitPosition -> m (Integer, Integer, Integer)

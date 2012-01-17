@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleInstances #-}
+-- |this module defines low level daide errors
 module Diplomacy.Common.DaideError( DaideError(..)
                                   , DaideErrorClass(..)
                                   , errorCode
