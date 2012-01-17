@@ -1,13 +1,5 @@
 package;
 
-import nme.display.Sprite;
-import nme.ui.Keyboard;
-import nme.text.TextField;
-import nme.text.TextFormat;
-import nme.text.TextFieldType;
-import nme.Assets;
-import nme.events.KeyboardEvent;
-
 import daide.Socket;
 import daide.HLex;
 import daide.HLlr;
@@ -16,31 +8,41 @@ import daide.Tokens;
 import daide.Unparser;
 
 import gui.Interface;
+import Mut;
 
 using StringTools;
-import Mut;
+
+//----------------------------------------------------------------------------
 
 class Cli {
 
+	//for logging of Cli actions.
+	//can be bound anywhere
 	public var logger:Dynamic->Void;
 	public inline function log(x:Dynamic) {
 		if(logger!=null) logger(x);
 	}
 
+	//------------------------------------------------------------------------
+	//daide socket used for Cli actions.
 	var sock:Socket;
 	public function new() {
 		sock = new Socket();
 		sock.logger = log;
 	}
 
+	//------------------------------------------------------------------------
+	//gui interface bound to Cli
+	//(purely for the purpose of binding it to the socket on connection)
 	var gint:GuiInterface;
 	public function bind(gint:GuiInterface) {
 		this.gint = gint;
 		if(sock!=null) sock.bind(gint.receiver);
 	}
 
-	//------------------------------------------------------------------
+	//------------------------------------------------------------------------
 
+	//interactions with DAIDE server.
 	public function daide(msg:Message) {
 		try {
 			var tokens = Unparser.unparse(msg);
@@ -96,6 +98,7 @@ class Cli {
 
 	//------------------------------------------------------------------
 
+	//issue cli command.
 	public function cmd(arg:String) {
 		if(arg.length==0) return;
 	
@@ -103,6 +106,7 @@ class Cli {
 		var cmdargs = (~/[ \t]+/g).replace(StringTools.trim(arg)," ").split(" ");
 		cmdarg(cmdargs);
 	}
+
 	function cmdarg(cmdargs:Array<String>) {
 	switch(cmdargs[0]) {
 		case "displayid":
