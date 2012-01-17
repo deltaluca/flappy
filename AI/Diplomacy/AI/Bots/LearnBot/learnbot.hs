@@ -5,6 +5,11 @@
 
   Extended to include turn-by-turn learning, and made functional.
 
+  COMMENTS ON RUNNING:
+    - database
+    - speed
+    - usage
+
 -}
 
 module Main where
