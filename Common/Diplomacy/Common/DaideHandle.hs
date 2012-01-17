@@ -82,6 +82,7 @@ instance (MonadIO m) => MonadDaideTell (DaideCommT m) where
   tellDaide message = do
     hndle <- asks socketHandle
     liftIO . L.hPut hndle =<< serialise message
+    liftIO $ hFlush hndle
 
 instance (MonadIO m) => MonadDaideAsk (DaideAskT m) where
   askDaide = DaideAsk $ do
