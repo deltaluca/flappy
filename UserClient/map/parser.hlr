@@ -1,3 +1,5 @@
+//https://github.com/deltaluca/hllr
+
 %token MOVE CLOSE LINE VERT HORZ CUBIC SMOOTH QUAD SMOOTHQ
 %token NUM
 %token ARC

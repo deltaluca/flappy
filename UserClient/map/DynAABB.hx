@@ -1,7 +1,9 @@
 package map;
 
-//mostly copy-pasted from Nape
+//mostly copy-pasted from Nape (https://github.com/deltaluca/nape)
 //to avoid having to include the whole project
+
+//An AABB tree for use in mouse selection of provinces.
 
 import map.AABB;
 import nme.geom.Point;
@@ -17,7 +19,6 @@ class AABBNode<T> {
 	//sub-tree height
 	public var height:Int;
 
-	//
 	public var data:T;
 
 	public function new(data:T=null) {

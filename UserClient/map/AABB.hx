@@ -2,7 +2,9 @@ package map;
 
 import nme.geom.Point;
 
-//as opposed to nme.geom.Rectangle which is not as useful.
+//a more useful structure than nme.geom.Rectangle
+//for use in DynAABB tree and Path methods.
+
 class AABB {
 	public var minx:Float; public var miny:Float;
 	public var maxx:Float; public var maxy:Float;
@@ -16,6 +18,8 @@ class AABB {
 	public inline function height() return maxy-miny
 
 	public inline function perimeter() return width()+height()
+
+	//------------------------------------------------------------------------
 
 	public inline function set_combine(a:AABB,b:AABB) {
 		minx = a.minx < b.minx ? a.minx : b.minx;
