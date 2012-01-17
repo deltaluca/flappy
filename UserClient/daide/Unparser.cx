@@ -1,8 +1,16 @@
 package daide;
 
+//unparsing of DAIDE language constructs
+
 import scx.Match;
 import daide.Language;
 import daide.Tokens;
+
+//in hindsight, should have just used the protocol acronyms instead of full names.
+//Since this is not the case, make use the preprocessor to alleviate the pain of
+//constructing the tokens.
+//
+//preprocessor: https://github.com/deltaluca/caxe
 
 $(mixin INTEGER(x) (if(x==0) tZero else tNonZero(x)));
 $(mixin BRA() tLeftParen);

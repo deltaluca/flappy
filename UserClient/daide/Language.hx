@@ -1,5 +1,7 @@
 package daide;
 
+/// DAIDE language constructs.
+
 import daide.Tokens;
 import daide.HLlr;
 

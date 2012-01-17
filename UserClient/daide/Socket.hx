@@ -7,37 +7,39 @@ import haxe.io.Bytes;
 import daide.Tokens;
 import daide.Language;
 
-import Terminal;
-
-/**
-
-	Provide a low-level socket connection to daide compliant server
-	And message factories for protocol messages.
-
-**/
+// Provides low-level socket connection ontop of TCP for DAIDE server.
+// with factories for constructing messages.
 
 typedef Sock = cpp.net.Socket;
 class Socket {
+
 	var sock:Sock;
+	public var connected:Bool;
+	public var reader:cpp.vm.Thread;
 
 	public function new() {
 		sock = new Sock();
 		connected = false;
 	}
+	
+	//------------------------------------------------------------------------
+	//logger to be bound to Terminal
 
 	public var logger:String->Void;
 	inline function log(msg:String) {
 		if(logger!=null) logger(msg);
 	}
 
-	public var connected:Bool;
-	public var reader:cpp.vm.Thread;
+	//------------------------------------------------------------------------
+	//message handler to be bound to gui interface.
 
 	var receiver:Message->Void;
 	public function bind(receiver:Message->Void) {
 		this.receiver = receiver;
 		if(reader!=null) reader.sendMessage(receiver);
 	}
+
+	//------------------------------------------------------------------------
 
 	public function disconnect() {
 		if(!connected) throw "derp";
@@ -59,6 +61,8 @@ class Socket {
 		im.writeUInt16(0xDA10);
 		write_message({type:0,data:im.getBytes()});
 	}
+
+	//------------------------------------------------------------------------
 
 	public function connect(ip:String, port:Int) {
 		if(connected) throw "herpaderp";
@@ -185,6 +189,9 @@ class Socket {
 		if(receiver!=null) reader.sendMessage(receiver);
 	}
 
+	//------------------------------------------------------------------------
+	//message factories.
+
 	public function error_message(code:Int) {
 		var buf = new BytesOutput(); buf.bigEndian = true;
 		buf.writeUInt16(code);
@@ -194,6 +201,8 @@ class Socket {
 	public function daide_message(tokens:Array<Token>) {
 		return {type:2,data:TokenUtils.serialise(tokens)};
 	}
+
+	//------------------------------------------------------------------------
 
 	public function write_message(msg:ProtoMessage) {
 		var out = sock.output;

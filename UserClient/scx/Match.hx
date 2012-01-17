@@ -1,4 +1,7 @@
 package scx;
+//https://github.com/deltaluca/scx
+//provides nested pattern matching for haXe enums.
+
 #if macro import haxe.macro.Expr;
 import haxe.macro.Context;
 #end enum Pair<A,B>{
