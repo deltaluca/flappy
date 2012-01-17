@@ -21,13 +21,13 @@ using StringTools;
 import Mut;
 
 class Cli {
-	var sock:Socket;
 
 	public var logger:Dynamic->Void;
 	public inline function log(x:Dynamic) {
 		if(logger!=null) logger(x);
 	}
 
+	var sock:Socket;
 	public function new() {
 		sock = new Socket();
 		sock.logger = log;
@@ -71,12 +71,13 @@ class Cli {
 		{name:"help",help:"list available commands"},
 		{name:"daide",help:"submit daide message"},
 		{name:"test",help:"test daide message"},
-	#if cpp	{name:"run",help:"run file - run file consisting of terminal commands"}, #end
+		{name:"run",help:"run file - run file consisting of cli commands"},
 		{name:"send_im",help:"send im message to server"},
 		{name:"delay",help:"set delay on socket (seconds)"},
 		{name:"displayid",help:"toggle display of province daide ID's"}
 	];
 
+	//for use in tab-completion
 	public function completion(cmd:String) {
 		var matches = [];
 		for(c in commands) {

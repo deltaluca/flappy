@@ -1,15 +1,14 @@
 package;
 
+///forced synchronisation for shared data.
 import cpp.vm.Mutex;
-import cpp.vm.Thread;
-
 class Mut<T> {
 	var mut:Mutex;
 	var value:T;
 
 	public function new(value:T) {
 		this.value = value;
-		this.mut = new Mutex();
+		mut = new Mutex();
 	}
 
 	public inline function set(value:T) {
