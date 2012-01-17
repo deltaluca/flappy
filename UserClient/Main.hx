@@ -8,16 +8,14 @@ import nme.display.StageScaleMode;
 import nme.display.StageAlign;
 
 import nme.Assets;
-import nme.display.Bitmap;
 
 import Terminal;
 import gui.Gui;
 import gui.Interface;
-//import gui.Panel;
 
-import map.MapReader;
-import map.Path;
 import map.MapDef;
+
+//----------------------------------------------------------------------------
 
 class Main extends Sprite {
 	public static function main() {
@@ -26,14 +24,21 @@ class Main extends Sprite {
 	function new() {
 		super();
 		cacheAsBitmap = false;
-		addEventListener(Event.ADDED_TO_STAGE, init);
+
+		if(stage!=null) init();
+		else addEventListener(Event.ADDED_TO_STAGE, init);
 	}
 
-	function init(_) {
-		removeEventListener(Event.ADDED_TO_STAGE, init);
+	//------------------------------------------------------------------------
+
+	function init(?ev) {
+		if(ev!=null) removeEventListener(Event.ADDED_TO_STAGE, init);
 
 		stage.scaleMode = StageScaleMode.NO_SCALE;
 		stage.align = StageAlign.TOP_LEFT;
+
+		//--------------------------------------------------------------------
+		//register standard map
 
 		MapDef.register("standard",
 			function () return Assets.getText("Assets/europe_regions.svg"),
@@ -43,6 +48,9 @@ class Main extends Sprite {
 								Assets.getBitmapData("Assets/europe.png"),
 								Assets.getBitmapData("Assets/europe-sm1.png")]
 		);
+
+		//--------------------------------------------------------------------
+		//setup elements of app.
 
 		var ggui = new Gui();
 		addChild(ggui);
@@ -54,12 +62,18 @@ class Main extends Sprite {
 		terminal.visible = false;
 		terminal.bind(cli);
 
+		var gint = new GuiInterface(ggui,cli);
+
+		//--------------------------------------------------------------------
+		//toggling of terminal
+
 		stage.addEventListener(KeyboardEvent.KEY_DOWN, function (ev) {
 			if(ev.keyCode == 192) //`¬ key
 				terminal.visible = !terminal.visible; 
 		});
 
-		var gint = new GuiInterface(ggui,cli);
+		//--------------------------------------------------------------------
+		//resizing of app.
 
 		function size() {
 			ggui.resize(stage.stageWidth,stage.stageHeight,sDefault);

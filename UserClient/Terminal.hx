@@ -121,7 +121,10 @@ class Terminal {
 	//this update method is called on an event invoked via NME in main thread
 	//to set the TextField value from the current log state.
 	function update(_) {
-		mlog.with(function (x:Log) logger.text = x.text);
+		mlog.with(function (x:Log) {
+			logger.text = x.text;
+			return null; //bug in C++ backend of haXe
+		});
 	}
 
 	//------------------------------------------------------------------------
