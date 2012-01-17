@@ -1,0 +1,11 @@
+Requirements:
+
+	gcc
+
+	haxe (http://haxe.org)
+	nme [forked on github] (https://github.com/deltaluca/Haxe-NME--fork-)
+		sdlstatic (http://code.google.com/p/sdl-static/)
+
+	hlex (https://github.com/deltaluca/hlex)
+	hllr (https://github.com/deltaluca/hllr)
+	caxe (https://github.com/deltaluca/caxe)

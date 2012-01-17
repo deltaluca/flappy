@@ -7,6 +7,8 @@ import nme.geom.Matrix;
 import nme.geom.ColorTransform;
 import nme.display.Sprite;
 
+//MipMap holding several smoothed Bitmaps blended together for trillinear filtering.
+
 class MipMap extends Sprite {
 	public var mips:Array<Bitmap>;
 	public var ratio:Float;

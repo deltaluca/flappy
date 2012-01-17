@@ -5,6 +5,7 @@ import nme.Assets;
 
 import gui.Gui;
 
+///horizontal menu composed of appropriately layed out elements.
 class Menu extends GuiElem {
 	public var elts:Array<GuiElem>;	
 
@@ -30,6 +31,7 @@ class Menu extends GuiElem {
 	}
 }
 
+//dummy spacer element for gaps in menus.
 class Spacer extends GuiElem {
 	public function new(width:Int) {
 		super();
@@ -41,6 +43,7 @@ class Spacer extends GuiElem {
 	}
 }
 
+//text input graphical element.
 class Textual extends GuiElem {
 	public function set(w:Int,h:Int) {
 		txtf.width = w;

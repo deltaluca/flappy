@@ -26,6 +26,9 @@ import daide.Tokens;
 
 import scx.Match;
 
+//----------------------------------------------------------------------------
+
+//encapsulate ColorMatrixFilters for re-use for each power.
 class MapConfig {
 	//power colours, offset by 1 so that powers[0] = UNO colour
 	public static var powers:Array<Int> = [
@@ -50,6 +53,8 @@ class MapConfig {
 		for(p in powers) power_filters.push(ColorMatrix.fromred(p).filter());
 	}
 }
+
+//----------------------------------------------------------------------------
 
 enum ArrowType {
 	aMove;
