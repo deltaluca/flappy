@@ -3,6 +3,14 @@ PORT=16713
 
 all: ser obs
 
+keepdoing:
+	zsh -c 'for i in {0..10} ; do make doall ; sleep 300 ; killall AiServer.exe ; killall learnbot ; killall randombot ; sleep 5 ; done'
+
+doall:
+	cd "${HOME}/.wine/drive_c/Program Files/daide/aiserver" && zsh -c 'for i in {0..9} ; do wine AiServer.exe -port=1234$$i -start & ; done'
+	sleep 10
+	cd AI/dist/build/randombot && zsh -c 'for i in {0..9} ; do for j in {0..5} ; do ./randombot $(SERVER) 1234$$i &> outp.$$i_$$j & ; done ; sleep 5 ; done'
+	cd AI/dist/build/learnbot && zsh -c 'for i in {0..9} ; do ./learnbot $(SERVER) 1234$$i &> outp.$$i & ; sleep 5 ; done'
 ser:
 	cd "${HOME}/.wine/drive_c/Program Files/daide/aiserver" && wine AiServer.exe -start &
 

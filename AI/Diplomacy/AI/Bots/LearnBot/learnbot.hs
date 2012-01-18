@@ -108,7 +108,7 @@ learnGameOverEarly = do
   supplies <- getSupplies myPower
   if (length supplies == _noOfSCNeededToWin) then brainLog (show "I won, YAY!") else brainLog (show "I didn't win :(")
   conn <- liftIO $ connectSqlite3 _dbname
-  let finalDB = applyTDiffEnd (applyTDiffTurn (getPureDB hist) (getHist hist)) $ snd $ unzip (getHist hist)
+  let finalDB = (applyTDiffTurn (getPureDB hist) (getHist hist)) -- $ snd $ unzip (getHist hist)
   putPureDBAnalysis undefined finalDB
 
   myTable <- getMyDBTable =<< getMyPower
@@ -124,7 +124,7 @@ learnGameOver :: (MonadIO m) => GameKnowledgeT LearnHistory m ()
 learnGameOver = do
   hist <- getHistory
   conn <- liftIO $ connectSqlite3 _dbname
-  let finalDB = applyTDiffEnd (applyTDiffTurn (getPureDB hist) (getHist hist)) $ snd $ unzip (getHist hist)
+  let finalDB = (applyTDiffTurn (getPureDB hist) (getHist hist)) -- $ snd $ unzip (getHist hist)
 
   myTable <- getMyDBTable =<< getMyPower
 
