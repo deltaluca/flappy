@@ -24,6 +24,7 @@ module Diplomacy.AI.SkelBot.Common( getMyPower
                                   , getAllProvNodes
                                   , randElem
 				  , randElems
+                                  , getCurTurn
                                   , provNodeToProv
                                   , noUno
                                   , genLegalOrders
@@ -178,6 +179,9 @@ getProvNodeUnitMap = asksCache brainCacheProvNodeUnitMap
 getProvUnitMap :: (MonadBrainCache m) => m (Map.Map Province UnitPosition)
 getProvUnitMap = asksCache brainCacheProvUnitMap
 
+getCurTurn :: (MonadBrainCache m) => m Int
+getCurTurn = asksCache brainCacheCurTurn
+
 -- |same as getAdjacentUnits but only gives units that can move to the province
 getAdjacentUnits2 :: (MonadGameKnowledge h m, MonadBrainCache m) =>
                      Province -> m [UnitPosition]
@@ -307,7 +311,7 @@ getAdjProvOcc unit = do
 
 shuff :: (MonadRandom m) => [a] -> m [a]
 shuff [] = return []
-shuff l = shuffleM l
+shuff l = shuffleM l (length l - 1)
 
 brainLog :: (MonadIO m, OrderClass o, MonadBrain o m) => String -> m ()
 brainLog msg = do

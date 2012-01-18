@@ -25,6 +25,10 @@
   Additionally, Temporal Difference Learning is only applied between turns, and not at the end. Both of these
   can be enabled by uncommenting the lines in the code.
 
+  Two pre-seeded databases have been supplied, one of which uses turn-counting as a metric (so it might select
+  different moves as a game progresses) and one without, which has surrounding units instead. Conflicting 
+  metric sets should not be used with conflicting databases as this may screw up the values.
+
 -}
 
 module Main where
