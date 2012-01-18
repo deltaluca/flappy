@@ -6,9 +6,24 @@
   Extended to include turn-by-turn learning, and made functional.
 
   COMMENTS ON RUNNING:
-    - database
-    - speed
-    - usage
+
+  The bot runs based on a set of paramaters defined inside PatternWeights.hs. This includes
+  the name of the knowledge database, which should be placed next to the binary files (by default
+  this is in AI/dist/build/learnbot/).
+
+  The database should be split into the individual powers (as defined by _powtablenames) via different
+  tables. The default table in AI/Diplomacy/AI/Bots/LearnBot/ (named test.db) is a template for such
+  a database. This database is empty.
+
+  There are some speed issues with the bot - because of the large amount of moves generated (and
+  lack of efficient pruning mechanisms) the bot slows down significantly once it reaches about 7
+  or 8 units. As such, an 'early endgame' has been defined, which prematurely ends the bot and
+  writes what it has learnt to the database. This enabled us to see if the bot actually improves
+  at all.
+  
+  In the current bot layout, 'supported learning' is not used (Dumbbot does not provide any move suggestions)
+  Additionally, Temporal Difference Learning is only applied between turns, and not at the end. Both of these
+  can be enabled by uncommenting the lines in the code.
 
 -}
 
@@ -77,7 +92,7 @@ learnBrainBuildComm = withStdGen learnBrainBuild
 learnBrainMove :: (MonadIO m) => LearnBrainMoveT m ()
 learnBrainMove = do
 
-  -- check if game is over early (if early game over is defined in Patternweights
+  -- check if game is over early (if early game over is defined in Patternweights)
   gameEnd <- learnBrainEnd
   if gameEnd
     then do
@@ -108,7 +123,9 @@ learnGameOverEarly = do
   supplies <- getSupplies myPower
   if (length supplies == _noOfSCNeededToWin) then brainLog (show "I won, YAY!") else brainLog (show "I didn't win :(")
   conn <- liftIO $ connectSqlite3 _dbname
-  let finalDB = (applyTDiffTurn (getPureDB hist) (getHist hist)) -- $ snd $ unzip (getHist hist)
+  
+  let DB' = (applyTDiffTurn (getPureDB hist) (getHist hist)) 
+  let finalDB = DB' -- applyTDiffEnd DB' $ snd $ unzip (getHist hist) 
   putPureDBAnalysis undefined finalDB
 
   myTable <- getMyDBTable =<< getMyPower
@@ -124,8 +141,9 @@ learnGameOver :: (MonadIO m) => GameKnowledgeT LearnHistory m ()
 learnGameOver = do
   hist <- getHistory
   conn <- liftIO $ connectSqlite3 _dbname
-  let finalDB = (applyTDiffTurn (getPureDB hist) (getHist hist)) -- $ snd $ unzip (getHist hist)
-
+  let DB' = (applyTDiffTurn (getPureDB hist) (getHist hist)) 
+  let finalDB = DB' -- applyTDiffEnd DB' $ snd $ unzip (getHist hist) 
+  
   myTable <- getMyDBTable =<< getMyPower
 
   liftIO $ commitPureDB conn finalDB myTable

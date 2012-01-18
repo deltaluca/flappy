@@ -1,5 +1,6 @@
 {-
  - PATTERN WEIGHTS DATABASE FUNCTIONS
+ - Please refer to learnbot.hs for main usage comments
 -}
 
 {-# LANGUAGE ScopedTypeVariables, EmptyDataDecls, KindSignatures #-}
@@ -46,10 +47,11 @@ data Dummy o (m :: * -> *)
 _trimNum :: Int
 _trimNum = 3
 
--- database name
+-- database name (should be located in same folder as the learnbot binary)
 _dbname :: String
 _dbname = "test.db"
 
+-- names of tables in the database above. Names should be in alphabetical order
 _powtablenames :: [String]
 _powtablenames = ["aus","eng","fra","ger","ita","rus","tur"]
 
@@ -60,10 +62,10 @@ _npats = [1,2,3]
 -- _c defines the constant that determines how 'strong' the weights are affected
 -- Larger _c corresponds to smaller change
 _cTurn :: Double
-_cTurn = 100.0
+_cTurn = 10.0
 
 _cEnd :: Double
-_cEnd = 20.0
+_cEnd = 5.0
 
 -- sets the low (starting) and high (ending) values of k, which varies linearly over the 
 -- game period from low to high. k is used as a 'learning temperature'
@@ -72,7 +74,6 @@ _lowK = 1.0
 _highK :: Double
 _highK = 5.0
 
--- NOT IMPLEMENTED
 -- no of supply centres needed to win
 _noOfSCNeededToWin :: Int
 _noOfSCNeededToWin = 10
@@ -84,7 +85,8 @@ _metrics _ =  [(\x -> return . bool2Int =<< targNodeFriendly =<< moveOrderToTarg
               ,(\x -> return . bool2Int =<< targNodeOccupied =<< moveOrderToTargProv x)
               ,(\x -> return . bool2Int =<< targNodeIsSupply =<< moveOrderToTargProv x)
               ,(\x ->                       targNodeAdjUnits =<< moveOrderToTargProv x)
-              ,(\x ->                       targNodeAdjUnits =<< moveOrderToOwnProv x)
+              --,(\x ->                       targNodeAdjUnits =<< moveOrderToOwnProv x)
+              ,(\x  ->                      getCurTurn                            )
               ,(\x -> return . mOT2Int                       =<< moveOrderToType x)]
 
 -- description of each metric
@@ -92,7 +94,8 @@ _metrics_desc =  ["[TN friendly]"
                 ,"[TN occupied]"
                 ,"[TN supply]"
                 ,"[TN adj units]"
-                ,"[ON adj units]"
+               -- ,"[ON adj units]"
+                ,"[Cur Turn]"
                 ,"[Own move]"]
 
 -----------------------------------------------------------------------
