@@ -96,8 +96,8 @@ learnBrainMove = do
 
       brainLog $ show $ (dumbOrders, length possibleOrderSets)
 
-      highestWeightedOrders <- weighOrderSets possibleOrderSets
-      orders <- randWeightedElem $ take 5 highestWeightedOrders
+      orders <- weighOrderSets possibleOrderSets
+
       putOrders $ Just orders
 
 -- if game finishes in early-finish state

@@ -277,23 +277,25 @@ weighOrder order = do
       peelR :: [(a,a,a)] -> [(a,a)]
       peelR  = (\(x,y,_) -> zip x y) . unzip3 
 
-weighOrderSet :: (MonadIO m, OrderClass o) => [OrderMovement] -> LearnBrainT o m ((Double, [OrderMovement]),[(Int,Int)])
+weighOrderSet :: (MonadIO m, OrderClass o) => [OrderMovement] -> LearnBrainT o m (Double, ([OrderMovement],[(Int,Int)]))
 weighOrderSet orders = do
   orderKeys <- mapM weighOrder orders
   let (weights, keys) = unzip orderKeys
-  return ((average weights, orders),concat keys)
+  return (average weights, (orders,concat keys))
 
 -- the all in one "calc weights and do all turn specific pattern stuff" function
-weighOrderSets :: (MonadIO m, OrderClass o) => [[OrderMovement]] -> LearnBrainT o m [(Double, [OrderMovement])]
+weighOrderSets :: (MonadIO m, OrderClass o) => [[OrderMovement]] -> LearnBrainT o m [OrderMovement]
 weighOrderSets orderSets = do
   weightKeys <- mapM weighOrderSet orderSets 
-  let (weights, keys) = unzip weightKeys
+  
   stateValue <- getStateValue
+  (selectedOrder,keys) <- randWeightedElem $ take 5 $ sortBy sortGT weightKeys
 
-  hist <- getHistory
-  putHistory $ LearnHistory (getPureDB hist) (getHist hist ++ [(stateValue, concat keys)])
-  (return . (sortBy sortGT)) weights
-
+  hist <- getHistory 
+ 
+  putHistory $ LearnHistory (getPureDB hist) (getHist hist ++ [(stateValue, keys)])
+  
+  return selectedOrder
 
 --------------------------------------------------------------------
 --------------------------------------------------------------------
@@ -406,7 +408,7 @@ getNextWeight prev k win = (prev*_cEnd + k*(fromIntegral v))/(k + _cEnd)
 
 -- randomly pick an element from a list, except introducing bias based on the weight of
 -- that element
-randWeightedElem :: (MonadIO m, OrderClass o) => [(Double, [a])] -> LearnBrainT o m [a]
+randWeightedElem :: (MonadIO m, OrderClass o) => [(Double, a)] -> LearnBrainT o m a
 randWeightedElem elemWeights = do
   let (weights, results) = unzip elemWeights
   let sumWeights = sum weights
