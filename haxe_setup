@@ -129,6 +129,10 @@ echo 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:'"$INSTDIR/nmefork/ndll/Linux64/" >> $BAS
 echo 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:'"$INSTDIR/hxcpp-svn/bin/Linux64/" >> $BASHRC
 echo 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:'"$INSTDIR/nmefork/ndll/Linux/" >> $BASHRC
 echo 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:'"$INSTDIR/hxcpp-svn/bin/Linux/" >> $BASHRC
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/nmefork/ndll/Linux64/
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/hxcpp-svn/bin/Linux64/
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/nmefork/ndll/Linux/
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/hxcpp-svn/bin/Linux/
 
 # also need sdl-static to compile nme from source
 # ----------------------------------------------
@@ -140,5 +144,6 @@ svn checkout http://sdl-static.googlecode.com/svn/trunk/ sdl-static
 
 cd $INSTDIR
 cd nmefork/project
+git checkout gitfork
 haxelib run hxcpp Build.xml -DHXCPP_M64
 
